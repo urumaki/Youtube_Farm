@@ -37,7 +37,9 @@ Legend: [x] done and verified · [~] partly verified · [ ] todo · [!] blocked 
 - [x] Template narration with seeded variation, 54-75 words, EN and IT (`--lang`)
 - [x] TTS interface: Piper (local, default), ElevenLabs (cloud, word alignment), silent fallback; captions from word timings
 - [x] Procedural music bed + ambience (CC0, generated), ducked under the voice, loudness-normalized, licenses in `assets/audio/LICENSES.md`
-- [!] Voice quality not judged by ear (no audio playback here); speaker 20 was chosen by pitch analysis
+- [x] Kokoro-82M narration (default `bm_george`, Italian `im_nicola`), Piper fallback; script capped at 68 words and re-synthesized faster if it would overrun 28.3 s
+- [x] Camera-driven sound effects (`src/audio/sfx.js`): hammer/saw on houses, anvil+fire at the forge, water+oars at the dock, bells, chisel, chains; quiet birds/breeze bed; CC0 recordings in `assets/audio/sfx/` override the synthesized ones
+- [!] Voices and effects not judged by ear (no audio playback here); samples sent to the user to choose
 
 ## 7. Automation, viewer, README
 - [x] `.github/workflows/daily.yml` (cron, tests, daily cycle, commit state, upload MP4 artifact, publish extension point)
@@ -50,4 +52,7 @@ Legend: [x] done and verified · [~] partly verified · [ ] todo · [!] blocked 
   (1080x1920, H.264 yuv420p, 30 fps, 900 frames, 30.0 s, AAC 48 kHz, no black frames) and frames at 1 s / 10 s / 25 s reviewed:
   - 1: PASS · 12: PASS · 87: PASS · 640: PASS · 5000: PASS (render times 31-50 min each)
 - Issues found in frames and fixed: new tier buildings now shown before older completions, barbican hiding the gate sign, inverted roof faces, oversaturated grass, fog hiding the wide shot, dusk too dark, smoke blobs near the camera, viewer aspect stretch, scaffold on instant buildings.
+- Round 2 (organic town plan, detailed houses, red-roofed castle, Kokoro voice, camera-driven effects):
+  `npm test` 25 pass; 87 subscribers re-rendered: all 8 checks PASS, 2918 s render, −14.3 LUFS integrated.
+  Known: the house label can sit above a neighbour while the new house is still low; fog days soften the wide shot.
 - Viewer: `node scripts/viewer.js --subs 35000 --check` (4,800 houses) loads with no console errors; 558 draw calls, ~1.45 M triangles per frame.
