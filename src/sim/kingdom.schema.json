@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/urumaki/youtube_farm/state/kingdom.schema.json",
+  "title": "Subscriber Kingdom state",
+  "type": "object",
+  "required": ["schemaVersion", "seed", "day", "date", "subscriberCount", "peakPopulation", "villagers", "houses", "plots", "buildings", "unlockedTiers", "pendingConstruction", "weather", "events"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "enum": [1] },
+    "seed": { "type": "integer", "minimum": 0 },
+    "day": { "type": "integer", "minimum": 0 },
+    "date": { "type": "string" },
+    "subscriberCount": { "type": "integer", "minimum": 0 },
+    "peakPopulation": { "type": "integer", "minimum": 0 },
+    "countSource": { "type": "string" },
+    "villagers": { "type": "array", "items": { "$ref": "#/$defs/villager" } },
+    "houses": { "type": "array", "items": { "$ref": "#/$defs/house" } },
+    "plots": { "type": "array", "items": { "$ref": "#/$defs/plot" } },
+    "buildings": { "type": "array", "items": { "$ref": "#/$defs/building" } },
+    "unlockedTiers": { "type": "array", "items": { "type": "string" } },
+    "pendingConstruction": { "type": "array", "items": { "type": "object", "required": ["building", "daysLeft", "daysTotal"] } },
+    "weather": { "type": "string", "enum": ["clear", "cloudy", "fog", "rain", "snow"] },
+    "events": { "type": "array", "items": { "type": "object", "required": ["type"] } }
+  },
+  "$defs": {
+    "villager": {
+      "type": "object", "required": ["id", "name", "job", "house"],
+      "properties": { "id": { "type": "integer", "minimum": 0 }, "name": { "type": "string" }, "job": { "type": "string" }, "house": { "type": "integer" } }
+    },
+    "house": {
+      "type": "object", "required": ["id", "plot", "capacity", "status", "builtDay", "occupants"],
+      "properties": {
+        "id": { "type": "integer" }, "plot": { "type": "integer" }, "capacity": { "type": "integer", "minimum": 1 },
+        "status": { "enum": ["occupied", "abandoned", "ruin"] }, "builtDay": { "type": "integer" },
+        "abandonedDay": { "type": "integer" }, "ruinDay": { "type": "integer" }, "rebuiltDay": { "type": "integer" },
+        "occupants": { "type": "array", "items": { "type": "integer" } }
+      }
+    },
+    "plot": {
+      "type": "object", "required": ["id", "x", "z", "y", "hw", "hd", "rot"],
+      "properties": { "id": { "type": "integer" }, "x": { "type": "number" }, "z": { "type": "number" }, "y": { "type": "number" }, "hw": { "type": "number" }, "hd": { "type": "number" }, "rot": { "type": "number" } }
+    },
+    "building": {
+      "type": "object", "required": ["id", "tier", "status", "startedDay"],
+      "properties": { "id": { "type": "string" }, "tier": { "type": "string" }, "status": { "enum": ["construction", "done"] }, "startedDay": { "type": "integer" } }
+    }
+  }
+}

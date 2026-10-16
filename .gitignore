@@ -1,9 +1,16 @@
-output/*
-!output/.gitkeep
-__pycache__/
+# secrets — never commit
 .env
 .env.*
 !.env.example
 *client_secret*.json
 *token*.json
 credentials/
+
+# build / runtime
+node_modules/
+dist/
+tools/
+.cache/
+__pycache__/
+output/*
+!output/.gitkeep
