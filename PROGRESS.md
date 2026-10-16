@@ -13,7 +13,8 @@ Legend: [x] done and verified · [~] in progress · [ ] todo · [!] blocked
 - [x] Tests: determinism, 0→10k growth, shrinking/ruins, overlaps, unlocks, migration, re-run same day
 
 ## 2. Subscriber fetch
-- [ ] public count (Data API v3), exact mode (Analytics API), fallback to last known count
+- [x] public count (Data API v3 `forHandle`), exact mode (Analytics API sum gained−lost), fallback to last known count (`src/fetch/youtube.js`)
+- [x] Tests with mocked HTTP (`tests/fetch.test.js`). Live API not testable here: googleapis.com is blocked from this sandbox (403)
 
 ## 3. 3D scene
 - [ ] terrain, river, moat, castle, procedural houses
