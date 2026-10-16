@@ -23,7 +23,7 @@ concurrency:
 jobs:
   daily:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 340 # software rendering on a 4-core runner takes ~2-2.5 h
     steps:
       - uses: actions/checkout@v4
 
@@ -78,7 +78,12 @@ jobs:
           git add state/  # includes state/published.json (uploaded video ids)
           if git diff --cached --quiet; then echo "no state change"; exit 0; fi
           git commit -m "Kingdom day $(date -u +%F)"
-          git push
+          # the branch may have moved during the long render: rebase the state commit, retry
+          for i in 1 2 3 4; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
 
       - name: Upload video
         uses: actions/upload-artifact@v4
