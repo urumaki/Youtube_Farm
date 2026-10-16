@@ -101,8 +101,8 @@ and the video is still rendered with a weather / daily-life event. The daily run
 
 - **Kokoro** (default, free, local; Kokoro-82M, Apache-2.0 — one of the most used open TTS models
   for narration): `npm run setup:tts` (needs Python 3.10+; installs `kokoro-onnx` with pip and
-  downloads the model into `tools/kokoro`). Voices: `KOKORO_VOICE_EN=bm_george` (British male,
-  default) or `bm_fable`, `am_michael`, `am_adam`…; Italian `KOKORO_VOICE_IT=im_nicola` or `if_sara`.
+  downloads the model into `tools/kokoro`). Voices: `KOKORO_VOICE_EN=am_adam` (American male,
+  default) or `bm_george`, `bm_fable`, `am_michael`…; Italian `KOKORO_VOICE_IT=im_nicola` or `if_sara`.
 - **Piper** (lighter fallback, used automatically if Kokoro is missing): `npm run setup:piper`.
   English `en-us-libritts-high` (CC BY 4.0 — credit it), Italian `it-riccardo_fasol-x-low`.
 - **ElevenLabs** (optional, cloud): `TTS_PROVIDER=elevenlabs`, `ELEVENLABS_API_KEY`, optional
@@ -120,6 +120,30 @@ synthesized by `src/audio/sfx.js`; to use real recordings, drop CC0 files named 
 `chain`, `thud`, `creak`, `cart`, `chatter`, `birds`, `breeze`, `rain`, `chime` — `.wav/.ogg/.mp3`)
 and list them in `assets/audio/LICENSES.md`. Good CC0 sources: Kenney "RPG Audio", OpenGameArt
 "100 CC0 SFX", Freesound (filter by CC0). Do not use audio ripped from YouTube videos.
+
+### Uploading to YouTube (Shorts)
+
+An API key can only read. Uploading needs OAuth for the account that owns the channel:
+
+1. Google Cloud Console, same project as the API key → *APIs & Services* → **YouTube Data API v3**
+   enabled (also **YouTube Analytics API** for the exact count).
+2. *OAuth consent screen* (Google Auth Platform): user type **External**, add yourself as user,
+   scopes `youtube.upload` (+ `yt-analytics.readonly`). Set the publishing status to
+   **In production** — in *Testing* the refresh token expires after 7 days. The "unverified app"
+   warning is fine for your own account.
+3. *Credentials* → **Create OAuth client ID** → **Desktop app** → put the client ID and secret in
+   `.env` as `YT_OAUTH_CLIENT_ID` / `YT_OAUTH_CLIENT_SECRET`.
+4. `npm run auth:youtube -- --save` on your computer: a browser opens, sign in and pick the
+   Subscriber Kingdom channel; the refresh token is written to `.env` (never shown anywhere else).
+5. GitHub → *Settings → Secrets and variables → Actions*: secrets `YT_OAUTH_CLIENT_ID`,
+   `YT_OAUTH_CLIENT_SECRET`, `YT_OAUTH_REFRESH_TOKEN`; variable `PUBLISH_TARGETS=youtube`
+   (optional `YT_PRIVACY=public|unlisted|private`, `YT_PUBLISH_AT=17:00` in UTC).
+6. **Audit**: videos uploaded through an unverified API project are locked to *private* by YouTube.
+   Submit the *YouTube API Services – Audit and Quota Extension* form for the project to lift it;
+   until then make each video public by hand in YouTube Studio.
+
+Each upload is recorded in `state/published.json`, so re-running a day never uploads twice. A
+failed upload is logged and does not fail the daily run. One upload a day fits the free quota.
 
 ## Commands
 
@@ -166,9 +190,9 @@ in real time.
 `.github/workflows/daily.yml` runs every day at 06:17 UTC (and on demand): install, tests, daily
 cycle, commit `state/`, upload the MP4 as a workflow artifact. Add `YOUTUBE_API_KEY` (and the
 optional OAuth / ElevenLabs secrets) under *Settings → Secrets and variables → Actions*.
-Uploading to YouTube/Instagram/TikTok is not implemented yet: `src/publish/index.js` is the
-extension point (it already writes title/description metadata next to each video);
-`legacy/uploaders/` contains earlier Python upload scripts.
+With `PUBLISH_TARGETS=youtube` the video is uploaded as a Short (see above). Instagram/TikTok are
+not implemented: `src/publish/index.js` is the extension point; `legacy/uploaders/` contains earlier
+Python upload scripts.
 
 ## Layout
 
@@ -177,7 +201,7 @@ src/sim/      PRNG, names, tiers, world (terrain, river, roads, plots), simulati
 src/fetch/    YouTube Data API (public) and Analytics API (exact) with fallback
 src/render/   Three.js scene (scene/*), deterministic frame capture (capture.js)
 src/audio/    narration templates, TTS providers, procedural music/ambience, ffmpeg mix
-src/publish/  upload extension point
+src/publish/  YouTube upload (resumable, OAuth refresh token), metadata
 scripts/      daily, render, viewer, build, setup-piper, verify-video, watermark tools
 tests/        node:test suites
 assets/audio/ optional custom music/ambience + LICENSES.md

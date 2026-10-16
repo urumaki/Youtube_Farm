@@ -94,7 +94,7 @@ export async function daily(args, log = console) {
   if (args.noVideo) return { state, diff, saved: true };
   const out = args.out || path.join('output', `${date}_${args.lang}.mp4`);
   const video = await produceVideo(state, diff, { lang: args.lang, out, quality: args.quality, tts: args.tts, log });
-  await publish({ video: out, state, diff, script: video.script.text, lang: args.lang, log });
+  await publish({ video: out, state, diff, lang: args.lang, log, stateDir: dir });
   return { state, diff, saved: true, video: out };
 }
 

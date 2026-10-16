@@ -15,7 +15,8 @@
     "test": "node --test tests/*.test.js",
     "setup:piper": "node scripts/setup-piper.js",
     "setup:kokoro": "node scripts/setup-kokoro.js",
-    "setup:tts": "node scripts/setup-kokoro.js && node scripts/setup-piper.js"
+    "setup:tts": "node scripts/setup-kokoro.js && node scripts/setup-piper.js",
+    "auth:youtube": "node scripts/auth-youtube.js"
   },
   "dependencies": {
     "@fontsource/cinzel": "5.1.0",

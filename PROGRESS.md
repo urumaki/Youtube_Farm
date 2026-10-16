@@ -37,7 +37,7 @@ Legend: [x] done and verified · [~] partly verified · [ ] todo · [!] blocked 
 - [x] Template narration with seeded variation, 54-75 words, EN and IT (`--lang`)
 - [x] TTS interface: Piper (local, default), ElevenLabs (cloud, word alignment), silent fallback; captions from word timings
 - [x] Procedural music bed + ambience (CC0, generated), ducked under the voice, loudness-normalized, licenses in `assets/audio/LICENSES.md`
-- [x] Kokoro-82M narration (default `bm_george`, Italian `im_nicola`), Piper fallback; script capped at 68 words and re-synthesized faster if it would overrun 28.3 s
+- [x] Kokoro-82M narration (default `am_adam`, Italian `im_nicola`), Piper fallback; script capped at 68 words and re-synthesized faster if it would overrun 28.3 s
 - [x] Camera-driven sound effects (`src/audio/sfx.js`): hammer/saw on houses, anvil+fire at the forge, water+oars at the dock, bells, chisel, chains; quiet birds/breeze bed; CC0 recordings in `assets/audio/sfx/` override the synthesized ones
 - [!] Voices and effects not judged by ear (no audio playback here); samples sent to the user to choose
 

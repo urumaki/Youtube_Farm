@@ -63,6 +63,9 @@ jobs:
           YT_OAUTH_REFRESH_TOKEN: ${{ secrets.YT_OAUTH_REFRESH_TOKEN }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'kokoro' }}
+          PUBLISH_TARGETS: ${{ vars.PUBLISH_TARGETS }}
+          YT_PRIVACY: ${{ vars.YT_PRIVACY || 'public' }}
+          YT_PUBLISH_AT: ${{ vars.YT_PUBLISH_AT }}
         run: |
           ARGS="--lang ${{ github.event.inputs.lang || 'en' }}"
           if [ -n "${{ github.event.inputs.subs }}" ]; then ARGS="$ARGS --subs ${{ github.event.inputs.subs }}"; fi
@@ -72,7 +75,7 @@ jobs:
         run: |
           git config user.name "subscriber-kingdom-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state/
+          git add state/  # includes state/published.json (uploaded video ids)
           if git diff --cached --quiet; then echo "no state change"; exit 0; fi
           git commit -m "Kingdom day $(date -u +%F)"
           git push
@@ -85,6 +88,3 @@ jobs:
             output/*.mp4
             output/*.json
           retention-days: 30
-
-      # Extension point: publish the video (YouTube / Instagram / TikTok) here once an uploader
-      # is implemented in src/publish/index.js. Keep all credentials in repository secrets.

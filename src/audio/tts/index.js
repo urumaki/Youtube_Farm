@@ -39,8 +39,8 @@ export function kokoroConfig(lang, env = process.env) {
     python: env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3'),
     model: env.KOKORO_MODEL || path.join(dir, 'kokoro-v1.0.onnx'),
     voices: env.KOKORO_VOICES || path.join(dir, 'voices-v1.0.bin'),
-    voice: lang === 'it' ? env.KOKORO_VOICE_IT || 'im_nicola' : env.KOKORO_VOICE_EN || 'bm_george',
-    lang: lang === 'it' ? 'it' : (env.KOKORO_VOICE_EN || 'bm_george').startsWith('b') ? 'en-gb' : 'en-us',
+    voice: lang === 'it' ? env.KOKORO_VOICE_IT || 'im_nicola' : env.KOKORO_VOICE_EN || 'am_adam',
+    lang: lang === 'it' ? 'it' : (env.KOKORO_VOICE_EN || 'am_adam').startsWith('b') ? 'en-gb' : 'en-us',
     speed: Number(env.KOKORO_SPEED || 1.05),
   };
 }
