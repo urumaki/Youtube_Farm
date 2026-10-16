@@ -190,7 +190,7 @@ const BUILD = {
     b.add('ivory', cylGeo(1.5, 1.5, 0.2, 20).rotateX(Math.PI / 2), 0, 17.5, -0.45);
     b.add('iron', boxGeo(0.12, 1.2, 0.1), 0, 17.8, -0.3); b.add('iron', boxGeo(0.9, 0.12, 0.1), 0.35, 17.5, -0.3);
     b.add('slate', pyramidGeo(5.8, 5.8, 7), 0, 22, -3);
-    out.banners.push([-5, 8.5, 8.6, 1.8, 4.6], [5, 8.5, 8.6, 1.8, 4.6]);
+    out.banners.push([-5, 8.6, 8.3, 1.8, 3.3], [5, 8.6, 8.3, 1.8, 3.3]); // clear of the arcade beam below
     out.focusH = 14;
   },
   harbor(b, lot, out, ctx) {
@@ -276,7 +276,7 @@ const BUILD = {
     b.add('gold', new THREE.SphereGeometry(7, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), 0, 24, 10);
     for (const s of [-1, 1]) tower(b, s * 30, -10, 5, 30, 12);
     windowsRow(b, -26, 26, 6, 13.05, 14); windowsRow(b, -26, 26, 11.5, 13.05, 14);
-    out.banners.push([-6, 20, 19.1, 3, 8], [6, 20, 19.1, 3, 8]);
+    out.banners.push([-6, 20, 19.25, 3, 8], [6, 20, 19.25, 3, 8]);
     out.focusH = 20;
   },
   lighthouse(b, lot, out, ctx) {

@@ -221,7 +221,8 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
         const bx = c.base[i * 3], by = c.base[i * 3 + 1];
         if (c.hanging) {
           const k = (c.h0 / 2 - by) / c.h0; // 0 at top
-          p.setZ(i, Math.sin(t * 2.1 + by * 0.9 + c.ph) * 0.18 * k + Math.sin(t * 3.3 + bx * 2 + c.ph) * 0.05 * k);
+          // local +Z points away from the wall: billow outward only, never into the masonry
+          p.setZ(i, 0.04 + k * (0.16 * (0.5 + 0.5 * Math.sin(t * 2.1 + by * 0.9 + c.ph)) + 0.05 * (0.5 + 0.5 * Math.sin(t * 3.3 + bx * 2 + c.ph))));
         } else {
           const k = (bx + c.w0 / 2) / c.w0; // 0 at the pole
           p.setZ(i, Math.sin(t * 4.2 - bx * 1.6 + c.ph) * 0.35 * k + Math.sin(t * 6.1 - bx * 3 + by + c.ph) * 0.08 * k);

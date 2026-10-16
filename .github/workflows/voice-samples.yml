@@ -1,0 +1,70 @@
+name: Voice samples
+
+# On demand: render the same narration line with several free TTS engines so you can compare them
+# by ear. Download the "voice-samples" artifact from the run page. Nothing is committed or uploaded.
+on:
+  workflow_dispatch:
+    inputs:
+      text:
+        description: 'Line to read'
+        required: false
+        default: 'Welcome back to Subscriber Kingdom, day two. Eight new villagers arrived at dawn. Aldric of Blackwood takes up the axe, and the sawmill starts to sing. Subscribe to become a villager.'
+
+permissions:
+  contents: read
+
+jobs:
+  samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      TEXT: ${{ github.event.inputs.text }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg && mkdir -p samples
+
+      - name: Kokoro (current engine, Apache-2.0)
+        continue-on-error: true
+        run: |
+          node scripts/setup-kokoro.js
+          for v in am_adam af_heart am_michael bm_fable bm_lewis; do
+            L=en-us; case $v in b*) L=en-gb;; esac
+            mkdir -p tmp/$v
+            echo "$TEXT" | python scripts/py/kokoro_tts.py tools/kokoro/kokoro-v1.0.onnx tools/kokoro/voices-v1.0.bin $v $L 1.0 tmp/$v
+            ffmpeg -y -loglevel error -i tmp/$v/tts_0.wav -b:a 128k samples/kokoro_$v.mp3
+          done
+
+      - name: Chatterbox (Resemble AI, MIT)
+        continue-on-error: true
+        run: |
+          pip install --quiet torch==2.6.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          pip install --quiet chatterbox-tts
+          python - <<'EOF'
+          import os, torchaudio
+          from chatterbox.tts import ChatterboxTTS
+          m = ChatterboxTTS.from_pretrained(device="cpu")
+          for name, ex, cfg in [("neutral", 0.5, 0.5), ("storyteller", 0.7, 0.35)]:
+              wav = m.generate(os.environ["TEXT"], exaggeration=ex, cfg_weight=cfg)
+              torchaudio.save(f"samples/chatterbox_{name}.wav", wav, m.sr)
+          EOF
+          for f in samples/chatterbox_*.wav; do ffmpeg -y -loglevel error -i "$f" -b:a 128k "${f%.wav}.mp3" && rm "$f"; done
+
+      - name: Microsoft Edge neural voices (edge-tts, unofficial free endpoint)
+        continue-on-error: true
+        run: |
+          pip install --quiet edge-tts
+          for v in en-US-AndrewNeural en-US-BrianNeural en-US-ChristopherNeural en-GB-RyanNeural en-GB-ThomasNeural; do
+            edge-tts --voice $v --text "$TEXT" --write-media samples/edge_$v.mp3
+          done
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: voice-samples
+          path: samples/
+          retention-days: 7
