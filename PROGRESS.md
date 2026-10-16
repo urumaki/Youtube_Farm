@@ -48,6 +48,6 @@ Legend: [x] done and verified · [~] partly verified · [ ] todo · [!] blocked 
 - `npm test`: 23 tests pass.
 - Test videos (`npm run render -- --subs N`), each checked with `scripts/verify-video.js`
   (1080x1920, H.264 yuv420p, 30 fps, 900 frames, 30.0 s, AAC 48 kHz, no black frames) and frames at 1 s / 10 s / 25 s reviewed:
-  - 1: PASS · 12: PASS · 87: PASS · 640: PASS · 5000: see below
-- Issues found in frames and fixed: barbican hiding the gate sign, inverted roof faces, oversaturated grass, fog hiding the wide shot, dusk too dark, smoke blobs near the camera, viewer aspect stretch, scaffold on instant buildings.
+  - 1: PASS · 12: PASS · 87: PASS · 640: PASS · 5000: PASS (render times 31-50 min each)
+- Issues found in frames and fixed: new tier buildings now shown before older completions, barbican hiding the gate sign, inverted roof faces, oversaturated grass, fog hiding the wide shot, dusk too dark, smoke blobs near the camera, viewer aspect stretch, scaffold on instant buildings.
 - Viewer: `node scripts/viewer.js --subs 35000 --check` (4,800 houses) loads with no console errors; 558 draw calls, ~1.45 M triangles per frame.

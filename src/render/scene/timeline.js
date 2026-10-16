@@ -26,7 +26,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     });
   }
   // buildings unlocked or finished today
-  for (const id of [...diff.buildingsCompleted, ...diff.buildingsStarted]) {
+  for (const id of [...diff.buildingsStarted, ...diff.buildingsCompleted]) {
     const it = buildings.items[id];
     if (!it || targets.some((t) => t.kind === 'building' && t.id === id) || targets.length >= maxTargets) continue;
     const big = ['cathedral', 'palace', 'tournament', 'harbor', 'wall2', 'university', 'colossus', 'townhall'].includes(id);
