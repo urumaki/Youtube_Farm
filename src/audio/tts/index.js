@@ -1,5 +1,6 @@
-// Text-to-speech behind one interface. Providers: 'piper' (free, local), 'elevenlabs' (cloud), 'none' (silent).
-// synthesize() never throws: it falls back piper -> none so the daily video is always produced.
+// Text-to-speech behind one interface. Providers: 'kokoro' (default: free, local, Apache-2.0 model widely used
+// for narration), 'piper' (free, local, lighter), 'elevenlabs' (cloud), 'none' (silent).
+// synthesize() never throws: it falls back kokoro -> piper -> none so the daily video is always produced.
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -32,19 +33,31 @@ function timeWords(text, start, end) {
   });
 }
 
-function piper(sentences, { lang, outDir, lengthScale = 1 }) {
-  const cfg = piperConfig(lang);
-  if (!fs.existsSync(cfg.bin)) throw new Error(`piper binary not found at ${cfg.bin} (run npm run setup:piper)`);
-  if (!fs.existsSync(cfg.model)) throw new Error(`piper voice not found at ${cfg.model}`);
-  const parts = [];
-  sentences.forEach((s, i) => {
-    const out = path.resolve(outDir, `tts_${i}.wav`);
-    const args = ['--model', path.resolve(cfg.model), '--output_file', out, '--length_scale', String(lengthScale), '--sentence_silence', '0'];
-    if (cfg.speaker !== undefined && cfg.speaker !== '') args.push('--speaker', String(cfg.speaker));
-    const r = spawnSync(cfg.bin, args, { input: s.text, encoding: 'utf8', cwd: path.dirname(cfg.bin) });
-    if (r.status !== 0 || !fs.existsSync(out)) throw new Error(`piper failed: ${r.stderr?.slice(-400)}`);
-    parts.push(readWav(out));
+export function kokoroConfig(lang, env = process.env) {
+  const dir = path.join(ROOT, 'tools', 'kokoro');
+  return {
+    python: env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3'),
+    model: env.KOKORO_MODEL || path.join(dir, 'kokoro-v1.0.onnx'),
+    voices: env.KOKORO_VOICES || path.join(dir, 'voices-v1.0.bin'),
+    voice: lang === 'it' ? env.KOKORO_VOICE_IT || 'im_nicola' : env.KOKORO_VOICE_EN || 'bm_george',
+    lang: lang === 'it' ? 'it' : (env.KOKORO_VOICE_EN || 'bm_george').startsWith('b') ? 'en-gb' : 'en-us',
+    speed: Number(env.KOKORO_SPEED || 1.05),
+  };
+}
+
+function kokoro(sentences, { lang, outDir, speed }) {
+  const cfg = kokoroConfig(lang);
+  if (!fs.existsSync(cfg.model) || !fs.existsSync(cfg.voices)) throw new Error(`kokoro model not found in ${path.dirname(cfg.model)} (run npm run setup:tts)`);
+  const script = path.join(ROOT, 'scripts', 'py', 'kokoro_tts.py');
+  const r = spawnSync(cfg.python, [script, cfg.model, cfg.voices, cfg.voice, cfg.lang, String(speed ?? cfg.speed), path.resolve(outDir)], {
+    input: sentences.map((s) => s.text.replace(/\s+/g, ' ')).join('\n'), encoding: 'utf8', maxBuffer: 1 << 24,
   });
+  if (r.status !== 0) throw new Error(`kokoro failed: ${(r.stderr || r.error?.message || '').slice(-400)}`);
+  return assemble(sentences, sentences.map((_, i) => readWav(path.resolve(outDir, `tts_${i}.wav`))), outDir, 'kokoro');
+}
+
+/** Trim each sentence to its audible span, join with short pauses, time the words. */
+function assemble(sentences, parts, outDir, provider) {
   const rate = parts[0].rate;
   const chunks = [], words = [];
   let t = 0;
@@ -61,7 +74,23 @@ function piper(sentences, { lang, outDir, lengthScale = 1 }) {
   for (const c of chunks) { all.set(c, o); o += c.length; }
   const file = path.join(outDir, 'narration.wav');
   writeWav(file, [all], rate);
-  return { file, duration: all.length / rate, words, provider: 'piper' };
+  return { file, duration: all.length / rate, words, provider };
+}
+
+function piper(sentences, { lang, outDir, lengthScale = 1 }) {
+  const cfg = piperConfig(lang);
+  if (!fs.existsSync(cfg.bin)) throw new Error(`piper binary not found at ${cfg.bin} (run npm run setup:piper)`);
+  if (!fs.existsSync(cfg.model)) throw new Error(`piper voice not found at ${cfg.model}`);
+  const parts = [];
+  sentences.forEach((s, i) => {
+    const out = path.resolve(outDir, `tts_${i}.wav`);
+    const args = ['--model', path.resolve(cfg.model), '--output_file', out, '--length_scale', String(lengthScale), '--sentence_silence', '0'];
+    if (cfg.speaker !== undefined && cfg.speaker !== '') args.push('--speaker', String(cfg.speaker));
+    const r = spawnSync(cfg.bin, args, { input: s.text, encoding: 'utf8', cwd: path.dirname(cfg.bin) });
+    if (r.status !== 0 || !fs.existsSync(out)) throw new Error(`piper failed: ${r.stderr?.slice(-400)}`);
+    parts.push(readWav(out));
+  });
+  return assemble(sentences, parts, outDir, 'piper');
 }
 
 async function elevenlabs(sentences, { outDir, lang, env = process.env }) {
@@ -109,12 +138,21 @@ function silent(sentences, { outDir }) {
 }
 
 /** Synthesize the script. maxDuration: if the voice runs long, retry faster (piper) before giving up. */
-export async function synthesize(sentences, { lang = 'en', outDir, provider = process.env.TTS_PROVIDER || 'piper', maxDuration = 28.3, log = console } = {}) {
+export async function synthesize(sentences, { lang = 'en', outDir, provider = process.env.TTS_PROVIDER || 'kokoro', maxDuration = 28.3, log = console } = {}) {
   fs.mkdirSync(outDir, { recursive: true });
-  const chain = provider === 'elevenlabs' ? ['elevenlabs', 'piper', 'none'] : provider === 'none' ? ['none'] : ['piper', 'none'];
+  const chain = { elevenlabs: ['elevenlabs', 'kokoro', 'piper', 'none'], kokoro: ['kokoro', 'piper', 'none'], piper: ['piper', 'none'], none: ['none'] }[provider] || ['kokoro', 'piper', 'none'];
   for (const p of chain) {
     try {
       if (p === 'elevenlabs') return await elevenlabs(sentences, { outDir, lang });
+      if (p === 'kokoro') {
+        let speed = kokoroConfig(lang).speed;
+        let out = kokoro(sentences, { lang, outDir, speed });
+        for (let k = 0; k < 2 && out.duration > maxDuration; k++) {
+          speed = Math.min(1.35, speed * (out.duration / maxDuration) * 1.06);
+          out = kokoro(sentences, { lang, outDir, speed });
+        }
+        return out;
+      }
       if (p === 'piper') {
         let out = piper(sentences, { lang, outDir });
         if (out.duration > maxDuration) out = piper(sentences, { lang, outDir, lengthScale: Math.max(0.82, maxDuration / out.duration) });

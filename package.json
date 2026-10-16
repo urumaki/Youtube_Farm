@@ -13,7 +13,9 @@
     "viewer": "node scripts/viewer.js",
     "build": "node scripts/build.js",
     "test": "node --test tests/*.test.js",
-    "setup:piper": "node scripts/setup-piper.js"
+    "setup:piper": "node scripts/setup-piper.js",
+    "setup:kokoro": "node scripts/setup-kokoro.js",
+    "setup:tts": "node scripts/setup-kokoro.js && node scripts/setup-piper.js"
   },
   "dependencies": {
     "@fontsource/cinzel": "5.1.0",

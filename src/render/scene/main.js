@@ -60,7 +60,7 @@ async function setup(data) {
   const animated = new Map();
   for (const id of todays) {
     const h = state.houses.find((x) => x.id === id);
-    const a = buildAnimatedHouse(houses.shapes.get(id), h, state.seed, M, houses.defs);
+    const a = buildAnimatedHouse(houses.shapes.get(id), h, state.seed, M, houses);
     animated.set(id, a);
     scene.add(a.group);
   }
@@ -87,6 +87,8 @@ async function setup(data) {
   ctx.stats = {
     setupMs: Math.round(performance.now() - t0), houses: state.houses.length, animated: animated.size, trees: nature.count,
     walkers: life.walkers, guards: life.guards, targets: plan?.targets.map((t) => `${t.kind}:${t.id ?? ''}`),
+    // what each shot shows, for the sound effects track
+    cues: plan?.targets.map((t, i) => ({ kind: t.kind, id: t.id ?? null, t0: t.t0, t1: t.t1, completed: t.completed ?? null, rebuilt: !!t.rebuilt, pan: i % 2 ? 0.25 : -0.25, hasChapel: state.buildings.some((b) => (b.id === 'chapel' || b.id === 'cathedral') && b.status === 'done') })) ?? [],
   };
   window.__ctx = ctx;
   if (viewer) startViewer(ctx);

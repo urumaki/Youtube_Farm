@@ -145,7 +145,11 @@ export function buildOverlay(w, state, scale = 0.76) {
     }
     reach.set(p.road, Math.max(reach.get(p.road) || 0, best + 14));
   }
-  reach.set('main', Math.max(reach.get('main') || 0, 70));
+  reach.set('approach', 1e9);
+  // a lane that is in use keeps its parent street drawn at least up to the junction
+  for (let k = 0; k < 3; k++) for (const rd of w.roads) {
+    if (reach.has(rd.id) && rd.parent) reach.set(rd.parent, Math.max(reach.get(rd.parent) || 0, (rd.branchS || 0) + 8));
+  }
   const clipRoad = (rd, len) => {
     const out = [rd.pts[0]];
     let acc = 0;

@@ -2,7 +2,7 @@
 // banners and flags, torches, birds, boats, windmill sails, rain/snow. All a pure function of time t.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { heightAt, CASTLE } from '../../sim/world.js';
+import { heightAt, CASTLE, polyline } from '../../sim/world.js';
 import { rand01 } from '../../sim/prng.js';
 import { JOBS } from '../../sim/tiers.js';
 import { softSprite, ROYAL } from './textures.js';
@@ -69,17 +69,15 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
   // ------------------------------------------------ walkers on separated loops
   const yFn = (x, z) => heightAt(w, x, z) + 0.05;
   const loops = [];
+  // One closed loop per street that has houses, trimmed 16 m from both ends so loops never meet at
+  // junctions (streets never cross each other, see tests/world.test.js).
   const roadsWithHouses = new Set(state.plots.map((p) => p.road));
   for (const rd of w.roads) {
-    if (!roadsWithHouses.has(rd.id) && rd.id !== 'main') continue;
-    // keep each loop on its own stretch: side streets stop before the main road and the first cross street
-    let pts = rd.pts;
-    if (rd.id === 'main') {
-      const maxX = Math.max(140, ...state.plots.filter((p) => p.road === 'main').map((p) => p.x + 10));
-      pts = pts.filter((p) => p[0] <= maxX && p[0] >= CASTLE.moatOuter + 6);
-    } else if (rd.id.startsWith('side')) {
-      pts = pts.filter((p, i) => i * 10 > 10 && i * 10 < 150);
-    } else continue; // cross streets: no walkers (their crossings would intersect other loops)
+    if (!roadsWithHouses.has(rd.id) && rd.id !== 'east') continue;
+    const pl = polyline(rd.pts);
+    if (pl.total < 50) continue;
+    const pts = [];
+    for (let sv = 16; sv <= pl.total - 16; sv += 6) { const [x, z] = pl.at(sv); pts.push([x, z]); }
     if (pts.length < 3) continue;
     loops.push(laneLoop(pts, LANE, w, yFn));
   }

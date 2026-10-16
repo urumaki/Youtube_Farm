@@ -38,14 +38,18 @@ jobs:
           npx playwright install --with-deps chromium
           sudo apt-get update && sudo apt-get install -y ffmpeg
 
-      - name: Cache Piper TTS
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Cache TTS models
         uses: actions/cache@v4
         with:
-          path: tools/piper
-          key: piper-2023.11.14-2-v0.0.2-voices
+          path: tools
+          key: tts-kokoro-v1.0-piper-2023.11.14-2
 
-      - name: Set up Piper
-        run: npm run setup:piper
+      - name: Set up TTS (Kokoro + Piper fallback)
+        run: npm run setup:tts
 
       - name: Tests
         run: npm test
@@ -58,7 +62,7 @@ jobs:
           YT_OAUTH_CLIENT_SECRET: ${{ secrets.YT_OAUTH_CLIENT_SECRET }}
           YT_OAUTH_REFRESH_TOKEN: ${{ secrets.YT_OAUTH_REFRESH_TOKEN }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
-          TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'piper' }}
+          TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'kokoro' }}
         run: |
           ARGS="--lang ${{ github.event.inputs.lang || 'en' }}"
           if [ -n "${{ github.event.inputs.subs }}" ]; then ARGS="$ARGS --subs ${{ github.event.inputs.subs }}"; fi

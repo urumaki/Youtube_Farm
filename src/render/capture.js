@@ -75,7 +75,7 @@ export async function renderShots(data, shots, outDir) {
 /** Render the full video. audioFile (optional) is muxed; output is exactly 30.0 s, 30 fps, H.264 + AAC.
  * Frames are split across `workers` browser processes (each with its own software-GL process), written
  * as numbered JPEGs, then encoded in order. Every frame depends only on its time, so splitting is exact. */
-export async function renderVideo(data, outFile, { audioFile, log = console, frames = FPS * DURATION, workers = defaultWorkers() } = {}) {
+export async function renderVideo(data, outFile, { audioFile, audio, log = console, frames = FPS * DURATION, workers = defaultWorkers() } = {}) {
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   const tmp = fs.mkdtempSync(path.join(path.dirname(outFile), '.frames-'));
   const t0 = Date.now();
@@ -99,6 +99,8 @@ export async function renderVideo(data, outFile, { audioFile, log = console, fra
         await browser.close();
       }
     }));
+    // the soundtrack can depend on what the scene showed (cues from setup)
+    if (!audioFile && audio) audioFile = await audio(stats);
     const args = ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(tmp, 'f%05d.jpg')];
     if (audioFile) args.push('-i', audioFile);
     else args.push('-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000');

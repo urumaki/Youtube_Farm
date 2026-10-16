@@ -58,13 +58,13 @@ export async function produceVideo(state, diff, { lang = 'en', out, quality, tts
   const voice = await synthesize(script.sentences, { lang, outDir: dir, provider: tts, log });
   log.log(`[audio] ${voice.provider} narration ${voice.duration.toFixed(2)} s`);
   const captions = captionPhrases(voice.words, VOICE_DELAY);
-  const soundtrack = mixSoundtrack({
-    narration: voice.file, outDir: dir, seed: state.seed, date: state.date, weather: diff.weather,
-    construction: diff.housesBuilt.length + diff.buildingsStarted.length + state.pendingConstruction.length > 0,
-    crowd: Math.min(1, 0.2 + state.subscriberCount / 300),
-  });
   const data = { mode: 'video', state, diff, lang, captions, quality };
-  const result = await renderVideo(data, out, { audioFile: soundtrack, log });
+  const audio = async (stats) => {
+    const file = mixSoundtrack({ narration: voice.file, outDir: dir, seed: state.seed, date: state.date, weather: diff.weather, cues: stats?.cues || [] });
+    log.log(`[audio] soundtrack mixed with ${stats?.cues?.length || 0} camera cues`);
+    return file;
+  };
+  const result = await renderVideo(data, out, { audio, log });
   if (result.errors.length) log.error(`[render] browser console errors: ${result.errors.join(' | ')}`);
   fs.writeFileSync(out.replace(/\.mp4$/, '.json'), JSON.stringify({ date: state.date, subscribers: state.subscriberCount, lang, script: script.text, tts: voice.provider, captions, stats: result.stats, renderSeconds: result.seconds }, null, 1));
   return { out, script, voice, result };

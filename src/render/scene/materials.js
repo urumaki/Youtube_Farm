@@ -21,10 +21,11 @@ export function makeMaterials(seed) {
 
   const M = {
     night,
-    stone: std({ map: stone.map, bumpMap: stone.bump, bumpScale: 1.2, color: '#d8d2c4' }),
+    stone: std({ map: stone.map, bumpMap: stone.bump, bumpScale: 1.2, color: '#ebe4d4' }),
     stoneDark: std({ map: stoneDark.map, bumpMap: stoneDark.bump, bumpScale: 1.2, color: '#b8b2a6' }),
     slate: std({ map: roof, color: '#5a6170', roughness: 0.7 }),
     roofRed: std({ map: roof, color: '#9c4a32', roughness: 0.8 }),
+    castleRoof: std({ map: roof, color: '#c0573a', roughness: 0.7 }),
     roofTile: std({ map: roof, roughness: 0.8 }), // tinted per instance
     thatch: std({ map: thatchTexture(seed), color: '#c9b07a' }),
     plaster: std({ map: plasterTexture(seed, false), color: '#e6dcc8' }),
@@ -50,6 +51,10 @@ export function makeMaterials(seed) {
     lamp: glow('#c9b48a', '#ffd27a', 2.4),
     foliage: std({ roughness: 0.85, vertexColors: false }),
     trunk: std({ color: '#5a4030' }),
+    plasterTint: std({ map: plasterTexture(seed, false) }), // tinted per instance
+    clay: std({ color: '#9a5236', roughness: 0.8 }),
+    soil: std({ color: '#4e3b2a', roughness: 1 }),
+    greens: std({ color: '#4f7a2e', roughness: 0.9 }),
     rock: std({ map: stone.map, color: '#a09a90' }),
     dirt: std({ color: '#7a6448' }),
     rubble: std({ map: stoneDark.map, color: '#8a857c' }),

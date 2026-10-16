@@ -42,10 +42,10 @@ export function buildCastle(M) {
 
   // ---------------------------------------------------------------- corner towers (all different)
   const towers = [
-    { x: -H, z: -H, h: 27, r: 6.0, roof: 'cone', roofH: 11 },
-    { x: H, z: -H, h: 22, r: 5.4, roof: 'flag' },
-    { x: -H, z: H, h: 20, r: 5.2, roof: 'flag' },
-    { x: H, z: H, h: 24, r: 5.6, roof: 'cone', roofH: 8 },
+    { x: -H, z: -H, h: 27, r: 6.0, roof: 'cone', roofH: 13 },
+    { x: H, z: -H, h: 22, r: 5.4, roof: 'cone', roofH: 10 },
+    { x: -H, z: H, h: 20, r: 5.2, roof: 'cone', roofH: 9 },
+    { x: H, z: H, h: 24, r: 5.6, roof: 'cone', roofH: 11 },
   ];
   for (const t of towers) {
     const top = G + t.h;
@@ -53,7 +53,17 @@ export function buildCastle(M) {
     b.add('stone', cylGeo(t.r, t.r + 0.3, t.h + 1.5, 24), t.x, G - 1.5 + (t.h + 1.5) / 2, t.z);
     b.add('stoneDark', cylGeo(t.r + 0.6, t.r, 1.0, 24), t.x, top + 0.2, t.z);
     b.add('stoneDark', cylGeo(t.r + 0.6, t.r + 0.6, 0.6, 24), t.x, top + 0.9, t.z);
-    merlonRing(b, 'stone', t.x, top + 1.2, t.z, t.r + 0.25, Math.round(t.r * 2.6), [1.2, 1.5, 0.8]);
+    // machicolations: corbels under an oversailing parapet ring, then the roof over it
+    const nc = Math.round(t.r * 4);
+    for (let i = 0; i < nc; i++) {
+      const a = (i / nc) * Math.PI * 2;
+      b.add('stoneDark', boxGeo(0.5, 0.9, 0.7), t.x + Math.cos(a) * (t.r + 0.25), top - 0.6, t.z + Math.sin(a) * (t.r + 0.25), -a + Math.PI / 2);
+    }
+    b.add('stone', cylGeo(t.r + 0.7, t.r + 0.7, 2.2, 24, 4, true), t.x, top + 2.1, t.z);
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + 0.3;
+      b.add('window', boxGeo(0.7, 1.0, 0.3), t.x + Math.cos(a) * (t.r + 0.72), top + 2.2, t.z + Math.sin(a) * (t.r + 0.72), -a + Math.PI / 2);
+    }
     // arrow slits facing outward
     const a0 = Math.atan2(t.z, t.x);
     for (let k = -1; k <= 1; k++) {
@@ -63,10 +73,11 @@ export function buildCastle(M) {
       }
     }
     if (t.roof === 'cone') {
-      b.add('slate', cylGeo(0.05, t.r + 0.9, t.roofH, 24, 2), t.x, top + 1.2 + t.roofH / 2, t.z);
-      b.add('gold', new THREE.SphereGeometry(0.45, 10, 8), t.x, top + 1.3 + t.roofH, t.z);
-      b.add('iron', cylGeo(0.06, 0.06, 2.5, 6), t.x, top + 2.4 + t.roofH, t.z);
-      flags.push({ x: t.x, y: top + 3.4 + t.roofH, z: t.z, size: [2.6, 1.4], kind: 'pennant' });
+      b.add('castleRoof', cylGeo(0.05, t.r + 1.5, t.roofH, 28, 2), t.x, top + 3.2 + t.roofH / 2, t.z);
+      b.add('castleRoof', cylGeo(t.r + 1.5, t.r + 1.6, 0.3, 28, 2), t.x, top + 3.25, t.z); // eaves lip
+      b.add('gold', new THREE.SphereGeometry(0.45, 10, 8), t.x, top + 3.3 + t.roofH, t.z);
+      b.add('iron', cylGeo(0.06, 0.06, 2.5, 6), t.x, top + 4.4 + t.roofH, t.z);
+      flags.push({ x: t.x, y: top + 5.4 + t.roofH, z: t.z, size: [2.6, 1.4], kind: 'pennant' });
     } else {
       b.add('stoneDark', cylGeo(t.r - 0.3, t.r - 0.3, 0.3, 24), t.x, top + 0.95, t.z); // roof deck
       b.add('woodDark', cylGeo(0.12, 0.15, 9, 8), t.x, top + 5.5, t.z);
@@ -84,7 +95,7 @@ export function buildCastle(M) {
     for (const [x0, z0, x1, z1] of [[H - 2.4, z - 3.9, H + 5.4, z - 3.9], [H - 2.4, z + 3.9, H + 5.4, z + 3.9], [H + 5.4, z - 3.9, H + 5.4, z + 3.9], [H - 2.4, z - 3.9, H - 2.4, z + 3.9]]) {
       merlonLine(b, 'stone', x0, z0, x1, z1, gateTop + 0.8, 2.2, [1.1, 1.4, 0.6]);
     }
-    b.add('slate', pyramidGeo(6.6, 6.6, 5), H + 1.5, gateTop + 0.8, z);
+    b.add('castleRoof', pyramidGeo(7.4, 7.4, 6.5), H + 1.5, gateTop + 0.8, z);
     for (const y of [G + 6, G + 11.5]) b.add('window', boxGeo(0.2, 1.7, 0.35), H + 5.03, y, z);
     banners.push({ x: H + 5.15, y: G + 15.6, z, w: 2.6, h: 6.5, face: 'x' });
   }
@@ -188,13 +199,13 @@ export function buildCastle(M) {
   merlonLine(b, 'stone', K.x - K.w / 2 - 0.4, K.z + K.d / 2 + 0.4, K.x + K.w / 2 + 0.4, K.z + K.d / 2 + 0.4, kTop + 0.6, 2.2);
   merlonLine(b, 'stone', K.x - K.w / 2 - 0.4, K.z - K.d / 2 - 0.4, K.x - K.w / 2 - 0.4, K.z + K.d / 2 + 0.4, kTop + 0.6, 2.2);
   merlonLine(b, 'stone', K.x + K.w / 2 + 0.4, K.z - K.d / 2 - 0.4, K.x + K.w / 2 + 0.4, K.z + K.d / 2 + 0.4, kTop + 0.6, 2.2);
-  b.add('slate', pyramidGeo(K.w - 3, K.d - 3, 8), K.x, kTop + 0.6, K.z);
+  b.add('castleRoof', pyramidGeo(K.w - 2.4, K.d - 2.4, 9), K.x, kTop + 0.6, K.z);
   // corner turrets
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
     const tx = K.x + sx * (K.w / 2), tz = K.z + sz * (K.d / 2);
     b.add('stone', cylGeo(1.9, 1.6, 7, 14), tx, kTop + 2.5, tz);
     b.add('stoneDark', cylGeo(2.1, 1.9, 0.5, 14), tx, kTop + 6.1, tz);
-    b.add('slate', cylGeo(0.04, 2.4, 4.5, 14, 2), tx, kTop + 6.35 + 2.25, tz);
+    b.add('castleRoof', cylGeo(0.04, 2.4, 5.5, 14, 2), tx, kTop + 6.35 + 2.75, tz);
     b.add('window', boxGeo(0.25, 1.1, 0.25), tx + sx * 1.7, kTop + 3.5, tz + sz * 0.1);
   }
   // windows: arched (slot + rounded head), on three upper floors of every face
@@ -240,6 +251,29 @@ export function buildCastle(M) {
   b.add('gold', new THREE.SphereGeometry(0.35, 10, 8), K.x, kTop + 19.2, K.z);
   flags.push({ x: K.x, y: kTop + 18.6, z: K.z, size: [6.2, 3.8], kind: 'flag' });
   banners.push({ x: ex + 0.25, y: G + 22.6, z: K.z - 4.5, w: 2.4, h: 6.5, face: 'x' }, { x: ex + 0.25, y: G + 22.6, z: K.z + 4.5, w: 2.4, h: 6.5, face: 'x' });
+
+  // a slender watchtower rising from the keep, with the tallest red spire of the castle
+  {
+    const wx = K.x - K.w / 2 + 3, wz = K.z + K.d / 2 - 3, base = kTop - 2, wh = 14;
+    b.add('stone', cylGeo(2.6, 2.8, wh, 18), wx, base + wh / 2, wz);
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      b.add('stoneDark', boxGeo(0.4, 0.7, 0.5), wx + Math.cos(a) * 2.8, base + wh - 0.5, wz + Math.sin(a) * 2.8, -a + Math.PI / 2);
+    }
+    for (const y of [base + 5, base + 9.5]) for (const a of [0.4, 2.0, 3.6, 5.2]) b.add('window', boxGeo(0.6, 1.4, 0.3), wx + Math.cos(a) * 2.62, y, wz + Math.sin(a) * 2.62, -a + Math.PI / 2);
+    b.add('castleRoof', cylGeo(0.04, 3.4, 12, 20, 2), wx, base + wh + 6, wz);
+    b.add('gold', new THREE.SphereGeometry(0.4, 10, 8), wx, base + wh + 12.2, wz);
+    b.add('iron', cylGeo(0.06, 0.06, 3, 6), wx, base + wh + 13.5, wz);
+    flags.push({ x: wx, y: base + wh + 15, z: wz, size: [3.2, 1.8], kind: 'pennant' });
+  }
+  // bartizans: corbelled turrets on the outer face of the curtain walls
+  for (const [x, z, a] of [[0, -H, -Math.PI / 2], [0, H, Math.PI / 2], [-H, 0, Math.PI], [-H, -14, Math.PI], [-H, 14, Math.PI]]) {
+    const bx2 = x + Math.cos(a) * (WALL_T / 2 + 1.1), bz2 = z + Math.sin(a) * (WALL_T / 2 + 1.1);
+    b.add('stone', cylGeo(1.5, 0.3, 2.2, 14), bx2, TOP - 2.4, bz2);
+    b.add('stone', cylGeo(1.5, 1.5, 3.6, 14), bx2, TOP + 0.5, bz2);
+    b.add('window', boxGeo(0.25, 1.1, 0.3), bx2 + Math.cos(a) * 1.5, TOP + 0.6, bz2 + Math.sin(a) * 1.5, -a + Math.PI / 2);
+    b.add('castleRoof', cylGeo(0.03, 1.95, 3.6, 14, 2), bx2, TOP + 4.1, bz2);
+  }
 
   const group = b.build(M);
   group.add(drawbridge);

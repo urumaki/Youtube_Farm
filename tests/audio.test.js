@@ -16,7 +16,7 @@ test('narration fits 30 s, mentions the change, ends with the call to action', (
   for (const { state, diff } of days([1, 12, 87, 87, 60, 640, 5000])) {
     for (const lang of ['en', 'it']) {
       const s = buildScript(state, diff, { lang });
-      assert.ok(s.words >= 40 && s.words <= 80, `${lang} day ${diff.day}: ${s.words} words`);
+      assert.ok(s.words >= 40 && s.words <= 75, `${lang} day ${diff.day}: ${s.words} words`);
       assert.equal(s.sentences.at(-1).role === 'cta' || s.sentences.some((x) => x.role === 'cta'), true);
       assert.ok(s.sentences.some((x) => x.role === 'delta'));
     }
@@ -47,4 +47,20 @@ test('music is deterministic and not clipping', () => {
   let peak = 0;
   for (const v of l1) peak = Math.max(peak, Math.abs(v));
   assert.ok(peak > 0.05 && peak < 1, `peak ${peak}`);
+});
+
+test('effects follow the camera: hammering on a house shot, nothing loud elsewhere, no clipping', async () => {
+  const { makeSfxTrack } = await import('../src/audio/sfx.js');
+  const { readWav } = await import('../src/audio/wav.js');
+  const os = await import('node:os');
+  const path = await import('node:path');
+  const f = path.join(os.tmpdir(), `sfx-${process.pid}.wav`);
+  makeSfxTrack(f, { cues: [{ kind: 'house', id: 1, t0: 10, t1: 14 }], seed: 3, date: '2026-01-01', weather: 'clear', duration: 30 });
+  const { samples, rate } = readWav(f);
+  const rms = (a, b) => { let e = 0; for (let i = Math.round(a * rate); i < b * rate; i++) e += samples[i] ** 2; return Math.sqrt(e / ((b - a) * rate)); };
+  assert.ok(rms(10.5, 13.5) > 3 * rms(4, 7), 'the house shot is clearly louder than the quiet bed');
+  let peak = 0;
+  for (const v of samples) peak = Math.max(peak, Math.abs(v));
+  assert.ok(peak < 0.99);
+  assert.ok(rms(4, 7) < 0.05, 'background bed stays quiet');
 });

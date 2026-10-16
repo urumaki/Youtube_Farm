@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { world, obstacles, heightAt, CASTLE, RIVER_HALF_WIDTH, WATER_LEVEL } from '../src/sim/world.js';
+import { world, obstacles, heightAt, CASTLE, RIVER_HALF_WIDTH, WATER_LEVEL, MARKET } from '../src/sim/world.js';
 import { obbOverlap, obbAabb, obbCorners, SpatialHash } from '../src/sim/geometry.js';
 
 const w = world(777);
 
 test('enough plots for a large kingdom', () => {
-  assert.ok(w.plots.length >= 4000, `${w.plots.length} plots`);
+  assert.ok(w.plots.length >= 2400, `${w.plots.length} plots`);
 });
 
 test('no two plots overlap', () => {
@@ -30,9 +30,12 @@ test('plots avoid roads, reserved lots, walls, fields, the river and the moat', 
   }
 });
 
-test('plots fill outward from the gate, mostly east of the castle', () => {
-  const d = w.plots.map((p) => Math.hypot(p.x - CASTLE.moatOuter, p.z));
-  assert.ok(d[0] < d[500] && d[500] < d[2000]);
+test('plots fill outward from the market along the streets, mostly east of the castle', () => {
+  const avg = (a, b) => w.plots.slice(a, b).reduce((n, p) => n + Math.hypot(p.x - MARKET.x, p.z - MARKET.z), 0) / (b - a);
+  assert.ok(avg(0, 50) < avg(400, 450) && avg(400, 450) < avg(1500, 1550));
+  const mains = ['approach', 'east', 'northeast', 'southeast', 'north'];
+  const onMain = w.plots.slice(0, 60).filter((p) => mains.includes(p.road)).length;
+  assert.ok(onMain >= 48, `the first houses line the main streets (${onMain}/60)`);
   const east = w.plots.slice(0, 1000).filter((p) => p.x > 0).length;
   assert.ok(east >= 950, `${east}/1000 east of the castle`);
 });
@@ -42,4 +45,24 @@ test('world is a pure function of the seed', () => {
   assert.equal(again, w); // memoized
   const other = world(778);
   assert.notDeepEqual(other.plots.slice(0, 50).map((p) => p.x), w.plots.slice(0, 50).map((p) => p.x));
+});
+
+test('streets never cross: every street ends free or in a T-junction', () => {
+  const segs = [];
+  for (const r of w.roads) for (let i = 0; i < r.pts.length - 1; i++) segs.push({ r, i, a: r.pts[i], b: r.pts[i + 1] });
+  const cross = (p, q, r2, s2) => {
+    const d = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+    return d(p, q, r2) * d(p, q, s2) < 0 && d(r2, s2, p) * d(r2, s2, q) < 0;
+  };
+  let n = 0;
+  for (let i = 0; i < segs.length; i++) for (let j = i + 1; j < segs.length; j++) {
+    const A = segs[i], B = segs[j];
+    if (A.r === B.r) continue;
+    // the junction segments themselves: a lane's first segment on its parent, a T-junction's last one
+    const junction = (X, Y) => (X.i === 0 && X.r.parent === Y.r.id) || (X.i === X.r.pts.length - 2 && X.r.joined === Y.r.id);
+    if (junction(A, B) || junction(B, A)) continue;
+    if (Math.abs(A.a[0] - B.a[0]) > 40 || Math.abs(A.a[1] - B.a[1]) > 40) continue;
+    if (cross(A.a, A.b, B.a, B.b)) n++;
+  }
+  assert.equal(n, 0, `${n} street crossings`);
 });

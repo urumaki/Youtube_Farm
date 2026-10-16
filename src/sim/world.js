@@ -87,40 +87,14 @@ function buildWorld(seed) {
   ], 8);
   w.river = polyIndex(w.riverPts);
 
-  // Main road from the bridge eastward.
-  const ph1 = r.float(0, 6.28), ph2 = r.float(0, 6.28);
-  w.mainZ = (x) => smoothstep(70, 170, x) * (9 * Math.sin(x / 150 + ph1) + 3.5 * Math.sin(x / 57 + ph2));
-  const main = [];
-  for (let x = CASTLE.moatOuter; x <= 2500; x += 10) main.push([x, w.mainZ(x)]);
-  w.roads = [{ id: 'main', kind: 'main', pts: main, width: ROAD_WIDTH.main }];
-
+  // Organic town plan (after medieval castle towns such as Corfe or Bolsover): a market square just
+  // outside the castle bridge, streets radiating from it and bending with the ground, lanes branching
+  // off them, and long narrow burgage plots running back from every street frontage.
   w.terrainSeed = hash(seed, 'terrain');
   w.lots = buildLots(w, r);
+  w.roads = growRoads(w, r, seed);
+  addRoadsideLots(w);
 
-  // Side streets (north and south) along the main road, then cross streets parallel to it.
-  const blocking = Object.values(w.lots).filter((l) => l.blocksRoads);
-  let x = 104 + r.int(0, 10), k = 0;
-  while (x < 2420) {
-    const z0 = w.mainZ(x);
-    for (const dir of [-1, 1]) {
-      const len = dir < 0 ? r.float(700, 860) : r.float(280, 340);
-      const ang = dir * Math.PI / 2 + r.float(-0.12, 0.12);
-      const bend = r.float(-0.12, 0.12);
-      const pts = [];
-      for (let s = 0; s <= len; s += 10) {
-        const a = ang + bend * (s / len);
-        pts.push([x + Math.cos(a) * s, z0 + Math.sin(a) * s]);
-      }
-      for (const part of clipByLots(pts, blocking)) w.roads.push({ id: `side${k}${dir < 0 ? 'n' : 's'}`, kind: 'street', pts: part, width: ROAD_WIDTH.street });
-    }
-    k++;
-    x += r.int(64, 86);
-  }
-  for (const dz of [-160, -320, -480, -640, 150]) {
-    const pts = [];
-    for (let xx = 110; xx <= 2420; xx += 10) pts.push([xx, w.mainZ(xx) + dz + 6 * Math.sin(xx / 90 + dz)]);
-    clipByLots(pts, blocking).forEach((part, i) => w.roads.push({ id: `cross${dz}_${i}`, kind: 'street', pts: part, width: ROAD_WIDTH.street }));
-  }
   // Dirt tracks to the west-side workplaces (not used for plots).
   const ringTrack = [];
   for (let a = 0; a <= 64; a++) ringTrack.push([Math.cos(a / 64 * Math.PI * 2) * 67, Math.sin(a / 64 * Math.PI * 2) * 67]);
@@ -176,33 +150,25 @@ function clipByLots(pts, lots) {
   return parts;
 }
 
-// Reserved building lots. Positions are fixed relative to the main road so the town reads well.
+// Reserved building lots. The market sits outside the castle bridge with the chapel and town hall on
+// its sides; large later buildings get open ground that streets steer around.
+export const MARKET = { x: 102, z: 0, hw: 20, hd: 16 };
 function buildLots(w, r) {
   const lots = {};
-  const roadside = (id, x, side, hw, hd, extra = {}) => {
-    const z = w.mainZ(x);
-    const t = Math.atan2(w.mainZ(x + 1) - w.mainZ(x - 1), 2);
-    const off = ROAD_WIDTH.main / 2 + 2 + hd;
-    lots[id] = { id, x: x - Math.sin(t) * off * side, z: z + Math.cos(t) * off * side, hw, hd, rot: t, ...extra };
-  };
-  roadside('well', 76, -1, 3.5, 3.5);
-  roadside('forge', 96, 1, 8, 7);
-  roadside('bakery', 116, -1, 8, 7);
-  roadside('chapel', 150, -1, 10, 15);
-  lots.market = { id: 'market', x: 205, z: w.mainZ(205), hw: 22, hd: 19, rot: 0, plaza: true };
-  roadside('tavern', 240, 1, 9, 8);
-  lots.townhall = { id: 'townhall', x: 205, z: w.mainZ(205) - 19 - 13, hw: 13, hd: 11, rot: 0 };
-  roadside('cathedral', 300, -1, 15, 26, { blocksRoads: true });
-  lots.district_east = { id: 'district_east', x: 560, z: w.mainZ(560) - 25, hw: 17, hd: 17, rot: 0, plaza: true };
-  lots.district_north = { id: 'district_north', x: 470, z: w.mainZ(470) - 330, hw: 16, hd: 16, rot: 0, plaza: true };
-  lots.district_south = { id: 'district_south', x: 760, z: w.mainZ(760) + 75, hw: 16, hd: 16, rot: 0, plaza: true };
-  lots.district_far = { id: 'district_far', x: 1150, z: w.mainZ(1150) - 26, hw: 18, hd: 18, rot: 0, plaza: true };
-  lots.tournament = { id: 'tournament', x: 420, z: w.mainZ(420) - 235, hw: 48, hd: 28, rot: 0, blocksRoads: true };
-  lots.university = { id: 'university', x: 690, z: w.mainZ(690) - 235, hw: 30, hd: 24, rot: 0, blocksRoads: true };
-  lots.palace = { id: 'palace', x: 900, z: w.mainZ(900) - 400, hw: 42, hd: 32, rot: 0, blocksRoads: true };
-  lots.colossus = { id: 'colossus', x: 1400, z: w.mainZ(1400) - 25, hw: 16, hd: 16, rot: 0, plaza: true };
-  lots.windmill = { id: 'windmill', x: 6, z: -214, hw: 7, hd: 7, rot: 0 };
-  lots.quarry = { id: 'quarry', x: -112, z: -222, hw: 20, hd: 14, rot: 0.3 };
+  lots.market = { id: 'market', ...MARKET, rot: 0, plaza: true };
+  lots.chapel = { id: 'chapel', x: MARKET.x - 6, z: -MARKET.hd - 17, hw: 10, hd: 15, rot: 0 };
+  lots.townhall = { id: 'townhall', x: MARKET.x - 4, z: MARKET.hd + 14, hw: 13, hd: 11, rot: 0 };
+  lots.cathedral = { id: 'cathedral', x: 330, z: -95, hw: 15, hd: 26, rot: 0.2, blocksRoads: true };
+  lots.district_east = { id: 'district_east', x: 560, z: -55, hw: 17, hd: 17, rot: 0, plaza: true, blocksRoads: true };
+  lots.district_north = { id: 'district_north', x: 470, z: -330, hw: 16, hd: 16, rot: 0, plaza: true, blocksRoads: true };
+  lots.district_south = { id: 'district_south', x: 760, z: 95, hw: 16, hd: 16, rot: 0, plaza: true, blocksRoads: true };
+  lots.district_far = { id: 'district_far', x: 1150, z: -40, hw: 18, hd: 18, rot: 0, plaza: true, blocksRoads: true };
+  lots.tournament = { id: 'tournament', x: 420, z: -235, hw: 48, hd: 28, rot: 0, blocksRoads: true };
+  lots.university = { id: 'university', x: 690, z: -235, hw: 30, hd: 24, rot: 0, blocksRoads: true };
+  lots.palace = { id: 'palace', x: 900, z: -400, hw: 42, hd: 32, rot: 0, blocksRoads: true };
+  lots.colossus = { id: 'colossus', x: 1400, z: -25, hw: 16, hd: 16, rot: 0, plaza: true, blocksRoads: true };
+  lots.windmill = { id: 'windmill', x: 6, z: -214, hw: 7, hd: 7, rot: 0, blocksRoads: true };
+  lots.quarry = { id: 'quarry', x: -112, z: -222, hw: 20, hd: 14, rot: 0.3, blocksRoads: true };
   // West bank workplaces: sawmill at the forest edge, dock on the river.
   const bank = (zTarget, out) => {
     let best = null;
@@ -213,16 +179,155 @@ function buildLots(w, r) {
   lots.sawmill = { id: 'sawmill', x: sx, z: sz, hw: 9, hd: 7, rot: 0.15 };
   const [dx, dz] = bank(150, RIVER_HALF_WIDTH + 2);
   lots.dock = { id: 'dock', x: dx, z: dz, hw: 6, hd: 8, rot: -0.5, onWater: true };
-  // Harbor: north bank of the river, south-east of the town.
   let hp = w.riverPts.reduce((b, p) => (Math.abs(p[0] - 470) < Math.abs(b[0] - 470) ? p : b));
-  lots.harbor = { id: 'harbor', x: hp[0], z: hp[1] - RIVER_HALF_WIDTH - 12, hw: 36, hd: 12, rot: 0, onWater: true };
+  lots.harbor = { id: 'harbor', x: hp[0], z: hp[1] - RIVER_HALF_WIDTH - 12, hw: 36, hd: 12, rot: 0, onWater: true, blocksRoads: true };
   hp = w.riverPts.reduce((b, p) => (Math.abs(p[0] - 1250) < Math.abs(b[0] - 1250) ? p : b));
-  lots.lighthouse = { id: 'lighthouse', x: hp[0], z: hp[1] - RIVER_HALF_WIDTH - 22, hw: 7, hd: 7, rot: 0 };
+  lots.lighthouse = { id: 'lighthouse', x: hp[0], z: hp[1] - RIVER_HALF_WIDTH - 22, hw: 7, hd: 7, rot: 0, blocksRoads: true };
   lots.guardposts = { id: 'guardposts', x: 0, z: 0, hw: 0, hd: 0, rot: 0, virtual: true };
   lots.fields = { id: 'fields', x: 0, z: -120, hw: 0, hd: 0, rot: 0, virtual: true };
-  lots.charter_stone = { id: 'charter_stone', x: 205, z: w.mainZ(205) + 10, hw: 0, hd: 0, rot: 0, virtual: true };
-  for (const l of Object.values(lots)) l.y = undefined;
+  lots.charter_stone = { id: 'charter_stone', x: MARKET.x, z: 10, hw: 0, hd: 0, rot: 0, virtual: true };
+  void r;
   return lots;
+}
+
+/** Arc-length helpers for a polyline. */
+export function polyline(pts) {
+  const acc = [0];
+  for (let i = 1; i < pts.length; i++) acc.push(acc[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  return {
+    pts, acc, total: acc[acc.length - 1],
+    at(sv) {
+      let i = 1;
+      while (i < acc.length - 1 && acc[i] < sv) i++;
+      const t = Math.max(0, Math.min(1, (sv - acc[i - 1]) / (acc[i] - acc[i - 1] || 1)));
+      const [ax, az] = pts[i - 1], [bx, bz] = pts[i];
+      return [ax + (bx - ax) * t, az + (bz - az) * t, Math.atan2(bz - az, bx - ax)];
+    },
+  };
+}
+
+// Streets grow by a seeded walk that prefers flat ground, keeps away from water, lots and other
+// streets, and ends in a T-junction when it meets another street.
+function growRoads(w, r, seed) {
+  const roads = [];
+  const segs = new SpatialHash(30);
+  const blockers = Object.values(w.lots).filter((l) => !l.virtual && l.id !== 'market');
+  const STEP = 8;
+  const addSegs = (road) => {
+    for (let i = 0; i < road.pts.length - 1; i++) {
+      const [ax, az] = road.pts[i], [bx, bz] = road.pts[i + 1];
+      segs.insert([Math.min(ax, bx), Math.min(az, bz), Math.max(ax, bx), Math.max(az, bz)], { road, i });
+    }
+  };
+  const nearRoad = (x, z, ignore, radius) => {
+    let best = null;
+    for (const s of segs.query([x - radius, z - radius, x + radius, z + radius])) {
+      if (ignore(s.road, s.i)) continue;
+      const [ax, az] = s.road.pts[s.i], [bx, bz] = s.road.pts[s.i + 1];
+      const d = distToSegment(x, z, ax, az, bx, bz);
+      if (d < radius && (!best || d < best.d)) best = { d, s };
+    }
+    return best;
+  };
+  const h = (x, z) => heightAt(w, x, z);
+  const walk = ({ id, start, heading, length, width, kind, parent, depth, base, keep = 0 }) => {
+    const pts = [start];
+    let [x, z] = start, a = heading;
+    let joined = null;
+    const own = (rd, i) => rd.id === id || (rd === parent && pts.length < 5);
+    for (let k = 0; k * STEP < length; k++) {
+      let best = null;
+      for (const da of [-0.5, -0.24, -0.12, 0, 0.12, 0.24, 0.5]) {
+        const curl = fbm(seed + 31 + depth, x / 160, z / 160, 2) * 0.07;
+        const na = a + da + curl;
+        const nx = x + Math.cos(na) * STEP, nz = z + Math.sin(na) * STEP;
+        let cost = Math.abs(da) * 0.5 + Math.abs(h(nx, nz) - h(x, z)) * 1.4 + keep * Math.abs(Math.atan2(Math.sin(na - heading), Math.cos(na - heading)));
+        if (nx > 2600 || nx < -60 || nz < -1150 || nz > 520) cost += 1000;
+        if (w.river.dist(nx, nz, 80) < RIVER_HALF_WIDTH + 26) cost += 1000;
+        if (Math.hypot(nx, nz) < CASTLE.moatOuter + 22) cost += 1000;
+        if (h(nx, nz) > 16) cost += 6;
+        for (const l of blockers) {
+          if (pointInObb(grow(l, 9), nx, nz)) cost += 1000;
+          else if (pointInObb(grow(l, 40), nx + Math.cos(na) * 30, nz + Math.sin(na) * 30)) cost += 4; // steer early
+        }
+        if (w.river.dist(nx + Math.cos(na) * 40, nz + Math.sin(na) * 40, 80) < RIVER_HALF_WIDTH + 30) cost += 4;
+        if (!best || cost < best.cost) best = { cost, na, nx, nz };
+      }
+      if (best.cost >= 1000) break;
+      a = best.na; x = best.nx; z = best.nz;
+      const hit = pts.length > 3 && nearRoad(x, z, own, 24);
+      if (hit) {
+        // T-junction: finish on the other street's centre line
+        const [ax, az] = hit.s.road.pts[hit.s.i], [bx, bz] = hit.s.road.pts[hit.s.i + 1];
+        const dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1)));
+        pts.push([ax + dx * t, az + dz * t]);
+        joined = hit.s.road.id;
+        break;
+      }
+      pts.push([x, z]);
+    }
+    if (pts.length < (depth > 1 ? 7 : 4)) return null;
+    const road = { id, kind, pts, width, parent: parent?.id ?? null, depth, base, joined };
+    roads.push(road);
+    addSegs(road);
+    return road;
+  };
+
+  // the approach from the castle bridge into the market square
+  const approach = { id: 'approach', kind: 'main', pts: [[CASTLE.moatOuter + 4, 0], [MARKET.x - MARKET.hw, 0]], width: ROAD_WIDTH.main, parent: null, depth: 0, base: 0 };
+  roads.push(approach);
+  addSegs(approach);
+  // main streets leaving the market
+  const mains = [
+    { id: 'east', start: [MARKET.x + MARKET.hw, 0], heading: r.float(-0.08, 0.08), length: 2300 },
+    { id: 'northeast', start: [MARKET.x + MARKET.hw * 0.6, -MARKET.hd], heading: -0.8 + r.float(-0.1, 0.1), length: 1300 },
+    { id: 'southeast', start: [MARKET.x + MARKET.hw * 0.6, MARKET.hd], heading: 0.75 + r.float(-0.1, 0.1), length: 1100 },
+    { id: 'north', start: [MARKET.x + MARKET.hw, -MARKET.hd * 0.5], heading: -1.25 + r.float(-0.08, 0.08), length: 900 },
+  ];
+  const queue = [];
+  for (const m of mains) {
+    const rd = walk({ ...m, width: ROAD_WIDTH.main, kind: 'main', parent: null, depth: 1, base: 0, keep: 0.5 });
+    if (rd) queue.push(rd);
+  }
+  // lanes branch off streets, and smaller lanes off those
+  let n = 0;
+  while (queue.length) {
+    const p = queue.shift();
+    if (p.depth >= 3) continue;
+    const pl = polyline(p.pts);
+    let s = p.depth === 1 ? r.float(60, 90) : r.float(45, 70);
+    let side = r.chance(0.5) ? 1 : -1;
+    while (s < pl.total - 30) {
+      const [x, z, ang] = pl.at(s);
+      side = r.chance(0.7) ? -side : side;
+      const turn = side * (Math.PI / 2 + r.float(-0.45, 0.45));
+      const off = p.width / 2 + 1;
+      const start = [x - Math.sin(ang) * off * side, z + Math.cos(ang) * off * side];
+      const rd = walk({
+        id: `lane${n++}`, start: [start[0] + Math.cos(ang + turn) * 2, start[1] + Math.sin(ang + turn) * 2], heading: ang + turn,
+        length: p.depth === 1 ? r.float(180, 520) : r.float(80, 240), width: ROAD_WIDTH.street, kind: 'street', keep: 0.15,
+        parent: p, depth: p.depth + 1, base: p.base + s,
+      });
+      if (rd) { rd.pts.unshift([x, z]); rd.branchS = s; queue.push(rd); }
+      s += p.depth === 1 ? r.float(55, 110) : r.float(60, 120);
+    }
+  }
+  return roads;
+}
+
+/** Workshops and the tavern front the main streets near the market. */
+function addRoadsideLots(w) {
+  const place = (id, roadId, s, side, hw, hd) => {
+    const rd = w.roads.find((x) => x.id === roadId);
+    if (!rd) return;
+    const [x, z, ang] = polyline(rd.pts).at(s);
+    const off = rd.width / 2 + 2 + hd;
+    w.lots[id] = { id, x: x - Math.sin(ang) * off * side, z: z + Math.cos(ang) * off * side, hw, hd, rot: ang };
+  };
+  place('well', 'approach', 10, -1, 3.5, 3.5);
+  place('tavern', 'east', 22, -1, 9, 8);
+  place('forge', 'east', 45, 1, 8, 7);
+  place('bakery', 'northeast', 30, 1, 8, 7);
 }
 
 // Second wall ring: an ellipse around the castle and old town, with gates where roads cross.
@@ -289,7 +394,7 @@ export function heightAt(w, x, z) {
     h = lerp(-2.6, Math.max(h, 1.6), bank * bank * (3 - 2 * bank));
   }
   // gentle grading under roads
-  const rd = w.pathIndex.edgeDist(x, z, 14);
+  const rd = w.pathIndex ? w.pathIndex.edgeDist(x, z, 14) : Infinity;
   if (rd < 10 && h > 1.2) h = lerp(h, h * 0.9 + 0.2, 1 - smoothstep(0, 10, rd));
   return h;
 }
@@ -308,39 +413,35 @@ function buildPlots(w, seed) {
   for (const t of w.wall2.towers) add({ x: t[0], z: t[1], hw: 7, hd: 7, rot: 0 });
   for (const f of w.fields) add(grow(f, 2));
 
+  // Burgage plots: narrow frontage on the street, long backs (house in front, croft behind).
+  // They are taken in order of distance along the street network from the market, so the town
+  // grows as ribbons along its streets rather than as a block.
   const cands = [];
   for (const road of w.roads) {
     const r = rng(seed, 'plots', road.id);
+    const pl = polyline(road.pts);
     for (const side of [-1, 1]) {
-      let s = 6;
-      const pts = road.pts;
-      // arc-length parametrisation
-      const acc = [0];
-      for (let i = 1; i < pts.length; i++) acc.push(acc[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
-      const at = (sv) => {
-        let i = 1;
-        while (i < acc.length - 1 && acc[i] < sv) i++;
-        const t = (sv - acc[i - 1]) / (acc[i] - acc[i - 1] || 1);
-        const [ax, az] = pts[i - 1], [bx, bz] = pts[i];
-        return [ax + (bx - ax) * t, az + (bz - az) * t, Math.atan2(bz - az, bx - ax)];
-      };
-      const total = acc[acc.length - 1];
-      while (s < total - 6) {
-        const width = r.float(9, 12.5), depth = r.float(11, 14.5), gap = r.float(1.2, 3.2);
-        const [px, pz, ang] = at(s + width / 2);
-        const off = road.width / 2 + PLOT_SETBACK + depth / 2;
+      let s = road.id === 'approach' ? 4 : r.float(5, 9);
+      while (s < pl.total - 6) {
+        const main = road.kind === 'main';
+        const width = main ? r.float(5.8, 9) : r.float(6.5, 10.5);
+        const depth = main ? r.float(18, 27) : r.float(14, 21);
+        const gap = r.chance(0.1) ? r.float(3.5, 8) : r.float(0.5, 1.6); // the odd gap: a yard or an alley
+        const [px, pz, ang] = pl.at(s + width / 2);
+        const setback = r.float(1.3, 3);
+        const off = road.width / 2 + setback + depth / 2;
         cands.push({
           x: px - Math.sin(ang) * off * side,
           z: pz + Math.cos(ang) * off * side,
           hw: width / 2, hd: depth / 2,
-          rot: ang, facing: side, road: road.id,
+          rot: ang + r.float(-0.07, 0.07), facing: side, road: road.id,
+          prio: road.base + s + r.float(0, 25) + road.depth * 12,
         });
         s += width + gap;
       }
     }
   }
-  const gx = CASTLE.moatOuter + 4;
-  cands.sort((a, b) => Math.hypot(a.x - gx, a.z) - Math.hypot(b.x - gx, b.z) || a.x - b.x || a.z - b.z);
+  cands.sort((a, b) => a.prio - b.prio || a.x - b.x || a.z - b.z);
 
   const accepted = new SpatialHash(40);
   const plots = [];

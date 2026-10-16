@@ -1,96 +1,97 @@
-// Villager houses: instanced, chunked with a simplified far LOD, seeded variation,
-// abandoned / ruin states, and individually animated houses for today's construction.
+// Villager houses: detailed procedural variants (timber-framed, stone, thatched cottage) shared by
+// instancing, chunked with a simplified far LOD; yards with crofts, sheds, woodpiles and wattle fences;
+// abandoned and ruin states; individually animated houses for today's construction.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { heightAt } from '../../sim/world.js';
 import { houseStyle } from '../../sim/simulate.js';
 import { hash, rand01 } from '../../sim/prng.js';
 import { gableGeo, boxGeo, cylGeo } from './kit.js';
+import { buildHouseVariant, propGeos } from './houseKit.js';
 
-const ROOF_COLORS = ['#a24b31', '#7d3b2a', '#5b6474', '#8a5a3a', '#6c4a3e', '#c9a86a'].map((c) => new THREE.Color(c));
-const WALL_COLORS = ['#efe6d2', '#e6cf9f', '#e9d4c8', '#f4f1e8', '#d9d4c6'].map((c) => new THREE.Color(c));
-const FLOOR_H = 3.2;
+const ROOF_COLORS = ['#a24b31', '#8a3f2b', '#6e6f78', '#9a5c3c', '#7a4a3a', '#b0603c'].map((c) => new THREE.Color(c));
+const WALL_COLORS = ['#efe6d2', '#e8d3a6', '#ead7c9', '#f4f1e8', '#dcd6c4', '#e9dcc0'].map((c) => new THREE.Color(c));
+const q05 = (v) => Math.round(v * 2) / 2;
 
-function unitBox(floors) {
-  const g = new THREE.BoxGeometry(1, 1, 1);
-  const uv = g.attributes.uv;
-  for (let i = 0; i < uv.count; i++) uv.setY(i, uv.getY(i) * floors);
-  g.translate(0, 0.5, 0);
-  return g;
-}
-
-/** Geometric description of a house, shared by instanced and animated builds. */
+/** Which variant a house uses, and where it stands. */
 export function houseShape(seed, house, plot, w) {
   const st = houseStyle(seed, plot.id);
-  const floors = house.capacity >= 8 ? 3 : house.capacity >= 4 ? 2 : 1;
-  const tall = house.capacity === 2;
-  const width = Math.min(2 * plot.hw - 2.2, house.capacity >= 4 ? 10 : 8.2) * st.scale;
-  const depth = Math.min(2 * plot.hd - 5, house.capacity >= 4 ? 8 : 6.8) * st.scale;
+  const h = hash(seed, 'arch', plot.id);
+  const cap = house.capacity;
+  const floors = cap >= 8 ? 3 : cap >= 4 ? 2 : cap === 2 ? (h % 3 === 0 ? 1 : 2) : 1;
+  let arch = 'timber';
+  if (floors === 1 && h % 5 < 2) arch = 'cottage';
+  else if (floors >= 2 && h % 7 < 2) arch = 'stone';
+  const W = Math.max(5, Math.min(q05(2 * plot.hw - 1.0), cap >= 4 ? 9 : 8));
+  const D = Math.max(5, Math.min(q05(Math.min(2 * plot.hd - 6, cap >= 4 ? 8.5 : 7)), 8.5));
   const side = plot.facing || 1;
-  const lz = -side * (plot.hd - depth / 2 - 1.2); // front of the house on the street
   const c = Math.cos(plot.rot), s = Math.sin(plot.rot);
   const nx = -s, nz = c;
+  const lz = -side * (plot.hd - D / 2 - 1.0); // front of the house on the street, croft behind
   const hx = plot.x + nx * lz, hz = plot.z + nz * lz;
   let hmin = Infinity, hmax = -Infinity;
   for (const [u, v] of [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, 0]]) {
-    const px = hx + c * u * width / 2 + nx * v * depth / 2, pz = hz + s * u * width / 2 + nz * v * depth / 2;
-    const h = heightAt(w, px, pz);
-    hmin = Math.min(hmin, h); hmax = Math.max(hmax, h);
+    const px = hx + c * u * W / 2 + nx * v * D / 2, pz = hz + s * u * W / 2 + nz * v * D / 2;
+    const hh = heightAt(w, px, pz);
+    hmin = Math.min(hmin, hh); hmax = Math.max(hmax, hh);
   }
-  const base = hmax + 0.3;
-  const bodyH = floors * FLOOR_H + (tall ? 0.6 : 0.3);
-  const roofH = depth * (tall ? 0.78 : 0.55);
-  const flip = (hash(seed, 'flip', plot.id) & 3) === 0 && house.capacity < 4; // gable facing the street
-  const matrix = new THREE.Matrix4().compose(new THREE.Vector3(hx, base, hz), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, -plot.rot, 0)), new THREE.Vector3(1, 1, 1));
-  return { st, floors, tall, width, depth, side, base, hmin, bodyH, roofH, flip, matrix, x: hx, z: hz, rot: plot.rot, plot };
+  const base = hmax + 0.15;
+  const yaw = -plot.rot + (side < 0 ? Math.PI : 0);
+  const matrix = new THREE.Matrix4().compose(new THREE.Vector3(hx, base, hz), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)), new THREE.Vector3(1, 1, 1));
+  return {
+    st, arch, floors, W, D, side, base, hmin, matrix, x: hx, z: hz, rot: plot.rot, plot, yaw,
+    chimney: st.chimney || arch === 'stone', dormer: floors >= 2 && h % 4 === 0,
+    key: (damaged) => `${arch}|${W}|${D}|${floors}|${st.chimney || arch === 'stone' ? 1 : 0}|${floors >= 2 && h % 4 === 0 ? 1 : 0}|${damaged ? 1 : 0}`,
+  };
+}
+
+const variantCache = new Map();
+function variant(sh, damaged, seed) {
+  const key = sh.key(damaged);
+  if (!variantCache.has(key)) {
+    variantCache.set(key, buildHouseVariant({ arch: sh.arch, W: sh.W, D: sh.D, floors: sh.floors, chimney: sh.chimney, dormer: sh.dormer, damaged, seed }));
+  }
+  return variantCache.get(key);
 }
 
 class Batch {
   constructor() { this.items = new Map(); }
-  push(key, m, color) {
-    if (!this.items.has(key)) this.items.set(key, { mats: [], colors: [] });
+  push(key, def, m, color) {
+    if (!this.items.has(key)) this.items.set(key, { def, mats: [], colors: [] });
     const it = this.items.get(key);
     it.mats.push(m.clone());
     it.colors.push(color ? color.clone() : null);
   }
-  build(defs, group) {
-    for (const [key, { mats, colors }] of this.items) {
-      const { geo, mat, shadow = true } = defs[key];
-      const im = new THREE.InstancedMesh(geo, mat, mats.length);
+  build(group) {
+    for (const { def, mats, colors } of this.items.values()) {
+      const im = new THREE.InstancedMesh(def.geo, def.mat, mats.length);
       mats.forEach((m, i) => im.setMatrixAt(i, m));
-      if (colors[0]) colors.forEach((c, i) => im.setColorAt(i, c));
-      im.castShadow = shadow; im.receiveShadow = true;
+      if (colors.some(Boolean)) colors.forEach((c, i) => im.setColorAt(i, c || new THREE.Color(1, 1, 1)));
+      im.castShadow = def.shadow !== false; im.receiveShadow = true;
       im.computeBoundingSphere();
-      im.name = key;
       group.add(im);
     }
   }
 }
 
 const tmp = new THREE.Matrix4();
-const part = (shape, x, y, z, sx, sy, sz, ry = 0) =>
-  shape.matrix.clone().multiply(tmp.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, ry, 0)), new THREE.Vector3(sx, sy, sz)));
+const local = (sh, x, y, z, sx = 1, sy = 1, sz = 1, ry = 0) =>
+  sh.matrix.clone().multiply(tmp.compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, ry, 0)), new THREE.Vector3(sx, sy, sz)));
 
-export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 260 } = {}) {
-  const seed = state.seed;
-  const plots = new Map(state.plots.map((p) => [p.id, p]));
-  const defs = {
-    plinth: { geo: boxGeo(1, 1, 1, 0.5).translate(0, -0.5, 0), mat: M.stoneDark },
-    body1t: { geo: unitBox(1), mat: M.timber }, body2t: { geo: unitBox(2), mat: M.timber }, body3t: { geo: unitBox(3), mat: M.timber },
-    body1p: { geo: unitBox(1), mat: M.plaster }, body2p: { geo: unitBox(2), mat: M.plaster }, body3p: { geo: unitBox(3), mat: M.plaster },
-    roof: { geo: gableGeo(1, 1, 1, 0.12), mat: M.roofTile },
-    thatch: { geo: gableGeo(1, 1, 1, 0.2), mat: M.thatch },
-    broken: { geo: brokenRoofGeo(), mat: M.woodDark },
-    chimney: { geo: boxGeo(1, 1, 1, 1).translate(0, 0.5, 0), mat: M.stone },
-    door: { geo: boxGeo(1, 1, 1, 1).translate(0, 0.5, 0), mat: M.woodDark },
-    win: { geo: new THREE.BoxGeometry(1, 1, 1), mat: M.window, shadow: false },
-    winDark: { geo: new THREE.BoxGeometry(1, 1, 1), mat: M.iron, shadow: false },
-    fence: { geo: fenceGeo(), mat: M.wood },
-    bush: { geo: new THREE.IcosahedronGeometry(1, 1), mat: M.foliage },
-    ruin: { geo: ruinGeo(), mat: M.rubble },
-    rubble: { geo: new THREE.DodecahedronGeometry(1, 0), mat: M.rubble },
-    far: { geo: farGeo(), mat: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 }) },
+export function houseMaterials(M) {
+  return {
+    stone: M.stone, stoneDark: M.stoneDark, plaster: M.plasterTint, woodDark: M.woodDark, wood: M.wood, roofTile: M.roofTile,
+    thatch: M.thatch, slate: M.slate, glass: M.window, dark: M.iron, iron: M.iron, clay: M.clay, soil: M.soil, greens: M.greens,
   };
+}
+
+export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 300 } = {}) {
+  const seed = state.seed;
+  const HM = houseMaterials(M);
+  const plots = new Map(state.plots.map((p) => [p.id, p]));
+  const props = propGeos();
+  const unit = { plinth: boxGeo(1, 1, 1, 0.5).translate(0, -0.5, 0), ruin: ruinGeo(), rubble: new THREE.DodecahedronGeometry(1, 0), far: farGeo() };
+  const farMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
   const chunks = new Map();
   const getChunk = (x, z) => {
     const key = `${Math.floor(x / chunk)},${Math.floor(z / chunk)}`;
@@ -106,27 +107,43 @@ export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 260 
     shapes.set(h.id, sh);
     if (animatedIds.has(h.id)) continue;
     const ch = getChunk(sh.x, sh.z);
-    addHouseParts(ch.near, sh, h, seed, chimneys);
-    // far LOD: one tinted box+roof
-    const wall = WALL_COLORS[sh.st.wall].clone();
-    if (h.status !== 'occupied') wall.multiplyScalar(h.status === 'ruin' ? 0.45 : 0.6);
-    const far = part(sh, 0, -0.2, 0, sh.width, h.status === 'ruin' ? 1.5 : sh.bodyH + sh.roofH * 0.6, sh.depth);
-    ch.far.push('far', far, h.status === 'ruin' ? new THREE.Color('#77736a') : ROOF_COLORS[sh.st.roof].clone().lerp(wall, 0.35));
+    ch.near.push('plinth', { geo: unit.plinth, mat: M.stoneDark }, local(sh, 0, 0.05, 0, sh.W + 0.6, sh.base - sh.hmin + 0.7, sh.D + 0.6));
+    if (h.status === 'ruin') {
+      ch.near.push('ruin', { geo: unit.ruin, mat: M.rubble }, local(sh, 0, 0, 0, sh.W, 1, sh.D), new THREE.Color('#a7a294'));
+      for (let i = 0; i < 6; i++) {
+        const r = (k) => rand01(seed, 'rubble', h.plot, i, k);
+        ch.near.push('rubble', { geo: unit.rubble, mat: M.rubble }, local(sh, (r(0) - 0.5) * sh.W * 1.2, 0.2, (r(1) - 0.5) * sh.D * 1.2, 0.4 + r(2) * 0.6, 0.3 + r(3) * 0.4, 0.4 + r(4) * 0.6, r(5) * 6));
+      }
+      ch.far.push('far', { geo: unit.far, mat: farMat, shadow: false }, local(sh, 0, 0, 0, sh.W, 1.5, sh.D), new THREE.Color('#77736a'));
+      continue;
+    }
+    const damaged = h.status === 'abandoned';
+    const v = variant(sh, damaged, seed);
+    const wall = WALL_COLORS[sh.st.wall].clone().multiplyScalar(damaged ? 0.6 : 1);
+    const roofC = ROOF_COLORS[sh.st.roof].clone().multiplyScalar(damaged ? 0.6 : 1);
+    const m = local(sh, 0, 0, 0);
+    for (const [key, geo] of v.parts) {
+      const mat = key.split('|')[1];
+      const tint = mat === 'plaster' ? wall : mat === 'roofTile' ? roofC : damaged ? new THREE.Color(0.6, 0.6, 0.6) : null;
+      ch.near.push(sh.key(damaged) + key, { geo, mat: damaged && mat === 'glass' ? HM.dark : HM[mat], shadow: mat !== 'glass' }, m, tint);
+    }
+    if (v.chimneyTop && !damaged) chimneys.push(new THREE.Vector3(...v.chimneyTop).applyMatrix4(sh.matrix));
+    addYard(ch.near, sh, h, seed, props, HM, damaged);
+    ch.far.push('far', { geo: unit.far, mat: farMat, shadow: false }, local(sh, 0, 0, 0, sh.W, v.height * 0.85, sh.D), roofC.clone().lerp(wall, 0.3));
   }
 
   const group = new THREE.Group();
   const chunkList = [];
   for (const ch of chunks.values()) {
     const near = new THREE.Group(), far = new THREE.Group();
-    ch.near.build(defs, near);
-    ch.far.build(defs, far);
-    far.traverse((o) => { o.castShadow = false; });
+    ch.near.build(near);
+    ch.far.build(far);
     group.add(near, far);
     chunkList.push({ near, far, cx: ch.cx, cz: ch.cz });
   }
   return {
-    group, chimneys, shapes, defs,
-    updateLod(camera, nearDist = 520) {
+    group, chimneys, shapes, unit, props, HM,
+    updateLod(camera, nearDist = 480) {
       for (const c of chunkList) {
         const d = Math.hypot(camera.position.x - c.cx, camera.position.z - c.cz);
         c.near.visible = d < nearDist;
@@ -136,88 +153,25 @@ export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 260 
   };
 }
 
-function addHouseParts(batch, sh, h, seed, chimneys) {
-  const { width: W, depth: D, bodyH, roofH, floors, st, side } = sh;
-  const front = -side * D / 2; // local z of the street-facing wall
-  const status = h.status;
-  const dim = status === 'abandoned' ? 0.55 : 1;
-  batch.push('plinth', part(sh, 0, 0, 0, W + 0.5, sh.base - sh.hmin + 0.6, D + 0.5));
-  if (status === 'ruin') {
-    batch.push('ruin', part(sh, 0, 0, 0, W, 1, D), new THREE.Color('#a7a294'));
-    for (let i = 0; i < 5; i++) {
-      const r = (k) => rand01(seed, 'rubble', h.plot, i, k);
-      batch.push('rubble', part(sh, (r(0) - 0.5) * W * 1.2, 0.2, (r(1) - 0.5) * D * 1.2, 0.5 + r(2) * 0.6, 0.35 + r(3) * 0.4, 0.5 + r(4) * 0.6, r(5) * 6), null);
-    }
-    return;
-  }
-  const wall = WALL_COLORS[st.wall].clone().multiplyScalar(dim);
-  batch.push(`body${floors}${st.timber ? 't' : 'p'}`, part(sh, 0, 0, 0, W, bodyH, D), wall);
-  const ry = sh.flip ? Math.PI / 2 : 0;
-  const rw = (sh.flip ? D : W) + 0.9, rd = (sh.flip ? W : D) + 1.0;
-  if (status === 'abandoned') {
-    batch.push('broken', part(sh, 0, bodyH, 0, rw, roofH, rd, ry), null);
-  } else if (st.roof === 5) {
-    batch.push('thatch', part(sh, 0, bodyH, 0, rw, roofH * 1.15, rd, ry), new THREE.Color('#ffffff'));
-  } else {
-    batch.push('roof', part(sh, 0, bodyH, 0, rw, roofH, rd, ry), ROOF_COLORS[st.roof]);
-  }
-  if (st.chimney) {
-    const cx = W * 0.28 * (hash(seed, 'ch', h.plot) & 1 ? 1 : -1), cz = D * 0.12;
-    const ch = roofH + 1.4;
-    batch.push('chimney', part(sh, cx, bodyH - 0.5, cz, 0.9, ch, 0.9), new THREE.Color(dim, dim, dim));
-    if (status === 'occupied') chimneys.push(new THREE.Vector3(cx, bodyH - 0.5 + ch + 0.2, cz).applyMatrix4(sh.matrix));
-  }
-  // door + windows on the street side
-  batch.push('door', part(sh, W * 0.18, 0, front - side * 0.06, 1.2, 2.3, 0.25), null);
-  const winKey = status === 'abandoned' ? 'winDark' : 'win';
-  for (let f = 0; f < floors; f++) {
-    const y = 1.6 + f * FLOOR_H;
-    for (const u of f === 0 ? [-0.25] : [-0.28, 0.12, 0.33]) {
-      batch.push(rand01(seed, 'lit', h.plot, f, u) < 0.25 ? 'winDark' : winKey, part(sh, u * W, y - 0.55, front - side * 0.06, 1.0, 1.2, 0.15), null);
-    }
-    batch.push(winKey, part(sh, 0, y - 0.55, -front + side * 0.06, 1.0, 1.2, 0.15), null);
-    batch.push(winKey, part(sh, -W / 2 - 0.06, y - 0.55, 0, 0.15, 1.2, 1.0), null);
-  }
-  if (sh.tall) batch.push(winKey, part(sh, 0, bodyH + roofH * 0.25, front * 0.55 - side * 0.4, 1.0, 1.0, 0.15), null);
-  // back garden: fence on three sides and a few bushes
-  const gardenDepth = 2 * sh.plot.hd - D - 2.4;
-  if ((st.fence || st.garden) && gardenDepth > 2.2 && status === 'occupied') {
-    const gz0 = -front, gz1 = -front + side * gardenDepth;
-    const gzc = (gz0 + gz1) / 2;
-    const gw = Math.min(W + 2, 2 * sh.plot.hw - 0.6);
-    batch.push('fence', part(sh, 0, 0, gz1, gw, 1, 1), null);
-    batch.push('fence', part(sh, -gw / 2, 0, gzc, gardenDepth, 1, 1, Math.PI / 2), null);
-    batch.push('fence', part(sh, gw / 2, 0, gzc, gardenDepth, 1, 1, Math.PI / 2), null);
-    for (let i = 0; i < 3; i++) {
-      const r = (k) => rand01(seed, 'bush', h.plot, i, k);
-      const s = 0.5 + r(2) * 0.6;
-      batch.push('bush', part(sh, (r(0) - 0.5) * (gw - 1.5), s * 0.7, gzc + (r(1) - 0.5) * (gardenDepth - 1), s, s * 0.85, s), new THREE.Color().setHSL(0.24 + r(3) * 0.08, 0.45, 0.24 + r(4) * 0.1));
-    }
-  }
-}
-
-function brokenRoofGeo() {
-  // rafters with half the covering gone
-  const parts = [];
-  for (let i = 0; i < 6; i++) {
-    const x = -0.45 + i * 0.18;
-    for (const s of [-1, 1]) {
-      const g = new THREE.BoxGeometry(0.04, 0.04, 0.62);
-      g.rotateX(s * Math.atan2(1, 0.5));
-      g.translate(x, 0.5, s * 0.25);
-      parts.push(g);
-    }
-  }
-  const half = gableGeo(1, 1, 1, 0.12);
-  // keep only the first slope (6 vertices) and lower it slightly
-  const pos = half.attributes.position.array.slice(0, 18);
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-  g.setAttribute('uv', new THREE.Float32BufferAttribute(half.attributes.uv.array.slice(0, 12), 2));
-  g.scale(0.6, 0.95, 1); g.translate(-0.2, 0, 0);
-  g.computeVertexNormals();
-  parts.push(g);
-  return mergeGeometries(parts.map((p) => { const q = p.index ? p.toNonIndexed() : p; for (const k of Object.keys(q.attributes)) if (!['position', 'normal', 'uv'].includes(k)) q.deleteAttribute(k); if (!q.attributes.uv) q.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(q.attributes.position.count * 2), 2)); if (!q.attributes.normal) q.computeVertexNormals(); return q; }));
+/** Croft behind the house: vegetable bed, shed, woodpile, barrels, cart, wattle fence. */
+function addYard(batch, sh, h, seed, props, HM, damaged) {
+  const back = sh.D / 2; // local z of the back wall (front is -D/2)
+  const croft = 2 * sh.plot.hd - sh.D - 1.2; // depth of land behind the house
+  const r = (k) => rand01(seed, 'yard', h.plot, k);
+  const put = (name, x, z, ry = 0, s = 1) => {
+    for (const { mat, geo } of props.get(name)) batch.push(`prop|${name}|${mat}`, { geo, mat: HM[mat] }, local(sh, x, 0, z, s, s, s, ry));
+  };
+  if (r(0) < 0.75) put('woodpile', sh.W / 2 + 0.7, back - 1.6, Math.PI / 2, 0.9);
+  if (r(1) < 0.6) put('barrels', -sh.W / 2 + 0.3, -sh.D / 2 - 0.9, 0);
+  if (croft < 3.5 || damaged) return;
+  if (r(2) < 0.85) put('veg', (r(3) - 0.5) * (sh.W - 3.4), back + 2 + Math.min(croft - 3.2, 2.5), 0);
+  if (croft > 8 && r(4) < 0.6) put('shed', (r(5) < 0.5 ? -1 : 1) * (sh.W / 2 - 1.4), back + croft - 1.6, Math.PI);
+  if (r(6) < 0.2) put('cart', sh.W / 2 - 1.2, back + 1.4, r(7) * 3);
+  // wattle fence around the croft (2 m panels)
+  const fw = Math.min(2 * sh.plot.hw - 0.6, sh.W + 2.4);
+  const z1 = back + croft - 0.3;
+  for (let x = -fw / 2 + 1; x <= fw / 2 - 1 + 0.01; x += 2) put('wattle', x, z1, 0);
+  for (let z = back + 1; z <= z1 - 1 + 0.01; z += 2) { put('wattle', -fw / 2, z, Math.PI / 2); put('wattle', fw / 2, z, Math.PI / 2); }
 }
 
 function ruinGeo() {
@@ -226,106 +180,93 @@ function ruinGeo() {
   let k = 0;
   for (const [x0, z0, x1, z1] of [[-0.5, -0.5, 0.5, -0.5], [0.5, -0.5, 0.5, 0.5], [0.5, 0.5, -0.5, 0.5], [-0.5, 0.5, -0.5, -0.5]]) {
     for (let i = 0; i < 2; i++) {
-      const h = heights[k++ % heights.length];
+      const hh = heights[k++ % heights.length];
       const ax = x0 + (x1 - x0) * i / 2, az = z0 + (z1 - z0) * i / 2, bx = x0 + (x1 - x0) * (i + 1) / 2, bz = z0 + (z1 - z0) * (i + 1) / 2;
       const len = Math.hypot(bx - ax, bz - az);
-      const g = new THREE.BoxGeometry(Math.abs(bx - ax) > 0 ? len : 0.07, h, Math.abs(bz - az) > 0 ? len : 0.07);
-      g.translate((ax + bx) / 2, h / 2, (az + bz) / 2);
+      const g = new THREE.BoxGeometry(Math.abs(bx - ax) > 0 ? len : 0.07, hh, Math.abs(bz - az) > 0 ? len : 0.07);
+      g.translate((ax + bx) / 2, hh / 2, (az + bz) / 2);
       parts.push(g.toNonIndexed());
     }
   }
-  return mergeGeometries(parts);
-}
-
-function fenceGeo() {
-  const parts = [];
-  for (const y of [0.45, 0.85]) parts.push(new THREE.BoxGeometry(1, 0.08, 0.06).translate(0, y, 0).toNonIndexed());
-  for (const x of [-0.5, 0, 0.5]) parts.push(new THREE.BoxGeometry(0.1, 1.05, 0.1).translate(x, 0.52, 0).toNonIndexed());
+  // two charred beams fallen across
+  parts.push(new THREE.BoxGeometry(1.1, 0.05, 0.05).rotateZ(0.5).translate(0, 0.5, 0.1).toNonIndexed());
+  parts.push(new THREE.BoxGeometry(0.05, 0.05, 1.0).rotateX(-0.4).translate(0.2, 0.4, 0).toNonIndexed());
   return mergeGeometries(parts);
 }
 
 function farGeo() {
-  const body = new THREE.BoxGeometry(1, 0.62, 1).translate(0, 0.31, 0).toNonIndexed();
-  const roof = gableGeo(1.08, 1.1, 0.38).translate(0, 0.62, 0);
+  const body = new THREE.BoxGeometry(1, 0.6, 1).translate(0, 0.3, 0).toNonIndexed();
+  const roof = gableGeo(1.08, 1.1, 0.4).translate(0, 0.6, 0);
   const g = mergeGeometries([body, roof].map((p) => { for (const k of Object.keys(p.attributes)) if (!['position', 'normal'].includes(k)) p.deleteAttribute(k); return p; }));
   const col = new Float32Array(g.attributes.position.count * 3);
-  for (let i = 0; i < g.attributes.position.count; i++) {
-    const roofPart = i >= body.attributes.position.count;
-    col.set(roofPart ? [1, 1, 1] : [1.25, 1.2, 1.1], i * 3);
-  }
+  for (let i = 0; i < g.attributes.position.count; i++) col.set(i >= body.attributes.position.count ? [1, 1, 1] : [1.25, 1.2, 1.1], i * 3);
   g.setAttribute('color', new THREE.BufferAttribute(col, 3));
   return g;
 }
 
-/** A single house as a group of meshes whose construction progress p (0..1) can be animated. */
-export function buildAnimatedHouse(sh, h, seed, M, defs) {
+/** A single house built layer by layer so construction (0..1) can be animated. */
+export function buildAnimatedHouse(sh, h, seed, M, housesCtx) {
+  const HM = housesCtx.HM;
+  const v = variant(sh, false, seed);
   const g = new THREE.Group();
   g.matrixAutoUpdate = false;
   g.matrix.copy(sh.matrix);
-  const { width: W, depth: D, bodyH, roofH, floors, st, side } = sh;
-  const plinth = new THREE.Mesh(defs.plinth.geo, M.stoneDark);
-  plinth.scale.set(W + 0.5, sh.base - sh.hmin + 0.6, D + 0.5);
-  const body = new THREE.Mesh(defs[`body${floors}${st.timber ? 't' : 'p'}`].geo, (st.timber ? M.timber : M.plaster).clone());
-  body.material.color.copy(WALL_COLORS[st.wall]);
-  body.scale.set(W, bodyH, D);
-  const ry = sh.flip ? Math.PI / 2 : 0;
-  const roofMat = st.roof === 5 ? M.thatch : M.roofTile.clone();
-  if (st.roof !== 5) roofMat.color.copy(ROOF_COLORS[st.roof]);
-  const roof = new THREE.Mesh(defs[st.roof === 5 ? 'thatch' : 'roof'].geo, roofMat);
-  roof.rotation.y = ry;
-  roof.position.y = bodyH;
-  const rs = new THREE.Vector3((sh.flip ? D : W) + 0.9, roofH * (st.roof === 5 ? 1.15 : 1), (sh.flip ? W : D) + 1.0);
-  roof.scale.copy(rs);
-  const front = -side * D / 2;
-  const door = new THREE.Mesh(defs.door.geo, M.woodDark);
-  door.position.set(W * 0.18, 0, front - side * 0.06); door.scale.set(1.2, 2.3, 0.25);
-  const wins = [];
-  for (let f = 0; f < floors; f++) for (const u of f === 0 ? [-0.25] : [-0.28, 0.12, 0.33]) {
-    const m = new THREE.Mesh(defs.win.geo, M.window);
-    m.position.set(u * W, 1.6 + f * FLOOR_H - 0.55, front - side * 0.06); m.scale.set(1, 1.2, 0.15);
-    wins.push(m);
+  const layers = {};
+  for (const [key, geo] of v.parts) {
+    const [layer, mat] = key.split('|');
+    let material = HM[mat];
+    if (mat === 'plaster' || mat === 'roofTile') {
+      material = material.clone();
+      material.color.copy(mat === 'plaster' ? WALL_COLORS[sh.st.wall] : ROOF_COLORS[sh.st.roof]);
+    }
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.castShadow = mat !== 'glass'; mesh.receiveShadow = true;
+    (layers[layer] ||= new THREE.Group()).add(mesh);
   }
-  let chimney = null, chimneyTop = null;
-  if (st.chimney) {
-    const cx = W * 0.28 * (hash(seed, 'ch', h.plot) & 1 ? 1 : -1), cz = D * 0.12, chh = roofH + 1.4;
-    chimney = new THREE.Mesh(defs.chimney.geo, M.stone);
-    chimney.position.set(cx, bodyH - 0.5, cz); chimney.scale.set(0.9, chh, 0.9);
-    chimneyTop = new THREE.Vector3(cx, bodyH - 0.5 + chh + 0.2, cz).applyMatrix4(sh.matrix);
-  }
-  // scaffold: poles at the corners and mid-sides, two levels of planks
+  const plinth = new THREE.Mesh(housesCtx.unit.plinth, M.stoneDark);
+  plinth.scale.set(sh.W + 0.6, sh.base - sh.hmin + 0.7, sh.D + 0.6);
+  plinth.position.y = 0.05;
+  g.add(plinth);
+  for (const l of Object.values(layers)) g.add(l);
+  // scaffold: poles around the house and plank levels
   const scaffold = new THREE.Group();
   const poleGeo = cylGeo(0.08, 0.08, 1, 6);
-  for (const [u, v] of [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1]]) {
+  const H = v.eaves + 1.2;
+  for (const [u, vv] of [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1]]) {
     const p = new THREE.Mesh(poleGeo, M.wood);
-    p.position.set(u * (W / 2 + 0.7), (bodyH + 1.5) / 2, v * (D / 2 + 0.7));
-    p.scale.set(1, bodyH + 1.5, 1);
+    p.position.set(u * (sh.W / 2 + 0.8), H / 2, vv * (sh.D / 2 + 0.9));
+    p.scale.set(1, H, 1);
     scaffold.add(p);
   }
-  for (let l = 1; l <= floors; l++) for (const v of [-1, 1]) {
-    const pl = new THREE.Mesh(defs.door.geo, M.wood);
-    pl.position.set(0, l * FLOOR_H - 0.6, v * (D / 2 + 0.7)); pl.scale.set(W + 1.6, 0.12, 0.8);
+  for (let y = 2.8; y < H; y += 3) for (const vv of [-1, 1]) {
+    const pl = new THREE.Mesh(boxGeo(sh.W + 1.8, 0.1, 0.8, 1), M.wood);
+    pl.position.set(0, y, vv * (sh.D / 2 + 0.9));
     scaffold.add(pl);
   }
-  for (const m of [plinth, body, roof, door, chimney, ...wins, ...scaffold.children].filter(Boolean)) { m.castShadow = true; m.receiveShadow = true; }
-  g.add(plinth, body, roof, door, scaffold, ...wins);
-  if (chimney) g.add(chimney);
-  const top = new THREE.Vector3(0, bodyH + roofH + 1.5, 0).applyMatrix4(sh.matrix);
+  scaffold.traverse((o) => { o.castShadow = true; });
+  g.add(scaffold);
+  const chimneyTop = v.chimneyTop ? new THREE.Vector3(...v.chimneyTop).applyMatrix4(sh.matrix) : null;
+  const top = new THREE.Vector3(0, v.height + 1, 0).applyMatrix4(sh.matrix);
+  // each layer rises from its own base line
+  const grow = (obj, a, b, p, pivot = 0) => {
+    const k = Math.min(1, Math.max(0, (p - a) / (b - a)));
+    if (!obj) return;
+    obj.visible = k > 0.001;
+    obj.scale.y = Math.max(0.001, k);
+    obj.position.y = pivot * (1 - obj.scale.y);
+  };
   return {
     group: g, top, chimneyTop, shape: sh,
-    /** p: 0 = bare plot, 0.15 scaffold + plinth, 0.55 walls done, 0.8 roof done, 1 finished */
+    /** p: 0 = bare plot · foundation · ground-floor walls · upper floors · roof · details · 1 finished */
     set(p) {
-      const k = (a, b) => Math.min(1, Math.max(0, (p - a) / (b - a)));
-      plinth.visible = p > 0.02;
-      plinth.scale.y = (sh.base - sh.hmin + 0.6) * Math.max(0.01, k(0.02, 0.12));
-      scaffold.visible = p > 0.08 && p < 0.97;
-      scaffold.scale.y = Math.max(0.01, k(0.08, 0.2));
-      body.visible = p > 0.15;
-      body.scale.y = bodyH * Math.max(0.01, k(0.15, 0.55));
-      roof.visible = p > 0.55;
-      roof.scale.set(rs.x, rs.y * Math.max(0.01, k(0.55, 0.8)), rs.z);
-      door.visible = wins.every(() => true) && p > 0.5;
-      for (const wm of wins) wm.visible = p > 0.55;
-      if (chimney) chimney.visible = p > 0.75;
+      plinth.visible = p > 0.01;
+      grow(layers.foundation, 0.01, 0.1, p);
+      grow(layers.walls, 0.1, 0.38, p);
+      grow(layers.upper, 0.36, 0.56, p, 3.45);
+      grow(layers.roof, 0.56, 0.8, p, v.eaves);
+      grow(layers.details, 0.8, 0.9, p);
+      scaffold.visible = p > 0.06 && p < 0.96;
+      scaffold.scale.y = Math.max(0.01, Math.min(1, (p - 0.06) / 0.2));
     },
   };
 }
