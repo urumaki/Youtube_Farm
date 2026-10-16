@@ -12,7 +12,7 @@ import { rand01 } from '../../sim/prng.js';
 
 const FOG = { clear: 0.0009, cloudy: 0.0013, fog: 0.0042, rain: 0.0024, snow: 0.0028 };
 
-export function buildEnvironment(renderer, scene, camera, { weather = 'clear', seed = 1, width, height, quality = 'high' }) {
+export function buildEnvironment(renderer, scene, camera, { viewer = false, weather = 'clear', seed = 1, width, height, quality = 'high' }) {
   // Physical sky only feeds the environment map; the visible sky is a cheap gradient dome.
   const sky = new Sky();
   const su = sky.material.uniforms;
@@ -52,7 +52,7 @@ export function buildEnvironment(renderer, scene, camera, { weather = 'clear', s
   const hemi = new THREE.HemisphereLight('#bcd3ff', '#6a6648', 1.1);
   scene.add(hemi);
 
-  const baseFog = FOG[weather] ?? FOG.clear;
+  const baseFog = (FOG[weather] ?? FOG.clear) * (viewer ? 0.45 : 1);
   scene.fog = new THREE.FogExp2('#c9d6e3', baseFog);
 
   // environment map for reflections (water, metal) from the sky at golden hour

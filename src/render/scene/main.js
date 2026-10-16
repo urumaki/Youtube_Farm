@@ -24,8 +24,8 @@ function seasonOf(date) {
 async function setup(data) {
   const t0 = performance.now();
   const { state, diff } = data;
-  const width = data.width || 1080, height = data.height || 1920;
   const viewer = data.mode === 'viewer';
+  const width = viewer ? window.innerWidth : data.width || 1080, height = viewer ? window.innerHeight : data.height || 1920;
   await Promise.all([document.fonts.load('700 40px Cinzel'), document.fonts.load('800 40px Inter')]).catch(() => {});
 
   const w = world(state.seed);
@@ -80,7 +80,7 @@ async function setup(data) {
   const life = buildLife(w, state, M, castle, houses, buildings, { weather: diff.weather, extraChimneys });
   scene.add(life.group);
 
-  const env = buildEnvironment(renderer, scene, camera, { weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
+  const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
   const overlay = viewer ? null : createOverlay(document.getElementById('stage'), data);
 
   const ctx = { renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w };
@@ -94,7 +94,7 @@ async function setup(data) {
 }
 
 function applyFrame(ctx, t) {
-  const { plan, camera, env, castle, animated, buildings, life, water, M, houses, nature, overlay } = ctx;
+  const { plan, camera, env, castle, animated, buildings, life, water, M, houses, nature, overlay, renderer } = ctx;
   const ev = evaluate(plan, t);
   camera.position.copy(ev.camera.pos);
   camera.lookAt(ev.camera.look);
@@ -113,7 +113,7 @@ function applyFrame(ctx, t) {
     it.setProgress(start + (target - start) * p);
   }
   water.userData.uniforms.time.value = t;
-  life.update(t, { night, camera, wind: [1, 0.35] });
+  life.update(t, { night, camera, wind: [1, 0.35], viewportH: renderer.domElement.height });
   houses.updateLod(camera);
   nature.updateLod(camera);
   env.composer.render();
@@ -163,10 +163,15 @@ function startViewer(ctx) {
     M.setNight(night);
     castle.update(t, { bridgeOpen: 1 });
     water.userData.uniforms.time.value = t;
-    life.update(t, { night, camera, wind: [1, 0.35] });
+    life.update(t, { night, camera, wind: [1, 0.35], viewportH: renderer.domElement.height });
     houses.updateLod(camera);
     nature.updateLod(camera);
+    const t1 = performance.now();
+    renderer.info.autoReset = false;
+    renderer.info.reset();
     env.composer.render();
+    const info = renderer.info.render;
+    window.__info = { calls: info.calls, triangles: info.triangles, frameMs: Math.round(performance.now() - t1), frames: (window.__info?.frames || 0) + 1 };
     requestAnimationFrame(loop);
   };
   window.addEventListener('resize', () => {

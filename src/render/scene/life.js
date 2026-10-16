@@ -196,7 +196,7 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
     });
     smokeGeo.attributes.position.needsUpdate = smokeGeo.attributes.size.needsUpdate = smokeGeo.attributes.alpha.needsUpdate = true;
     smokeMat.uniforms.light.value.setScalar(1 - 0.6 * env.night);
-    smokeMat.uniforms.scale.value = 1920 / (2 * Math.tan((env.camera.fov * Math.PI) / 360));
+    smokeMat.uniforms.scale.value = (env.viewportH || 1920) / (2 * Math.tan((env.camera.fov * Math.PI) / 360));
   });
 
   // ------------------------------------------------ cloth: banners (hanging) and flags (on poles)

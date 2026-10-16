@@ -34,11 +34,13 @@ if (argv.includes('--check')) {
   await page.goto('file://' + path.resolve(out));
   await page.waitForFunction(() => window.__ready || window.__error, null, { timeout: 180000 });
   const ready = await page.evaluate(() => window.__ready || null);
-  await new Promise((r) => setTimeout(r, 3000)); // let a few animation frames run
+  await page.waitForFunction(() => (window.__info?.frames || 0) >= 3, null, { timeout: 300000 }); // a few animation frames
+  const info = await page.evaluate(() => window.__info);
   const shot = out.replace(/\.html$/, '.png');
-  await page.screenshot({ path: shot });
+  await page.screenshot({ path: shot, timeout: 300000 });
   await browser.close();
   console.log('viewer stats:', JSON.stringify(ready));
+  console.log('last frame:', JSON.stringify(info), '(software GL here; a real GPU is far faster)');
   console.log(`screenshot: ${shot}`);
   if (errors.length || !ready) {
     console.error('console errors:', errors);

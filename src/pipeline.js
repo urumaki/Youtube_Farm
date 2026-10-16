@@ -72,7 +72,7 @@ export async function produceVideo(state, diff, { lang = 'en', out, quality, tts
 
 /** Build a two-day test kingdom ending at `subs` (default start: ~88% of it), without touching state/. */
 export function testKingdom({ subs, from, date = today(), seed }) {
-  const start = from ?? Math.max(0, Math.round(subs * 0.88) - (subs > 1 ? 1 : 0));
+  const start = from ?? (subs <= 3 ? 0 : Math.round(subs * 0.88) - 1);
   const d0 = new Date(Date.parse(date) - 2 * 86400000).toISOString().slice(0, 10);
   const d1 = new Date(Date.parse(date) - 86400000).toISOString().slice(0, 10);
   let s = genesis({ seed, date: d0 });
