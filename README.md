@@ -138,9 +138,9 @@ An API key can only read. Uploading needs OAuth for the account that owns the ch
 5. GitHub → *Settings → Secrets and variables → Actions*: secrets `YT_OAUTH_CLIENT_ID`,
    `YT_OAUTH_CLIENT_SECRET`, `YT_OAUTH_REFRESH_TOKEN`; variable `PUBLISH_TARGETS=youtube`
    (optional `YT_PRIVACY=public|unlisted|private`, `YT_PUBLISH_AT=17:00` in UTC).
-6. **Audit**: videos uploaded through an unverified API project are locked to *private* by YouTube.
-   Submit the *YouTube API Services – Audit and Quota Extension* form for the project to lift it;
-   until then make each video public by hand in YouTube Studio.
+6. **Audit**: YouTube may lock videos uploaded through an unverified API project to *private*
+   (this channel's first upload went public without it). If that happens, submit the *YouTube API
+   Services – Audit and Quota Extension* form and publish by hand in YouTube Studio meanwhile.
 
 Each upload is recorded in `state/published.json`, so re-running a day never uploads twice. A
 failed upload is logged and does not fail the daily run. One upload a day fits the free quota.
