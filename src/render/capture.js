@@ -2,6 +2,7 @@
 // and pipe the JPEG frames into ffmpeg. Nothing is recorded in real time.
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import { spawn } from 'node:child_process';
 import { chromium } from 'playwright';
 import { buildRenderPage } from '../../scripts/build.js';
@@ -71,39 +72,53 @@ export async function renderShots(data, shots, outDir) {
   }
 }
 
-/** Render the full video. audioFile (optional) is muxed; output is exactly 30.0 s, 30 fps, H.264 + AAC. */
-export async function renderVideo(data, outFile, { audioFile, log = console, frames = FPS * DURATION } = {}) {
-  const { browser, page, errors } = await openPage({ log });
+/** Render the full video. audioFile (optional) is muxed; output is exactly 30.0 s, 30 fps, H.264 + AAC.
+ * Frames are split across `workers` browser processes (each with its own software-GL process), written
+ * as numbered JPEGs, then encoded in order. Every frame depends only on its time, so splitting is exact. */
+export async function renderVideo(data, outFile, { audioFile, log = console, frames = FPS * DURATION, workers = defaultWorkers() } = {}) {
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
-  const args = ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-'];
-  if (audioFile) args.push('-i', audioFile);
-  else args.push('-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000');
-  args.push(
-    '-map', '0:v:0', '-map', '1:a:0',
-    '-c:v', 'libx264', '-preset', process.env.X264_PRESET || 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-r', String(FPS),
-    '-profile:v', 'high', '-level', '4.2', '-g', String(FPS * 2),
-    '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2',
-    '-t', String(DURATION), '-movflags', '+faststart', outFile,
-  );
-  const ff = spawn('ffmpeg', args, { stdio: ['pipe', 'inherit', 'inherit'] });
-  const done = new Promise((res, rej) => ff.on('close', (c) => (c === 0 ? res() : rej(new Error(`ffmpeg exited ${c}`)))));
+  const tmp = fs.mkdtempSync(path.join(path.dirname(outFile), '.frames-'));
   const t0 = Date.now();
+  let stats = null;
+  const errors = [];
+  let done = 0;
   try {
-    const stats = await setupScene(page, data);
-    log.log?.(`[render] scene ready in ${stats.setupMs} ms: ${JSON.stringify(stats)}`);
-    for (let f = 0; f < frames; f++) {
-      const buf = await captureFrame(page, f, 'jpeg');
-      if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once('drain', r));
-      if (f % 60 === 0) log.log?.(`[render] frame ${f}/${frames} (${((Date.now() - t0) / 1000).toFixed(0)} s)`);
-    }
-    ff.stdin.end();
-    await done;
+    const n = Math.max(1, Math.min(workers, 8));
+    const chunk = Math.ceil(frames / n);
+    await Promise.all(Array.from({ length: n }, async (_, w) => {
+      const { browser, page, errors: errs } = await openPage({ log });
+      try {
+        const st = await setupScene(page, data);
+        if (w === 0) { stats = st; log.log?.(`[render] scene ready in ${st.setupMs} ms: ${JSON.stringify(st)}`); }
+        for (let f = w * chunk; f < Math.min(frames, (w + 1) * chunk); f++) {
+          fs.writeFileSync(path.join(tmp, `f${String(f).padStart(5, '0')}.jpg`), await captureFrame(page, f, 'jpeg'));
+          if (++done % 60 === 0) log.log?.(`[render] ${done}/${frames} frames (${((Date.now() - t0) / 1000).toFixed(0)} s, ${n} workers)`);
+        }
+      } finally {
+        errors.push(...errs);
+        await browser.close();
+      }
+    }));
+    const args = ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(tmp, 'f%05d.jpg')];
+    if (audioFile) args.push('-i', audioFile);
+    else args.push('-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000');
+    args.push(
+      '-map', '0:v:0', '-map', '1:a:0',
+      '-c:v', 'libx264', '-preset', process.env.X264_PRESET || 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-r', String(FPS),
+      '-profile:v', 'high', '-level', '4.2', '-g', String(FPS * 2),
+      '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2',
+      '-t', String(DURATION), '-movflags', '+faststart', outFile,
+    );
+    await new Promise((res, rej) => spawn('ffmpeg', args, { stdio: 'inherit' }).on('close', (c) => (c === 0 ? res() : rej(new Error(`ffmpeg exited ${c}`)))));
     return { stats, errors, seconds: (Date.now() - t0) / 1000 };
-  } catch (e) {
-    ff.stdin.destroy();
-    ff.kill('SIGKILL');
-    throw e;
   } finally {
-    await browser.close();
+    fs.rmSync(tmp, { recursive: true, force: true });
   }
+}
+
+export function defaultWorkers() {
+  // Software GL (SwiftShader) already uses every core, so extra browsers do not help on CPU-only
+  // machines (measured: 2 workers ~ same throughput as 1 on 4 cores). Raise it on GPU machines.
+  if (process.env.RENDER_WORKERS) return Number(process.env.RENDER_WORKERS);
+  return Math.max(1, Math.floor(os.cpus().length / 8));
 }

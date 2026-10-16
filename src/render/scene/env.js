@@ -10,7 +10,7 @@ import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader.js';
 import { cloudSprite } from './textures.js';
 import { rand01 } from '../../sim/prng.js';
 
-const FOG = { clear: 0.0009, cloudy: 0.0013, fog: 0.0055, rain: 0.0026, snow: 0.0032 };
+const FOG = { clear: 0.0009, cloudy: 0.0013, fog: 0.0042, rain: 0.0024, snow: 0.0028 };
 
 export function buildEnvironment(renderer, scene, camera, { weather = 'clear', seed = 1, width, height, quality = 'high' }) {
   // Physical sky only feeds the environment map; the visible sky is a cheap gradient dome.
@@ -117,7 +117,7 @@ export function buildEnvironment(renderer, scene, camera, { weather = 'clear', s
   const fogDay = new THREE.Color(overcast ? '#b9c3cc' : '#c8d7e6'), fogDusk = new THREE.Color(overcast ? '#5e5a66' : '#b7876e');
   const sunDay = new THREE.Color('#fff1dc'), sunDusk = new THREE.Color('#ff9a52');
   const skyDay = new THREE.Color('#bcd3ff'), skyDusk = new THREE.Color('#6a6f9a');
-  const dim = overcast ? 0.55 : 1;
+  const dim = overcast ? 0.75 : 1;
 
   return {
     sun, composer, bloom, grade,
@@ -145,7 +145,7 @@ export function buildEnvironment(renderer, scene, camera, { weather = 'clear', s
       domeU.sunDir.value.copy(sunDir);
       scene.fog.color.copy(domeU.horizon.value).multiplyScalar(0.97);
       const alt = Math.max(1, camera.position.y);
-      scene.fog.density = baseFog * THREE.MathUtils.clamp(140 / alt, 0.3, 1);
+      scene.fog.density = Math.min(baseFog * THREE.MathUtils.clamp(140 / alt, 0.25, 1), 0.9 / Math.max(300, alt * 2.2));
       sun.position.copy(focus).addScaledVector(sunDir, 700);
       sun.target.position.copy(focus);
       const sc = sun.shadow.camera;

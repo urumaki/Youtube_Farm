@@ -170,7 +170,7 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
     vertexShader: `attribute float size; attribute float alpha; attribute float dark; varying float vA; varying float vD; uniform float scale;
       void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); gl_PointSize = size * scale / -mv.z; gl_Position = projectionMatrix * mv; vA = alpha; vD = dark; }`,
     fragmentShader: `uniform sampler2D map; uniform vec3 light; varying float vA; varying float vD;
-      void main(){ vec4 c = texture2D(map, gl_PointCoord); vec3 col = mix(vec3(0.82,0.82,0.84), vec3(0.22,0.21,0.2), vD) * light; gl_FragColor = vec4(col, c.a * vA); }`,
+      void main(){ vec4 c = texture2D(map, gl_PointCoord); vec3 col = mix(vec3(0.82,0.82,0.84), vec3(0.38,0.36,0.35), vD) * light; gl_FragColor = vec4(col, c.a * vA); }`,
   });
   const smoke = new THREE.Points(smokeGeo, smokeMat);
   smoke.frustumCulled = false;
@@ -190,7 +190,7 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
         sPos[idx * 3 + 1] = src.pos.y + rise;
         sPos[idx * 3 + 2] = src.pos.z + wind[1] * ph * ph * 9;
         sSize[idx] = (1.2 + ph * 5.5) * (src.dark ? 1.5 : 1);
-        sAlpha[idx] = active ? Math.sin(Math.PI * Math.min(1, ph * 1.15)) * (src.dark ? 0.42 : 0.24) : 0;
+        sAlpha[idx] = active ? Math.sin(Math.PI * Math.min(1, ph * 1.15)) * (src.dark ? 0.3 : 0.24) : 0;
         sDark[idx] = src.dark ? 1 : 0;
       }
     });

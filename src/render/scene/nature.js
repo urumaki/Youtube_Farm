@@ -141,7 +141,7 @@ export function buildNature(w, state, M, { season = 'summer' } = {}) {
 
   return {
     group, count: trees.length,
-    updateLod(camera, nearDist = 420) {
+    updateLod(camera, nearDist = 240) {
       for (const c of chunkList) {
         const d = Math.hypot(camera.position.x - c.cx, camera.position.z - c.cz);
         c.near.visible = d < nearDist;

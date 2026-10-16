@@ -20,7 +20,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const a = animated.get(id);
     const v = addedByHouse.get(id);
     targets.push({
-      kind: 'house', id, pos: a.top.clone(), radius: 20, front: a.shape.rot + (a.shape.side > 0 ? -Math.PI / 2 : Math.PI / 2),
+      kind: 'house', id, pos: a.top.clone(), radius: 27, front: a.shape.rot + (a.shape.side > 0 ? -Math.PI / 2 : Math.PI / 2),
       label: v ? { title: v.name, sub: JOBS[v.job]?.label || v.job } : { title: 'New home', sub: '' },
       rebuilt: diff.housesRebuilt.includes(id), extra: 0,
     });
@@ -42,7 +42,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     if (!sh || targets.length >= maxTargets) continue;
     const who = diff.removed.find((r) => r.house === id);
     targets.push({
-      kind: 'loss', id, pos: new THREE.Vector3(sh.x, sh.base + 5, sh.z), radius: 20, front: sh.rot + Math.PI / 2,
+      kind: 'loss', id, pos: new THREE.Vector3(sh.x, sh.base + 5, sh.z), radius: 27, front: sh.rot + Math.PI / 2,
       label: { title: who ? `${who.name} left` : 'A house falls to ruin', sub: diff.housesRuined.includes(id) ? 'Ruins' : 'Abandoned' },
     });
   }
@@ -93,11 +93,12 @@ const HOOK_TO = { pos: new THREE.Vector3(84, 17, 23), look: new THREE.Vector3(CA
 
 function orbitPose(tg, u) {
   const r = tg.radius;
+  const small = tg.kind === 'house' || tg.kind === 'loss' || tg.kind === 'story';
   const a = tg.front + 0.55 - 0.7 * u;
-  const h = r * (tg.kind === 'house' || tg.kind === 'loss' ? 0.62 : 0.55);
+  const h = r * (small ? 0.42 : 0.5);
   return {
     pos: new THREE.Vector3(tg.pos.x + Math.cos(a) * r, tg.pos.y + h, tg.pos.z + Math.sin(a) * r),
-    look: tg.pos.clone().add(new THREE.Vector3(0, -2, 0)),
+    look: tg.pos.clone().add(new THREE.Vector3(0, small ? -3.5 : -2, 0)),
   };
 }
 function widePose(plan, u) {
