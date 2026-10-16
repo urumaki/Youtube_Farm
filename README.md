@@ -8,6 +8,7 @@ python3 scripts/render.py scenes/demo_text.py --preset short --seconds 8 --text 
 bash scripts/export.sh output/demo_text_short.mp4 tiktok
 ```
 
+- `scripts/watermark.sh video.mp4 [tr|tl|br|bl|c]` — watermark (`scripts/make_watermark.py` lo rigenera).
 - `presets/presets.json` — formati (short 9:16, long 16:9, square).
 - `scenes/` — script bpy; `common.py` per setup render.
 - `.claude/skills/` — skill `caveman` (risposte brevi) e `blender-video`.
