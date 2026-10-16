@@ -18,10 +18,16 @@ npm test                         # simulation, fetch and audio tests
 
 - **1 subscriber = 1 villager.** Villager `#i` always gets the same name and job (seeded by
   index), so a returning subscriber comes back as the same person.
-- **Houses** are built on plots along roads that grow outward from the castle gate, mostly to the
-  east. Plots never overlap each other, roads, the river, the moat, walls, fields or reserved
-  building lots. Newer houses hold more people (1 → 2 → 4 → 8) so the map stays readable at
-  thousands of subscribers.
+- **Town plan** follows how medieval castle towns grew (e.g. Corfe, Bolsover): a market square just
+  outside the castle bridge with the chapel and town hall on its sides, main streets radiating from
+  it and bending with the ground, lanes branching off and ending in T-junctions, and long narrow
+  *burgage* plots (house on the street, croft behind) in a herringbone pattern. Houses fill outward
+  along the street network. Plots never overlap each other, roads, the river, the moat, walls,
+  fields or reserved lots, and streets never cross. Newer houses hold more people (1 → 2 → 4 → 8).
+- **Houses** are detailed procedural variants: timber-framed (posts, rails, braces, jettied upper
+  floors with joist ends), stone houses with quoins, thatched cottages; framed windows with
+  shutters, plank doors with hoods, thick roofs with eaves, ridges and bargeboards, chimneys with
+  pots, dormers; crofts with vegetable beds, sheds, woodpiles, barrels, carts and wattle fences.
 - **Tiers** unlock jobs and buildings: 1 hamlet (farmers, well, fields) · 5 woodcutter, fisherman
   (sawmill, dock) · 10 blacksmith, baker · 25 guards on the walls, quarry · 50 market, tavern ·
   100 chapel, windmill · 250 second wall, town hall · 500 harbor, cathedral, tournament ground ·
@@ -45,7 +51,7 @@ Requirements: **Node.js 20+**, **ffmpeg** on `PATH`, ~1 GB disk for Chromium and
 sudo apt-get install -y ffmpeg
 npm ci
 npx playwright install --with-deps chromium
-npm run setup:piper            # Piper TTS + voices into tools/piper (git-ignored)
+npm run setup:tts              # Kokoro TTS (+ Piper fallback) into tools/ (git-ignored)
 cp .env.example .env           # then fill in your keys
 npm test
 npm run render -- --subs 12    # ~15-25 min on a CPU-only machine
@@ -56,9 +62,10 @@ npm run render -- --subs 12    # ~15-25 min on a CPU-only machine
 ```powershell
 winget install Gyan.FFmpeg        # or: choco install ffmpeg — then reopen the terminal
 winget install OpenJS.NodeJS.LTS
+winget install Python.Python.3.12
 npm ci
 npx playwright install chromium
-npm run setup:piper               # downloads piper_windows_amd64.zip (uses the built-in tar.exe)
+npm run setup:tts                 # Kokoro via pip + Piper fallback (needs Python 3.10+)
 copy .env.example .env            # then edit .env
 npm test
 npm run render -- --subs 12
@@ -92,13 +99,27 @@ and the video is still rendered with a weather / daily-life event. The daily run
 
 ### Narration (text-to-speech)
 
-- **Piper** (default, free, local): `npm run setup:piper`. English voice `en-us-libritts-high`
-  (speaker 20, CC BY 4.0 — credit it in the description), Italian `it-riccardo_fasol-x-low`.
-  Override with `PIPER_BIN`, `PIPER_VOICE_EN`, `PIPER_SPEAKER_EN`, `PIPER_VOICE_IT`.
+- **Kokoro** (default, free, local; Kokoro-82M, Apache-2.0 — one of the most used open TTS models
+  for narration): `npm run setup:tts` (needs Python 3.10+; installs `kokoro-onnx` with pip and
+  downloads the model into `tools/kokoro`). Voices: `KOKORO_VOICE_EN=bm_george` (British male,
+  default) or `bm_fable`, `am_michael`, `am_adam`…; Italian `KOKORO_VOICE_IT=im_nicola` or `if_sara`.
+- **Piper** (lighter fallback, used automatically if Kokoro is missing): `npm run setup:piper`.
+  English `en-us-libritts-high` (CC BY 4.0 — credit it), Italian `it-riccardo_fasol-x-low`.
 - **ElevenLabs** (optional, cloud): `TTS_PROVIDER=elevenlabs`, `ELEVENLABS_API_KEY`, optional
   `ELEVENLABS_VOICE_ID`. Falls back to Piper, then to silent captions, if it fails.
 
 Captions are burned in from word timestamps (ElevenLabs alignment, or per-sentence Piper timing).
+
+### Sound
+
+Music is a generated medieval bed (CC0). Sound effects follow the camera: hammer and saw while a
+house goes up, anvil and fire at the forge, water and oars at the dock, bells at the chapel, chisel
+and stone at the quarry, chains when the drawbridge moves, soft birds underneath. They are
+synthesized by `src/audio/sfx.js`; to use real recordings, drop CC0 files named after the effect in
+`assets/audio/sfx/` (`hammer`, `saw`, `anvil`, `fire`, `water`, `oars`, `bell`, `chisel`, `stone`,
+`chain`, `thud`, `creak`, `cart`, `chatter`, `birds`, `breeze`, `rain`, `chime` — `.wav/.ogg/.mp3`)
+and list them in `assets/audio/LICENSES.md`. Good CC0 sources: Kenney "RPG Audio", OpenGameArt
+"100 CC0 SFX", Freesound (filter by CC0). Do not use audio ripped from YouTube videos.
 
 ## Commands
 

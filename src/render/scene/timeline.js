@@ -20,7 +20,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const a = animated.get(id);
     const v = addedByHouse.get(id);
     targets.push({
-      kind: 'house', id, pos: a.top.clone(), radius: 27, front: a.shape.rot + (a.shape.side > 0 ? -Math.PI / 2 : Math.PI / 2),
+      kind: 'house', id, pos: a.mid.clone(), labelPos: a.top.clone(), radius: 24, front: a.shape.rot + (a.shape.side > 0 ? -Math.PI / 2 : Math.PI / 2),
       label: v ? { title: v.name, sub: JOBS[v.job]?.label || v.job } : { title: 'New home', sub: '' },
       rebuilt: diff.housesRebuilt.includes(id), extra: 0,
     });
@@ -88,17 +88,17 @@ function pickSpread(n, k) {
 }
 
 // ---------------------------------------------------------------- camera
-const HOOK_FROM = { pos: new THREE.Vector3(175, 46, 70), look: new THREE.Vector3(CASTLE.half, CASTLE.ground + 10, 0) };
-const HOOK_TO = { pos: new THREE.Vector3(84, 17, 23), look: new THREE.Vector3(CASTLE.half + 4, CASTLE.ground + 9, 0) };
+const HOOK_FROM = { pos: new THREE.Vector3(150, 44, 64), look: new THREE.Vector3(CASTLE.half, CASTLE.ground + 10, 0) };
+const HOOK_TO = { pos: new THREE.Vector3(72, 17, -13), look: new THREE.Vector3(CASTLE.half + 4, CASTLE.ground + 9, 0) };
 
 function orbitPose(tg, u) {
   const r = tg.radius;
   const small = tg.kind === 'house' || tg.kind === 'loss' || tg.kind === 'story';
   const a = tg.front + 0.55 - 0.7 * u;
-  const h = r * (small ? 0.42 : 0.5);
+  const h = r * (small ? 0.3 : 0.5);
   return {
     pos: new THREE.Vector3(tg.pos.x + Math.cos(a) * r, tg.pos.y + h, tg.pos.z + Math.sin(a) * r),
-    look: tg.pos.clone().add(new THREE.Vector3(0, small ? -3.5 : -2, 0)),
+    look: tg.pos.clone().add(new THREE.Vector3(0, small ? -1 : -2, 0)),
   };
 }
 function widePose(plan, u) {

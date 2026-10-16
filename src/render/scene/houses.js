@@ -247,6 +247,7 @@ export function buildAnimatedHouse(sh, h, seed, M, housesCtx) {
   g.add(scaffold);
   const chimneyTop = v.chimneyTop ? new THREE.Vector3(...v.chimneyTop).applyMatrix4(sh.matrix) : null;
   const top = new THREE.Vector3(0, v.height + 1, 0).applyMatrix4(sh.matrix);
+  const mid = new THREE.Vector3(0, v.height * 0.5, 0).applyMatrix4(sh.matrix);
   // each layer rises from its own base line
   const grow = (obj, a, b, p, pivot = 0) => {
     const k = Math.min(1, Math.max(0, (p - a) / (b - a)));
@@ -256,7 +257,7 @@ export function buildAnimatedHouse(sh, h, seed, M, housesCtx) {
     obj.position.y = pivot * (1 - obj.scale.y);
   };
   return {
-    group: g, top, chimneyTop, shape: sh,
+    group: g, top, mid, chimneyTop, shape: sh,
     /** p: 0 = bare plot · foundation · ground-floor walls · upper floors · roof · details · 1 finished */
     set(p) {
       plinth.visible = p > 0.01;

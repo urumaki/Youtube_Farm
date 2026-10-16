@@ -93,7 +93,7 @@ export function createOverlay(root, data) {
           ov.querySelector('.safe').appendChild(el);
           labelEls.set(tg, el);
         }
-        v.copy(tg.pos).add(new THREE.Vector3(0, 3, 0)).project(camera);
+        (tg.labelPos ? v.copy(tg.labelPos) : v.copy(tg.pos).add(new THREE.Vector3(0, 3, 0))).project(camera);
         const x = (v.x * 0.5 + 0.5) * W - SAFE.left, y = (-v.y * 0.5 + 0.5) * H - SAFE.top;
         el.style.display = 'block';
         const wEl = el.offsetWidth, hEl = el.offsetHeight;
