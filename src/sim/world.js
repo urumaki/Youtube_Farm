@@ -6,7 +6,7 @@ import {
 } from './geometry.js';
 
 export const WATER_LEVEL = 0.4;
-export const CASTLE = { half: 26, island: 46, moatInner: 47, moatOuter: 58, ground: 4.5 };
+export const CASTLE = { half: 28, island: 46, moatInner: 47, moatOuter: 58, ground: 4.5 };
 export const GATE = { x: CASTLE.half, z: 0 };
 export const ROAD_WIDTH = { main: 8, street: 6, track: 4 };
 export const RIVER_HALF_WIDTH = 13;
@@ -193,14 +193,14 @@ function buildLots(w, r) {
   roadside('tavern', 240, 1, 9, 8);
   lots.townhall = { id: 'townhall', x: 205, z: w.mainZ(205) - 19 - 13, hw: 13, hd: 11, rot: 0 };
   roadside('cathedral', 300, -1, 15, 26, { blocksRoads: true });
-  lots.district_east = { id: 'district_east', x: 560, z: w.mainZ(560), hw: 17, hd: 17, rot: 0, plaza: true };
+  lots.district_east = { id: 'district_east', x: 560, z: w.mainZ(560) - 25, hw: 17, hd: 17, rot: 0, plaza: true };
   lots.district_north = { id: 'district_north', x: 470, z: w.mainZ(470) - 330, hw: 16, hd: 16, rot: 0, plaza: true };
   lots.district_south = { id: 'district_south', x: 760, z: w.mainZ(760) + 75, hw: 16, hd: 16, rot: 0, plaza: true };
-  lots.district_far = { id: 'district_far', x: 1150, z: w.mainZ(1150), hw: 18, hd: 18, rot: 0, plaza: true };
+  lots.district_far = { id: 'district_far', x: 1150, z: w.mainZ(1150) - 26, hw: 18, hd: 18, rot: 0, plaza: true };
   lots.tournament = { id: 'tournament', x: 420, z: w.mainZ(420) - 235, hw: 48, hd: 28, rot: 0, blocksRoads: true };
   lots.university = { id: 'university', x: 690, z: w.mainZ(690) - 235, hw: 30, hd: 24, rot: 0, blocksRoads: true };
   lots.palace = { id: 'palace', x: 900, z: w.mainZ(900) - 400, hw: 42, hd: 32, rot: 0, blocksRoads: true };
-  lots.colossus = { id: 'colossus', x: 1400, z: w.mainZ(1400), hw: 16, hd: 16, rot: 0, plaza: true };
+  lots.colossus = { id: 'colossus', x: 1400, z: w.mainZ(1400) - 25, hw: 16, hd: 16, rot: 0, plaza: true };
   lots.windmill = { id: 'windmill', x: 6, z: -214, hw: 7, hd: 7, rot: 0 };
   lots.quarry = { id: 'quarry', x: -112, z: -222, hw: 20, hd: 14, rot: 0.3 };
   // West bank workplaces: sawmill at the forest edge, dock on the river.
@@ -245,7 +245,8 @@ function buildWall2(w) {
     if (roadHit) { gates.push({ x: mx, z: mz, rot: box.rot }); continue; }
     segments.push(box);
   }
-  return { segments, gates, towers: pts.filter((_, i) => i % 6 === 0).slice(0, -1) };
+  const towers = pts.slice(0, -1).filter((p, i) => i % 6 === 0 && w.pathIndex.edgeDist(p[0], p[1]) > 8 && w.river.dist(p[0], p[1]) > RIVER_HALF_WIDTH + 6);
+  return { segments, gates, towers };
 }
 
 function buildFields(w, r) {
@@ -279,7 +280,7 @@ export function heightAt(w, x, z) {
   // castle island and moat
   const rc = Math.hypot(x, z);
   h = lerp(CASTLE.ground, h, smoothstep(CASTLE.island - 2, CASTLE.moatOuter + 18, rc));
-  const moat = smoothstep(CASTLE.island + 2, CASTLE.moatInner + 1.5, rc) * (1 - smoothstep(CASTLE.moatOuter - 2, CASTLE.moatOuter + 1, rc));
+  const moat = smoothstep(CASTLE.island - 1, CASTLE.moatInner + 3, rc) * (1 - smoothstep(CASTLE.moatOuter - 4, CASTLE.moatOuter + 3, rc));
   h = lerp(h, -2.2, moat);
   // river channel
   const d = w.river.dist(x, z, 60);

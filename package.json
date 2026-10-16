@@ -4,7 +4,9 @@
   "private": true,
   "description": "Procedural medieval kingdom that grows with YouTube subscribers; daily 30s vertical video renderer.",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "daily": "node scripts/daily.js",
     "render": "node scripts/render.js",
@@ -15,6 +17,7 @@
   },
   "dependencies": {
     "@fontsource/cinzel": "5.1.0",
+    "@fontsource/inter": "5.1.0",
     "esbuild": "0.24.2",
     "playwright": "1.56.1",
     "three": "0.170.0"
