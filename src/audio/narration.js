@@ -121,7 +121,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
   if (nb === 1) add(pick(L.houses1), 'houses', 5);
   else if (nb > 1) add(pick(L.houses)(nb.toLocaleString('en-US')), 'houses', 5);
   if (diff.housesRebuilt.length) add(pick(L.rebuilt)(diff.housesRebuilt.length), 'rebuilt', 5);
-  for (const b of diff.buildingsCompleted.slice(0, 2)) add(pick(L.completed)(bname(b)), 'completed', 8);
+  for (const b of diff.buildingsCompleted.slice(0, 2)) add(BUILDINGS[b].plural ? (lang === 'it' ? 'I campi sono pronti per la semina!' : 'The fields are ready to sow!') : pick(L.completed)(bname(b)), 'completed', 8);
   for (const b of diff.buildingsStarted.slice(0, 2)) add(pick(L.unlocked)(bname(b)), 'unlocked', 8);
   if (diff.housesAbandoned.length) add(pick(L.abandoned)(diff.housesAbandoned.length), 'abandoned', 7);
   if (diff.housesRuined.length) add(pick(L.ruined)(diff.housesRuined.length), 'ruined', 7);

@@ -109,7 +109,7 @@ function applyFrame(ctx, t) {
     const bd = ctx.data.state.buildings.find((b) => b.id === id);
     if (!it || !bd) continue;
     const target = bd.status === 'done' ? 1 : Math.max(0.08, 1 - (ctx.data.state.pendingConstruction.find((x) => x.building === id)?.daysLeft ?? 0) / (bd.daysTotal || 1));
-    const start = bd.status === 'done' ? Math.max(0, target - 0.25) : 0;
+    const start = bd.status === 'done' ? (bd.daysTotal ? Math.max(0, target - 0.25) : 1) : 0;
     it.setProgress(start + (target - start) * p);
   }
   water.userData.uniforms.time.value = t;

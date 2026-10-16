@@ -34,7 +34,7 @@ export const JOBS = {
 
 export const BUILDINGS = {
   well: { label: 'the Well', days: 0 },
-  fields: { label: 'the Fields', days: 0 },
+  fields: { label: 'the Fields', days: 0, plural: true },
   sawmill: { label: 'the Sawmill', days: 1 },
   dock: { label: 'the Fishing Dock', days: 1 },
   forge: { label: 'the Forge', days: 1 },
