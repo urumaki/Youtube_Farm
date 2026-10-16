@@ -1,0 +1,86 @@
+name: Daily kingdom
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # once a day, 06:17 UTC
+  workflow_dispatch:
+    inputs:
+      subs:
+        description: 'Override subscriber count (blank = fetch from YouTube)'
+        required: false
+      lang:
+        description: 'Narration language (en or it)'
+        required: false
+        default: 'en'
+
+permissions:
+  contents: write # commit state/ and state/history/
+
+concurrency:
+  group: daily-kingdom
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Cache Piper TTS
+        uses: actions/cache@v4
+        with:
+          path: tools/piper
+          key: piper-2023.11.14-2-v0.0.2-voices
+
+      - name: Set up Piper
+        run: npm run setup:piper
+
+      - name: Tests
+        run: npm test
+
+      - name: Daily cycle (fetch, simulate, render)
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          COUNT_MODE: ${{ vars.COUNT_MODE || 'public' }}
+          YT_OAUTH_CLIENT_ID: ${{ secrets.YT_OAUTH_CLIENT_ID }}
+          YT_OAUTH_CLIENT_SECRET: ${{ secrets.YT_OAUTH_CLIENT_SECRET }}
+          YT_OAUTH_REFRESH_TOKEN: ${{ secrets.YT_OAUTH_REFRESH_TOKEN }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          TTS_PROVIDER: ${{ vars.TTS_PROVIDER || 'piper' }}
+        run: |
+          ARGS="--lang ${{ github.event.inputs.lang || 'en' }}"
+          if [ -n "${{ github.event.inputs.subs }}" ]; then ARGS="$ARGS --subs ${{ github.event.inputs.subs }}"; fi
+          npm run daily -- $ARGS
+
+      - name: Commit state and history
+        run: |
+          git config user.name "subscriber-kingdom-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/
+          if git diff --cached --quiet; then echo "no state change"; exit 0; fi
+          git commit -m "Kingdom day $(date -u +%F)"
+          git push
+
+      - name: Upload video
+        uses: actions/upload-artifact@v4
+        with:
+          name: kingdom-${{ github.run_id }}
+          path: |
+            output/*.mp4
+            output/*.json
+          retention-days: 30
+
+      # Extension point: publish the video (YouTube / Instagram / TikTok) here once an uploader
+      # is implemented in src/publish/index.js. Keep all credentials in repository secrets.
