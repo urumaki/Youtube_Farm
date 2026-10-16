@@ -1,6 +1,15 @@
 // Subscriber count sources. Keys and tokens come only from environment variables.
 export const DEFAULT_HANDLE = '@Subscriber_Kingdom';
 
+/** Google's error reason (e.g. "API_KEY_SERVICE_BLOCKED", "accessNotConfigured") for the log; never the key. */
+async function googleReason(res) {
+  try {
+    const e = (await res.json()).error || {};
+    const reason = e.details?.find((d) => d.reason)?.reason || e.errors?.[0]?.reason || e.status || '';
+    return ` (${[reason, (e.message || '').replace(/key=[^&\s]+/g, 'key=***').slice(0, 200)].filter(Boolean).join(': ')})`;
+  } catch { return ''; }
+}
+
 /**
  * Public count via YouTube Data API v3 (channels.list, part=statistics, forHandle).
  * Above 1,000 subscribers YouTube rounds this to 3 significant figures.
@@ -10,7 +19,7 @@ export async function fetchPublicCount({ apiKey, handle = DEFAULT_HANDLE, fetchI
   const url = new URL('https://www.googleapis.com/youtube/v3/channels');
   url.search = new URLSearchParams({ part: 'statistics', forHandle: handle, key: apiKey });
   const res = await fetchImpl(url, { signal: AbortSignal.timeout(20000) });
-  if (!res.ok) throw new Error(`channels.list HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`channels.list HTTP ${res.status}${await googleReason(res)}`);
   const body = await res.json();
   const stats = body.items?.[0]?.statistics;
   if (!stats) throw new Error(`channel ${handle} not found`);
@@ -41,7 +50,7 @@ export async function fetchExactCount({ clientId, clientSecret, refreshToken, si
     metrics: 'subscribersGained,subscribersLost',
   });
   const res = await fetchImpl(url, { headers: { authorization: `Bearer ${access_token}` }, signal: AbortSignal.timeout(20000) });
-  if (!res.ok) throw new Error(`analytics reports HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`analytics reports HTTP ${res.status}${await googleReason(res)}`);
   const body = await res.json();
   const cols = (body.columnHeaders || []).map((c) => c.name);
   const gi = cols.indexOf('subscribersGained'), li = cols.indexOf('subscribersLost');
