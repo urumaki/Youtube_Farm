@@ -1,3 +1,9 @@
 output/*
 !output/.gitkeep
 __pycache__/
+.env
+.env.*
+!.env.example
+*client_secret*.json
+*token*.json
+credentials/

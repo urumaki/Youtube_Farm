@@ -11,3 +11,16 @@ bash scripts/export.sh output/demo_text_short.mp4 tiktok
 - `presets/presets.json` — formati (short 9:16, long 16:9, square).
 - `scenes/` — script bpy; `common.py` per setup render.
 - `.claude/skills/` — skill `caveman` (risposte brevi) e `blender-video`.
+
+## Audio e upload
+
+```bash
+pip install -r requirements.txt
+cp .env.example .env    # inserisci chiavi SOLO qui (.env è in .gitignore)
+bash scripts/audio.sh output/x_tiktok.mp4 voce.wav musica.mp3 0.2
+python3 uploaders/youtube.py output/x_audio.mp4 --title "Titolo" --short
+python3 uploaders/instagram.py output/x_audio.mp4 --caption "..."
+python3 uploaders/tiktok.py output/x_audio.mp4
+```
+
+Credenziali OAuth/token in `credentials/` (ignorata da git).
