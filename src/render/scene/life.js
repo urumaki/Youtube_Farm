@@ -168,7 +168,7 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
     transparent: true, depthWrite: false,
     uniforms: { map: { value: softSprite() }, scale: { value: 1900 }, light: { value: new THREE.Color(1, 1, 1) } },
     vertexShader: `attribute float size; attribute float alpha; attribute float dark; varying float vA; varying float vD; uniform float scale;
-      void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); gl_PointSize = size * scale / -mv.z; gl_Position = projectionMatrix * mv; vA = alpha; vD = dark; }`,
+      void main(){ vec4 mv = modelViewMatrix * vec4(position,1.0); gl_PointSize = size * scale / -mv.z; gl_Position = projectionMatrix * mv; vA = alpha * smoothstep(6.0, 22.0, -mv.z); vD = dark; }`,
     fragmentShader: `uniform sampler2D map; uniform vec3 light; varying float vA; varying float vD;
       void main(){ vec4 c = texture2D(map, gl_PointCoord); vec3 col = mix(vec3(0.82,0.82,0.84), vec3(0.38,0.36,0.35), vD) * light; gl_FragColor = vec4(col, c.a * vA); }`,
   });
