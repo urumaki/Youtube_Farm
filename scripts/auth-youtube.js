@@ -68,6 +68,7 @@ server.listen(0, '127.0.0.1', () => {
   });
   console.log('Open this URL and sign in with the account that owns the channel (pick the Subscriber Kingdom channel):\n');
   console.log(auth.toString() + '\n');
-  const opener = process.platform === 'win32' ? ['cmd', ['/c', 'start', '', auth.toString()]] : process.platform === 'darwin' ? ['open', [auth.toString()]] : ['xdg-open', [auth.toString()]];
+  // not `cmd /c start`: cmd cuts the URL at the first '&' (Google then reports a missing response_type)
+  const opener = process.platform === 'win32' ? ['rundll32', ['url.dll,FileProtocolHandler', auth.toString()]] : process.platform === 'darwin' ? ['open', [auth.toString()]] : ['xdg-open', [auth.toString()]];
   try { spawn(opener[0], opener[1], { stdio: 'ignore', detached: true }).on('error', () => {}).unref(); } catch { /* print only */ }
 });
