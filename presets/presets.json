@@ -1,0 +1,5 @@
+{
+  "short":  {"width": 1080, "height": 1920, "fps": 30, "max_seconds": 60},
+  "long":   {"width": 1920, "height": 1080, "fps": 30, "max_seconds": null},
+  "square": {"width": 1080, "height": 1080, "fps": 30, "max_seconds": 60}
+}
