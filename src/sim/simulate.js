@@ -1,6 +1,6 @@
 // Deterministic daily simulation step: (previous state, subscriber count, date) -> (new state, diff).
 import { hash, rng } from './prng.js';
-import { nameFor } from './names.js';
+import { cleanName, isOffensive } from './names.js';
 import { TIERS, BUILDINGS, JOBS, jobFor, houseCapacity, tiersReached } from './tiers.js';
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
@@ -26,17 +26,31 @@ export function genesis({ seed = DEFAULT_SEED, date = '1970-01-01' } = {}) {
     pendingConstruction: [],
     weather: 'clear',
     events: [],
+    names: {},        // villager id -> { name, author }: given by commenters, see assignNames()
+    nameQueue: [],    // commenters waiting for an unnamed villager
+    namedAuthors: [], // every commenter who ever received a name (one villager per person)
+    commentsSeen: null, // publishedAt of the newest comment already processed
   };
 }
 
-export function villagerFor(seed, id, house) {
-  return { id, name: nameFor(seed, id), job: jobFor(seed, id), house };
+/** Older saves have no name fields. */
+export function withNameFields(s) {
+  s.names ??= {};
+  s.nameQueue ??= [];
+  s.namedAuthors ??= [];
+  if (!('commentsSeen' in s)) s.commentsSeen = null;
+  return s;
+}
+
+/** A villager is nameless (null) until a commenter's name is assigned to them. */
+export function villagerFor(seed, id, house, names = {}) {
+  return { id, name: names[id]?.name ?? null, job: jobFor(seed, id), house };
 }
 
 /** Rebuild the villager list from house occupancy (used for compact history snapshots). */
 export function deriveVillagers(state) {
   const v = new Array(state.subscriberCount);
-  for (const h of state.houses) for (const id of h.occupants) v[id] = villagerFor(state.seed, id, h.id);
+  for (const h of state.houses) for (const id of h.occupants) v[id] = villagerFor(state.seed, id, h.id, state.names);
   return v;
 }
 
@@ -58,8 +72,8 @@ export function houseStyle(seed, plotId) {
  * @param {object} prev  previous state
  * @param {{subscribers:number, date:string, source?:string}} input
  */
-export function advance(prev, { subscribers, date, source = 'api' }) {
-  const s = structuredClone(prev);
+export function advance(prev, { subscribers, date, source = 'api', commenters = [], blocked = {} }) {
+  const s = withNameFields(structuredClone(prev));
   const seed = s.seed;
   const w = world(seed);
   const target = Math.max(0, Math.floor(subscribers));
@@ -71,7 +85,7 @@ export function advance(prev, { subscribers, date, source = 'api' }) {
     date, day, from: prev.subscriberCount, to: target, delta: target - prev.subscriberCount,
     added: [], removed: [], housesBuilt: [], housesRebuilt: [], housesReoccupied: [],
     housesAbandoned: [], housesRuined: [], unlocked: [], buildingsStarted: [], buildingsCompleted: [],
-    events: [], weather: null,
+    events: [], weather: null, named: [],
   };
 
   // 1. Time passes: abandoned houses decay, construction progresses.
@@ -98,6 +112,8 @@ export function advance(prev, { subscribers, date, source = 'api' }) {
     const h = byId.get(v.house);
     h.occupants = h.occupants.filter((id) => id !== v.id);
     diff.removed.push({ id: v.id, name: v.name, job: v.job, house: h.id });
+    // the commenter keeps their right to a villager: back to the front of the queue
+    if (s.names[v.id]) { s.nameQueue.unshift(s.names[v.id]); delete s.names[v.id]; }
     if (h.occupants.length === 0) {
       h.status = 'abandoned';
       h.abandonedDay = day;
@@ -108,13 +124,14 @@ export function advance(prev, { subscribers, date, source = 'api' }) {
   while (s.villagers.length < target) {
     const id = s.villagers.length;
     const house = findHome(s, w, id, day, diff, () => scan, (v) => { scan = v; }, byId);
-    const v = villagerFor(seed, id, house.id);
+    const v = villagerFor(seed, id, house.id, s.names);
     house.occupants.push(id);
     s.villagers.push(v);
     diff.added.push({ id, name: v.name, job: v.job, house: house.id });
   }
   s.subscriberCount = target;
   s.peakPopulation = Math.max(s.peakPopulation, target);
+  assignNames(s, commenters, blocked, diff);
 
   // 3. Unlocks (tiers never re-lock; history is never deleted).
   for (const t of tiersReached(target)) {
@@ -138,6 +155,41 @@ export function advance(prev, { subscribers, date, source = 'api' }) {
   diff.population = target;
   diff.next = nextGoal(target, s.unlockedTiers);
   return { state: s, diff };
+}
+
+/**
+ * Commenters name villagers: each new commenter (oldest comment first, one villager per person)
+ * joins the queue; queued names go to the unnamed villagers with the lowest ids.
+ * commenters: [{ author, name, at }]; blocked: { authors?: [], names?: [] }.
+ */
+function assignNames(s, commenters, blocked, diff) {
+  const blockedAuthors = new Set(blocked.authors || []);
+  const blockedNames = new Set((blocked.names || []).map((n) => String(n).toLowerCase().replace(/^@/, '')));
+  const known = new Set(s.namedAuthors);
+  for (const c of [...commenters].sort((a, b) => String(a.at).localeCompare(String(b.at)))) {
+    if (c.at && (!s.commentsSeen || c.at > s.commentsSeen)) s.commentsSeen = c.at;
+    if (!c.author || known.has(c.author) || blockedAuthors.has(c.author)) continue;
+    const name = cleanName(c.name);
+    if (!name || isOffensive(name) || blockedNames.has(name.toLowerCase())) continue;
+    known.add(c.author);
+    s.namedAuthors.push(c.author);
+    s.nameQueue.push({ name, author: c.author });
+  }
+  // names blocked after they were given are taken back
+  for (const [id, n] of Object.entries(s.names)) {
+    if (blockedAuthors.has(n.author) || blockedNames.has(n.name.toLowerCase())) { delete s.names[id]; if (s.villagers[id]) s.villagers[id].name = null; }
+  }
+  s.nameQueue = s.nameQueue.filter((n) => !blockedAuthors.has(n.author) && !blockedNames.has(n.name.toLowerCase()));
+  for (const v of s.villagers) {
+    if (!s.nameQueue.length) break;
+    if (s.names[v.id]) continue;
+    const n = s.nameQueue.shift();
+    s.names[v.id] = { ...n, day: s.day };
+    v.name = n.name;
+    diff.named.push({ id: v.id, name: n.name, job: v.job, house: v.house });
+    const added = diff.added.find((a) => a.id === v.id);
+    if (added) added.name = n.name;
+  }
 }
 
 function findHome(s, w, id, day, diff, getScan, setScan, byId) {

@@ -60,6 +60,7 @@ export function makeMaterials(seed) {
     rubble: std({ map: stoneDark.map, color: '#8a857c' }),
     people: std({ roughness: 0.8 }),
     skin: std({ color: '#e0b48f', roughness: 0.7 }),
+    gear: std({ color: '#4a3526', roughness: 0.9 }),
     sail: std({ color: '#efe6cf', side: THREE.DoubleSide }),
   };
   M.glows = [M.window, M.windowWarm, M.stained, M.flame, M.ember, M.lamp];

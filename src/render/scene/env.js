@@ -145,7 +145,9 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
       domeU.sunDir.value.copy(sunDir);
       scene.fog.color.copy(domeU.horizon.value).multiplyScalar(0.97);
       const alt = Math.max(1, camera.position.y);
-      scene.fog.density = Math.min(baseFog * THREE.MathUtils.clamp(140 / alt, 0.25, 1), 0.9 / Math.max(300, alt * 2.2));
+      // high wide shots look through much less haze, so the whole town stays readable on foggy days
+      const high = THREE.MathUtils.smoothstep(alt, 70, 220);
+      scene.fog.density = Math.min(baseFog * THREE.MathUtils.clamp(140 / alt, 0.25, 1), THREE.MathUtils.lerp(0.9, 0.45, high) / Math.max(300, alt * 2.2));
       sun.position.copy(focus).addScaledVector(sunDir, 700);
       sun.target.position.copy(focus);
       const sc = sun.shadow.camera;

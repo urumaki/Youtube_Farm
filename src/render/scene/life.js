@@ -44,20 +44,33 @@ function laneLoop(pts, lane, w, yFn) {
   };
 }
 
+const flat = (g) => { const q = g.index ? g.toNonIndexed() : g; q.deleteAttribute('uv'); return q; };
+/** Tunic, shoulders and sleeves: tinted per instance by the villager's job. */
 function personGeo() {
-  const parts = [
-    cylGeo(0.2, 0.3, 1.05, 8).translate(0, 0.95, 0),
-    cylGeo(0.09, 0.11, 0.5, 6).translate(-0.1, 0.25, 0),
-    cylGeo(0.09, 0.11, 0.5, 6).translate(0.1, 0.25, 0),
-    cylGeo(0.07, 0.08, 0.6, 6).translate(-0.3, 1.05, 0),
-    cylGeo(0.07, 0.08, 0.6, 6).translate(0.3, 1.05, 0),
-  ].map((g) => { const q = g.toNonIndexed(); q.deleteAttribute('uv'); return q; });
-  return mergeGeometries(parts);
+  const sleeve = (sx) => cylGeo(0.075, 0.095, 0.62, 8).rotateZ(sx * 0.16).translate(sx * 0.29, 1.12, 0);
+  return mergeGeometries([
+    cylGeo(0.19, 0.33, 0.9, 12).translate(0, 0.98, 0),                          // flared tunic
+    new THREE.SphereGeometry(0.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.25, 0.5, 0.85).translate(0, 1.42, 0), // shoulders
+    sleeve(-1), sleeve(1),
+  ].map(flat));
+}
+/** Legs, shoes, belt, hands and a hood/cap in dark cloth and leather. */
+function gearGeo() {
+  return mergeGeometries([
+    cylGeo(0.075, 0.085, 0.58, 6).translate(-0.09, 0.29, 0), cylGeo(0.075, 0.085, 0.58, 6).translate(0.09, 0.29, 0),
+    boxGeo(0.13, 0.08, 0.24).translate(-0.09, 0.04, 0.04), boxGeo(0.13, 0.08, 0.24).translate(0.09, 0.04, 0.04),
+    cylGeo(0.235, 0.24, 0.07, 12).translate(0, 1.08, 0),                         // belt
+    boxGeo(0.07, 0.05, 0.03).translate(0, 1.08, 0.24),                           // buckle
+    cylGeo(0.215, 0.2, 0.09, 12).translate(0, 1.79, 0),                          // cap band
+    new THREE.ConeGeometry(0.2, 0.26, 12).translate(0, 1.96, 0),                  // cap crown
+  ].map(flat));
 }
 function headGeo() {
-  const h = new THREE.SphereGeometry(0.19, 10, 8).translate(0, 1.66, 0).toNonIndexed();
-  h.deleteAttribute('uv');
-  return h;
+  return mergeGeometries([
+    new THREE.SphereGeometry(0.17, 12, 10).scale(1, 1.1, 1).translate(0, 1.66, 0),
+    cylGeo(0.07, 0.08, 0.12, 8).translate(0, 1.5, 0),                            // neck
+    new THREE.SphereGeometry(0.06, 8, 6).translate(-0.33, 0.8, 0), new THREE.SphereGeometry(0.06, 8, 6).translate(0.33, 0.8, 0), // hands
+  ].map(flat));
 }
 
 export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
@@ -95,23 +108,24 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
   });
   const bodyIm = new THREE.InstancedMesh(personGeo(), M.people, Math.max(1, walkers.length));
   const headIm = new THREE.InstancedMesh(headGeo(), M.skin, Math.max(1, walkers.length));
-  bodyIm.count = headIm.count = walkers.length;
+  const gearIm = new THREE.InstancedMesh(gearGeo(), M.gear, Math.max(1, walkers.length));
+  bodyIm.count = headIm.count = gearIm.count = walkers.length;
   walkers.forEach((wk, i) => {
     const v = state.villagers[wk.villager % Math.max(1, state.villagers.length)];
     bodyIm.setColorAt(i, new THREE.Color(v ? JOBS[v.job]?.color || '#777' : '#777'));
   });
-  bodyIm.castShadow = headIm.castShadow = true;
-  bodyIm.frustumCulled = headIm.frustumCulled = false;
-  group.add(bodyIm, headIm);
+  bodyIm.castShadow = headIm.castShadow = gearIm.castShadow = true;
+  bodyIm.frustumCulled = headIm.frustumCulled = gearIm.frustumCulled = false;
+  group.add(bodyIm, headIm, gearIm);
   const P = { x: 0, y: 0, z: 0, dir: 0 }, m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v3 = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1);
   updaters.push((t) => {
     walkers.forEach((wk, i) => {
       loops[wk.loop].at(wk.s0 + t * WALK, P);
       const bob = Math.abs(Math.sin(t * 7 + i)) * 0.06;
       m4.compose(v3.set(P.x, P.y + bob, P.z), q.setFromEuler(e.set(0, -P.dir + Math.PI / 2, Math.sin(t * 7 + i) * 0.04)), one);
-      bodyIm.setMatrixAt(i, m4); headIm.setMatrixAt(i, m4);
+      bodyIm.setMatrixAt(i, m4); headIm.setMatrixAt(i, m4); gearIm.setMatrixAt(i, m4);
     });
-    bodyIm.instanceMatrix.needsUpdate = headIm.instanceMatrix.needsUpdate = true;
+    bodyIm.instanceMatrix.needsUpdate = headIm.instanceMatrix.needsUpdate = gearIm.instanceMatrix.needsUpdate = true;
   });
 
   // ------------------------------------------------ guards: one per lane per wall stretch, ping-pong
@@ -346,6 +360,16 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
     walkers: walkers.length,
     guards: guardCount,
     smokeSources: sources,
+    /** Where villager `id` walks at time t (null if they have no walker). dir is smoothed over ~12 m. */
+    walkerOf(id) {
+      const wk = walkers.find((x) => x.villager === id);
+      if (!wk) return null;
+      const lp = loops[wk.loop], A = {}, B = {};
+      return {
+        at: (t) => { lp.at(wk.s0 + t * WALK, A); return new THREE.Vector3(A.x, A.y, A.z); },
+        dir: (t) => { lp.at(wk.s0 + t * WALK - 6, A); lp.at(wk.s0 + t * WALK + 6, B); return Math.atan2(B.z - A.z, B.x - A.x); },
+      };
+    },
     hideSmoke(i) { hidden.add(i); },
     update(t, env) { for (const u of updaters) u(t, env); },
   };

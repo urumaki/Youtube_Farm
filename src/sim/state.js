@@ -1,7 +1,7 @@
 // Persistence: load/migrate/validate state, atomic writes, daily history snapshots.
 import fs from 'node:fs';
 import path from 'node:path';
-import { SCHEMA_VERSION, genesis, advance, deriveVillagers, DEFAULT_SEED } from './simulate.js';
+import { SCHEMA_VERSION, genesis, advance, deriveVillagers, withNameFields, DEFAULT_SEED } from './simulate.js';
 import { validate } from './validate.js';
 
 export const STATE_DIR = path.resolve('state');
@@ -27,6 +27,7 @@ export function migrate(raw) {
     s = MIGRATIONS[v](s);
     v = s.schemaVersion;
   }
+  withNameFields(s);
   if (!Array.isArray(s.villagers)) s.villagers = deriveVillagers(s); // compact snapshots
   const errors = validate(SCHEMA, s);
   if (errors.length) throw new Error('invalid state: ' + errors.slice(0, 5).join('; '));

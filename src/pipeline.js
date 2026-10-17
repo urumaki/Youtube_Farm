@@ -4,6 +4,7 @@ import path from 'node:path';
 import { genesis, advance } from './sim/simulate.js';
 import { baseStateFor, saveDay, lastKnownCount, STATE_DIR } from './sim/state.js';
 import { getSubscriberCount } from './fetch/youtube.js';
+import { fetchCommenters } from './fetch/comments.js';
 import { buildScript } from './audio/narration.js';
 import { synthesize, captionPhrases } from './audio/tts/index.js';
 import { mixSoundtrack, VOICE_DELAY } from './audio/mix.js';
@@ -31,6 +32,7 @@ export function parseArgs(argv) {
     else if (k === '--no-video') a.noVideo = true;
     else if (k === '--stills') a.stills = v() || '1,10,25';
     else if (k === '--state-dir') a.stateDir = v();
+    else if (k === '--names') a.names = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: fake commenters
     else throw new Error(`unknown option ${k}`);
   }
   if (a.lang !== 'en' && a.lang !== 'it') throw new Error('--lang must be en or it');
@@ -45,7 +47,8 @@ export function summarizeDiff(diff) {
     housesReoccupied: pick('housesReoccupied'), housesAbandoned: pick('housesAbandoned'), housesRuined: pick('housesRuined'),
     unlocked: diff.unlocked, buildingsStarted: diff.buildingsStarted, buildingsCompleted: diff.buildingsCompleted,
     weather: diff.weather, events: diff.events.map((e) => e.type + (e.name ? `:${e.name}` : '')), next: diff.next,
-    newcomers: diff.added.slice(0, 5).map((v) => `${v.name} (${v.job})`),
+    newcomers: diff.added.slice(0, 5).map((v) => `${v.name ?? '(no name yet)'} (${v.job})`),
+    named: (diff.named || []).map((v) => `${v.name} (${v.job})`),
   };
 }
 
@@ -71,13 +74,19 @@ export async function produceVideo(state, diff, { lang = 'en', out, quality, tts
 }
 
 /** Build a two-day test kingdom ending at `subs` (default start: ~88% of it), without touching state/. */
-export function testKingdom({ subs, from, date = today(), seed }) {
+export function testKingdom({ subs, from, date = today(), seed, names = [] }) {
   const start = from ?? (subs <= 3 ? 0 : Math.round(subs * 0.88) - 1);
   const d0 = new Date(Date.parse(date) - 2 * 86400000).toISOString().slice(0, 10);
   const d1 = new Date(Date.parse(date) - 86400000).toISOString().slice(0, 10);
   let s = genesis({ seed, date: d0 });
   s = advance(s, { subscribers: start, date: d1, source: 'test' }).state;
-  return advance(s, { subscribers: subs, date, source: 'test' });
+  const commenters = names.map((n, i) => ({ author: `test-${i}`, name: n, at: `${date}T00:00:${String(i).padStart(2, '0')}Z` }));
+  return advance(s, { subscribers: subs, date, source: 'test', commenters });
+}
+
+/** state/blocked.json: { "names": ["SomeName"], "authors": ["UC..."] } — names never to show. */
+export function loadBlocked(dir) {
+  try { return JSON.parse(fs.readFileSync(path.join(dir, 'blocked.json'), 'utf8')); } catch { return {}; }
 }
 
 export async function daily(args, log = console) {
@@ -86,7 +95,11 @@ export async function daily(args, log = console) {
   const { count, source, error } = await getSubscriberCount({ override: args.subs, lastKnown: lastKnownCount({ dir }), log });
   log.log(`[fetch] ${count} subscribers (${source})${error ? ` — ${error}` : ''}`);
   const base = baseStateFor(date, { dir, seed: args.seed });
-  const { state, diff } = advance(base, { subscribers: count, date, source });
+  const commenters = args.names
+    ? args.names.map((n, i) => ({ author: `manual-${n}`, name: n, at: `${date}T00:00:${String(i).padStart(2, '0')}Z` }))
+    : await fetchCommenters({ apiKey: process.env.YOUTUBE_API_KEY, handle: process.env.YOUTUBE_HANDLE || undefined, since: base.commentsSeen, log });
+  log.log(`[names] ${commenters.length} new commenter${commenters.length === 1 ? '' : 's'}`);
+  const { state, diff } = advance(base, { subscribers: count, date, source, commenters, blocked: loadBlocked(dir) });
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff), null, 1));
   if (args.dryRun) return { state, diff, saved: false };
   saveDay(state, diff, { dir });
@@ -100,7 +113,7 @@ export async function daily(args, log = console) {
 
 export async function testRender(args, log = console) {
   if (!Number.isFinite(args.subs)) throw new Error('--subs N is required');
-  const { state, diff } = testKingdom({ subs: args.subs, from: args.from, date: args.date, seed: args.seed });
+  const { state, diff } = testKingdom({ subs: args.subs, from: args.from, date: args.date, seed: args.seed, names: args.names });
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));
   if (args.stills) {
     const times = args.stills.split(',').map(Number);

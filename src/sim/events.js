@@ -52,7 +52,9 @@ export function dailyEvents(state, diff) {
   const options = [];
   if (pop === 0) options.push({ type: 'empty', w: 1 });
   if (pop > 0) {
-    const id = r.int(0, pop - 1);
+    // a named villager when there is one, so commenters see themselves in the story
+    const named = Object.keys(state.names || {}).map(Number).filter((i) => i < pop);
+    const id = named.length && r.chance(0.7) ? r.pick(named) : r.int(0, pop - 1);
     const v = state.villagers[id];
     options.push({ type: 'spotlight', villager: id, name: v.name, job: v.job, activity: ACTIVITIES[v.job] || 'goes about the day', w: 3 });
   }

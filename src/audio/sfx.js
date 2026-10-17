@@ -303,6 +303,7 @@ const SCENES = {
 function sceneFor(cue) {
   if (cue.kind === 'house') return cue.rebuilt ? 'rebuilt' : 'house';
   if (cue.kind === 'loss') return 'loss';
+  if (cue.kind === 'villager') return 'story';
   if (cue.kind === 'castle' || cue.kind === 'gate') return 'castle';
   if (cue.kind === 'building' || cue.kind === 'story') {
     const id = (cue.id || '').startsWith('district') ? 'district' : cue.id;

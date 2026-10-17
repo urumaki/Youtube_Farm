@@ -8,32 +8,41 @@ export const DURATION = 30;
 const HOOK = 2, UPDATE_END = 22, WIDE_END = 27;
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 
-export function makePlan({ state, diff, houses, animated, buildings, castle, maxTargets = 6 }) {
+export function makePlan({ state, diff, houses, animated, buildings, castle, maxTargets = 7 }) {
   const targets = [];
   const addedByHouse = new Map();
   for (const a of diff.added) if (!addedByHouse.has(a.house)) addedByHouse.set(a.house, a);
-  // new or rebuilt houses (pick a spread of them)
+  const jobLabel = (j) => JOBS[j]?.label || j;
+  // 1) buildings unlocked or finished today come first: a new building is the day's headline
+  for (const id of [...diff.buildingsStarted, ...diff.buildingsCompleted]) {
+    const it = buildings.items[id];
+    if (!it || targets.some((t) => t.id === id) || targets.length >= 3) continue;
+    const big = ['cathedral', 'palace', 'tournament', 'harbor', 'wall2', 'university', 'colossus', 'townhall'].includes(id);
+    targets.push({
+      kind: 'building', id, pos: it.focus.clone(), radius: big ? 70 : 30, front: (it.lot?.rot ?? 0) + Math.PI / 2,
+      label: { title: BUILDINGS[id].label.replace(/^the /, 'The '), sub: diff.buildingsCompleted.includes(id) ? 'Completed!' : 'Construction begins' },
+      completed: diff.buildingsCompleted.includes(id),
+    });
+  }
+  // 2) villagers named by commenters: newest names first, then earlier ones, followed on their walk
+  const named = Object.entries(state.names || {}).map(([id, n]) => ({ id: Number(id), ...n }))
+    .filter((n) => n.id < state.villagers.length)
+    .sort((a, b) => (b.day ?? 0) - (a.day ?? 0) || a.id - b.id);
+  for (const n of named.slice(0, Math.min(3, Math.max(2, maxTargets - targets.length - 2)))) {
+    const v = state.villagers[n.id];
+    targets.push({ kind: 'villager', id: n.id, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 8, front: 0, label: { title: n.name, sub: jobLabel(v.job) }, track: null });
+  }
+  // 3) new or rebuilt houses fill the rest (a spread of them)
   const fresh = [...diff.housesBuilt, ...diff.housesRebuilt].filter((id) => animated.has(id));
-  const houseIdx = pickSpread(fresh.length, Math.min(maxTargets - Math.min(2, diff.unlocked.length + diff.buildingsCompleted.length), fresh.length));
+  const houseIdx = pickSpread(fresh.length, Math.min(Math.max(0, maxTargets - targets.length), fresh.length));
   for (const i of houseIdx) {
     const id = fresh[i];
     const a = animated.get(id);
     const v = addedByHouse.get(id);
     targets.push({
       kind: 'house', id, pos: a.mid.clone(), labelPos: a.top.clone(), radius: 24, front: a.shape.rot + (a.shape.side > 0 ? -Math.PI / 2 : Math.PI / 2),
-      label: v ? { title: v.name, sub: JOBS[v.job]?.label || v.job } : { title: 'New home', sub: '' },
+      label: v?.name ? { title: v.name, sub: jobLabel(v.job) } : { title: 'New home', sub: v ? jobLabel(v.job) : '' },
       rebuilt: diff.housesRebuilt.includes(id), extra: 0,
-    });
-  }
-  // buildings unlocked or finished today
-  for (const id of [...diff.buildingsStarted, ...diff.buildingsCompleted]) {
-    const it = buildings.items[id];
-    if (!it || targets.some((t) => t.kind === 'building' && t.id === id) || targets.length >= maxTargets) continue;
-    const big = ['cathedral', 'palace', 'tournament', 'harbor', 'wall2', 'university', 'colossus', 'townhall'].includes(id);
-    targets.push({
-      kind: 'building', id, pos: it.focus.clone(), radius: big ? 70 : 34, front: (it.lot?.rot ?? 0) + Math.PI / 2,
-      label: { title: BUILDINGS[id].label.replace(/^the /, 'The '), sub: diff.buildingsCompleted.includes(id) ? 'Completed!' : 'Construction begins' },
-      completed: diff.buildingsCompleted.includes(id),
     });
   }
   // losses
@@ -43,11 +52,12 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const who = diff.removed.find((r) => r.house === id);
     targets.push({
       kind: 'loss', id, pos: new THREE.Vector3(sh.x, sh.base + 5, sh.z), radius: 27, front: sh.rot + Math.PI / 2,
-      label: { title: who ? `${who.name} left` : 'A house falls to ruin', sub: diff.housesRuined.includes(id) ? 'Ruins' : 'Abandoned' },
+      label: { title: who?.name ? `${who.name} left` : diff.housesRuined.includes(id) ? 'A house falls to ruin' : 'A family moved away', sub: diff.housesRuined.includes(id) ? 'Ruins' : 'Abandoned' },
     });
   }
   const extraHouses = fresh.length - houseIdx.length;
-  if (extraHouses > 0 && targets.length) targets[0].extra = extraHouses;
+  const firstHouse = targets.find((t) => t.kind === 'house');
+  if (extraHouses > 0 && firstHouse) firstHouse.extra = extraHouses;
   // a quiet day: show the story event
   const story = diff.events.find((e) => e.type !== 'weather' && e.type !== 'construction' && e.type !== 'milestone') || diff.events[0];
   if (targets.length < 2) {
@@ -55,7 +65,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     if (ev === 'spotlight') {
       const v = state.villagers[story.villager];
       const sh = v && houses.shapes.get(v.house);
-      if (sh) targets.push({ kind: 'story', pos: new THREE.Vector3(sh.x, sh.base + 4, sh.z), radius: 22, front: sh.rot + Math.PI / 2, label: { title: v.name, sub: JOBS[v.job].label } });
+      if (sh) targets.push({ kind: 'story', pos: new THREE.Vector3(sh.x, sh.base + 4, sh.z), radius: 22, front: sh.rot + Math.PI / 2, label: { title: v.name || `The ${JOBS[v.job].label.toLowerCase()}`, sub: JOBS[v.job].label } });
     } else if ((ev === 'market_day' || ev === 'festival' || ev === 'trade') && buildings.items.market) {
       targets.push({ kind: 'story', pos: buildings.items.market.focus.clone(), radius: 40, front: Math.PI / 2, label: null });
     } else if (ev === 'trade' && buildings.items.dock) {
@@ -78,7 +88,9 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
 
   const seg = (UPDATE_END - HOOK) / targets.length;
   targets.forEach((tg, i) => { tg.t0 = HOOK + i * seg; tg.t1 = HOOK + (i + 1) * seg; });
-  return { targets, center, extent: Math.max(size.x, size.z), story };
+  // overcast days keep more light at the end so the wide shot stays readable
+  const dusk = ['fog', 'rain', 'snow', 'cloudy'].includes(diff.weather) ? 0.55 : 0.8;
+  return { targets, center, extent: Math.max(size.x, size.z), story, dusk };
 }
 
 function pickSpread(n, k) {
@@ -92,8 +104,21 @@ const HOOK_FROM = { pos: new THREE.Vector3(150, 44, 64), look: new THREE.Vector3
 const HOOK_TO = { pos: new THREE.Vector3(72, 17, -13), look: new THREE.Vector3(CASTLE.half + 4, CASTLE.ground + 9, 0) };
 
 function orbitPose(tg, u) {
+  if (tg.kind === 'villager' && tg.track) {
+    // walk backwards in front of the villager, slightly off-axis: the street ahead is always open,
+    // while a camera beside them would end up inside the houses
+    const t = tg.t0 + u * (tg.t1 - tg.t0);
+    const p = tg.track(t), dir = tg.trackDir(t);
+    tg.pos.copy(p);
+    tg.labelPos.copy(p).add(new THREE.Vector3(0, 2.3, 0));
+    const a = dir + 0.32 - 0.2 * u;
+    return {
+      pos: new THREE.Vector3(p.x + Math.cos(a) * tg.radius, p.y + 3.6, p.z + Math.sin(a) * tg.radius),
+      look: p.clone().add(new THREE.Vector3(0, 1.1, 0)),
+    };
+  }
   const r = tg.radius;
-  const small = tg.kind === 'house' || tg.kind === 'loss' || tg.kind === 'story';
+  const small = tg.kind === 'house' || tg.kind === 'loss' || tg.kind === 'story' || tg.kind === 'villager';
   const a = tg.front + 0.55 - 0.7 * u;
   const h = r * (small ? 0.3 : 0.5);
   return {
@@ -120,7 +145,8 @@ function fly(a, b, k) {
 }
 
 export function evaluate(plan, t) {
-  const out = { phase: 0.8 * smooth(4, 25, t), bridge: 1, labels: [], progress: new Map(), shadowRadius: 120 };
+  // stay in daylight through the update shots, then go to dusk for the wide shot
+  const out = { phase: (plan.dusk ?? 0.8) * smooth(16, 25, t), bridge: 1, labels: [], progress: new Map(), shadowRadius: 120 };
   // drawbridge lowers in the hook and rises again at the end so the video loops
   out.bridge = t < 1.8 ? ease(t / 1.8) : t > 28.2 ? 1 - ease((t - 28.2) / 1.8) : 1;
   let pose;

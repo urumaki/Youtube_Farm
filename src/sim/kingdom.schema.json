@@ -19,12 +19,16 @@
     "unlockedTiers": { "type": "array", "items": { "type": "string" } },
     "pendingConstruction": { "type": "array", "items": { "type": "object", "required": ["building", "daysLeft", "daysTotal"] } },
     "weather": { "type": "string", "enum": ["clear", "cloudy", "fog", "rain", "snow"] },
-    "events": { "type": "array", "items": { "type": "object", "required": ["type"] } }
+    "events": { "type": "array", "items": { "type": "object", "required": ["type"] } },
+    "names": { "type": "object" },
+    "nameQueue": { "type": "array", "items": { "type": "object", "required": ["name", "author"] } },
+    "namedAuthors": { "type": "array", "items": { "type": "string" } },
+    "commentsSeen": { "type": ["string", "null"] }
   },
   "$defs": {
     "villager": {
       "type": "object", "required": ["id", "name", "job", "house"],
-      "properties": { "id": { "type": "integer", "minimum": 0 }, "name": { "type": "string" }, "job": { "type": "string" }, "house": { "type": "integer" } }
+      "properties": { "id": { "type": "integer", "minimum": 0 }, "name": { "type": ["string", "null"] }, "job": { "type": "string" }, "house": { "type": "integer" } }
     },
     "house": {
       "type": "object", "required": ["id", "plot", "capacity", "status", "builtDay", "occupants"],

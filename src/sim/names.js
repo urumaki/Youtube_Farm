@@ -39,3 +39,31 @@ export function nameFor(seed, index) {
 export function genderFor(seed, index) {
   return (hash(seed, 'name', index) & 1) === 1 ? 'f' : 'm';
 }
+
+// ------------------------------------------------------------------ names from YouTube comments
+// Villagers have no name until a commenter gives them one (see simulate.js). Display names are
+// cleaned for the video: no "@", only letters, digits and . _ - (emoji and symbols render badly),
+// at most 22 characters. Offensive names are dropped; state/blocked.json can drop any by hand.
+const BAD = [
+  // substrings, so avoid short ones that hide in ordinary names (skill, grape, Sussex, analyst, Dickens)
+  'fuck', 'shit', 'cunt', 'bitch', 'nigg', 'faggot', 'retard', 'whore', 'slut', 'rapist', 'nazi', 'hitler', 'porn', 'sexy',
+  'pussy', 'cock', 'penis', 'vagina', 'suicide', 'cazzo', 'merda', 'troia', 'puttana', 'stronz', 'vaffanc',
+  'frocio', 'negro', 'figa', 'coglion', 'porco dio', 'porcodio', 'dioporco', 'onlyfans', 'free robux', 'http', 'www.', '.com',
+];
+
+export function cleanName(raw) {
+  const s = String(raw || '')
+    .normalize('NFKC')
+    .replace(/^@+/, '')
+    .replace(/[^\p{L}\p{N} ._-]+/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!/\p{L}|\p{N}/u.test(s)) return null;
+  return s.length > 22 ? s.slice(0, 21).trimEnd() + '…' : s;
+}
+
+export function isOffensive(name) {
+  const flat = name.toLowerCase().replace(/[0@]/g, 'o').replace(/[1!|]/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a').replace(/[5$]/g, 's');
+  const squeezed = flat.replace(/[^a-z]/g, '');
+  return BAD.some((w) => flat.includes(w) || (w.length > 3 && squeezed.includes(w.replace(/[^a-z]/g, ''))));
+}

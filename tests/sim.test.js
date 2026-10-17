@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { genesis, advance, deriveVillagers, ABANDON_DAYS, SCHEMA_VERSION } from '../src/sim/simulate.js';
 import { TIERS, jobFor, houseCapacity } from '../src/sim/tiers.js';
-import { nameFor } from '../src/sim/names.js';
+import { cleanName, isOffensive } from '../src/sim/names.js';
 import { migrate, writeAtomic, saveDay, baseStateFor } from '../src/sim/state.js';
 import { validate } from '../src/sim/validate.js';
 
@@ -58,9 +58,8 @@ test('subscriber index always yields the same villager regardless of history', (
   const direct = run([60]).state;
   const stepped = run([5, 20, 11, 35, 60]).state;
   for (let i = 0; i < 60; i++) {
-    assert.equal(direct.villagers[i].name, stepped.villagers[i].name);
+    assert.equal(direct.villagers[i].name, null, 'nameless until a commenter names them');
     assert.equal(direct.villagers[i].job, stepped.villagers[i].job);
-    assert.equal(direct.villagers[i].name, nameFor(SEED, i));
   }
 });
 
@@ -102,8 +101,8 @@ test('unsubscribes remove newest villagers, abandon houses, ruin after 7 days, r
   assert.equal(r.diff.housesBuilt.length, 0, 'no new plot while ruins remain');
   assert.equal(r.state.houses.length, housesBefore);
   checkInvariants(r.state);
-  // re-subscribing villagers return as the same people
-  assert.equal(r.state.villagers[25].name, nameFor(SEED, 25));
+  // re-subscribing villagers return with the same job
+  assert.equal(r.state.villagers[25].job, jobFor(SEED, 25));
 });
 
 test('abandoned houses are re-occupied before ruins are rebuilt', () => {
@@ -190,4 +189,45 @@ test('atomic write leaves no temp files and re-running a day reproduces it', () 
   assert.equal(JSON.stringify(again.state), JSON.stringify(first.state));
   assert.equal(JSON.stringify(again.diff), JSON.stringify(first.diff));
   assert.equal(fs.readdirSync(path.join(dir, 'history')).length, 2);
+});
+
+const C = (author, name, at) => ({ author, name, at });
+
+test('commenters name the unnamed villagers, one villager per person, oldest comment first', () => {
+  let { state: s } = run([5]);
+  let r = advance(s, { subscribers: 8, date: dateOf(5), commenters: [C('b', '@Bea', '2026-01-02'), C('a', '@Al', '2026-01-01'), C('a', '@Al', '2026-01-03')] });
+  assert.deepEqual(r.state.villagers.slice(0, 3).map((v) => v.name), ['Al', 'Bea', null]);
+  assert.deepEqual(r.diff.named.map((n) => n.id), [0, 1]);
+  assert.equal(r.state.commentsSeen, '2026-01-03');
+  checkInvariants(r.state);
+  // the same people commenting again get nothing more
+  r = advance(r.state, { subscribers: 8, date: dateOf(6), commenters: [C('a', '@Al', '2026-01-04'), C('c', 'Cy', '2026-01-04')] });
+  assert.deepEqual(r.state.villagers.slice(0, 3).map((v) => v.name), ['Al', 'Bea', 'Cy']);
+  assert.equal(r.diff.named.length, 1);
+});
+
+test('more commenters than villagers wait in a queue; a leaving named villager returns the name to it', () => {
+  let { state: s } = run([2]);
+  let r = advance(s, { subscribers: 2, date: dateOf(5), commenters: ['a', 'b', 'c'].map((x, i) => C(x, x.toUpperCase(), `2026-01-0${i + 1}`)) });
+  assert.deepEqual(r.state.villagers.map((v) => v.name), ['A', 'B']);
+  assert.deepEqual(r.state.nameQueue.map((n) => n.name), ['C']);
+  r = advance(r.state, { subscribers: 1, date: dateOf(6) });
+  assert.deepEqual(r.state.nameQueue.map((n) => n.name), ['B', 'C']);
+  r = advance(r.state, { subscribers: 3, date: dateOf(7) });
+  assert.deepEqual(r.state.villagers.map((v) => v.name), ['A', 'B', 'C']);
+  assert.equal(r.state.nameQueue.length, 0);
+  checkInvariants(r.state);
+  // history snapshots re-derive the names
+  assert.deepEqual(deriveVillagers(r.state).map((v) => v.name), ['A', 'B', 'C']);
+});
+
+test('offensive and blocked names are never used, and a block removes a given name', () => {
+  let { state: s } = run([4]);
+  let r = advance(s, { subscribers: 4, date: dateOf(5), commenters: [C('x', '@fuck_you', '1'), C('y', '🔥🔥', '2'), C('z', '@Zed', '3'), C('w', '@Wil', '4')] });
+  assert.deepEqual(r.state.villagers.map((v) => v.name), ['Zed', 'Wil', null, null]);
+  r = advance(r.state, { subscribers: 4, date: dateOf(6), blocked: { names: ['@zed'] } });
+  assert.deepEqual(r.state.villagers.map((v) => v.name), [null, 'Wil', null, null]);
+  checkInvariants(r.state);
+  assert.equal(cleanName('@Mario Rossi'), 'Mario Rossi');
+  assert.equal(isOffensive('skill_gamer'), false);
 });

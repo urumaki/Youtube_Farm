@@ -26,6 +26,7 @@ const CSS = `
 #ov .bar i{display:block;height:100%;background:linear-gradient(90deg,#b8862a,#ffe08a)}
 #ov .cta{position:absolute;left:0;right:0;top:380px;text-align:center}
 #ov .cta .big{font-family:'Cinzel',serif;font-weight:700;font-size:74px;line-height:1.1;color:#fff4d6;text-shadow:0 5px 0 #6b4a12,0 8px 26px rgba(0,0,0,.8)}
+#ov .cta .cmt{margin-top:26px;font-weight:800;font-size:40px;color:#fff4d6;text-shadow:0 3px 12px rgba(0,0,0,.9)}
 #ov .cta .btn{display:inline-block;margin-top:34px;padding:22px 54px;border-radius:60px;background:#c4302b;font-weight:800;font-size:52px;letter-spacing:2px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
 #ov .day{position:absolute;left:0;top:0;font-weight:700;font-size:30px;color:#fff;opacity:.92;text-shadow:0 2px 8px rgba(0,0,0,.9)}
 #ov .cap{position:absolute;left:0;right:0;bottom:30px;text-align:center}
@@ -34,8 +35,8 @@ const CSS = `
 `;
 
 const STR = {
-  en: { villagers: 'VILLAGERS', villager: 'VILLAGER', day: 'Day', more: (n) => `+${n} more homes`, until: (n, g) => `<b>${n}</b> more villager${n === 1 ? '' : 's'} until <b>${g}</b>`, cta1: 'Subscribe to', cta2: 'become a villager', btn: 'SUBSCRIBE', realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Clear skies', cloudy: 'Cloudy', fog: 'Fog', rain: 'Rain', snow: 'Snow' }, none: 'No change today' },
-  it: { villagers: 'ABITANTI', villager: 'ABITANTE', day: 'Giorno', more: (n) => `+${n} altre case`, until: (n, g) => `Ancora <b>${n}</b> abitant${n === 1 ? 'e' : 'i'} e <b>${g}</b>`, cta1: 'Iscriviti per', cta2: 'diventare un abitante', btn: 'ISCRIVITI', realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Sereno', cloudy: 'Nuvoloso', fog: 'Nebbia', rain: 'Pioggia', snow: 'Neve' }, none: 'Nessun cambiamento oggi' },
+  en: { villagers: 'VILLAGERS', villager: 'VILLAGER', day: 'Day', more: (n) => `+${n} more homes`, until: (n, g) => `<b>${n}</b> more villager${n === 1 ? '' : 's'} until <b>${g}</b>`, cta1: 'Subscribe to', cta2: 'become a villager', btn: 'SUBSCRIBE', cmt: 'Comment to name a villager', realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Clear skies', cloudy: 'Cloudy', fog: 'Fog', rain: 'Rain', snow: 'Snow' }, none: 'No change today' },
+  it: { villagers: 'ABITANTI', villager: 'ABITANTE', day: 'Giorno', more: (n) => `+${n} altre case`, until: (n, g) => `Ancora <b>${n}</b> abitant${n === 1 ? 'e' : 'i'} e <b>${g}</b>`, cta1: 'Iscriviti per', cta2: 'diventare un abitante', btn: 'ISCRIVITI', cmt: 'Commenta per dare il nome a un abitante', realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Sereno', cloudy: 'Nuvoloso', fog: 'Nebbia', rain: 'Pioggia', snow: 'Neve' }, none: 'Nessun cambiamento oggi' },
 };
 
 export function createOverlay(root, data) {
@@ -49,7 +50,7 @@ export function createOverlay(root, data) {
     <div class="day"></div>
     <div class="counter"><div class="crown">${s.realm}</div><div class="num">0</div><div class="unit"></div><div class="delta"></div></div>
     <div class="goal"></div>
-    <div class="cta"><div class="big">${s.cta1}<br>${s.cta2}</div><div class="btn">${s.btn}</div></div>
+    <div class="cta"><div class="big">${s.cta1}<br>${s.cta2}</div><div class="btn">${s.btn}</div><div class="cmt">${s.cmt}</div></div>
     <div class="cap"></div>
   </div>`;
   root.appendChild(ov);
@@ -84,7 +85,9 @@ export function createOverlay(root, data) {
       // labels for the active target, projected and clamped to the safe zone
       for (const [, el] of labelEls) el.style.display = 'none';
       const tg = ev.active;
-      if (tg && tg.label && ev.activeU > 0.12 && ev.activeU < 0.97) {
+      // a walking villager is tiny until the camera has landed in front of them
+      const u0 = tg?.kind === 'villager' ? 0.4 : 0.12;
+      if (tg && tg.label && ev.activeU > u0 && ev.activeU < 0.97) {
         let el = labelEls.get(tg);
         if (!el) {
           el = document.createElement('div');
@@ -101,7 +104,7 @@ export function createOverlay(root, data) {
         const cx = Math.min(sw - wEl / 2, Math.max(wEl / 2, x));
         const cy = Math.min(sh - 260, Math.max(hEl + 10, y - 30));
         el.style.left = `${cx}px`; el.style.top = `${cy}px`;
-        el.style.opacity = Math.min(1, (ev.activeU - 0.12) * 8, (0.97 - ev.activeU) * 12);
+        el.style.opacity = Math.min(1, (ev.activeU - u0) * 8, (0.97 - ev.activeU) * 12);
       }
       // captions: the current phrase, the spoken word highlighted
       const c = (data.captions || []).find((p) => t >= p.start && t < p.end + 0.15);

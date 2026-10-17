@@ -79,6 +79,14 @@ async function setup(data) {
   for (const [id, a] of animated) if (a.chimneyTop && !plan?.targets.some((tg) => tg.id === id)) extraChimneys.push({ pos: a.chimneyTop, dark: false, rate: 1, startAt: 21 });
   const life = buildLife(w, state, M, castle, houses, buildings, { weather: diff.weather, extraChimneys });
   scene.add(life.group);
+  // named villagers: the camera follows their walker; without one, it looks at their house
+  if (plan) for (const tg of plan.targets) {
+    if (tg.kind !== 'villager') continue;
+    const wk = life.walkerOf(tg.id);
+    if (wk) { tg.track = wk.at; tg.trackDir = wk.dir; continue; }
+    const sh = houses.shapes.get(state.villagers[tg.id].house);
+    tg.pos.set(sh.x, sh.base + 3, sh.z); tg.labelPos.set(sh.x, sh.base + 8, sh.z); tg.radius = 20; tg.front = sh.rot + Math.PI / 2;
+  }
 
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
   const overlay = viewer ? null : createOverlay(document.getElementById('stage'), data);

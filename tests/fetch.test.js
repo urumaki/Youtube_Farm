@@ -38,3 +38,17 @@ test('exact mode sums gained minus lost from the Analytics API', async () => {
 test('--subs override wins', async () => {
   assert.deepEqual(await getSubscriberCount({ override: 12, fetchImpl: json({}, 500) }), { count: 12, source: 'override' });
 });
+
+test('commenters: new top-level authors since the last run, oldest first, channel owner skipped', async () => {
+  const { fetchCommenters } = await import('../src/fetch/comments.js');
+  const th = (author, name, at) => ({ snippet: { topLevelComment: { snippet: { authorChannelId: { value: author }, authorDisplayName: name, publishedAt: at } } } });
+  const fetchImpl = async (url) => {
+    const u = String(url);
+    if (u.includes('/channels')) return new Response(JSON.stringify({ items: [{ id: 'UCown' }] }));
+    if (u.includes('/commentThreads')) return new Response(JSON.stringify({ items: [th('UCb', '@Bea', '2026-10-17T10:00:00Z'), th('UCown', '@Me', '2026-10-17T09:00:00Z'), th('UCa', '@Al', '2026-10-16T12:00:00Z'), th('UCold', '@Old', '2026-10-15T00:00:00Z')] }));
+    return new Response('{}', { status: 404 });
+  };
+  const r = await fetchCommenters({ apiKey: 'k', since: '2026-10-15T12:00:00Z', fetchImpl, log: { log() {} } });
+  assert.deepEqual(r.map((c) => c.name), ['@Al', '@Bea']);
+  assert.deepEqual(await fetchCommenters({ apiKey: '', log: { log() {} } }), []);
+});

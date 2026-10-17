@@ -16,7 +16,7 @@ npm test                         # simulation, fetch and audio tests
 
 ## How the kingdom works
 
-- **1 subscriber = 1 villager.** Villager `#i` always gets the same name and job (seeded by
+- **1 subscriber = 1 villager.** Villager `#i` always gets the same job (seeded by
   index), so a returning subscriber comes back as the same person.
 - **Town plan** follows how medieval castle towns grew (e.g. Corfe, Bolsover): a market square just
   outside the castle bridge with the chapel and town hall on its sides, main streets radiating from
@@ -33,6 +33,14 @@ npm test                         # simulation, fetch and audio tests
   100 chapel, windmill · 250 second wall, town hall · 500 harbor, cathedral, tournament ground ·
   1,000 town charter, East Ward · 2,500 North Ward · 5,000 university · 10,000 royal palace ·
   100,000 lighthouse · 1,000,000 the Colossus. Big buildings take days to build.
+- **Names come from comments.** Villagers have no name until someone comments on a channel video:
+  each new commenter (one villager per person, oldest comment first) names the unnamed villager with
+  the lowest number, keeping that villager's job. Names are read with the same API key
+  (`commentThreads.list`), cleaned (no "@", no emoji, max 22 characters) and filtered for offensive
+  words; `state/blocked.json` (`{"names": [...], "authors": [...]}`) removes any name by hand. Videos
+  follow up to three named villagers walking through town (name above, job below); the narrator
+  welcomes them by job only ("Welcome our new blacksmith!"). Test with
+  `npm run render -- --subs 80 --names "Mario,Luca"`.
 - **Unsubscribes** remove the newest villagers first. Empty houses are *abandoned* (dark, broken
   roof, no smoke) for 7 days, then become *ruins*. When the count grows again, abandoned houses
   are re-occupied and ruins rebuilt before any new plot is used. History is never deleted.

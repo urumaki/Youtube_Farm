@@ -9,8 +9,9 @@ import { hash, rand01 } from '../../sim/prng.js';
 import { gableGeo, boxGeo, cylGeo } from './kit.js';
 import { buildHouseVariant, propGeos } from './houseKit.js';
 
-const ROOF_COLORS = ['#a24b31', '#8a3f2b', '#6e6f78', '#9a5c3c', '#7a4a3a', '#b0603c'].map((c) => new THREE.Color(c));
-const WALL_COLORS = ['#efe6d2', '#e8d3a6', '#ead7c9', '#f4f1e8', '#dcd6c4', '#e9dcc0'].map((c) => new THREE.Color(c));
+const ROOF_COLORS = ['#a24b31', '#8a3f2b', '#6e6f78', '#9a5c3c', '#7a4a3a', '#b0603c', '#c46a3c', '#5d4a40', '#8c5a48'].map((c) => new THREE.Color(c));
+// limewash in several earth pigments: cream, ochre, rose, pale grey-blue, buff, white
+const WALL_COLORS = ['#efe6d2', '#e2c48c', '#e6c3b4', '#cfd5d6', '#d8c6a4', '#f4f1e8', '#e9d29a', '#dcb9a6', '#c9cfc4'].map((c) => new THREE.Color(c));
 const q05 = (v) => Math.round(v * 2) / 2;
 
 /** Which variant a house uses, and where it stands. */
@@ -18,9 +19,11 @@ export function houseShape(seed, house, plot, w) {
   const st = houseStyle(seed, plot.id);
   const h = hash(seed, 'arch', plot.id);
   const cap = house.capacity;
-  const floors = cap >= 8 ? 3 : cap >= 4 ? 2 : cap === 2 ? (h % 3 === 0 ? 1 : 2) : 1;
+  // small early houses vary too: some get a second storey, some are stone or thatched cottages
+  const floors = cap >= 8 ? 3 : cap >= 4 ? 2 : cap === 2 ? (h % 3 === 0 ? 1 : 2) : (h >>> 4) % 3 === 0 ? 2 : 1;
   let arch = 'timber';
   if (floors === 1 && h % 5 < 2) arch = 'cottage';
+  else if (floors === 1 && h % 5 === 2) arch = 'stone';
   else if (floors >= 2 && h % 7 < 2) arch = 'stone';
   const W = Math.max(5, Math.min(q05(2 * plot.hw - 1.0), cap >= 4 ? 9 : 8));
   const D = Math.max(5, Math.min(q05(Math.min(2 * plot.hd - 6, cap >= 4 ? 8.5 : 7)), 8.5));
@@ -40,6 +43,7 @@ export function houseShape(seed, house, plot, w) {
   const matrix = new THREE.Matrix4().compose(new THREE.Vector3(hx, base, hz), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)), new THREE.Vector3(1, 1, 1));
   return {
     st, arch, floors, W, D, side, base, hmin, matrix, x: hx, z: hz, rot: plot.rot, plot, yaw,
+    wallColor: WALL_COLORS[hash(seed, 'wall', plot.id) % WALL_COLORS.length], roofColor: ROOF_COLORS[hash(seed, 'roof', plot.id) % ROOF_COLORS.length],
     chimney: st.chimney || arch === 'stone', dormer: floors >= 2 && h % 4 === 0,
     key: (damaged) => `${arch}|${W}|${D}|${floors}|${st.chimney || arch === 'stone' ? 1 : 0}|${floors >= 2 && h % 4 === 0 ? 1 : 0}|${damaged ? 1 : 0}`,
   };
@@ -119,8 +123,8 @@ export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 300 
     }
     const damaged = h.status === 'abandoned';
     const v = variant(sh, damaged, seed);
-    const wall = WALL_COLORS[sh.st.wall].clone().multiplyScalar(damaged ? 0.6 : 1);
-    const roofC = ROOF_COLORS[sh.st.roof].clone().multiplyScalar(damaged ? 0.6 : 1);
+    const wall = sh.wallColor.clone().multiplyScalar(damaged ? 0.6 : 1);
+    const roofC = sh.roofColor.clone().multiplyScalar(damaged ? 0.6 : 1);
     const m = local(sh, 0, 0, 0);
     for (const [key, geo] of v.parts) {
       const mat = key.split('|')[1];
@@ -217,7 +221,7 @@ export function buildAnimatedHouse(sh, h, seed, M, housesCtx) {
     let material = HM[mat];
     if (mat === 'plaster' || mat === 'roofTile') {
       material = material.clone();
-      material.color.copy(mat === 'plaster' ? WALL_COLORS[sh.st.wall] : ROOF_COLORS[sh.st.roof]);
+      material.color.copy(mat === 'plaster' ? sh.wallColor : sh.roofColor);
     }
     const mesh = new THREE.Mesh(geo, material);
     mesh.castShadow = mat !== 'glass'; mesh.receiveShadow = true;
