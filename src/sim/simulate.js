@@ -39,6 +39,8 @@ export function withNameFields(s) {
   s.nameQueue ??= [];
   s.namedAuthors ??= [];
   if (!('commentsSeen' in s)) s.commentsSeen = null;
+  for (const n of [...Object.values(s.names), ...s.nameQueue]) n.name = cleanName(n.name) || n.name; // re-clean old saves
+  if (Array.isArray(s.villagers)) for (const v of s.villagers) if (v && s.names[v.id]) v.name = s.names[v.id].name;
   return s;
 }
 

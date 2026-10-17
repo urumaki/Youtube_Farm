@@ -13,6 +13,9 @@ import { buildLife } from './life.js';
 import { buildEnvironment } from './env.js';
 import { makePlan, evaluate } from './timeline.js';
 import { createOverlay } from './overlay.js';
+import { buildWorkScene } from './work.js';
+import { buildCaravan } from './caravan.js';
+import { heightAt } from '../../sim/world.js';
 
 const FPS = 30;
 
@@ -79,24 +82,48 @@ async function setup(data) {
   for (const [id, a] of animated) if (a.chimneyTop && !plan?.targets.some((tg) => tg.id === id)) extraChimneys.push({ pos: a.chimneyTop, dark: false, rate: 1, startAt: 21 });
   const life = buildLife(w, state, M, castle, houses, buildings, { weather: diff.weather, extraChimneys });
   scene.add(life.group);
-  // named villagers: the camera follows their walker; without one, it looks at their house
+  // named villagers are shown at work in their croft; today's named villagers arrive in a caravan
+  const works = [];
+  let caravan = null;
+  const yFn = (x, z) => heightAt(w, x, z) + 0.03;
   if (plan) for (const tg of plan.targets) {
-    if (tg.kind !== 'villager') continue;
-    const wk = life.walkerOf(tg.id);
-    if (wk) { tg.track = wk.at; tg.trackDir = wk.dir; continue; }
-    const sh = houses.shapes.get(state.villagers[tg.id].house);
-    tg.pos.set(sh.x, sh.base + 3, sh.z); tg.labelPos.set(sh.x, sh.base + 8, sh.z); tg.radius = 20; tg.front = sh.rot + Math.PI / 2;
+    if (tg.kind === 'villager') {
+      const v = state.villagers[tg.id];
+      const sh = houses.shapes.get(v.house);
+      const c = Math.cos(sh.rot), s = Math.sin(sh.rot);
+      const ax = -s * sh.side, az = c * sh.side; // from the house toward its croft
+      const anchor = new THREE.Vector3(sh.x + ax * (sh.D / 2 + 4.2), 0, sh.z + az * (sh.D / 2 + 4.2));
+      anchor.y = yFn(anchor.x, anchor.z);
+      const ws = buildWorkScene({ job: v.job, anchor, face: Math.atan2(ax, az) + 1.1, M, seed: state.seed, id: tg.id });
+      scene.add(ws.group);
+      works.push(ws);
+      tg.work = ws;
+      tg.pos.copy(ws.focus);
+      tg.labelPos.copy(ws.labelPos);
+      tg.away = Math.atan2(az, ax);
+    } else if (tg.kind === 'caravan') {
+      caravan = buildCaravan({ w, named: diff.named.map((n) => ({ name: n.name, job: n.job })), M, seed: state.seed, yFn });
+      if (!caravan) continue;
+      scene.add(caravan.group);
+      tg.labels = caravan.labels;
+      tg.track = (t) => caravan.headAt(t, tg.t0);
+      tg.banner = data.lang === 'it' ? `La carovana: ${caravan.count} nuov${caravan.count === 1 ? 'o arrivo' : 'i arrivi'}` : `The caravan: ${caravan.count} newcomer${caravan.count === 1 ? '' : 's'}`;
+      tg.caravan = caravan;
+    }
   }
-
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
   const overlay = viewer ? null : createOverlay(document.getElementById('stage'), data);
 
-  const ctx = { renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w };
+  const ctx = { renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, caravan };
   ctx.stats = {
     setupMs: Math.round(performance.now() - t0), houses: state.houses.length, animated: animated.size, trees: nature.count,
     walkers: life.walkers, guards: life.guards, targets: plan?.targets.map((t) => `${t.kind}:${t.id ?? ''}`),
     // what each shot shows, for the sound effects track
-    cues: plan?.targets.map((t, i) => ({ kind: t.kind, id: t.id ?? null, t0: t.t0, t1: t.t1, completed: t.completed ?? null, rebuilt: !!t.rebuilt, pan: i % 2 ? 0.25 : -0.25, hasChapel: state.buildings.some((b) => (b.id === 'chapel' || b.id === 'cathedral') && b.status === 'done') })) ?? [],
+    cues: plan?.targets.map((t, i) => ({
+      kind: t.kind, id: t.id ?? null, t0: t.t0, t1: t.t1, completed: t.completed ?? null, rebuilt: !!t.rebuilt, pan: i % 2 ? 0.25 : -0.25,
+      hasChapel: state.buildings.some((b) => (b.id === 'chapel' || b.id === 'cathedral') && b.status === 'done'),
+      job: t.job ?? null, strikes: t.work ? t.work.strikeTimes(t.t0, t.t1) : [], strikeSound: t.work?.sound ?? null,
+    })) ?? [],
   };
   window.__ctx = ctx;
   if (viewer) startViewer(ctx);
@@ -105,6 +132,9 @@ async function setup(data) {
 
 function applyFrame(ctx, t) {
   const { plan, camera, env, castle, animated, buildings, life, water, M, houses, nature, overlay, renderer } = ctx;
+  for (const ws of ctx.works || []) ws.update(t);
+  const ct = ctx.caravan && plan.targets.find((x) => x.kind === 'caravan');
+  if (ct) ctx.caravan.update(t, ct.t0, ct.t1);
   const ev = evaluate(plan, t);
   camera.position.copy(ev.camera.pos);
   camera.lookAt(ev.camera.look);

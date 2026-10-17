@@ -55,6 +55,7 @@ export function cleanName(raw) {
   const s = String(raw || '')
     .normalize('NFKC')
     .replace(/^@+/, '')
+    .replace(/-[a-z0-9]{3,5}$/, (m) => (/\d/.test(m) ? '' : m)) // YouTube's auto handle suffix (-l6p1m)
     .replace(/[^\p{L}\p{N} ._-]+/gu, '')
     .replace(/\s+/g, ' ')
     .trim();

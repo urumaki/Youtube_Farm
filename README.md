@@ -40,7 +40,11 @@ npm test                         # simulation, fetch and audio tests
   words; `state/blocked.json` (`{"names": [...], "authors": [...]}`) removes any name by hand. Videos
   follow up to three named villagers walking through town (name above, job below); the narrator
   welcomes them by job only ("Welcome our new blacksmith!"). Test with
-  `npm run render -- --subs 80 --names "Mario,Luca"`.
+  `npm run render -- --subs 80 --names "Mario,Luca"`. Each day the newly named villagers arrive in a
+  **caravan** along the east road, every one with a name tag, plus one covered wagon of belongings per
+  50 people; then up to three named villagers (one per job) are shown **at work** in their croft:
+  hoeing, hammering at the anvil with sparks, chopping wood, fishing, baking, carving stone, on guard,
+  with sound effects on every strike. YouTube's automatic handle suffixes (`-l6p1m`) are dropped.
 - **Unsubscribes** remove the newest villagers first. Empty houses are *abandoned* (dark, broken
   roof, no smoke) for 7 days, then become *ruins*. When the count grows again, abandoned houses
   are re-occupied and ruins rebuilt before any new plot is used. History is never deleted.

@@ -298,12 +298,35 @@ const SCENES = {
   loss: [['creak', 0.5]],
   castle: [['chain', 0.25]],
   story: [['chatter', 0.2]],
+  caravan: [['cart', 0.45], ['chatter', 0.25]],
 };
+
+/** One impact, synced to a strike in the animation (blacksmith, woodcutter, farmer, mason). */
+function hit(kind, r) {
+  const o = buf(kind === 'anvil' ? 0.9 : 0.4);
+  if (kind === 'anvil') {
+    const f = r.float(1050, 1180), a = r.float(0.4, 0.5);
+    modes(o, 0, [[f, 0.5, 0.45], [f * 2.76, 0.32, 0.22], [f * 5.4, 0.18, 0.1], [f * 8.93, 0.1, 0.05], [f * 0.5, 0.15, 0.3]], a, r);
+    noiseBurst(o, 0, 0.01, a, r, [new Biquad('hp', 3000)]);
+  } else if (kind === 'chop') {
+    modes(o, 0, [[r.float(170, 220), 0.7, 0.06], [r.float(420, 520), 0.4, 0.035]], 0.8, r);
+    noiseBurst(o, 0, 0.03, 0.7, r, [new Biquad('bp', 1400, 1.1)]);
+  } else if (kind === 'hoe') {
+    modes(o, 0, [[r.float(95, 130), 0.6, 0.07]], 0.6, r);
+    noiseBurst(o, 0, 0.09, 0.55, r, [new Biquad('lp', 900)]);
+  } else if (kind === 'chisel') {
+    modes(o, 0, [[r.float(2100, 2600), 0.4, 0.03], [r.float(5200, 6000), 0.2, 0.015]], 0.5, r);
+    noiseBurst(o, 0, 0.015, 0.4, r, [new Biquad('hp', 2500)]);
+  }
+  return o;
+}
+const WORK_BEDS = { blacksmith: [['fire', 0.25]], baker: [['fire', 0.3], ['chatter', 0.1]], fisherman: [['water', 0.5]], merchant: [['chatter', 0.3]], innkeeper: [['chatter', 0.3]], stonemason: [['stone', 0.2]] };
 
 function sceneFor(cue) {
   if (cue.kind === 'house') return cue.rebuilt ? 'rebuilt' : 'house';
   if (cue.kind === 'loss') return 'loss';
-  if (cue.kind === 'villager') return 'story';
+  if (cue.kind === 'villager') return null; // handled with synced strikes below
+  if (cue.kind === 'caravan') return 'caravan';
   if (cue.kind === 'castle' || cue.kind === 'gate') return 'castle';
   if (cue.kind === 'building' || cue.kind === 'story') {
     const id = (cue.id || '').startsWith('district') ? 'district' : cue.id;
@@ -345,6 +368,11 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
     const len = cue.t1 - cue.t0 + 0.4;
     for (const [name, gain] of SCENES[scene]) place(sound(name, len, r, workDir), cue.t0 - 0.2, gain, cue.pan ?? 0);
     if (cue.kind === 'house') place(sound('thud', 0.8, r, workDir), cue.t0 + (cue.t1 - cue.t0) * 0.66, 0.35, cue.pan ?? 0, 0.005, 0.3);
+  }
+  for (const cue of cues.filter((c) => c.kind === 'villager')) {
+    const len = cue.t1 - cue.t0 + 0.4;
+    for (const [name, gain] of WORK_BEDS[cue.job] || []) place(sound(name, len, r, workDir), cue.t0 - 0.2, gain, cue.pan ?? 0);
+    for (const ts of cue.strikes || []) place(hit(cue.strikeSound, r), ts - 0.005, cue.strikeSound === 'anvil' ? 0.6 : 0.75, cue.pan ?? 0, 0.002, 0.3);
   }
   // wide shot: a distant bell if the kingdom has one; chains again as the bridge rises for the loop
   if (cues.some((c) => c.hasChapel)) place(sound('bell', 4.5, r, workDir), 22.5, 0.18, -0.3, 0.2, 1.2);

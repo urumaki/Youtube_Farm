@@ -132,7 +132,8 @@ export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 300 
       ch.near.push(sh.key(damaged) + key, { geo, mat: damaged && mat === 'glass' ? HM.dark : HM[mat], shadow: mat !== 'glass' }, m, tint);
     }
     if (v.chimneyTop && !damaged) chimneys.push(new THREE.Vector3(...v.chimneyTop).applyMatrix4(sh.matrix));
-    addYard(ch.near, sh, h, seed, props, HM, damaged);
+    // the crofts of villagers named by commenters are kept clear for their work scenes (work.js)
+    if (!h.occupants.some((id) => state.names?.[id])) addYard(ch.near, sh, h, seed, props, HM, damaged);
     ch.far.push('far', { geo: unit.far, mat: farMat, shadow: false }, local(sh, 0, 0, 0, sh.W, v.height * 0.85, sh.D), roofC.clone().lerp(wall, 0.3));
   }
 

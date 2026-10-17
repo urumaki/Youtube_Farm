@@ -33,17 +33,19 @@ function windowsRow(b, x0, x1, y, z, n, key = 'window', ry = 0, size = [1, 1.3])
     b.add(key, boxGeo(size[0], size[1], 0.2), lx * c + z * s, y, -lx * s + z * c, ry);
   }
 }
-function scaffoldAround(b, hw, hd, h) {
-  const pole = cylGeo(0.1, 0.1, h, 6);
-  for (let x = -hw; x <= hw + 0.01; x += Math.max(2, (2 * hw) / 6)) for (const z of [-hd, hd]) b.add('wood', pole, x, h / 2, z);
-  for (let z = -hd; z <= hd + 0.01; z += Math.max(2, (2 * hd) / 4)) for (const x of [-hw, hw]) b.add('wood', pole, x, h / 2, z);
+// drop: how far the ground falls below the lot's level, so poles always reach the earth
+function scaffoldAround(b, hw, hd, h, drop = 0) {
+  const pole = cylGeo(0.1, 0.1, h + drop, 6);
+  const py = (h - drop) / 2;
+  for (let x = -hw; x <= hw + 0.01; x += Math.max(2, (2 * hw) / 6)) for (const z of [-hd, hd]) b.add('wood', pole, x, py, z);
+  for (let z = -hd; z <= hd + 0.01; z += Math.max(2, (2 * hd) / 4)) for (const x of [-hw, hw]) b.add('wood', pole, x, py, z);
   for (let y = 3; y < h; y += 3.2) {
     b.add('wood', boxGeo(2 * hw, 0.12, 0.9), 0, y, -hd); b.add('wood', boxGeo(2 * hw, 0.12, 0.9), 0, y, hd);
     b.add('wood', boxGeo(0.9, 0.12, 2 * hd), -hw, y, 0); b.add('wood', boxGeo(0.9, 0.12, 2 * hd), hw, y, 0);
   }
 }
-function crane(b, x, z, h) {
-  b.add('woodDark', boxGeo(0.5, h, 0.5), x, h / 2, z);
+function crane(b, x, z, h, drop = 0) {
+  b.add('woodDark', boxGeo(0.5, h + drop, 0.5), x, (h - drop) / 2, z);
   b.add('woodDark', boxGeo(h * 0.6, 0.4, 0.4), x + h * 0.2, h - 0.4, z);
   b.add('iron', cylGeo(0.03, 0.03, h * 0.5, 4), x + h * 0.45, h * 0.72, z);
   b.add('stoneDark', boxGeo(1.2, 0.8, 1.2), x + h * 0.45, h * 0.45, z);
@@ -76,7 +78,6 @@ const BUILD = {
       const row = i < 4 ? 0 : i < 7 ? 1 : 2, k = i < 4 ? i : i < 7 ? i - 4 : i - 7;
       b.add('wood', cylGeo(0.35, 0.35, 6, 8).rotateX(Math.PI / 2), -4 + k * 0.72 + row * 0.36, 0.35 + row * 0.62, 6.2);
     }
-    out.smoke.push([-4, 7.5, 1.5]);
     out.focusH = 6;
   },
   dock(b, lot, out, ctx) {
@@ -406,8 +407,19 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     ctx.boats = []; ctx.sails = []; ctx.lamps = [];
     fn(b, lot, out, ctx);
     // a leveled foundation pad (skip on water)
-    const foundation = new THREE.Mesh(boxGeo(lot.hw * 2 + 1, frame.base - frame.lo + 1.2, lot.hd * 2 + 1, 3), M.cobble);
-    foundation.position.y = -(frame.base - frame.lo + 1.2) / 2 + 0.05;
+    const padH = frame.base - frame.lo + 1.2;
+    const padGeo = boxGeo(lot.hw * 2 + 1, padH, lot.hd * 2 + 1, 3);
+    if (lot.plaza) {
+      // squares get sloping sides (an embankment, not a wall) so the roads still run up onto them
+      const pp = padGeo.attributes.position, flare = padH * 1.8;
+      for (let k = 0; k < pp.count; k++) if (pp.getY(k) < 0) {
+        pp.setX(k, pp.getX(k) + Math.sign(pp.getX(k)) * flare);
+        pp.setZ(k, pp.getZ(k) + Math.sign(pp.getZ(k)) * flare);
+      }
+      padGeo.computeVertexNormals();
+    }
+    const foundation = new THREE.Mesh(padGeo, M.cobble);
+    foundation.position.y = -padH / 2 + 0.05;
     foundation.receiveShadow = true;
     const inner = b.build(mats);
     const root = new THREE.Group();
@@ -416,15 +428,17 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     const body = new THREE.Group();
     body.add(inner);
     root.add(body);
-    if (!lot.onWater && !lot.plaza && bd.id !== 'quarry') root.add(foundation);
-    // construction site extras
+    if (!lot.onWater && bd.id !== 'quarry') root.add(foundation); // squares too: stalls and crosses need a level floor
+    // construction site extras, standing on the ground (or the river bed) below the lot level
+    const drop = lot.onWater ? 4 : frame.base - frame.lo + 0.3;
     const site = new Builder();
-    scaffoldAround(site, lot.hw * 0.9, lot.hd * 0.9, Math.max(6, out.focusH * 1.2));
-    crane(site, lot.hw * 0.7, -lot.hd * 0.7, Math.max(10, out.focusH * 1.5));
+    scaffoldAround(site, lot.hw * 0.9, lot.hd * 0.9, Math.max(6, out.focusH * 1.2), drop);
+    crane(site, lot.hw * 0.7, -lot.hd * 0.7, Math.max(10, out.focusH * 1.5), drop);
     const siteGroup = site.build(mats);
     root.add(siteGroup);
     const toWorld = (p) => new THREE.Vector3(p[0], p[1], p[2]).applyMatrix4(frame.m);
-    for (const s of out.smoke) smoke.push({ pos: toWorld(s), dark: s[3] === 'dark', id: bd.id });
+    // no chimney smoke while the building (and its chimney) is still going up
+    if (bd.status === 'done') for (const s of out.smoke) smoke.push({ pos: toWorld(s), dark: s[3] === 'dark', id: bd.id });
     for (const l of [...out.lights, ...ctx.lamps]) lights.push({ pos: toWorld(l), id: bd.id });
     for (const f of out.flags) flags.push({ pos: toWorld(f), size: [f[3], f[4]], kind: f[5] || 'pennant' });
     for (const bn of out.banners) banners.push({ pos: toWorld(bn), w: bn[3], h: bn[4], rot: lot.rot });

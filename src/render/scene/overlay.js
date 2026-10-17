@@ -19,6 +19,10 @@ const CSS = `
 #ov .label .s{font-weight:700;font-size:28px;color:#e3b23c;letter-spacing:1px;text-transform:uppercase}
 #ov .label.loss{background:rgba(70,18,26,.88);border-color:#c9a0a0}
 #ov .label .more{font-weight:700;font-size:24px;color:#cfd8ff}
+#ov .tag{position:absolute;transform:translate(-50%,-100%);padding:4px 10px 5px;border-radius:12px;background:rgba(18,29,71,.82);border:2px solid #e3b23c;white-space:nowrap;text-align:center;line-height:1.05}
+#ov .tag .t{font-family:'Cinzel',serif;font-weight:700;font-size:22px;color:#fff4d6}
+#ov .tag .s{font-weight:700;font-size:14px;color:#e3b23c;letter-spacing:1px;text-transform:uppercase}
+#ov .banner{position:absolute;left:0;right:0;top:46px;text-align:center;font-family:'Cinzel',serif;font-weight:700;font-size:48px;color:#fff4d6;text-shadow:0 4px 0 #6b4a12,0 6px 20px rgba(0,0,0,.8)}
 #ov .pin{position:absolute;width:4px;background:#e3b23c;transform:translateX(-50%)}
 #ov .goal{position:absolute;left:20px;right:20px;top:330px;text-align:center;font-weight:800;font-size:48px;line-height:1.2;text-shadow:0 3px 14px rgba(0,0,0,.9)}
 #ov .goal b{color:#e3b23c}
@@ -50,11 +54,14 @@ export function createOverlay(root, data) {
     <div class="day"></div>
     <div class="counter"><div class="crown">${s.realm}</div><div class="num">0</div><div class="unit"></div><div class="delta"></div></div>
     <div class="goal"></div>
+    <div class="banner"></div>
     <div class="cta"><div class="big">${s.cta1}<br>${s.cta2}</div><div class="btn">${s.btn}</div><div class="cmt">${s.cmt}</div></div>
     <div class="cap"></div>
   </div>`;
   root.appendChild(ov);
   const $ = (q) => ov.querySelector(q);
+  const banner = $('.banner');
+  const tagEls = [];
   const counter = $('.counter'), num = $('.num'), unit = $('.unit'), delta = $('.delta'), goal = $('.goal'), cta = $('.cta'), cap = $('.cap'), day = $('.day');
   const diff = data.diff;
   const pop = data.state.subscriberCount;
@@ -87,7 +94,7 @@ export function createOverlay(root, data) {
       const tg = ev.active;
       // a walking villager is tiny until the camera has landed in front of them
       const u0 = tg?.kind === 'villager' ? 0.4 : 0.12;
-      if (tg && tg.label && ev.activeU > u0 && ev.activeU < 0.97) {
+      if (tg && tg.label && !tg.labels && ev.activeU > u0 && ev.activeU < 0.97) {
         let el = labelEls.get(tg);
         if (!el) {
           el = document.createElement('div');
@@ -105,6 +112,31 @@ export function createOverlay(root, data) {
         const cy = Math.min(sh - 260, Math.max(hEl + 10, y - 30));
         el.style.left = `${cx}px`; el.style.top = `${cy}px`;
         el.style.opacity = Math.min(1, (ev.activeU - u0) * 8, (0.97 - ev.activeU) * 12);
+      }
+      // many small name tags (the caravan): nearest first, hidden when they would overlap
+      for (const el of tagEls) el.style.display = 'none';
+      banner.style.opacity = 0;
+      if (tg && tg.labels && ev.activeU > 0.08 && ev.activeU < 0.97) {
+        banner.textContent = tg.banner || '';
+        banner.style.opacity = Math.min(1, (ev.activeU - 0.08) * 6, (0.97 - ev.activeU) * 12);
+        const sw = W - SAFE.left - SAFE.right, sh = H - SAFE.top - SAFE.bottom;
+        const placed = [];
+        const items = tg.labels.map((lb) => {
+          v.copy(lb.pos).project(camera);
+          return { lb, x: (v.x * 0.5 + 0.5) * W - SAFE.left, y: (-v.y * 0.5 + 0.5) * H - SAFE.top, z: v.z };
+        }).filter((it) => it.z < 1 && it.x > -40 && it.x < sw + 40 && it.y > 130 && it.y < sh - 200).sort((a, b) => a.z - b.z);
+        items.forEach((it, i) => {
+          let el = tagEls[i];
+          if (!el) { el = document.createElement('div'); el.className = 'tag'; ov.querySelector('.safe').appendChild(el); tagEls[i] = el; }
+          el.innerHTML = `<div class="t">${esc(it.lb.title)}</div><div class="s">${esc(it.lb.sub || '')}</div>`;
+          el.style.display = 'block';
+          const wEl = el.offsetWidth, hEl = el.offsetHeight;
+          const cx = Math.min(sw - wEl / 2, Math.max(wEl / 2, it.x));
+          if (placed.some((p) => Math.abs(p.x - cx) < (p.w + wEl) / 2 - 6 && Math.abs(p.y - it.y) < hEl - 4)) { el.style.display = 'none'; return; }
+          placed.push({ x: cx, y: it.y, w: wEl });
+          el.style.left = `${cx}px`; el.style.top = `${it.y}px`;
+          el.style.opacity = Math.min(1, (ev.activeU - 0.08) * 6, (0.97 - ev.activeU) * 12);
+        });
       }
       // captions: the current phrase, the spoken word highlighted
       const c = (data.captions || []).find((p) => t >= p.start && t < p.end + 0.15);

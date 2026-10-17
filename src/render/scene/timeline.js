@@ -24,13 +24,17 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
       completed: diff.buildingsCompleted.includes(id),
     });
   }
-  // 2) villagers named by commenters: newest names first, then earlier ones, followed on their walk
-  const named = Object.entries(state.names || {}).map(([id, n]) => ({ id: Number(id), ...n }))
+  // 2) the caravan of villagers named today, then a few named villagers at work
+  const today = diff.named || [];
+  if (today.length) targets.unshift({ kind: 'caravan', id: 'caravan', pos: new THREE.Vector3(), radius: 14, front: 0, label: null, labels: [], weight: 1.7, count: today.length });
+  const INTEREST = ['blacksmith', 'woodcutter', 'baker', 'stonemason', 'fisherman', 'carpenter', 'miller', 'guard', 'knight', 'farmer', 'peasant'];
+  const named = Object.entries(state.names || {}).map(([id, n]) => ({ id: Number(id), ...n, job: state.villagers[Number(id)]?.job }))
     .filter((n) => n.id < state.villagers.length)
-    .sort((a, b) => (b.day ?? 0) - (a.day ?? 0) || a.id - b.id);
-  for (const n of named.slice(0, Math.min(3, Math.max(2, maxTargets - targets.length - 2)))) {
-    const v = state.villagers[n.id];
-    targets.push({ kind: 'villager', id: n.id, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 8, front: 0, label: { title: n.name, sub: jobLabel(v.job) }, track: null });
+    .sort((a, b) => (b.day ?? 0) - (a.day ?? 0) || (INTEREST.indexOf(a.job) + 1 || 99) - (INTEREST.indexOf(b.job) + 1 || 99) || a.id - b.id);
+  const picked = [];
+  for (const n of named) if (!picked.some((p) => p.job === n.job)) picked.push(n); // one per job: variety
+  for (const n of picked.slice(0, Math.min(3, Math.max(2, maxTargets - targets.length - 2)))) {
+    targets.push({ kind: 'villager', id: n.id, job: n.job, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0, label: { title: n.name, sub: jobLabel(n.job) }, work: null });
   }
   // 3) new or rebuilt houses fill the rest (a spread of them)
   const fresh = [...diff.housesBuilt, ...diff.housesRebuilt].filter((id) => animated.has(id));
@@ -86,8 +90,9 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
 
-  const seg = (UPDATE_END - HOOK) / targets.length;
-  targets.forEach((tg, i) => { tg.t0 = HOOK + i * seg; tg.t1 = HOOK + (i + 1) * seg; });
+  const totalW = targets.reduce((a, tg) => a + (tg.weight || 1), 0);
+  let tc = HOOK;
+  for (const tg of targets) { tg.t0 = tc; tc += ((UPDATE_END - HOOK) * (tg.weight || 1)) / totalW; tg.t1 = tc; }
   // overcast days keep more light at the end so the wide shot stays readable
   const dusk = ['fog', 'rain', 'snow', 'cloudy'].includes(diff.weather) ? 0.55 : 0.8;
   return { targets, center, extent: Math.max(size.x, size.z), story, dusk };
@@ -104,17 +109,23 @@ const HOOK_FROM = { pos: new THREE.Vector3(150, 44, 64), look: new THREE.Vector3
 const HOOK_TO = { pos: new THREE.Vector3(72, 17, -13), look: new THREE.Vector3(CASTLE.half + 4, CASTLE.ground + 9, 0) };
 
 function orbitPose(tg, u) {
-  if (tg.kind === 'villager' && tg.track) {
-    // walk backwards in front of the villager, slightly off-axis: the street ahead is always open,
-    // while a camera beside them would end up inside the houses
+  if (tg.kind === 'caravan' && tg.track) {
+    // in the road ahead of the column, looking back at it as it comes into town
     const t = tg.t0 + u * (tg.t1 - tg.t0);
-    const p = tg.track(t), dir = tg.trackDir(t);
-    tg.pos.copy(p);
-    tg.labelPos.copy(p).add(new THREE.Vector3(0, 2.3, 0));
-    const a = dir + 0.32 - 0.2 * u;
+    const h = tg.track(t);
+    // ahead and to one side, so the column runs diagonally across the frame and the name tags spread
+    const a = h.dir + 0.62 - 0.22 * u;
     return {
-      pos: new THREE.Vector3(p.x + Math.cos(a) * tg.radius, p.y + 3.6, p.z + Math.sin(a) * tg.radius),
-      look: p.clone().add(new THREE.Vector3(0, 1.1, 0)),
+      pos: new THREE.Vector3(h.pos.x + Math.cos(a) * 10.5, h.pos.y + 4.3, h.pos.z + Math.sin(a) * 10.5),
+      look: h.pos.clone().add(new THREE.Vector3(-Math.cos(h.dir) * 6.5, 0.6, -Math.sin(h.dir) * 6.5)),
+    };
+  }
+  if (tg.kind === 'villager' && tg.away !== undefined) {
+    // at work in the croft: the camera stands on the open side, the house behind as a backdrop
+    const a = tg.away + 0.45 - 0.9 * u;
+    return {
+      pos: new THREE.Vector3(tg.pos.x + Math.cos(a) * tg.radius, tg.pos.y + 1.7, tg.pos.z + Math.sin(a) * tg.radius),
+      look: tg.pos.clone().add(new THREE.Vector3(0, -0.1, 0)),
     };
   }
   const r = tg.radius;

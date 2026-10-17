@@ -18,6 +18,7 @@ const T = {
     welcome: [(v) => `Welcome our new ${v.job}!`, (v) => `Please welcome our new ${v.job}!`, (v) => `Say hello to our new ${v.job}!`],
     person: [(v) => `A new ${v.job} settles in.`, (v) => `A new ${v.job} moves in by the road.`],
     comment: ['Comment below, and a villager takes your name.', 'Leave a comment to name a villager.'],
+    caravan: [(n) => (n === 1 ? 'A traveler arrives with a cart full of belongings!' : `A caravan of ${n} newcomers rolls into town!`)],
     houses1: ['A new house rises along the road.', 'Builders finished a fresh new home.'],
     houses: [(n) => `${n} new houses rise along the roads.`, (n) => `Builders raised ${n} new homes.`],
     rebuilt: [(n) => `${n === 1 ? 'An old ruin was' : `${n} old ruins were`} rebuilt.`],
@@ -54,6 +55,7 @@ T.it = {
   welcome: [(v) => `Diamo il benvenuto al nuovo ${v.job}!`, (v) => `Benvenuto al nostro nuovo ${v.job}!`],
   person: [(v) => `Arriva un nuovo ${v.job}.`],
   comment: ['Commenta e un abitante prenderà il tuo nome.'],
+  caravan: [(n) => (n === 1 ? 'Arriva un viandante con il suo carro!' : `Arriva una carovana con ${n} nuovi abitanti!`)],
   houses1: ['Una nuova casa sorge lungo la strada.'],
   houses: [(n) => `${n} nuove case sorgono lungo le strade.`],
   rebuilt: [(n) => `${n === 1 ? 'Una rovina è stata ricostruita' : `${n} rovine sono state ricostruite`}.`],
@@ -120,6 +122,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
   else add(pick(L.same), 'delta', 10);
 
   // villagers named by commenters today are welcomed by job; otherwise up to two newcomers (special jobs first)
+  if ((diff.named || []).length) add(pick(L.caravan)(diff.named.length), 'caravan', 9);
   const welcomed = (diff.named || []).slice(0, 3);
   const byJob = [...new Set(welcomed.map((v) => v.job))].slice(0, 2);
   byJob.forEach((j, i) => {
@@ -159,7 +162,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
   }
 
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
-  const order = ['open', 'delta', 'count', 'person', 'houses', 'rebuilt', 'completed', 'unlocked', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
+  const order = ['open', 'delta', 'caravan', 'count', 'person', 'houses', 'rebuilt', 'completed', 'unlocked', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
     const victim = [...S].sort((a, b) => a.priority - b.priority)[0];
