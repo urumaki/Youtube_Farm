@@ -69,20 +69,51 @@ const JOB_SCENES = {
 };
 const DEFAULT_SCENE = { period: 2.4, hit: 0.5, raise: -2.6, down: -0.2, bend: 0, fx: null, sound: 'none', tool: null, props: 'market', wave: true };
 
+// Striking tools are held like real ones: the handle leaves the fist at an angle (beta, from the
+// arm's line toward the back of the hand) and the head/blade faces -z of the hand, which is the
+// direction the hand moves on the down-swing. `tip` marks the striking face for calibration.
+function striker(g, M, { beta, len, back = 0.06, head }) {
+  const h = new THREE.Vector3(0, -Math.cos(beta), Math.sin(beta)); // handle direction
+  const p = new THREE.Vector3(0, -Math.sin(beta), -Math.cos(beta)); // toward the striking face
+  const along = (geo, dir) => geo.rotateX(Math.atan2(dir.z, dir.y));
+  const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m); };
+  const total = len + back;
+  add(along(cylGeo(0.024, 0.026, total, 6), h).translate(...h.clone().multiplyScalar(len / 2 - back / 2).toArray()), M.woodDark);
+  const end = h.clone().multiplyScalar(len);
+  const tipOff = head(add, along, h, p, end);
+  const tip = new THREE.Object3D();
+  tip.position.copy(end).addScaledVector(p, tipOff);
+  g.add(tip);
+  g.userData.tip = tip;
+}
+
 function toolGeo(kind, M) {
   const wood = M.woodDark, iron = M.iron;
   const g = new THREE.Group();
   const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m); };
-  // tools point along -y of the hand (the arm's direction) with their working end at the tip
-  if (kind === 'hoe' || kind === 'spade') {
-    add(cylGeo(0.025, 0.025, 1.5, 6).translate(0, -0.45, 0), wood);
-    add(kind === 'hoe' ? boxGeo(0.24, 0.03, 0.2).translate(0, -1.18, 0.1) : boxGeo(0.22, 0.3, 0.03).translate(0, -1.32, 0), iron);
-  } else if (kind === 'hammer' || kind === 'mallet') {
-    add(cylGeo(0.022, 0.022, 0.42, 6).translate(0, -0.18, 0), wood);
-    add(kind === 'hammer' ? boxGeo(0.09, 0.09, 0.2).translate(0, -0.38, 0) : cylGeo(0.07, 0.07, 0.18, 8).rotateX(Math.PI / 2).translate(0, -0.38, 0), kind === 'hammer' ? iron : wood);
+  if (kind === 'hammer' || kind === 'mallet') {
+    striker(g, M, { beta: 0.55, len: 0.4, head: (put, along, h, p, end) => {
+      const geo = kind === 'hammer' ? along(boxGeo(0.085, 0.24, 0.085), p) : along(cylGeo(0.075, 0.075, 0.2, 10), p);
+      put(geo.translate(...end.toArray()), kind === 'hammer' ? iron : M.wood);
+      return 0.11;
+    } });
   } else if (kind === 'axe') {
-    add(cylGeo(0.025, 0.025, 0.95, 6).translate(0, -0.4, 0), wood);
-    add(boxGeo(0.03, 0.2, 0.22).translate(0, -0.82, 0.08), iron);
+    striker(g, M, { beta: 0.3, len: 0.85, back: 0.1, head: (put, along, h, p, end) => {
+      // the blade sticks out on the striking side, flat in the swing plane
+      put(along(boxGeo(0.03, 0.24, 0.2), p).translate(...end.clone().addScaledVector(p, 0.12).toArray()), iron);
+      put(along(boxGeo(0.06, 0.08, 0.1), p).translate(...end.clone().addScaledVector(p, -0.03).toArray()), iron);
+      return 0.24;
+    } });
+  } else if (kind === 'hoe') {
+    striker(g, M, { beta: 0.35, len: 1.25, back: 0.25, head: (put, along, h, p, end) => {
+      put(along(boxGeo(0.24, 0.22, 0.03), p).translate(...end.clone().addScaledVector(p, 0.11).toArray()), iron);
+      return 0.22;
+    } });
+  } else if (kind === 'spade') {
+    striker(g, M, { beta: 0.2, len: 1.1, back: 0.25, head: (put, along, h, p, end) => {
+      put(along(boxGeo(0.22, 0.3, 0.03), h).translate(...end.clone().addScaledVector(h, 0.15).toArray()), iron);
+      return 0;
+    } });
   } else if (kind === 'peel') {
     add(cylGeo(0.02, 0.02, 1.6, 6).translate(0, -0.6, 0), wood);
     add(boxGeo(0.32, 0.02, 0.38).translate(0, -1.42, 0), M.wood);
@@ -121,8 +152,8 @@ function buildProps(kind, M, add) {
       add(merged([boxGeo(0.5, 0.2, 0.24).translate(0, 0.65, 0.62), boxGeo(0.28, 0.14, 0.18).translate(0, 0.5, 0.62), new THREE.ConeGeometry(0.1, 0.3, 8).rotateZ(Math.PI / 2).translate(0.38, 0.68, 0.62)]), M.iron);
       add(boxGeo(0.34, 0.035, 0.05).translate(0.02, 0.77, 0.62), M.ember);
       // a small forge with glowing coals and a quench bucket
-      add(boxGeo(1.1, 0.8, 0.9).translate(-1.35, 0.4, 0.9), M.stoneDark);
-      add(boxGeo(0.8, 0.08, 0.6).translate(-1.35, 0.82, 0.9), M.ember);
+      add(boxGeo(1.1, 0.8, 0.9).translate(-1.45, 0.4, -0.7), M.stoneDark);
+      add(boxGeo(0.8, 0.08, 0.6).translate(-1.45, 0.82, -0.7), M.ember);
       add(cylGeo(0.22, 0.18, 0.4, 10).translate(1.0, 0.2, 0.4), M.wood);
       return new THREE.Vector3(0.02, 0.8, 0.62);
     }
@@ -197,10 +228,32 @@ export function buildWorkScene({ job, anchor, face, M, seed, id }) {
   group.rotation.y = face;
   const P = rig(M, JOBS[job]?.color || '#7a6a55');
   group.add(P.root);
-  const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; group.add(m); return m; };
+  const propsG = new THREE.Group();
+  group.add(propsG);
+  const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; propsG.add(m); return m; };
   const impact = buildProps(cfg.props, M, add);
   const tool = cfg.tool ? toolGeo(cfg.tool, M) : null;
   if (tool) P.r.hand.add(tool);
+  // calibrate: find the arm angle where the tool's face reaches the work surface, then slide the
+  // props so the anvil/log/soil sits exactly under it
+  const tipObj = tool?.userData.tip;
+  let down = cfg.down;
+  const at = new THREE.Vector3();
+  const tipAt = (a) => {
+    P.r.g.rotation.set(a, 0, cfg.both ? -0.28 : 0);
+    P.body.rotation.x = cfg.bend;
+    group.updateMatrixWorld(true);
+    return group.worldToLocal(tipObj.getWorldPosition(at.set(0, 0, 0)));
+  };
+  if (tipObj && !cfg.wave && !cfg.push && !cfg.look) {
+    for (let a = cfg.raise + 0.6; a < 0.6; a += 0.01) {
+      const tp = tipAt(a);
+      if (tp.z > 0.15 && tp.y <= impact.y) { down = a; break; }
+    }
+    const tp = tipAt(down);
+    propsG.position.set(tp.x - impact.x, 0, tp.z - impact.z);
+    impact.set(tp.x, impact.y, tp.z);
+  }
   let pts = null, fx = null;
   if (cfg.fx) { fx = FX[cfg.fx]; pts = particles(fx.n * 2, fx.color, fx.size, fx.add); group.add(pts); }
   const offset = rand01(seed, 'work', id) * cfg.period;
@@ -209,10 +262,10 @@ export function buildWorkScene({ job, anchor, face, M, seed, id }) {
     // wind up slowly, strike fast, recover
     let a;
     if (cfg.wave) a = cfg.raise + 0.35 * Math.sin(t * 7);
-    else if (cfg.push) a = THREE.MathUtils.lerp(cfg.down, cfg.raise, 0.5 + 0.5 * Math.sin(c * Math.PI * 2));
-    else if (u < cfg.hit - 0.12) a = THREE.MathUtils.lerp(cfg.down, cfg.raise, ease(u / (cfg.hit - 0.12)));
-    else if (u < cfg.hit) a = THREE.MathUtils.lerp(cfg.raise, cfg.down, ((u - cfg.hit + 0.12) / 0.12) ** 2);
-    else a = cfg.down + 0.12 * Math.sin(Math.min(1, (u - cfg.hit) / 0.15) * Math.PI);
+    else if (cfg.push) a = THREE.MathUtils.lerp(down, cfg.raise, 0.5 + 0.5 * Math.sin(c * Math.PI * 2));
+    else if (u < cfg.hit - 0.12) a = THREE.MathUtils.lerp(down, cfg.raise, ease(u / (cfg.hit - 0.12)));
+    else if (u < cfg.hit) a = THREE.MathUtils.lerp(cfg.raise, down, ((u - cfg.hit + 0.12) / 0.12) ** 2);
+    else a = down - 0.12 * Math.sin(Math.min(1, (u - cfg.hit) / 0.15) * Math.PI); // small rebound
     return { a, k, u };
   };
   const strikeTimes = (t0, t1) => {
@@ -235,11 +288,11 @@ export function buildWorkScene({ job, anchor, face, M, seed, id }) {
     strikeTimes,
     update(t) {
       const { a } = pose(t);
-      P.r.g.rotation.x = a;
-      if (cfg.both) { P.l.g.rotation.x = a * 0.92; P.l.g.rotation.z = -0.25; P.r.g.rotation.z = 0.25; }
+      P.r.g.rotation.set(a, 0, 0);
+      if (cfg.both) { P.l.g.rotation.x = a * 0.95; P.l.g.rotation.z = 0.28; P.r.g.rotation.z = -0.28; } // hands meet on the handle
       else if (cfg.left !== undefined) P.l.g.rotation.x = cfg.left + (cfg.look ? 0 : 0.05 * Math.sin(t * 3));
       if (cfg.wave) { P.r.g.rotation.z = 0.35; }
-      const swing = (a - cfg.raise) / ((cfg.down - cfg.raise) || 1); // 0 raised .. 1 down
+      const swing = (a - cfg.raise) / ((down - cfg.raise) || 1); // 0 raised .. 1 down
       P.body.rotation.x = cfg.bend * THREE.MathUtils.clamp(swing, 0, 1);
       if (cfg.look) P.root.rotation.y = 0.5 * Math.sin(t * 0.8);
       if (cfg.push) P.root.position.z = 0.25 * Math.sin(((t + offset) / cfg.period) * Math.PI * 2);

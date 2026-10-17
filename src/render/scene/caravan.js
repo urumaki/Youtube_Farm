@@ -31,8 +31,11 @@ function wagon(M, seed, k) {
   add(boxGeo(1.7, 0.5, 3.6).translate(0, 1.05, 0), M.wood);
   add(boxGeo(1.8, 0.1, 3.7).translate(0, 0.8, 0), M.woodDark);
   // canvas cover on hoops, open at the back so the cargo shows
-  const cover = new THREE.CylinderGeometry(0.95, 0.95, 3.1, 18, 1, true, -Math.PI / 2, Math.PI).rotateX(Math.PI / 2).rotateZ(Math.PI / 2).rotateY(Math.PI / 2);
-  add(cover.translate(0, 1.3, 0.15), M.clothIvory);
+  // half cylinder along the wagon (z), arched upward: theta pi/2..3pi/2 maps to y >= 0 after rotateX
+  const cover = new THREE.CylinderGeometry(0.95, 0.95, 3.1, 18, 1, true, Math.PI / 2, Math.PI).rotateX(Math.PI / 2);
+  const canvas = M.clothIvory.clone();
+  canvas.side = THREE.DoubleSide;
+  add(cover.translate(0, 1.3, 0.15), canvas);
   for (const z of [-1.35, 0, 1.35]) add(new THREE.TorusGeometry(0.97, 0.04, 6, 16, Math.PI).translate(0, 1.3, z), M.woodDark);
   // cargo: barrels, sacks, a chest
   add(cylGeo(0.3, 0.3, 0.6, 10).translate(-0.45, 1.6, -1.45), M.wood);
@@ -134,7 +137,7 @@ export function buildCaravan({ w, named, M, seed, yFn }) {
         labels[i].pos.copy(figures[i].position).add(new THREE.Vector3(0, 2.3 + (i % 2) * 0.55, 0)); // stagger the pair
       });
       wagons.forEach((wg, k) => {
-        const s = sHead + rows * ROW + 3.2 + k * 8.5;
+        const s = sHead + rows * ROW + 6.6 + k * 9.5; // the ox walks behind the last row
         place(wg.g, s, 0);
         wg.wheels.forEach((wh) => { wh.rotation.x = -(walked / 0.6); });
         wg.legs.forEach((l, j) => { l.rotation.x = 0.35 * Math.sin(t * 5 + (j % 2 ? Math.PI : 0) + (j > 1 ? Math.PI : 0)); });
