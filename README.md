@@ -50,7 +50,7 @@ npm test                         # simulation, fetch and audio tests
   keywords; the text itself is never stored). Jobs the kingdom has not unlocked yet make them an
   apprentice, promoted when the tier arrives; first choices that are locked fall back to a later one in
   the same comment. Request-only jobs: fletcher, town weirdo, beggar, jester. The next video shows them
-  at work with "request granted", and the narrator counts the granted requests.
+  at work first, and the narrator counts the granted requests.
 - **Unsubscribes** remove the newest villagers first. Empty houses are *abandoned* (dark, broken
   roof, no smoke) for 7 days, then become *ruins*. When the count grows again, abandoned houses
   are re-occupied and ruins rebuilt before any new plot is used. History is never deleted.

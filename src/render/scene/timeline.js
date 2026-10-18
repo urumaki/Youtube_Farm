@@ -40,7 +40,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const sub = apprentice ? `Apprentice ${jobLabel(n.wants)}` : jobLabel(n.job);
     targets.push({
       kind: 'villager', id: n.id, job: n.job, sceneJob: apprentice ? n.wants : n.job, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
-      label: { title: n.name, sub: asked(n) ? `${sub} · ${apprentice ? 'request heard' : 'request granted'}` : sub }, work: null,
+      label: { title: n.name, sub }, work: null,
     });
   }
   // 3) new or rebuilt houses fill the rest (a spread of them)
