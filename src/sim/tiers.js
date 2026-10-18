@@ -30,6 +30,12 @@ export const JOBS = {
   noble: { label: 'Noble', color: '#5b2a86' },
   chronicler: { label: 'Chronicler', color: '#55443a' },
   admiral: { label: 'Admiral', color: '#0f3057' },
+  // jobs that only exist because someone asked for them in a comment (see requests.js)
+  fletcher: { label: 'Fletcher', color: '#5e7d3a', requestOnly: true },
+  weirdo: { label: 'Town Weirdo', color: '#c04fb4', requestOnly: true },
+  beggar: { label: 'Beggar', color: '#6d6152', requestOnly: true },
+  jester: { label: 'Jester', color: '#e0a21b', requestOnly: true },
+  apprentice: { label: 'Apprentice', color: '#8c8c6a', requestOnly: true },
 };
 
 export const BUILDINGS = {

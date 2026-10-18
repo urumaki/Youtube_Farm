@@ -231,3 +231,31 @@ test('offensive and blocked names are never used, and a block removes a given na
   assert.equal(cleanName('@Mario Rossi'), 'Mario Rossi');
   assert.equal(isOffensive('skill_gamer'), false);
 });
+
+test('comment job requests: granted when unlocked, apprentice (then promoted) when not, existing villagers can switch', async () => {
+  const { wantsFromText } = await import('../src/sim/requests.js');
+  const W = (author, name, text, at) => ({ author, name, at, wants: wantsFromText(text) });
+  let { state: s } = run([60]);
+  let r = advance(s, { subscribers: 60, date: dateOf(5), commenters: [
+    W('a', 'Pilot', 'Yo lemme work at the local tavern', '1'),
+    W('b', 'Sir', 'make me a knight or smth', '2'),
+    W('c', 'Balint', 'commander of the army? if not, a fletcher', '3'),
+    W('d', 'Weird', 'can i be the town weirdo', '4'),
+  ] });
+  const job = (n) => r.state.villagers.find((v) => v.name === n).job;
+  assert.equal(job('Pilot'), 'innkeeper');
+  assert.equal(job('Sir'), 'apprentice');
+  assert.equal(job('Balint'), 'fletcher', 'second choice when the first is locked');
+  assert.equal(job('Weird'), 'weirdo');
+  assert.deepEqual(r.diff.requests.map((q) => q.granted), [true, false, true, true]);
+  checkInvariants(r.state);
+  // an existing villager asks for another job later
+  r = advance(r.state, { subscribers: 60, date: dateOf(6), commenters: [W('a', 'Pilot', 'actually let me be a blacksmith', '5')] });
+  assert.equal(job('Pilot'), 'blacksmith');
+  // the knight tier arrives at 500: the apprentice is promoted
+  r = advance(r.state, { subscribers: 500, date: dateOf(7) });
+  assert.equal(job('Sir'), 'knight');
+  assert.deepEqual(r.diff.promoted.map((p) => p.name), ['Sir']);
+  // history snapshots keep the chosen jobs
+  assert.equal(deriveVillagers(r.state).find((v) => v.name === 'Pilot').job, 'blacksmith');
+});

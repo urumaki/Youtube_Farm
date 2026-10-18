@@ -28,13 +28,20 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const today = diff.named || [];
   if (today.length) targets.unshift({ kind: 'caravan', id: 'caravan', pos: new THREE.Vector3(), radius: 14, front: 0, label: null, labels: [], weight: 1.7, count: today.length });
   const INTEREST = ['blacksmith', 'woodcutter', 'baker', 'stonemason', 'fisherman', 'carpenter', 'miller', 'guard', 'knight', 'farmer', 'peasant'];
+  // requests granted today come first ("you asked, the Lord granted"), then the newest names
+  const asked = (n) => (n.requestDay === state.day ? 1 : 0);
   const named = Object.entries(state.names || {}).map(([id, n]) => ({ id: Number(id), ...n, job: state.villagers[Number(id)]?.job }))
     .filter((n) => n.id < state.villagers.length)
-    .sort((a, b) => (b.day ?? 0) - (a.day ?? 0) || (INTEREST.indexOf(a.job) + 1 || 99) - (INTEREST.indexOf(b.job) + 1 || 99) || a.id - b.id);
+    .sort((a, b) => asked(b) - asked(a) || (b.day ?? 0) - (a.day ?? 0) || (INTEREST.indexOf(a.job) + 1 || 99) - (INTEREST.indexOf(b.job) + 1 || 99) || a.id - b.id);
   const picked = [];
   for (const n of named) if (!picked.some((p) => p.job === n.job)) picked.push(n); // one per job: variety
   for (const n of picked.slice(0, Math.min(3, Math.max(2, maxTargets - targets.length - 2)))) {
-    targets.push({ kind: 'villager', id: n.id, job: n.job, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0, label: { title: n.name, sub: jobLabel(n.job) }, work: null });
+    const apprentice = n.job === 'apprentice' && n.wants;
+    const sub = apprentice ? `Apprentice ${jobLabel(n.wants)}` : jobLabel(n.job);
+    targets.push({
+      kind: 'villager', id: n.id, job: n.job, sceneJob: apprentice ? n.wants : n.job, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
+      label: { title: n.name, sub: asked(n) ? `${sub} · ${apprentice ? 'request heard' : 'request granted'}` : sub }, work: null,
+    });
   }
   // 3) new or rebuilt houses fill the rest (a spread of them)
   const fresh = [...diff.housesBuilt, ...diff.housesRebuilt].filter((id) => animated.has(id));

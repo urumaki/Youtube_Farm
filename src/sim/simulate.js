@@ -1,6 +1,7 @@
 // Deterministic daily simulation step: (previous state, subscriber count, date) -> (new state, diff).
 import { hash, rng } from './prng.js';
 import { cleanName, isOffensive } from './names.js';
+import { availableJobs } from './requests.js';
 import { TIERS, BUILDINGS, JOBS, jobFor, houseCapacity, tiersReached } from './tiers.js';
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
@@ -46,7 +47,7 @@ export function withNameFields(s) {
 
 /** A villager is nameless (null) until a commenter's name is assigned to them. */
 export function villagerFor(seed, id, house, names = {}) {
-  return { id, name: names[id]?.name ?? null, job: jobFor(seed, id), house };
+  return { id, name: names[id]?.name ?? null, job: names[id]?.job ?? jobFor(seed, id), house };
 }
 
 /** Rebuild the villager list from house occupancy (used for compact history snapshots). */
@@ -168,29 +169,65 @@ function assignNames(s, commenters, blocked, diff) {
   const blockedAuthors = new Set(blocked.authors || []);
   const blockedNames = new Set((blocked.names || []).map((n) => String(n).toLowerCase().replace(/^@/, '')));
   const known = new Set(s.namedAuthors);
+  diff.requests = [];
+  diff.promoted = [];
+  const avail = availableJobs(s.subscriberCount);
+  const villagerOf = (author) => Object.keys(s.names).find((id) => s.names[id].author === author);
+  // a request sets the job if the kingdom has it, otherwise the villager is an apprentice until it does
+  const applyRequest = (id, wants) => {
+    const n = s.names[id];
+    const pick = wants.find((j) => avail.has(j));
+    n.job = pick || 'apprentice';
+    if (pick) delete n.wants; else n.wants = wants[0];
+    n.requestDay = s.day;
+    if (s.villagers[id]) s.villagers[id].job = n.job;
+    diff.requests.push({ id: Number(id), name: n.name, job: n.job, wanted: wants[0], granted: !!pick });
+  };
   for (const c of [...commenters].sort((a, b) => String(a.at).localeCompare(String(b.at)))) {
     if (c.at && (!s.commentsSeen || c.at > s.commentsSeen)) s.commentsSeen = c.at;
-    if (!c.author || known.has(c.author) || blockedAuthors.has(c.author)) continue;
+    if (!c.author || blockedAuthors.has(c.author)) continue;
+    const wants = c.wants || [];
+    if (known.has(c.author)) {
+      // someone who already has a villager asks for a (new) job
+      const id = villagerOf(c.author);
+      if (id !== undefined && wants.length) applyRequest(id, wants);
+      else if (wants.length) { const q = s.nameQueue.find((n) => n.author === c.author); if (q) q.wants = wants; }
+      continue;
+    }
     const name = cleanName(c.name);
     if (!name || isOffensive(name) || blockedNames.has(name.toLowerCase())) continue;
     known.add(c.author);
     s.namedAuthors.push(c.author);
-    s.nameQueue.push({ name, author: c.author });
+    s.nameQueue.push({ name, author: c.author, ...(wants.length ? { wants } : {}) });
   }
   // names blocked after they were given are taken back
   for (const [id, n] of Object.entries(s.names)) {
-    if (blockedAuthors.has(n.author) || blockedNames.has(n.name.toLowerCase())) { delete s.names[id]; if (s.villagers[id]) s.villagers[id].name = null; }
+    if (blockedAuthors.has(n.author) || blockedNames.has(n.name.toLowerCase())) {
+      delete s.names[id];
+      if (s.villagers[id]) { s.villagers[id].name = null; s.villagers[id].job = jobFor(s.seed, Number(id)); }
+    }
   }
   s.nameQueue = s.nameQueue.filter((n) => !blockedAuthors.has(n.author) && !blockedNames.has(n.name.toLowerCase()));
   for (const v of s.villagers) {
     if (!s.nameQueue.length) break;
     if (s.names[v.id]) continue;
-    const n = s.nameQueue.shift();
+    const { wants, ...n } = s.nameQueue.shift();
     s.names[v.id] = { ...n, day: s.day };
+    if (n.job) v.job = n.job; // a named villager who left and came back keeps the job they chose
+    if (typeof wants === 'string') s.names[v.id].wants = wants; // still an apprentice
+    else if (wants?.length) applyRequest(v.id, wants);
     v.name = n.name;
     diff.named.push({ id: v.id, name: n.name, job: v.job, house: v.house });
     const added = diff.added.find((a) => a.id === v.id);
-    if (added) added.name = n.name;
+    if (added) { added.name = n.name; added.job = v.job; }
+  }
+  // apprentices whose job has just been unlocked are promoted
+  for (const [id, n] of Object.entries(s.names)) {
+    if (n.job !== 'apprentice' || !n.wants || !avail.has(n.wants)) continue;
+    n.job = n.wants;
+    delete n.wants;
+    if (s.villagers[id]) s.villagers[id].job = n.job;
+    diff.promoted.push({ id: Number(id), name: n.name, job: n.job });
   }
 }
 

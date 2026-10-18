@@ -15,6 +15,8 @@ const ACTIVITIES = {
   mayor: 'reads the town charter aloud', weaver: 'finishes a banner in the royal colors', physician: 'brews a remedy of sage and mint',
   alchemist: 'turns lead into slightly shinier lead', bard: 'writes a song about the newest villagers', noble: 'hosts a grand feast',
   chronicler: 'records today in the kingdom chronicle', admiral: 'charts a route to distant lands',
+  fletcher: 'fletches a bundle of arrows', weirdo: 'dances alone in the square for no reason', beggar: 'raises a mug to every passer-by',
+  jester: 'juggles for a crowd of children', apprentice: 'sweeps the workshop and dreams of the future',
 };
 
 function season(date) {

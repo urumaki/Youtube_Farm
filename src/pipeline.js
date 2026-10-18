@@ -5,6 +5,7 @@ import { genesis, advance } from './sim/simulate.js';
 import { baseStateFor, saveDay, lastKnownCount, STATE_DIR } from './sim/state.js';
 import { getSubscriberCount } from './fetch/youtube.js';
 import { fetchCommenters } from './fetch/comments.js';
+import { wantsFromText } from './sim/requests.js';
 import { buildScript } from './audio/narration.js';
 import { synthesize, captionPhrases } from './audio/tts/index.js';
 import { mixSoundtrack, VOICE_DELAY } from './audio/mix.js';
@@ -49,6 +50,8 @@ export function summarizeDiff(diff) {
     weather: diff.weather, events: diff.events.map((e) => e.type + (e.name ? `:${e.name}` : '')), next: diff.next,
     newcomers: diff.added.slice(0, 5).map((v) => `${v.name ?? '(no name yet)'} (${v.job})`),
     named: (diff.named || []).map((v) => `${v.name} (${v.job})`),
+    requests: (diff.requests || []).map((r) => `${r.name}: ${r.wanted}${r.granted ? '' : ' (apprentice)'}`),
+    promoted: (diff.promoted || []).map((r) => `${r.name} -> ${r.job}`),
   };
 }
 
@@ -80,9 +83,15 @@ export function testKingdom({ subs, from, date = today(), seed, names = [] }) {
   const d1 = new Date(Date.parse(date) - 86400000).toISOString().slice(0, 10);
   let s = genesis({ seed, date: d0 });
   s = advance(s, { subscribers: start, date: d1, source: 'test' }).state;
-  const commenters = names.map((n, i) => ({ author: `test-${i}`, name: n, at: `${date}T00:00:${String(i).padStart(2, '0')}Z` }));
+  const commenters = names.map(fakeCommenter(date, 'test'));
   return advance(s, { subscribers: subs, date, source: 'test', commenters });
 }
+
+/** --names "Mario=can I work at the tavern?,Luca": a fake commenter, optionally with a comment text. */
+const fakeCommenter = (date, prefix) => (entry, i) => {
+  const [name, text = ''] = entry.split('=');
+  return { author: `${prefix}-${name}`, name, at: `${date}T00:00:${String(i).padStart(2, '0')}Z`, wants: wantsFromText(text) };
+};
 
 /** state/blocked.json: { "names": ["SomeName"], "authors": ["UC..."] } — names never to show. */
 export function loadBlocked(dir) {
@@ -96,7 +105,7 @@ export async function daily(args, log = console) {
   log.log(`[fetch] ${count} subscribers (${source})${error ? ` — ${error}` : ''}`);
   const base = baseStateFor(date, { dir, seed: args.seed });
   const commenters = args.names
-    ? args.names.map((n, i) => ({ author: `manual-${n}`, name: n, at: `${date}T00:00:${String(i).padStart(2, '0')}Z` }))
+    ? args.names.map(fakeCommenter(date, 'manual'))
     : await fetchCommenters({ apiKey: process.env.YOUTUBE_API_KEY, handle: process.env.YOUTUBE_HANDLE || undefined, since: base.commentsSeen, log });
   log.log(`[names] ${commenters.length} new commenter${commenters.length === 1 ? '' : 's'}`);
   const { state, diff } = advance(base, { subscribers: count, date, source, commenters, blocked: loadBlocked(dir) });

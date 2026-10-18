@@ -66,6 +66,12 @@ const JOB_SCENES = {
   miller: { period: 1.5, hit: 0.6, raise: -1.6, down: -1.0, bend: 0.25, fx: 'dust', sound: 'none', tool: 'sack', props: 'sacks', both: true },
   guard: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'spear', props: 'post', left: -0.6, look: true },
   knight: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'sword', props: 'post', left: -0.6, look: true },
+  // jobs asked for in the comments
+  innkeeper: { period: 2.4, raise: -1.75, down: -0.45, bend: 0, sound: 'none', tool: 'tankard', props: 'tavern', smooth: true, left: -0.5 },
+  beggar: { period: 3.4, raise: -1.5, down: -0.35, bend: 0.28, sound: 'none', tool: 'tankard', props: 'begging', smooth: true, left: -0.15, sway: true },
+  weirdo: { period: 1.1, raise: -2.6, down: -0.4, bend: 0, sound: 'none', tool: null, props: 'none', dance: true },
+  jester: { period: 0.9, raise: -1.2, down: -0.8, bend: 0, sound: 'none', tool: null, props: 'none', juggle: true },
+  fletcher: { period: 0.6, raise: -1.35, down: -1.05, bend: 0.22, sound: 'none', tool: null, props: 'fletch', smooth: true, left: -1.15 },
 };
 const DEFAULT_SCENE = { period: 2.4, hit: 0.5, raise: -2.6, down: -0.2, bend: 0, fx: null, sound: 'none', tool: null, props: 'market', wave: true };
 
@@ -125,6 +131,10 @@ function toolGeo(kind, M) {
   } else if (kind === 'sword') {
     add(boxGeo(0.05, 0.9, 0.015).translate(0, 0.45, 0.1), iron);
     add(boxGeo(0.2, 0.04, 0.04).translate(0, 0, 0.1), M.gold);
+  } else if (kind === 'tankard') {
+    add(cylGeo(0.095, 0.09, 0.24, 12).translate(0, -0.02, 0.12), M.wood);
+    add(cylGeo(0.098, 0.098, 0.035, 12).translate(0, 0.115, 0.12), M.clothIvory); // foam
+    add(new THREE.TorusGeometry(0.06, 0.015, 5, 10).rotateY(Math.PI / 2).translate(0, 0, 0.23), M.woodDark); // handle
   } else if (kind === 'sack') {
     add(new THREE.SphereGeometry(0.28, 10, 8).scale(1, 1.2, 0.8).translate(0, -0.1, 0.25), M.hay);
   }
@@ -197,6 +207,31 @@ function buildProps(kind, M, add) {
       add(boxGeo(0.7, 0.9, 0.06).translate(-1.0, 2.1, -0.15), M.cloth);
       return new THREE.Vector3(0, 1.0, 0.5);
     }
+    case 'tavern': {
+      add(cylGeo(0.42, 0.42, 0.95, 12).rotateZ(Math.PI / 2).translate(-1.5, 0.75, -0.3), M.wood); // barrel on its side
+      add(boxGeo(0.9, 0.3, 0.7).translate(-1.5, 0.15, -0.3), M.woodDark);
+      add(boxGeo(1.4, 0.08, 0.8).translate(0.9, 0.8, 1.0), M.wood); // table with tankards
+      for (const x of [-0.6, 0.6]) add(boxGeo(0.08, 0.8, 0.6).translate(0.9 + x, 0.4, 1.0), M.woodDark);
+      for (const x of [0.6, 0.9, 1.2]) add(cylGeo(0.07, 0.07, 0.17, 10).translate(x, 0.92, 0.95), M.wood);
+      return new THREE.Vector3(0, 1.3, 0.4);
+    }
+    case 'begging': {
+      add(boxGeo(0.7, 0.45, 0.5).translate(0, 0.22, -0.35), M.wood); // crate he leans on
+      add(cylGeo(0.2, 0.16, 0.12, 10).translate(0.15, 0.06, 0.6), M.gear); // the hat for coins
+      for (let i = 0; i < 3; i++) add(cylGeo(0.035, 0.035, 0.01, 8).translate(0.1 + i * 0.05, 0.12, 0.58), M.gold);
+      add(cylGeo(0.1, 0.1, 0.35, 8).rotateZ(1.3).translate(-0.5, 0.1, 0.5), M.clothIvory); // empty bottle
+      return new THREE.Vector3(0, 1.2, 0.4);
+    }
+    case 'fletch': {
+      add(boxGeo(1.4, 0.08, 0.6).translate(0, 0.8, 0.6), M.wood);
+      for (const x of [-0.6, 0.6]) add(boxGeo(0.08, 0.8, 0.5).translate(x, 0.4, 0.6), M.woodDark);
+      for (let i = 0; i < 7; i++) add(cylGeo(0.012, 0.012, 0.75, 5).rotateZ(Math.PI / 2).translate(0, 0.86, 0.45 + i * 0.04), M.wood);
+      add(cylGeo(0.13, 0.11, 0.6, 10).translate(-0.9, 0.3, 0.2), M.gear); // quiver
+      add(new THREE.TorusGeometry(0.6, 0.02, 5, 20, Math.PI * 0.9).rotateZ(-Math.PI * 0.45).translate(0.95, 0.9, 0.85), M.woodDark); // bow
+      return new THREE.Vector3(0, 0.9, 0.5);
+    }
+    case 'none':
+      return new THREE.Vector3(0, 1.2, 0.4);
     default: { // a little stall with goods
       add(boxGeo(1.8, 0.9, 0.7).translate(0, 0.45, 1.0), M.wood);
       for (let i = 0; i < 5; i++) add(boxGeo(0.25, 0.2, 0.25).translate(-0.7 + i * 0.35, 1.0, 1.0), [M.roofTile, M.hay, M.greens, M.clothRed, M.clay][i % 5]);
@@ -245,7 +280,7 @@ export function buildWorkScene({ job, anchor, face, M, seed, id }) {
     group.updateMatrixWorld(true);
     return group.worldToLocal(tipObj.getWorldPosition(at.set(0, 0, 0)));
   };
-  if (tipObj && !cfg.wave && !cfg.push && !cfg.look) {
+  if (tipObj && !cfg.wave && !cfg.push && !cfg.look && !cfg.smooth) {
     for (let a = cfg.raise + 0.6; a < 0.6; a += 0.01) {
       const tp = tipAt(a);
       if (tp.z > 0.15 && tp.y <= impact.y) { down = a; break; }
@@ -254,6 +289,7 @@ export function buildWorkScene({ job, anchor, face, M, seed, id }) {
     propsG.position.set(tp.x - impact.x, 0, tp.z - impact.z);
     impact.set(tp.x, impact.y, tp.z);
   }
+  const balls = cfg.juggle ? [M.clothRed, M.gold, M.clothBlue].map((m) => { const b = new THREE.Mesh(new THREE.SphereGeometry(0.095, 12, 10), m); b.castShadow = true; group.add(b); return b; }) : [];
   let pts = null, fx = null;
   if (cfg.fx) { fx = FX[cfg.fx]; pts = particles(fx.n * 2, fx.color, fx.size, fx.add); group.add(pts); }
   const offset = rand01(seed, 'work', id) * cfg.period;
@@ -262,6 +298,9 @@ export function buildWorkScene({ job, anchor, face, M, seed, id }) {
     // wind up slowly, strike fast, recover
     let a;
     if (cfg.wave) a = cfg.raise + 0.35 * Math.sin(t * 7);
+    else if (cfg.smooth) a = THREE.MathUtils.lerp(down, cfg.raise, Math.max(0, Math.sin(c * Math.PI * 2)) ** 1.5);
+    else if (cfg.dance) a = THREE.MathUtils.lerp(cfg.down, cfg.raise, 0.5 + 0.5 * Math.sin(c * Math.PI * 2));
+    else if (cfg.juggle) a = THREE.MathUtils.lerp(cfg.down, cfg.raise, 0.5 + 0.5 * Math.sin(c * Math.PI * 2));
     else if (cfg.push) a = THREE.MathUtils.lerp(down, cfg.raise, 0.5 + 0.5 * Math.sin(c * Math.PI * 2));
     else if (u < cfg.hit - 0.12) a = THREE.MathUtils.lerp(down, cfg.raise, ease(u / (cfg.hit - 0.12)));
     else if (u < cfg.hit) a = THREE.MathUtils.lerp(cfg.raise, down, ((u - cfg.hit + 0.12) / 0.12) ** 2);
@@ -295,6 +334,25 @@ export function buildWorkScene({ job, anchor, face, M, seed, id }) {
       const swing = (a - cfg.raise) / ((down - cfg.raise) || 1); // 0 raised .. 1 down
       P.body.rotation.x = cfg.bend * THREE.MathUtils.clamp(swing, 0, 1);
       if (cfg.look) P.root.rotation.y = 0.5 * Math.sin(t * 0.8);
+      if (cfg.sway) P.root.rotation.z = 0.06 * Math.sin(t * 1.3);
+      if (cfg.dance) {
+        // flapping, hopping and spinning: the town weirdo
+        const c = (t + offset) / cfg.period;
+        P.l.g.rotation.set(THREE.MathUtils.lerp(cfg.raise, cfg.down, 0.5 + 0.5 * Math.sin(c * Math.PI * 2)), 0, 0.6 + 0.5 * Math.sin(c * Math.PI * 4));
+        P.r.g.rotation.z = -0.6 - 0.5 * Math.sin(c * Math.PI * 4);
+        P.root.position.y = 0.18 * Math.abs(Math.sin(c * Math.PI * 2));
+        P.root.rotation.y = t * 1.8;
+        P.body.rotation.z = 0.2 * Math.sin(c * Math.PI * 2);
+      }
+      if (cfg.juggle) {
+        P.l.g.rotation.x = THREE.MathUtils.lerp(cfg.down, cfg.raise, 0.5 - 0.5 * Math.sin(((t + offset) / cfg.period) * Math.PI * 2));
+        P.l.g.rotation.z = 0.25; P.r.g.rotation.z = -0.25;
+        balls.forEach((b, i) => {
+          const ph = ((t + offset) / (cfg.period * 1.5) + i / 3) % 1; // each ball flies from one hand to the other and back
+          const side = ph < 0.5 ? 1 : -1, q = (ph % 0.5) * 2;
+          b.position.set(side * (0.25 - 0.5 * q), 1.05 + 4 * q * (1 - q) * 0.75, 0.45);
+        });
+      }
       if (cfg.push) P.root.position.z = 0.25 * Math.sin(((t + offset) / cfg.period) * Math.PI * 2);
       // particles from the last two impacts
       if (pts) {

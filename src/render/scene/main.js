@@ -94,7 +94,7 @@ async function setup(data) {
       const ax = -s * sh.side, az = c * sh.side; // from the house toward its croft
       const anchor = new THREE.Vector3(sh.x + ax * (sh.D / 2 + 4.2), 0, sh.z + az * (sh.D / 2 + 4.2));
       anchor.y = yFn(anchor.x, anchor.z);
-      const ws = buildWorkScene({ job: v.job, anchor, face: Math.atan2(ax, az) + 1.1, M, seed: state.seed, id: tg.id });
+      const ws = buildWorkScene({ job: tg.sceneJob || v.job, anchor, face: Math.atan2(ax, az) + 1.1, M, seed: state.seed, id: tg.id });
       scene.add(ws.group);
       works.push(ws);
       tg.work = ws;
@@ -122,7 +122,7 @@ async function setup(data) {
     cues: plan?.targets.map((t, i) => ({
       kind: t.kind, id: t.id ?? null, t0: t.t0, t1: t.t1, completed: t.completed ?? null, rebuilt: !!t.rebuilt, pan: i % 2 ? 0.25 : -0.25,
       hasChapel: state.buildings.some((b) => (b.id === 'chapel' || b.id === 'cathedral') && b.status === 'done'),
-      job: t.job ?? null, strikes: t.work ? t.work.strikeTimes(t.t0, t.t1) : [], strikeSound: t.work?.sound ?? null,
+      job: t.sceneJob ?? t.job ?? null, strikes: t.work ? t.work.strikeTimes(t.t0, t.t1) : [], strikeSound: t.work?.sound ?? null,
     })) ?? [],
   };
   window.__ctx = ctx;

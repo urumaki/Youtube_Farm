@@ -18,6 +18,9 @@ const T = {
     welcome: [(v) => `Welcome our new ${v.job}!`, (v) => `Please welcome our new ${v.job}!`, (v) => `Say hello to our new ${v.job}!`],
     person: [(v) => `A new ${v.job} settles in.`, (v) => `A new ${v.job} moves in by the road.`],
     comment: ['Comment below, and a villager takes your name.', 'Leave a comment to name a villager.'],
+    granted: [(n, j) => (n === 1 ? `A wish was granted: we have a new ${j}!` : `The Lord granted ${n} job requests today!`)],
+    apprentice: [(n) => `${n === 1 ? 'One apprentice waits' : `${n} apprentices wait`} for their trade to arrive.`],
+    promoted: [(j) => `An apprentice finally becomes a ${j}!`],
     caravan: [(n) => (n === 1 ? 'A traveler arrives with a cart full of belongings!' : `A caravan of ${n} newcomers rolls into town!`)],
     houses1: ['A new house rises along the road.', 'Builders finished a fresh new home.'],
     houses: [(n) => `${n} new houses rise along the roads.`, (n) => `Builders raised ${n} new homes.`],
@@ -55,6 +58,9 @@ T.it = {
   welcome: [(v) => `Diamo il benvenuto al nuovo ${v.job}!`, (v) => `Benvenuto al nostro nuovo ${v.job}!`],
   person: [(v) => `Arriva un nuovo ${v.job}.`],
   comment: ['Commenta e un abitante prenderà il tuo nome.'],
+  granted: [(n, j) => (n === 1 ? `Desiderio esaudito: abbiamo un nuovo ${j}!` : `Il Signore ha esaudito ${n} richieste oggi!`)],
+  apprentice: [(n) => `${n === 1 ? 'Un apprendista aspetta' : `${n} apprendisti aspettano`} il suo mestiere.`],
+  promoted: [(j) => `Un apprendista diventa finalmente ${j}!`],
   caravan: [(n) => (n === 1 ? 'Arriva un viandante con il suo carro!' : `Arriva una carovana con ${n} nuovi abitanti!`)],
   houses1: ['Una nuova casa sorge lungo la strada.'],
   houses: [(n) => `${n} nuove case sorgono lungo le strade.`],
@@ -94,7 +100,8 @@ const JOB_IT = {
   guard: 'guardia', stonemason: 'scalpellino', merchant: 'mercante', innkeeper: 'oste', priest: 'prete', miller: 'mugnaio',
   carpenter: 'carpentiere', reeve: 'balivo', sailor: 'marinaio', knight: 'cavaliere', bishop: 'vescovo', scholar: 'studioso',
   mayor: 'sindaco', weaver: 'tessitore', physician: 'medico', alchemist: 'alchimista', bard: 'bardo', noble: 'nobile',
-  chronicler: 'cronista', admiral: 'ammiraglio',
+  chronicler: 'cronista', admiral: 'ammiraglio', fletcher: 'arcaio', weirdo: 'stravagante del paese', beggar: 'mendicante',
+  jester: 'giullare', apprentice: 'apprendista',
 };
 
 function plural(j) { return j.endsWith('man') ? j.slice(0, -3) + 'men' : j + 's'; }
@@ -123,6 +130,10 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
 
   // villagers named by commenters today are welcomed by job; otherwise up to two newcomers (special jobs first)
   if ((diff.named || []).length) add(pick(L.caravan)(diff.named.length), 'caravan', 9);
+  const granted = (diff.requests || []).filter((q) => q.granted), waiting = (diff.requests || []).filter((q) => !q.granted);
+  if (granted.length) add(pick(L.granted)(granted.length, job(granted[0].job)), 'requests', 9);
+  if (waiting.length) add(pick(L.apprentice)(waiting.length), 'requests', 6);
+  if ((diff.promoted || []).length) add(pick(L.promoted)(job(diff.promoted[0].job)), 'requests', 8);
   const welcomed = (diff.named || []).slice(0, 3);
   const byJob = [...new Set(welcomed.map((v) => v.job))].slice(0, 2);
   byJob.forEach((j, i) => {
@@ -162,7 +173,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
   }
 
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
-  const order = ['open', 'delta', 'caravan', 'count', 'person', 'houses', 'rebuilt', 'completed', 'unlocked', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
+  const order = ['open', 'delta', 'caravan', 'requests', 'count', 'person', 'houses', 'rebuilt', 'completed', 'unlocked', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
     const victim = [...S].sort((a, b) => a.priority - b.priority)[0];

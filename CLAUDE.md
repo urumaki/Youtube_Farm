@@ -37,4 +37,5 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 
 ## Open ideas the owner mentioned
 - Choose a less robotic free voice (Chatterbox or Edge voices; samples via the Voice samples action).
-- Possibly use comment text (e.g. pick a job) — not implemented.
+- Done: comment text picks a job (`src/sim/requests.js`). Ideas not done: tavern scene with several
+  named patrons, narrator jokes for refused requests ("clone me", "landlord").
