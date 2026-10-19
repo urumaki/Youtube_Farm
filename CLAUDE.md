@@ -40,3 +40,11 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - Done: comment text picks a job and a name (`src/sim/requests.js`), end credits roll in the wide shot
   (`overlay.js`). Owner does not want royal family or noble titles (prince, princess) as jobs for now. Ideas not done: tavern scene with several
   named patrons, narrator jokes for refused requests ("clone me", "landlord").
+
+## Status at handoff (2026-10-19)
+- Daily upload works (videos 74VLgbuvzGU, YQjmBQNZlo4, 2mydn7mgvjU). ~118 subscribers, 24 named villagers.
+- Pending ideas, not started: real-life events with a visible scene (owner liked the list: Halloween on
+  31/10 with pumpkins and bonfires, house fire then rebuild, wedding, wolves or bandits at night, storm,
+  tournament, villager leaving with a bundle on unsubscribe; max one big event per day, deterministic).
+- Voice still `am_adam`; owner may switch after listening to the Voice samples action.
+- Owner pinned (or will pin) a comment: "call me <name>" + a job, "watch the end credits".
