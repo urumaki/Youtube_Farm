@@ -5,7 +5,7 @@ import { genesis, advance } from './sim/simulate.js';
 import { baseStateFor, saveDay, lastKnownCount, STATE_DIR } from './sim/state.js';
 import { getSubscriberCount } from './fetch/youtube.js';
 import { fetchCommenters } from './fetch/comments.js';
-import { wantsFromText } from './sim/requests.js';
+import { wantsFromText, nameFromText } from './sim/requests.js';
 import { buildScript } from './audio/narration.js';
 import { synthesize, captionPhrases } from './audio/tts/index.js';
 import { mixSoundtrack, VOICE_DELAY } from './audio/mix.js';
@@ -52,6 +52,7 @@ export function summarizeDiff(diff) {
     named: (diff.named || []).map((v) => `${v.name} (${v.job})`),
     requests: (diff.requests || []).map((r) => `${r.name}: ${r.wanted}${r.granted ? '' : ' (apprentice)'}`),
     promoted: (diff.promoted || []).map((r) => `${r.name} -> ${r.job}`),
+    renamed: (diff.renamed || []).map((r) => `${r.from} -> ${r.name}`),
   };
 }
 
@@ -90,7 +91,8 @@ export function testKingdom({ subs, from, date = today(), seed, names = [] }) {
 /** --names "Mario=can I work at the tavern?,Luca": a fake commenter, optionally with a comment text. */
 const fakeCommenter = (date, prefix) => (entry, i) => {
   const [name, text = ''] = entry.split('=');
-  return { author: `${prefix}-${name}`, name, at: `${date}T00:00:${String(i).padStart(2, '0')}Z`, wants: wantsFromText(text) };
+  const call = nameFromText(text);
+  return { author: `${prefix}-${name}`, name, at: `${date}T00:00:${String(i).padStart(2, '0')}Z`, wants: wantsFromText(text), ...(call ? { call } : {}) };
 };
 
 /** state/blocked.json: { "names": ["SomeName"], "authors": ["UC..."] } — names never to show. */

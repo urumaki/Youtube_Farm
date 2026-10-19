@@ -163,7 +163,7 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
 /**
  * Commenters name villagers: each new commenter (oldest comment first, one villager per person)
  * joins the queue; queued names go to the unnamed villagers with the lowest ids.
- * commenters: [{ author, name, at }]; blocked: { authors?: [], names?: [] }.
+ * commenters: [{ author, name, at, wants?, call? }] (call: a name asked for in the comment); blocked: { authors?: [], names?: [] }.
  */
 function assignNames(s, commenters, blocked, diff) {
   const blockedAuthors = new Set(blocked.authors || []);
@@ -171,6 +171,8 @@ function assignNames(s, commenters, blocked, diff) {
   const known = new Set(s.namedAuthors);
   diff.requests = [];
   diff.promoted = [];
+  diff.renamed = [];
+  const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
   const avail = availableJobs(s.subscriberCount);
   const villagerOf = (author) => Object.keys(s.names).find((id) => s.names[id].author === author);
   // a request sets the job if the kingdom has it, otherwise the villager is an apprentice until it does
@@ -187,15 +189,22 @@ function assignNames(s, commenters, blocked, diff) {
     if (c.at && (!s.commentsSeen || c.at > s.commentsSeen)) s.commentsSeen = c.at;
     if (!c.author || blockedAuthors.has(c.author)) continue;
     const wants = c.wants || [];
+    const call = c.call ? valid(c.call) : null; // "call me Violet"
     if (known.has(c.author)) {
-      // someone who already has a villager asks for a (new) job
+      // someone who already has a villager asks for a (new) job or a new name
       const id = villagerOf(c.author);
+      const q = id === undefined ? s.nameQueue.find((n) => n.author === c.author) : null;
+      if (call && id !== undefined && s.names[id].name !== call) {
+        diff.renamed.push({ id: Number(id), from: s.names[id].name, name: call });
+        s.names[id].name = call;
+        if (s.villagers[id]) s.villagers[id].name = call;
+      } else if (call && q) q.name = call;
       if (id !== undefined && wants.length) applyRequest(id, wants);
-      else if (wants.length) { const q = s.nameQueue.find((n) => n.author === c.author); if (q) q.wants = wants; }
+      else if (wants.length && q) q.wants = wants;
       continue;
     }
-    const name = cleanName(c.name);
-    if (!name || isOffensive(name) || blockedNames.has(name.toLowerCase())) continue;
+    const name = call || valid(c.name);
+    if (!name) continue;
     known.add(c.author);
     s.namedAuthors.push(c.author);
     s.nameQueue.push({ name, author: c.author, ...(wants.length ? { wants } : {}) });

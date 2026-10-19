@@ -49,8 +49,12 @@ npm test                         # simulation, fetch and audio tests
   "can I be the town weirdo") gives that villager the job (`src/sim/requests.js`, English and Italian
   keywords; the text itself is never stored). Jobs the kingdom has not unlocked yet make them an
   apprentice, promoted when the tier arrives; first choices that are locked fall back to a later one in
-  the same comment. Request-only jobs: fletcher, town weirdo, beggar, jester. The next video shows them
-  at work first, and the narrator counts the granted requests.
+  the same comment. Request-only jobs: fletcher, town weirdo, beggar, jester, warrior, toolsmith, brewer.
+  The next video shows them at work first, and the narrator counts the granted requests. Wishes for the
+  kingdom ("when there are proper guards") are not requests.
+- **Chosen names.** "call me Violet", "a carpenter named henry", "a villager called sopita" use that name
+  instead of the display name (same cleaning and filter); a later comment can rename the villager.
+- **End credits.** During the wide shot every named villager rolls by with their job, newest first.
 - **Unsubscribes** remove the newest villagers first. Empty houses are *abandoned* (dark, broken
   roof, no smoke) for 7 days, then become *ruins*. When the count grows again, abandoned houses
   are re-occupied and ruins rebuilt before any new plot is used. History is never deleted.

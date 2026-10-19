@@ -27,7 +27,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   // 2) the caravan of villagers named today, then a few named villagers at work
   const today = diff.named || [];
   if (today.length) targets.unshift({ kind: 'caravan', id: 'caravan', pos: new THREE.Vector3(), radius: 14, front: 0, label: null, labels: [], weight: 1.7, count: today.length });
-  const INTEREST = ['blacksmith', 'woodcutter', 'baker', 'stonemason', 'fisherman', 'carpenter', 'miller', 'guard', 'knight', 'farmer', 'peasant'];
+  const INTEREST = ['blacksmith', 'toolsmith', 'woodcutter', 'baker', 'stonemason', 'fisherman', 'carpenter', 'miller', 'guard', 'knight', 'farmer', 'peasant'];
   // requests granted today come first ("you asked, the Lord granted"), then the newest names
   const asked = (n) => (n.requestDay === state.day ? 1 : 0);
   const named = Object.entries(state.names || {}).map(([id, n]) => ({ id: Number(id), ...n, job: state.villagers[Number(id)]?.job }))

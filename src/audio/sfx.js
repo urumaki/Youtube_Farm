@@ -320,7 +320,7 @@ function hit(kind, r) {
   }
   return o;
 }
-const WORK_BEDS = { blacksmith: [['fire', 0.25]], baker: [['fire', 0.3], ['chatter', 0.1]], fisherman: [['water', 0.5]], merchant: [['chatter', 0.3]], innkeeper: [['chatter', 0.3]], stonemason: [['stone', 0.2]] };
+const WORK_BEDS = { blacksmith: [['fire', 0.25]], toolsmith: [['fire', 0.25]], brewer: [['chatter', 0.3]], baker: [['fire', 0.3], ['chatter', 0.1]], fisherman: [['water', 0.5]], merchant: [['chatter', 0.3]], innkeeper: [['chatter', 0.3]], stonemason: [['stone', 0.2]] };
 
 function sceneFor(cue) {
   if (cue.kind === 'house') return cue.rebuilt ? 'rebuilt' : 'house';

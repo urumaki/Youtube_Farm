@@ -73,6 +73,9 @@ const JOB_SCENES = {
   jester: { period: 0.9, raise: -1.2, down: -0.8, bend: 0, sound: 'none', tool: null, props: 'none', juggle: true },
   fletcher: { period: 0.6, raise: -1.35, down: -1.05, bend: 0.22, sound: 'none', tool: null, props: 'fletch', smooth: true, left: -1.15 },
 };
+JOB_SCENES.warrior = JOB_SCENES.knight;
+JOB_SCENES.toolsmith = JOB_SCENES.blacksmith;
+JOB_SCENES.brewer = JOB_SCENES.innkeeper;
 const DEFAULT_SCENE = { period: 2.4, hit: 0.5, raise: -2.6, down: -0.2, bend: 0, fx: null, sound: 'none', tool: null, props: 'market', wave: true };
 
 // Striking tools are held like real ones: the handle leaves the fist at an angle (beta, from the

@@ -37,5 +37,6 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 
 ## Open ideas the owner mentioned
 - Choose a less robotic free voice (Chatterbox or Edge voices; samples via the Voice samples action).
-- Done: comment text picks a job (`src/sim/requests.js`). Ideas not done: tavern scene with several
+- Done: comment text picks a job and a name (`src/sim/requests.js`), end credits roll in the wide shot
+  (`overlay.js`). Owner does not want royal family or noble titles (prince, princess) as jobs for now. Ideas not done: tavern scene with several
   named patrons, narrator jokes for refused requests ("clone me", "landlord").

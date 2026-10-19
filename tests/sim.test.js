@@ -259,3 +259,26 @@ test('comment job requests: granted when unlocked, apprentice (then promoted) wh
   // history snapshots keep the chosen jobs
   assert.equal(deriveVillagers(r.state).find((v) => v.name === 'Pilot').job, 'blacksmith');
 });
+
+test('comments can choose a name; real comments map to the right jobs; wishes are not requests', async () => {
+  const { wantsFromText, nameFromText } = await import('../src/sim/requests.js');
+  assert.deepEqual(wantsFromText('I SHAL BE MAKING FARMING TOOLS!'), ['toolsmith']);
+  assert.deepEqual(wantsFromText('Yowza i think these people need mead and bread'), ['brewer', 'baker']);
+  assert.deepEqual(wantsFromText('maybe later on when there are proper guards'), []);
+  assert.equal(wantsFromText('Make me a warrior i am sir coolum now')[0], 'warrior');
+  assert.equal(nameFromText('Can I be a villager called sopita?'), 'Sopita');
+  assert.equal(nameFromText('could I be a carpenter named henry'), 'Henry');
+  assert.equal(nameFromText('Well damn. Please name one Violet.'), 'Violet');
+  assert.equal(nameFromText('i am sir coolum now'), 'Coolum');
+  assert.equal(nameFromText('GARY LOOK THERE I AM !!!!!'), null);
+  const W = (author, name, text, at) => ({ author, name, at, wants: wantsFromText(text), ...(nameFromText(text) ? { call: nameFromText(text) } : {}) });
+  let { state: s } = run([10]);
+  let r = advance(s, { subscribers: 10, date: dateOf(5), commenters: [W('a', 'PastandPlastic', 'could I be a carpenter named henry', '1'), W('b', 'Bad', 'call me fuckface', '2')] });
+  assert.deepEqual(r.state.villagers.slice(0, 2).map((v) => [v.name, v.job]), [['Henry', 'apprentice'], ['Bad', r.state.villagers[1].job]]);
+  // an existing villager can change name later
+  r = advance(r.state, { subscribers: 10, date: dateOf(6), commenters: [W('a', 'PastandPlastic', 'actually call me Hank', '3')] });
+  assert.equal(r.state.villagers[0].name, 'Hank');
+  assert.deepEqual(r.diff.renamed, [{ id: 0, from: 'Henry', name: 'Hank' }]);
+  assert.equal(deriveVillagers(r.state)[0].name, 'Hank');
+  checkInvariants(r.state);
+});

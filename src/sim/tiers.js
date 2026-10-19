@@ -35,6 +35,9 @@ export const JOBS = {
   weirdo: { label: 'Town Weirdo', color: '#c04fb4', requestOnly: true },
   beggar: { label: 'Beggar', color: '#6d6152', requestOnly: true },
   jester: { label: 'Jester', color: '#e0a21b', requestOnly: true },
+  warrior: { label: 'Warrior', color: '#8e2f2a', requestOnly: true },
+  toolsmith: { label: 'Toolsmith', color: '#5b5f66', requestOnly: true },
+  brewer: { label: 'Brewer', color: '#b07a2a', requestOnly: true },
   apprentice: { label: 'Apprentice', color: '#8c8c6a', requestOnly: true },
 };
 

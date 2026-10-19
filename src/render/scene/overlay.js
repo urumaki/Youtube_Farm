@@ -1,6 +1,7 @@
 // DOM overlay (counter, labels, captions, goal, CTA). Everything stays inside the platform safe zone:
 // no key text in the top 220 px, the bottom 380 px or the right 160 px of the 1080x1920 frame.
 import * as THREE from 'three';
+import { JOBS } from '../../sim/tiers.js';
 
 export const SAFE = { top: 220, bottom: 380, right: 160, left: 60 };
 const W = 1080, H = 1920;
@@ -32,6 +33,11 @@ const CSS = `
 #ov .cta .big{font-family:'Cinzel',serif;font-weight:700;font-size:74px;line-height:1.1;color:#fff4d6;text-shadow:0 5px 0 #6b4a12,0 8px 26px rgba(0,0,0,.8)}
 #ov .cta .cmt{margin-top:26px;font-weight:800;font-size:40px;color:#fff4d6;text-shadow:0 3px 12px rgba(0,0,0,.9)}
 #ov .cta .btn{display:inline-block;margin-top:34px;padding:22px 54px;border-radius:60px;background:#c4302b;font-weight:800;font-size:52px;letter-spacing:2px;box-shadow:0 10px 30px rgba(0,0,0,.45)}
+#ov .credits{position:absolute;left:0;right:0;top:640px;height:460px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,#000 12%,#000 88%,transparent)}
+#ov .credits .roll{position:absolute;left:0;right:0;top:0;display:grid;grid-template-columns:repeat(var(--cols),1fr);row-gap:8px;text-align:center}
+#ov .credits .h{grid-column:1/-1;padding:28px 0 8px;font-weight:800;font-size:26px;letter-spacing:3px;color:#e3b23c;text-transform:uppercase;text-shadow:0 2px 8px rgba(0,0,0,.9)}
+#ov .credits .n{font-family:'Cinzel',serif;font-weight:700;font-size:var(--fs);line-height:1.05;color:#fff4d6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px;text-shadow:0 2px 0 #3a2a0a,0 3px 10px rgba(0,0,0,.9)}
+#ov .credits .n i{display:block;font-family:'Inter',sans-serif;font-style:normal;font-weight:700;font-size:calc(var(--fs) * .55);letter-spacing:1px;color:#e3b23c;text-transform:uppercase}
 #ov .day{position:absolute;left:0;top:0;font-weight:700;font-size:30px;color:#fff;opacity:.92;text-shadow:0 2px 8px rgba(0,0,0,.9)}
 #ov .cap{position:absolute;left:0;right:0;bottom:30px;text-align:center}
 #ov .cap span{display:inline-block;margin:0 8px;font-weight:900;font-size:64px;line-height:1.15;color:#fff;text-shadow:0 0 6px #000,0 4px 0 #000,0 6px 18px rgba(0,0,0,.9);-webkit-text-stroke:2px #000}
@@ -39,8 +45,8 @@ const CSS = `
 `;
 
 const STR = {
-  en: { villagers: 'VILLAGERS', villager: 'VILLAGER', day: 'Day', more: (n) => `+${n} more homes`, until: (n, g) => `<b>${n}</b> more villager${n === 1 ? '' : 's'} until <b>${g}</b>`, cta1: 'Subscribe to', cta2: 'become a villager', btn: 'SUBSCRIBE', cmt: 'Comment to name a villager', realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Clear skies', cloudy: 'Cloudy', fog: 'Fog', rain: 'Rain', snow: 'Snow' }, none: 'No change today' },
-  it: { villagers: 'ABITANTI', villager: 'ABITANTE', day: 'Giorno', more: (n) => `+${n} altre case`, until: (n, g) => `Ancora <b>${n}</b> abitant${n === 1 ? 'e' : 'i'} e <b>${g}</b>`, cta1: 'Iscriviti per', cta2: 'diventare un abitante', btn: 'ISCRIVITI', cmt: 'Commenta per dare il nome a un abitante', realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Sereno', cloudy: 'Nuvoloso', fog: 'Nebbia', rain: 'Pioggia', snow: 'Neve' }, none: 'Nessun cambiamento oggi' },
+  en: { villagers: 'VILLAGERS', villager: 'VILLAGER', day: 'Day', more: (n) => `+${n} more homes`, until: (n, g) => `<b>${n}</b> more villager${n === 1 ? '' : 's'} until <b>${g}</b>`, cta1: 'Subscribe to', cta2: 'become a villager', btn: 'SUBSCRIBE', cmt: 'Comment to name a villager', credits: 'The villagers', realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Clear skies', cloudy: 'Cloudy', fog: 'Fog', rain: 'Rain', snow: 'Snow' }, none: 'No change today' },
+  it: { villagers: 'ABITANTI', villager: 'ABITANTE', day: 'Giorno', more: (n) => `+${n} altre case`, until: (n, g) => `Ancora <b>${n}</b> abitant${n === 1 ? 'e' : 'i'} e <b>${g}</b>`, cta1: 'Iscriviti per', cta2: 'diventare un abitante', btn: 'ISCRIVITI', cmt: 'Commenta per dare il nome a un abitante', credits: 'Gli abitanti', realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Sereno', cloudy: 'Nuvoloso', fog: 'Nebbia', rain: 'Pioggia', snow: 'Neve' }, none: 'Nessun cambiamento oggi' },
 };
 
 export function createOverlay(root, data) {
@@ -55,6 +61,7 @@ export function createOverlay(root, data) {
     <div class="counter"><div class="crown">${s.realm}</div><div class="num">0</div><div class="unit"></div><div class="delta"></div></div>
     <div class="goal"></div>
     <div class="banner"></div>
+    <div class="credits"><div class="roll"></div></div>
     <div class="cta"><div class="big">${s.cta1}<br>${s.cta2}</div><div class="btn">${s.btn}</div><div class="cmt">${s.cmt}</div></div>
     <div class="cap"></div>
   </div>`;
@@ -74,6 +81,20 @@ export function createOverlay(root, data) {
     const frac = Math.max(0.03, Math.min(1, pop / diff.next.at));
     goal.innerHTML = `${s.until(diff.next.remaining.toLocaleString('en-US'), data.goalText || diff.next.goal)}<div class="bar"><i style="width:${(frac * 100).toFixed(1)}%"></i></div>`;
   }
+  // end credits: every named villager with their job, newest first, rolling during the wide shot
+  const credits = $('.credits'), roll = $('.roll');
+  const job = (n, id) => {
+    const j = data.state.villagers?.[id]?.job ?? n.job;
+    return j === 'apprentice' && n.wants ? `Apprentice ${JOBS[n.wants]?.label || n.wants}` : JOBS[j]?.label || j || '';
+  };
+  const people = Object.entries(data.state.names || {}).map(([id, n]) => ({ id: Number(id), n }))
+    .filter((p) => !data.state.villagers || p.id < data.state.villagers.length)
+    .sort((a, b) => (b.n.day ?? 0) - (a.n.day ?? 0) || a.id - b.id);
+  const cols = people.length > 40 ? 3 : people.length > 8 ? 2 : 1;
+  roll.style.setProperty('--cols', cols);
+  roll.style.setProperty('--fs', `${[0, 34, 30, 24][cols]}px`);
+  roll.innerHTML = people.length ? `<div class="h">${s.credits}</div>` + people.map(({ id, n }) => `<div class="n">${esc(n.name)}<i>${esc(job(n, id))}</i></div>`).join('') : '';
+  let rollH = null;
   const labelEls = new Map();
   const v = new THREE.Vector3();
 
@@ -88,6 +109,12 @@ export function createOverlay(root, data) {
       delta.style.display = hook ? 'inline-block' : 'none';
       goal.style.opacity = wide && diff.next ? Math.min(1, (t - 22.4) * 3) : 0;
       goal.style.top = '420px';
+      credits.style.opacity = wide && people.length ? Math.min(1, (t - 22.6) * 3, (26.9 - t) * 4) : 0;
+      if (wide && people.length) {
+        rollH ??= roll.offsetHeight;
+        const travel = Math.max(0, rollH - 460 + 60); // short lists stay still
+        roll.style.transform = `translateY(${-travel * Math.min(1, Math.max(0, (t - 23.2) / 3.5))}px)`;
+      }
       cta.style.opacity = ctaOn ? Math.min(1, (t - 27) * 4) : 0;
       // labels for the active target, projected and clamped to the safe zone
       for (const [, el] of labelEls) el.style.display = 'none';

@@ -101,7 +101,7 @@ const JOB_IT = {
   carpenter: 'carpentiere', reeve: 'balivo', sailor: 'marinaio', knight: 'cavaliere', bishop: 'vescovo', scholar: 'studioso',
   mayor: 'sindaco', weaver: 'tessitore', physician: 'medico', alchemist: 'alchimista', bard: 'bardo', noble: 'nobile',
   chronicler: 'cronista', admiral: 'ammiraglio', fletcher: 'arcaio', weirdo: 'stravagante del paese', beggar: 'mendicante',
-  jester: 'giullare', apprentice: 'apprendista',
+  jester: 'giullare', warrior: 'guerriero', toolsmith: 'fabbro di attrezzi', brewer: 'birraio', apprentice: 'apprendista',
 };
 
 function plural(j) { return j.endsWith('man') ? j.slice(0, -3) + 'men' : j + 's'; }
