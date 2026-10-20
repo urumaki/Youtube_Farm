@@ -12,9 +12,17 @@ export const DURATION = 30;
 const HOOK = 2, UPDATE_END = 23.5, WIDE_END = 27;
 const CARAVAN_SECONDS = 4.5, STORY_SECONDS = 4.5;
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
-// Owner (2026-10-20): a guard is not always shown the same way. Each fighting job has a few scenes, one
-// picked per villager and day: on the castle walls, sparring in the courtyard, or at the straw dummy.
-export const VARIANTS = { guard: ['walls', 'sparring', 'dummy'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'] };
+// Owner (2026-10-20): a job is not always shown the same way. Each job has a few scenes, one picked per
+// villager and day (the first is the job's usual scene; the others are 'job:variant' in work.js): guards
+// on the castle walls, sparring in the courtyard or at the straw dummy; farmers hoeing, sowing or reaping...
+const FIGHTER_SCENES = ['walls', 'sparring', 'dummy'];
+export const VARIANTS = {
+  guard: FIGHTER_SCENES, knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
+  farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
+  blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw'],
+  baker: ['oven', 'knead', 'stall'], fisherman: ['rod', 'net'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
+  innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'],
+};
 const CASTLE_VARIANTS = new Set(['walls', 'sparring']); // own camera at the castle, a hard cut in and out
 // the croft shots move the camera in different ways, never the same way twice in a row
 export const CAM_STYLES = ['push', 'reveal', 'orbit', 'low'];
@@ -66,24 +74,29 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const keepers = tavern ? named.filter((n) => n.job === 'innkeeper' || n.job === 'brewer').slice(0, 2) : [];
   // who is shown at work comes from the simulation (src/sim/featured.js): today's named villagers first,
   // never yesterday's jobs again, one per job; older saves fall back to the same rule without yesterday
+  // a shot can show two villagers: the guest visits the host at work (src/render/scene/visit.js)
   const featured = diff.featured || pickFeatured(state);
-  const picked = featured.map((f) => named.find((n) => n.id === f.id)).filter((n) => n && !keepers.includes(n));
-  const atWork = picked.slice(0, tavern ? 2 : people ? 3 : Math.min(3, Math.max(2, maxTargets - targets.length - 2)));
+  const shots = featured.map((f) => ({ f, n: named.find((n) => n.id === f.id), g: f.with ? named.find((n) => n.id === f.with.id) : null }))
+    .filter(({ n }) => n && !keepers.includes(n))
+    .slice(0, tavern ? 2 : people ? 3 : Math.min(3, Math.max(2, maxTargets - targets.length - 2)));
+  const atWork = shots.flatMap(({ n, g }) => (g ? [n, g] : [n])); // everyone on screen at work
   const camFrom = Math.floor(rand01(state.seed, 'camstyle', state.day) * CAM_STYLES.length);
   const usedVariants = new Set();
   let crofts = 0;
-  for (const n of atWork) {
+  const jobSub = (n) => (n.job === 'apprentice' && n.wants ? `Apprentice ${jobLabel(n.wants)}` : jobLabel(n.job));
+  for (const { f, n, g } of shots) {
     const apprentice = n.job === 'apprentice' && n.wants;
-    const sub = apprentice ? `Apprentice ${jobLabel(n.wants)}` : jobLabel(n.job);
     const sceneJob = apprentice ? n.wants : n.job;
-    const variant = pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants);
+    // a host with a guest stays at home (the castle scenes have no croft to walk into)
+    const variant = pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g });
     if (variant) usedVariants.add(variant);
     const castleShot = CASTLE_VARIANTS.has(variant);
     targets.push({
       kind: 'villager', id: n.id, job: n.job, sceneJob, variant, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
       // a hard cut into each villager (a flight down into a croft only shows roofs and grass)
-      label: { title: n.name, sub }, work: null, weight: 1.1, cut: castleShot, cutIn: true,
+      label: { title: n.name, sub: jobSub(n) }, work: null, weight: g ? 1.45 : 1.1, cut: castleShot, cutIn: true,
       camStyle: castleShot ? null : CAM_STYLES[(camFrom + crofts++) % CAM_STYLES.length],
+      ...(g ? { pair: f.pair, guest: { id: g.id, name: g.name, job: g.job }, label2: { title: g.name, sub: jobSub(g) }, labelPos2: new THREE.Vector3() } : {}),
     });
   }
   // an everyday shot when there is time for it: a guard patrolling the castle walls or farmers hoeing
@@ -188,9 +201,9 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
 }
 
 /** The scene for a villager of this job today (null: the job's only scene), not one already used today. */
-export function pickVariant(job, seed, day, id, used = new Set()) {
-  const opts = VARIANTS[job];
-  if (!opts) return null;
+export function pickVariant(job, seed, day, id, used = new Set(), { croft = false } = {}) {
+  const opts = VARIANTS[job]?.filter((v) => !(croft && CASTLE_VARIANTS.has(v)));
+  if (!opts?.length) return null;
   const k = Math.floor(rand01(seed, 'variant', day, id) * opts.length);
   for (let i = 0; i < opts.length; i++) if (!used.has(opts[(k + i) % opts.length])) return opts[(k + i) % opts.length];
   return opts[k];

@@ -66,6 +66,25 @@ export async function renderStills(data, times, outDir, { log = console } = {}) 
   }
 }
 
+/** Test views of work scenes and visits (--gallery): items [{name, job, variant, guest, pair}] x times. */
+export async function renderGallery(data, items, times, outDir) {
+  const { browser, page, errors } = await openPage();
+  try {
+    const stats = await setupScene(page, { ...data, gallery: items });
+    fs.mkdirSync(outDir, { recursive: true });
+    const files = [];
+    for (let i = 0; i < items.length; i++) for (const t of times) {
+      await page.evaluate((a) => window.SK.galleryShot(a.i, a.t), { i, t });
+      const file = path.join(outDir, `${items[i].name}_${String(t).replace('.', '_')}.png`);
+      fs.writeFileSync(file, await page.screenshot({ type: 'png' }));
+      files.push(file);
+    }
+    return { stats, files, errors };
+  } finally {
+    await browser.close();
+  }
+}
+
 /** Debug views: [{name, pos:[x,y,z], look:[x,y,z], t, phase}] -> PNG files. */
 export async function renderShots(data, shots, outDir) {
   const { browser, page, errors } = await openPage();

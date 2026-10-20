@@ -6,14 +6,20 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { accessToken, publishAtFor, uploadVideo, videoResource } from './youtube.js';
 
+// Owner (2026-10-20): at most 5 hashtags per video, title and description together, none repeated.
+// Usual advice for Shorts: #shorts once as the format tag (in the title), then the channel's own tag and a
+// few niche ones; the first hashtags of the description show as links above the title.
+export const MAX_HASHTAGS = 5;
+const DESCRIPTION_TAGS = { en: '#subscriberkingdom #medieval #citybuilder #castle', it: '#subscriberkingdom #medioevo #citybuilder #castello' };
+
 export function metadata({ state, diff, lang }) {
   const d = diff.delta;
   const title = lang === 'it'
     ? `Giorno ${state.day}: ${d >= 0 ? '+' : ''}${d} abitanti — ${state.subscriberCount} nel regno 👑 #shorts`
     : `Day ${state.day}: ${d >= 0 ? '+' : ''}${d} villagers — ${state.subscriberCount} in the kingdom 👑 #shorts`;
   const description = lang === 'it'
-    ? 'Ogni iscritto è un abitante di Subscriber Kingdom. Iscriviti per avere la tua casa!\n#subscriberkingdom #medieval #shorts'
-    : 'Every subscriber is one villager of Subscriber Kingdom. Subscribe to move in!\n#subscriberkingdom #medieval #shorts';
+    ? `Ogni iscritto è un abitante di Subscriber Kingdom. Iscriviti per avere la tua casa!\n${DESCRIPTION_TAGS.it}`
+    : `Every subscriber is one villager of Subscriber Kingdom. Subscribe to move in!\n${DESCRIPTION_TAGS.en}`;
   return { title, description, tags: ['subscriber kingdom', 'medieval', 'kingdom builder', 'castle', 'shorts'] };
 }
 

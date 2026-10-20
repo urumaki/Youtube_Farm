@@ -121,26 +121,33 @@ export function createOverlay(root, data) {
       const tg = ev.active;
       // after a flight the villager is tiny until the camera has landed in front of them
       const u0 = tg?.kind === 'villager' && !tg.cut && !tg.cutIn ? 0.4 : 0.12;
-      if (tg && tg.label && !tg.labels && ev.activeU > u0 && ev.activeU < 0.97) {
-        let el = labelEls.get(tg);
+      // a shot of two villagers has a second label, for the guest, once they have walked in
+      const bigLabels = tg && !tg.labels ? [[tg, tg.label, tg.labelPos, u0], [tg.label2, tg.label2, tg.labelPos2, Math.max(u0, 0.22)]].filter((l) => l[1]) : [];
+      let first = null;
+      for (const [key, label, pos, from] of bigLabels) {
+        if (!(ev.activeU > from && ev.activeU < 0.97)) continue;
+        let el = labelEls.get(key);
         if (!el) {
           el = document.createElement('div');
           el.className = 'label' + (tg.kind === 'loss' ? ' loss' : '');
-          el.innerHTML = `<div class="t">${esc(tg.label.title)}</div>${tg.label.sub ? `<div class="s">${esc(tg.label.sub)}</div>` : ''}${tg.extra ? `<div class="more">${s.more(tg.extra)}</div>` : ''}`;
+          el.innerHTML = `<div class="t">${esc(label.title)}</div>${label.sub ? `<div class="s">${esc(label.sub)}</div>` : ''}${key === tg && tg.extra ? `<div class="more">${s.more(tg.extra)}</div>` : ''}`;
           ov.querySelector('.safe').appendChild(el);
-          labelEls.set(tg, el);
+          labelEls.set(key, el);
         }
-        (tg.labelPos ? v.copy(tg.labelPos) : v.copy(tg.pos).add(new THREE.Vector3(0, 3, 0))).project(camera);
+        (pos ? v.copy(pos) : v.copy(tg.pos).add(new THREE.Vector3(0, 3, 0))).project(camera);
         const x = (v.x * 0.5 + 0.5) * W - SAFE.left, y = (-v.y * 0.5 + 0.5) * H - SAFE.top;
         el.style.display = 'block';
         const wEl = el.offsetWidth, hEl = el.offsetHeight;
         const sw = W - SAFE.left - SAFE.right, sh = H - SAFE.top - SAFE.bottom;
         const cx = Math.min(sw - wEl / 2, Math.max(wEl / 2, x));
-        const cy = Math.min(sh - 260, Math.max(hEl + 10, y - 30));
+        let cy = Math.min(sh - 260, Math.max(hEl + 10, y - 30));
+        // the two labels never cover each other: the second one moves below the first
+        if (first && Math.abs(first.x - cx) < (first.w + wEl) / 2 && Math.abs(first.y - cy) < hEl + 6) cy = first.y + hEl + 8;
+        first ??= { x: cx, y: cy, w: wEl };
         el.style.left = `${cx}px`; el.style.top = `${cy}px`;
-        el.style.opacity = Math.min(1, (ev.activeU - u0) * 8, (0.97 - ev.activeU) * 12);
+        el.style.opacity = Math.min(1, (ev.activeU - from) * 8, (0.97 - ev.activeU) * 12);
         // the name label pops in with a small overshoot
-        const k = Math.min(1, (ev.activeU - u0) * 6);
+        const k = Math.min(1, (ev.activeU - from) * 6);
         const pop = k >= 1 ? 1 : 0.55 + 0.45 * (1 + 2.2 * (k - 1) ** 3 + 1.2 * (k - 1) ** 2);
         el.style.transformOrigin = '50% 100%';
         el.style.transform = `translate(-50%,-100%) scale(${pop.toFixed(3)})`;

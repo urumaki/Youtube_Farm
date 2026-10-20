@@ -367,7 +367,10 @@ function hit(kind, r) {
   }
   return o;
 }
-const WORK_BEDS = { blacksmith: [['fire', 0.25]], toolsmith: [['fire', 0.25]], brewer: [['chatter', 0.3]], baker: [['fire', 0.3], ['chatter', 0.1]], fisherman: [['water', 0.5]], merchant: [['chatter', 0.3]], innkeeper: [['chatter', 0.3]], stonemason: [['stone', 0.2]] };
+const WORK_BEDS = { blacksmith: [['fire', 0.25]], toolsmith: [['fire', 0.25]], brewer: [['chatter', 0.3]], baker: [['fire', 0.3], ['chatter', 0.1]], fisherman: [['water', 0.5]], merchant: [['chatter', 0.3]], innkeeper: [['chatter', 0.3]], stonemason: [['stone', 0.2]],
+  // the other scenes of a job (VARIANTS in src/render/scene/timeline.js)
+  'carpenter:saw': [['saw', 0.5]], 'blacksmith:bellows': [['fire', 0.45]], 'toolsmith:bellows': [['fire', 0.45]], 'baker:stall': [['chatter', 0.3]],
+  'baker:knead': [['chatter', 0.1]], 'brewer:stir': [['fire', 0.2], ['chatter', 0.1]], 'stonemason:stack': [['stone', 0.4]], 'miller:quern': [['stone', 0.15]] };
 
 function sceneFor(cue) {
   if (cue.kind === 'house') return cue.rebuilt ? 'rebuilt' : 'house';
@@ -421,7 +424,7 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
   }
   for (const cue of cues.filter((c) => c.kind === 'villager' || (c.kind === 'ambient' && c.strikes?.length))) {
     const len = cue.t1 - cue.t0 + 0.4;
-    for (const [name, gain] of WORK_BEDS[cue.job] || []) place(sound(name, len, r, workDir), cue.t0 - 0.2, gain, cue.pan ?? 0);
+    for (const [name, gain] of WORK_BEDS[`${cue.job}:${cue.variant}`] || WORK_BEDS[cue.job] || []) place(sound(name, len, r, workDir), cue.t0 - 0.2, gain, cue.pan ?? 0);
     for (const ts of cue.strikes || []) place(hit(cue.strikeSound, r), ts - 0.005, cue.strikeSound === 'anvil' || cue.strikeSound === 'clang' ? 0.6 : 0.75, cue.pan ?? 0, 0.002, 0.3);
   }
   // wide shot: a distant bell if the kingdom has one; chains again as the bridge rises for the loop

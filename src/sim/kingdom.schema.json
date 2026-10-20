@@ -27,7 +27,8 @@
     "storyLog": { "type": "object" },
     "story": { "type": ["object", "null"] },
     "storyArc": { "type": ["object", "null"] },
-    "featured": { "type": "array" }
+    "featured": { "type": "array" },
+    "lastShown": { "type": "object" }
   },
   "$defs": {
     "villager": {

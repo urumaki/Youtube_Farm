@@ -19,6 +19,7 @@ import { buildTavernInterior } from './tavern.js';
 import { buildStory } from './stories/index.js';
 import { buildPatrol, buildFields } from './ambient.js';
 import { buildSparring, buildDummyDrill } from './drills.js';
+import { buildVisit } from './visit.js';
 import { heightAt } from '../../sim/world.js';
 
 const FPS = 30;
@@ -88,6 +89,7 @@ async function setup(data) {
   scene.add(life.group);
   // named villagers are shown at work in their croft; today's named villagers arrive in a caravan
   const works = [];
+  const ctx0 = {};
   let caravan = null, tavern = null;
   const stories = [];
   const yFn = (x, z) => heightAt(w, x, z) + 0.03;
@@ -110,13 +112,23 @@ async function setup(data) {
       const anchor = new THREE.Vector3(sh.x + ax * (sh.D / 2 + 4.2), 0, sh.z + az * (sh.D / 2 + 4.2));
       anchor.y = yFn(anchor.x, anchor.z);
       const make = tg.variant === 'dummy' ? buildDummyDrill : buildWorkScene;
-      const ws = make({ job: tg.sceneJob || v.job, anchor, face: Math.atan2(ax, az) + 1.1, M, seed: state.seed, id: tg.id });
+      const ws = make({ job: tg.sceneJob || v.job, variant: tg.variant, anchor, face: Math.atan2(ax, az) + 1.1, M, seed: state.seed, id: tg.id });
       scene.add(ws.group);
       works.push(ws);
       tg.work = ws;
       tg.pos.copy(ws.focus);
       tg.labelPos.copy(ws.labelPos);
       tg.away = Math.atan2(az, ax);
+      if (tg.guest) {
+        // a second named villager walks in: frame them both, a little wider
+        const visit = buildVisit({ host: ws, hostJob: tg.sceneJob || v.job, guest: tg.guest, pair: tg.pair, away: tg.away, M, yFn, t0: tg.t0, t1: tg.t1 });
+        scene.add(visit.group);
+        stories.push({ st: visit, tg });
+        tg.labelPos2 = visit.labelPos2;
+        if (visit.work) tg.work = visit.work;
+        tg.pos.lerp(visit.stand.clone().setY(visit.stand.y + 1.1), 0.4);
+        tg.radius = 7.8;
+      }
     } else if (tg.kind === 'caravan') {
       caravan = buildCaravan({ w, named: diff.named.map((n) => ({ name: n.name, job: n.job })), M, seed: state.seed, yFn });
       if (!caravan) continue;
@@ -155,10 +167,28 @@ async function setup(data) {
       stories.push({ st, tg });
     }
   }
+  // test renders (--gallery): every work scene and visit asked for, one at a time, in the croft behind the
+  // first named villager's house (kept clear like in the video)
+  if (data.gallery) {
+    const sh = houses.shapes.get(state.villagers[Number(Object.keys(state.names || {})[0] ?? 0)].house);
+    const ax = -Math.sin(sh.rot) * sh.side, az = Math.cos(sh.rot) * sh.side;
+    const anchor = new THREE.Vector3(sh.x + ax * (sh.D / 2 + 4.2), 0, sh.z + az * (sh.D / 2 + 4.2));
+    anchor.y = yFn(anchor.x, anchor.z);
+    const away = Math.atan2(az, ax);
+    ctx0.galleryAway = away;
+    ctx0.gallery = data.gallery.map((g, i) => {
+      const make = g.variant === 'dummy' ? buildDummyDrill : buildWorkScene;
+      const ws = make({ job: g.job, variant: g.variant, anchor, face: Math.atan2(ax, az) + 1.1, M, seed: state.seed, id: 9100 + i });
+      scene.add(ws.group);
+      const visit = g.guest ? buildVisit({ host: ws, hostJob: g.job, guest: { job: g.guest }, pair: g.pair, away, M, yFn, t0: 0, t1: 3 }) : null;
+      if (visit) scene.add(visit.group);
+      return { ws, visit, focus: visit ? ws.focus.clone().lerp(visit.stand.clone().setY(visit.stand.y + 1.1), 0.4) : ws.focus };
+    });
+  }
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
   const overlay = viewer ? null : createOverlay(document.getElementById('stage'), data);
 
-  const ctx = { renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, caravan, tavern, stories };
+  const ctx = { ...ctx0, renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, caravan, tavern, stories };
   ctx.stats = {
     setupMs: Math.round(performance.now() - t0), houses: state.houses.length, animated: animated.size, trees: nature.count,
     walkers: life.walkers, guards: life.guards, targets: plan?.targets.map((t) => `${t.kind}:${t.id ?? ''}`),
@@ -166,7 +196,7 @@ async function setup(data) {
     cues: plan?.targets.map((t, i) => ({
       kind: t.kind, id: t.id ?? null, t0: t.t0, t1: t.t1, completed: t.completed ?? null, rebuilt: !!t.rebuilt, pan: i % 2 ? 0.25 : -0.25,
       hasChapel: state.buildings.some((b) => (b.id === 'chapel' || b.id === 'cathedral') && b.status === 'done'),
-      job: t.sceneJob ?? t.job ?? null, variant: t.variant ?? null, strikes: t.work ? t.work.strikeTimes(t.t0, t.t1) : [], strikeSound: t.work?.sound ?? null,
+      job: t.sceneJob ?? t.job ?? null, variant: t.variant ?? null, job2: t.guest?.job ?? null, pair: t.pair ?? null, strikes: t.work ? t.work.strikeTimes(t.t0, t.t1) : [], strikeSound: t.work?.sound ?? null,
     })) ?? [],
   };
   window.__ctx = ctx;
@@ -229,6 +259,20 @@ async function shot(pos, look, t = 10, phase) {
   return true;
 }
 
+/** Test renders: gallery scene i at time t, seen from `angle` around it (the croft shots' side). */
+async function galleryShot(i, t, turn = 0.25) {
+  const ctx = window.__ctx;
+  const angle = ctx.galleryAway + turn;
+  ctx.gallery.forEach((g, k) => { g.ws.group.visible = k === i; if (g.visit) g.visit.group.visible = k === i; });
+  const g = ctx.gallery[i];
+  const pos = [g.focus.x + Math.cos(angle) * 7, g.focus.y + 1.2, g.focus.z + Math.sin(angle) * 7];
+  applyFrame(ctx, 10);
+  g.ws.update(t);
+  g.visit?.update(t);
+  if (g.visit) g.visit.group.visible = true;
+  return shot(pos, [g.focus.x, g.focus.y - 0.1, g.focus.z], 10);
+}
+
 async function frame(f) {
   const ctx = window.__ctx;
   const ev = applyFrame(ctx, f / FPS);
@@ -275,7 +319,7 @@ function startViewer(ctx) {
   loop();
 }
 
-window.SK = { setup, frame, shot, CASTLE };
+window.SK = { setup, frame, shot, galleryShot, CASTLE };
 if (window.__KINGDOM__) {
   setup(window.__KINGDOM__).then((s) => { window.__ready = s; }).catch((e) => { console.error(e); window.__error = String(e?.stack || e); });
 }

@@ -312,3 +312,31 @@ test('story events: deterministic, Halloween on its date, cooldowns kept, named 
   const days = a.filter((x) => x.story).length;
   assert.ok(days > 15 && days < 55, `stories on ${days} of 70 days`);
 });
+
+test('every named villager gets a turn on screen, two at a time when they work together', async () => {
+  const { pickFeatured, featuredPeople, markShown, PAIRS } = await import('../src/sim/featured.js');
+  // a small kingdom with eight named villagers and no tavern
+  const jobs = ['blacksmith', 'guard', 'baker', 'miller', 'farmer', 'woodcutter', 'fisherman', 'carpenter'];
+  const s = {
+    seed: 5, day: 10, subscriberCount: 20, buildings: [],
+    names: Object.fromEntries(jobs.map((j, i) => [i, { name: `N${i}`, job: j, day: 1 }])),
+    villagers: jobs.map((j, i) => ({ id: i, job: j })),
+  };
+  const f = pickFeatured(s);
+  assert.ok(f.length <= 3);
+  for (const x of f.filter((y) => y.pair && y.pair !== 'visit')) {
+    const p = PAIRS.find((q) => q.id === x.pair);
+    assert.ok(p.host.includes(x.job) && p.guest.includes(x.with.job), `${x.job} + ${x.with.job}: ${x.pair}`);
+  }
+  const people = featuredPeople(f);
+  assert.equal(new Set(people.map((p) => p.job)).size, people.length, 'one villager per job');
+  // over the next days the ones not shown yet come first, until everybody has been on screen
+  const seen = new Set();
+  for (let day = 10; day < 14; day++) {
+    s.day = day;
+    const today = pickFeatured(s, { avoidJobs: [] });
+    for (const p of featuredPeople(today)) seen.add(p.id);
+    markShown(s, today);
+  }
+  assert.equal(seen.size, jobs.length, `shown: ${[...seen]}`);
+});

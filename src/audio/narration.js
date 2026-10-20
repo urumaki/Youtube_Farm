@@ -2,6 +2,7 @@
 import { rng } from '../sim/prng.js';
 import { JOBS, BUILDINGS, tavernScene } from '../sim/tiers.js';
 import { FROM_IT, GOODS_IT } from '../sim/stories.js';
+import { featuredPeople, visitItem } from '../sim/featured.js';
 
 const T = {
   en: {
@@ -39,6 +40,23 @@ const T = {
       patrol: ['Up on the walls, the guards keep watch.', 'The castle guards walk their rounds.'],
       sparring: ['In the castle yard, the guards train with sword and shield.', 'Clang! The guards practise in the courtyard.'],
       fields: ['Out in the fields, the farmers work the soil.', 'In the fields, the hoes never rest.'],
+    },
+    // two villagers in one shot (src/sim/featured.js): h = the host's job, g = the guest's
+    pair: {
+      sword: (h, g) => `The ${h} hands a brand new sword to the ${g}.`,
+      arrows: (h, g) => `The ${g} collects a fine new bow from the ${h}.`,
+      tools: (h, g) => `The ${h} mended a tool for the ${g}.`,
+      flour: (h, g) => `The ${g} brings fresh flour to the ${h}.`,
+      grain: (h, g) => `The ${g} brings a sheaf of wheat to the ${h}.`,
+      fish: (h, g) => `The ${g} brings the catch of the day to the ${h}.`,
+      logs: (h, g) => `The ${g} brings a load of logs to the ${h}.`,
+      loaf: (h, g) => `The ${g} stops by the ${h} for fresh bread.`,
+      tankard: (h, g) => `The ${g} drops by the ${h} for a drink.`,
+      fishbuy: (h, g) => `The ${g} buys a fresh fish from the ${h}.`,
+      cabbage: (h, g) => `The ${g} picks up a cabbage from the ${h}.`,
+      sheaf: (h, g) => `The ${g} picks up a sheaf of wheat from the ${h}.`,
+      sack: (h, g) => `The ${g} collects a sack of flour from the ${h}.`,
+      chat: (h, g) => `The ${g} drops by for a chat with the ${h}.`,
     },
     tavern: ['Meanwhile, the tavern is full tonight!', 'Over at the tavern, the mugs are full!', 'At the tavern, the cider is flowing!'],
     houses1: ['A new house rises along the road.', 'Builders finished a fresh new home.'],
@@ -96,6 +114,22 @@ T.it = {
     sparring: ['Nel cortile del castello, le guardie si allenano con spada e scudo.'],
     fields: ['Nei campi, i contadini lavorano la terra.'],
   },
+  pair: {
+    sword: (h, g) => `${cap(the(h))} consegna una spada nuova ${to(g)}.`,
+    arrows: (h, g) => `${cap(the(g))} ritira un arco nuovo ${from(h)}.`,
+    tools: (h, g) => `${cap(the(h))} ha riparato un attrezzo per ${the(g)}.`,
+    flour: (h, g) => `${cap(the(g))} porta farina fresca ${to(h)}.`,
+    grain: (h, g) => `${cap(the(g))} porta un covone di grano ${to(h)}.`,
+    fish: (h, g) => `${cap(the(g))} porta il pescato del giorno ${to(h)}.`,
+    logs: (h, g) => `${cap(the(g))} porta un carico di legna ${to(h)}.`,
+    loaf: (h, g) => `${cap(the(g))} passa ${from(h)} per il pane fresco.`,
+    tankard: (h, g) => `${cap(the(g))} passa a bere qualcosa.`,
+    fishbuy: (h, g) => `${cap(the(g))} compra un pesce fresco ${from(h)}.`,
+    cabbage: (h, g) => `${cap(the(g))} prende un cavolo ${from(h)}.`,
+    sheaf: (h, g) => `${cap(the(g))} prende un covone di grano ${from(h)}.`,
+    sack: (h, g) => `${cap(the(g))} ritira un sacco di farina ${from(h)}.`,
+    chat: (h, g) => `${cap(the(g))} passa a fare due chiacchiere con ${the(h)}.`,
+  },
   tavern: ['Intanto la taverna è piena!', 'In taverna i boccali sono pieni!'],
   houses1: ['Una nuova casa sorge lungo la strada.'],
   houses: [(n) => `${n} nuove case sorgono lungo le strade.`],
@@ -143,6 +177,10 @@ const JOB_IT = {
 const OVER_EN = { chicken: 'a runaway chicken', goat: 'a stubborn goat', cabbage: 'the last cabbage' };
 const OVER_IT = { chicken: 'una gallina scappata', goat: 'una capra testarda', cabbage: "l'ultimo cavolo" };
 function plural(j) { return j.endsWith('man') ? j.slice(0, -3) + 'men' : j + 's'; }
+// Italian articles for job names: la guardia, l'oste, lo scalpellino, il fabbro; al/alla/all'/allo, dal...
+function the(w) { return (w === 'guardia' ? 'la ' : /^[aeiou]/.test(w) ? "l'" : /^(s[^aeiou]|z|gn|ps)/.test(w) ? 'lo ' : 'il ') + w; }
+function to(w) { const a = the(w); return a.startsWith('il ') ? 'al ' + w : 'al' + a; }
+function from(w) { return 'd' + to(w).slice(1); }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 const words = (s) => s.split(/\s+/).filter(Boolean).length;
 
@@ -173,7 +211,8 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   if ((diff.named || []).length) add(pick(L.caravan)(diff.named.length), 'caravan', 9);
   const granted = (diff.requests || []).filter((q) => q.granted), waiting = (diff.requests || []).filter((q) => !q.granted);
   // the villagers the video shows at work (src/sim/featured.js): the narrator only names jobs on screen
-  const featured = diff.featured || null;
+  // (hosts and the guests who visit them)
+  const featured = diff.featured ? featuredPeople(diff.featured) : null;
   const onScreen = new Set((featured || []).map((f) => f.job));
   const g0 = granted.find((q) => onScreen.has(q.job)) || granted[0];
   if (granted.length) add(pick(L.granted)(granted.length, job(g0.job)), 'requests', 9, g0.job);
@@ -186,6 +225,11 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
     const text = n > 1 && lang === 'en' ? `Welcome our ${n === 2 ? 'two' : 'three'} new ${plural(job(j))}!` : pick(L.welcome)({ job: job(j) });
     add(text, 'person', 9 - i, j);
   });
+  // two villagers together: what happens between them (the shot is the host's)
+  for (const f of (diff.featured || []).filter((x) => x.pair).slice(0, 2)) {
+    const key = f.pair === 'visit' ? ({ fish: 'fishbuy' })[visitItem(f.job)] || visitItem(f.job) || 'chat' : f.pair;
+    if (L.pair[key]) add(L.pair[key](job(f.job), job(f.with.job)), 'pair', 7, f.job);
+  }
   if (!(diff.named || []).length) {
     const special = diff.added.filter((v) => !['farmer', 'peasant'].includes(v.job));
     const shown = [...special, ...diff.added.filter((v) => !special.includes(v))].slice(0, special.length ? 2 : 1);
@@ -226,7 +270,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
   // same order as the shots: caravan, new buildings, villagers at work, then the rest
   // the comment invitation comes with the named villagers (tavern), so the goal and the call to action keep the end
-  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'requests', 'count', 'person', 'ambient', 'tavern', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
+  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'requests', 'count', 'person', 'pair', 'ambient', 'tavern', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
     const victim = [...S].sort((a, b) => a.priority - b.priority)[0];
@@ -240,7 +284,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
 // Which shot each kind of sentence talks about (see makePlan in src/render/scene/timeline.js).
 const SHOT_OF = {
   story: (c) => c.kind === 'event', completed: (c) => c.kind === 'building', unlocked: (c) => c.kind === 'building',
-  requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', comment: (c) => c.kind === 'tavern', ambient: (c) => c.kind === 'ambient',
+  requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', pair: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', comment: (c) => c.kind === 'tavern', ambient: (c) => c.kind === 'ambient',
   houses: (c) => c.kind === 'house', rebuilt: (c) => c.kind === 'house', abandoned: (c) => c.kind === 'loss', ruined: (c) => c.kind === 'loss',
 };
 // fixed parts of the video: the wide shot with the goal (23.5 s) and the call to action (27 s)
@@ -256,10 +300,10 @@ export function sentenceAnchors(sentences, cues = []) {
   return sentences.map((s) => {
     if (FIXED_AT[s.role] !== undefined) return FIXED_AT[s.role];
     const match = SHOT_OF[s.role];
-    // a sentence naming a job waits for that villager's shot; otherwise the next shot of its kind
-    // a sentence naming a job waits for that villager's shot (and for no other); otherwise the next shot of its kind
-    const cue = match && (s.job && (s.role === 'person' || s.role === 'requests')
-      ? cues.find((c) => match(c) && c.job === s.job && !used.has(c))
+    // a sentence naming a job waits for that villager's shot (and for no other; a visiting villager is in
+    // the host's shot); otherwise the next shot of its kind
+    const cue = match && (s.job && (s.role === 'person' || s.role === 'requests' || s.role === 'pair')
+      ? cues.find((c) => match(c) && (c.job === s.job || c.job2 === s.job) && !used.has(c))
       : cues.find((c) => match(c) && !used.has(c)));
     if (!cue) return null;
     used.add(cue);

@@ -11,7 +11,7 @@ import { wantsFromText, nameFromText } from './sim/requests.js';
 import { buildScript, sentenceAnchors } from './audio/narration.js';
 import { synthesize, captionPhrases } from './audio/tts/index.js';
 import { mixSoundtrack, VOICE_DELAY } from './audio/mix.js';
-import { renderVideo, renderStills, sceneCues } from './render/capture.js';
+import { renderVideo, renderStills, renderGallery, sceneCues } from './render/capture.js';
 import { publish } from './publish/index.js';
 
 export function today() {
@@ -36,6 +36,8 @@ export function parseArgs(argv) {
     else if (k === '--stills') a.stills = v() || '1,10,25';
     else if (k === '--state-dir') a.stateDir = v();
     else if (k === '--day') a.day = v(); // test renders: a saved day again (state/history/DATE.json), never saved
+    else if (k === '--gallery') a.gallery = v(); // test renders: work scenes, e.g. "farmer:sow,blacksmith:anvil+guard:sword"
+    else if (k === '--gallery-times') a.galleryTimes = v();
     else if (k === '--story') a.story = v(); // test renders: force today's story event (bandits, quarrel, merchants, halloween)
     else if (k === '--real') a.real = true; // test renders: start from the real state/ (read only)
     else if (k === '--names') a.names = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: fake commenters
@@ -164,6 +166,20 @@ export async function testRender(args, log = console) {
   if (args.story) diff.story = state.story = storyFor(state, args.story);
   if (args.story === 'storm') diff.weather = state.weather = 'rain'; // as the daily simulation does
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));
+  if (args.gallery) {
+    // "job:variant" or "job:variant+guestJob:pair"
+    const items = args.gallery.split(',').map((s) => {
+      const [host, guest] = s.trim().split('+');
+      const [job, variant = null] = host.split(':');
+      const [gjob, pair] = guest ? guest.split(':') : [];
+      return { name: s.trim().replace(/[:+]/g, '_'), job, variant, ...(guest ? { guest: gjob, pair: pair || 'visit' } : {}) };
+    });
+    const times = (args.galleryTimes || '0.6,1.6,2.4').split(',').map(Number);
+    const r = await renderGallery({ mode: 'video', state, diff, lang: args.lang, quality: args.quality }, items, times, path.join('output', 'gallery'));
+    if (r.errors.length) log.error('[render] browser errors: ' + r.errors.join(' | '));
+    log.log(r.files.join('\n'));
+    return r;
+  }
   if (args.stills) {
     const times = args.stills.split(',').map(Number);
     const r = await renderStills({ mode: 'video', state, diff, lang: args.lang, quality: args.quality }, times, path.join("output", `stills_${args.day || args.subs}`));

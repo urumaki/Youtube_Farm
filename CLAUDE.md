@@ -68,11 +68,20 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (odd days, and in winter: patrolling the castle wall walk or sparring in the courtyard) or farmers
   hoeing in the field nearest the castle (even days), never a job already shown yesterday or today; a
   named guard or farmer not shown elsewhere gets the name tag.
-- Villager shots vary (owner 2026-10-20): guards, knights and warriors get one of several scenes per day
-  (`VARIANTS` in `timeline.js`: on the walls, sparring with another guard, cutting at a straw dummy;
-  `drills.js`), and the croft shots cut in hard and move the camera a different way each time
-  (`CAM_STYLES`: push in, pull back from the hands, orbit, low angle). Name labels pop in. More jobs can
-  get variants the same way.
+- Villager shots vary (owner 2026-10-20): every common job has 2-3 scenes, one picked per villager and day
+  (`VARIANTS` in `timeline.js`; `'job:variant'` entries in `JOB_SCENES`, `work.js`): guards on the walls,
+  sparring or at the straw dummy (`drills.js`); farmers hoeing, sowing or reaping; the smith at the anvil,
+  quenching or at the bellows; the fletcher shooting at a target... The croft shots cut in hard and move
+  the camera a different way each time (`CAM_STYLES`). Name labels pop in.
+- Everybody gets a turn (owner 2026-10-20): `state.lastShown` records the day each named villager was
+  last on screen; after today's names and requests, those never shown and those waiting longest come
+  first. A shot can show two villagers together (`PAIRS` in `featured.js`, `visit.js`): the guest walks
+  into the host's croft and gets something (a sword, a bow, a mended tool, bread...) or brings something
+  (flour, wheat, fish, logs); anyone never shown may just drop by. Up to 6 named villagers per video.
+- `npm run render -- --subs 80 --gallery "farmer:sow,blacksmith:anvil+guard:sword"` renders test views
+  of work scenes and visits (`output/gallery/`), in the croft of the first named villager.
+- Hashtags (owner 2026-10-20): at most 5 per video, title and description together, none repeated
+  (`#shorts` in the title, four niche tags in the description; tested).
 - In-between goals (owner, 2026-10-20): tier at 175 (Town Crier + Crier's Stand) and 750 (Executioner,
   who chops cabbages, + Pillory). Their structures are virtual lots on the market square (`onPlaza`), so
   house plots never move. Only add tiers above the current population, or existing villagers change job.

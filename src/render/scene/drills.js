@@ -13,7 +13,7 @@ import { person, stride, castTag, ease, clamp01 } from './stories/common.js';
 const lerp = THREE.MathUtils.lerp;
 
 /** A sword held point first: the blade continues the line of the arm (hand frame, arm along -y). */
-function sword(M) {
+export function sword(M) {
   const g = new THREE.Group();
   const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m); };
   add(cylGeo(0.022, 0.022, 0.18, 6), M.woodDark); // grip

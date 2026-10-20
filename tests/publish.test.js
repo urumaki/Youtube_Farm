@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { publish } from '../src/publish/index.js';
+import { publish, metadata, MAX_HASHTAGS } from '../src/publish/index.js';
 import { publishAtFor, videoResource } from '../src/publish/youtube.js';
 
 function mockFetch(calls) {
@@ -18,6 +18,15 @@ function mockFetch(calls) {
 }
 
 const quiet = { log() {}, error() {} };
+
+test('at most 5 hashtags per video, none repeated', () => {
+  for (const lang of ['en', 'it']) {
+    const m = metadata({ ...sample(), lang });
+    const tags = `${m.title} ${m.description}`.match(/#\w+/g);
+    assert.ok(tags.length <= MAX_HASHTAGS, `${lang}: ${tags.join(' ')}`);
+    assert.equal(new Set(tags.map((t) => t.toLowerCase())).size, tags.length);
+  }
+});
 const sample = () => ({ state: { day: 3, date: '2026-10-16', subscriberCount: 87 }, diff: { delta: 11 } });
 
 test('publish uploads to YouTube once per day and language', async () => {
