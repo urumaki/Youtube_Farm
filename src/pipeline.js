@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { genesis, advance } from './sim/simulate.js';
 import { storyFor } from './sim/stories.js';
-import { baseStateFor, saveDay, lastKnownCount, STATE_DIR } from './sim/state.js';
+import { pickFeatured, shownJobs } from './sim/featured.js';
+import { baseStateFor, saveDay, lastKnownCount, migrate, STATE_DIR } from './sim/state.js';
 import { getSubscriberCount } from './fetch/youtube.js';
 import { fetchCommenters } from './fetch/comments.js';
 import { wantsFromText, nameFromText } from './sim/requests.js';
@@ -34,6 +35,7 @@ export function parseArgs(argv) {
     else if (k === '--no-video') a.noVideo = true;
     else if (k === '--stills') a.stills = v() || '1,10,25';
     else if (k === '--state-dir') a.stateDir = v();
+    else if (k === '--day') a.day = v(); // test renders: a saved day again (state/history/DATE.json), never saved
     else if (k === '--story') a.story = v(); // test renders: force today's story event (bandits, quarrel, merchants, halloween)
     else if (k === '--real') a.real = true; // test renders: start from the real state/ (read only)
     else if (k === '--names') a.names = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: fake commenters
@@ -139,20 +141,37 @@ export async function daily(args, log = console) {
   return { state, diff, saved: true, video: out };
 }
 
+/**
+ * --day 2026-10-20: a saved day again, from state/history (read only), with today's code. The villagers at
+ * work are picked again (src/sim/featured.js), avoiding the jobs the day before showed.
+ */
+function savedDay(date, stateDir = STATE_DIR) {
+  const file = (d) => path.join(stateDir, 'history', `${d}.json`);
+  if (!fs.existsSync(file(date))) throw new Error(`no saved day ${date} in ${path.join(stateDir, 'history')}`);
+  const { state: raw, diff } = JSON.parse(fs.readFileSync(file(date), 'utf8'));
+  const state = migrate(raw);
+  const prevDate = fs.readdirSync(path.join(stateDir, 'history')).filter((f) => f.slice(0, 10) < date).sort().pop();
+  const prev = prevDate ? migrate(JSON.parse(fs.readFileSync(path.join(stateDir, 'history', prevDate), 'utf8')).state) : null;
+  diff.avoidJobs = prev ? shownJobs(prev) : [];
+  diff.featured = state.featured = pickFeatured(state, { avoidJobs: diff.avoidJobs });
+  return { state, diff };
+}
+
 export async function testRender(args, log = console) {
-  if (!Number.isFinite(args.subs)) throw new Error('--subs N is required');
-  const { state, diff } = args.real ? realNextDay(args) : testKingdom({ subs: args.subs, from: args.from, date: args.date, seed: args.seed, names: args.names });
+  if (!args.day && !Number.isFinite(args.subs)) throw new Error('--subs N is required');
+  if (args.day) args.subs ??= 0;
+  const { state, diff } = args.day ? savedDay(args.day) : args.real ? realNextDay(args) : testKingdom({ subs: args.subs, from: args.from, date: args.date, seed: args.seed, names: args.names });
   if (args.story) diff.story = state.story = storyFor(state, args.story);
   if (args.story === 'storm') diff.weather = state.weather = 'rain'; // as the daily simulation does
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));
   if (args.stills) {
     const times = args.stills.split(',').map(Number);
-    const r = await renderStills({ mode: 'video', state, diff, lang: args.lang, quality: args.quality }, times, path.join('output', `stills_${args.subs}`));
+    const r = await renderStills({ mode: 'video', state, diff, lang: args.lang, quality: args.quality }, times, path.join("output", `stills_${args.day || args.subs}`));
     log.log('[shots] ' + (r.stats.cues || []).map((c) => `${c.kind}:${c.id ?? ''} ${c.t0.toFixed(1)}-${c.t1.toFixed(1)}`).join(' | '));
     if (r.errors.length) log.error('[render] browser errors: ' + r.errors.join(' | '));
     log.log(r.files.join('\n'));
     return r;
   }
-  const out = args.out || path.join('output', `test_${args.subs}_${args.lang}.mp4`);
+  const out = args.out || path.join('output', args.day ? `${args.day}_${args.lang}_again.mp4` : `test_${args.subs}_${args.lang}.mp4`);
   return produceVideo(state, diff, { lang: args.lang, out, quality: args.quality, tts: args.tts, log });
 }

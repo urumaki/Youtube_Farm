@@ -259,9 +259,22 @@ function buildProps(kind, M, add) {
     case 'fletch': {
       add(boxGeo(1.4, 0.08, 0.6).translate(0, 0.8, 0.6), M.wood);
       for (const x of [-0.6, 0.6]) add(boxGeo(0.08, 0.8, 0.5).translate(x, 0.4, 0.6), M.woodDark);
-      for (let i = 0; i < 7; i++) add(cylGeo(0.012, 0.012, 0.75, 5).rotateZ(Math.PI / 2).translate(0, 0.86, 0.45 + i * 0.04), M.wood);
-      add(cylGeo(0.13, 0.11, 0.6, 10).translate(-0.9, 0.3, 0.2), M.gear); // quiver
-      add(new THREE.TorusGeometry(0.6, 0.02, 5, 20, Math.PI * 0.9).rotateZ(-Math.PI * 0.45).translate(0.95, 0.9, 0.85), M.woodDark); // bow
+      // arrows on the bench: iron heads on one end, three feathers on the other
+      const shafts = [], heads = [], white = [], red = [];
+      const arrow = (m, i) => { // m: matrix placing an arrow that lies along +x, head at +x
+        shafts.push(cylGeo(0.012, 0.012, 0.75, 5).rotateZ(Math.PI / 2).applyMatrix4(m));
+        heads.push(new THREE.ConeGeometry(0.022, 0.08, 4).rotateZ(-Math.PI / 2).translate(0.41, 0, 0).applyMatrix4(m));
+        for (let k = 0; k < 3; k++) (i % 2 ? red : white).push(boxGeo(0.11, 0.035, 0.004).translate(-0.3, 0.022, 0).rotateX((k * 2 * Math.PI) / 3).applyMatrix4(m));
+      };
+      for (let i = 0; i < 7; i++) arrow(new THREE.Matrix4().makeTranslation(0, 0.865, 0.45 + i * 0.04), i);
+      // a few more standing in the quiver, feathers up
+      add(cylGeo(0.13, 0.11, 0.6, 10).translate(-0.9, 0.3, 0.2), M.gear);
+      for (let i = 0; i < 4; i++) arrow(new THREE.Matrix4().makeRotationZ(-Math.PI / 2 + (i - 1.5) * 0.08).setPosition(-0.9 + (i - 1.5) * 0.035, 0.63, 0.2 + (i % 2) * 0.03), i);
+      add(merged(shafts), M.wood); add(merged(heads), M.iron); add(merged(white), M.clothIvory); add(merged(red), M.clothRed);
+      // the bow leans against the end of the bench, strung: a curved stave and a straight string
+      const bow = new THREE.Matrix4().makeRotationZ(0.4).setPosition(0.75, 0.52, 0.6);
+      add(new THREE.TorusGeometry(0.6, 0.02, 5, 20, Math.PI * 0.9).rotateZ(-Math.PI * 0.45).applyMatrix4(bow), M.woodDark); // tips at (0.094, ±0.593)
+      add(cylGeo(0.006, 0.006, 1.19, 4).translate(0.094, 0, 0).applyMatrix4(bow), M.clothIvory); // the string
       return new THREE.Vector3(0, 0.9, 0.5);
     }
     case 'notice': {

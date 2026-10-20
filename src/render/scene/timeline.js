@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { BUILDINGS, JOBS, tavernScene } from '../../sim/tiers.js';
 import { CASTLE } from '../../sim/world.js';
 import { NIGHT_STORIES } from './stories/index.js';
+import { pickFeatured } from '../../sim/featured.js';
 
 export const DURATION = 30;
 // the wide shot with the goal and the end credits is short (3.5 s) so the daily update keeps the time
@@ -56,8 +57,10 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   // serve behind the bar, other named villagers drink at the tables
   const tavern = people && named.length > 0 && buildings.items.tavern && tavernScene(state);
   const keepers = tavern ? named.filter((n) => n.job === 'innkeeper' || n.job === 'brewer').slice(0, 2) : [];
-  const picked = [];
-  for (const n of named) if (!keepers.includes(n) && !picked.some((p) => p.job === n.job)) picked.push(n); // one per job: variety
+  // who is shown at work comes from the simulation (src/sim/featured.js): today's named villagers first,
+  // never yesterday's jobs again, one per job; older saves fall back to the same rule without yesterday
+  const featured = diff.featured || pickFeatured(state);
+  const picked = featured.map((f) => named.find((n) => n.id === f.id)).filter((n) => n && !keepers.includes(n));
   const atWork = picked.slice(0, tavern ? 2 : people ? 3 : Math.min(3, Math.max(2, maxTargets - targets.length - 2)));
   for (const n of atWork) {
     const apprentice = n.job === 'apprentice' && n.wants;
@@ -73,8 +76,11 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const flexible = targets.filter((t) => t.kind !== 'caravan' && t.kind !== 'event').length;
   let ambient = null;
   if (people && flexible <= (tavern ? 3 : 4)) {
-    const walls = state.unlockedTiers.includes('guard') && (winter || state.day % 2 === 1);
-    const id = walls ? 'patrol' : winter ? null : 'fields';
+    // not a job the previous video or today's workers already showed (diff.avoidJobs: yesterday's jobs)
+    const seen = new Set([...(diff.avoidJobs || []), ...atWork.map((n) => n.job)]);
+    const wallsOk = state.unlockedTiers.includes('guard') && !['guard', 'knight', 'warrior'].some((j) => seen.has(j));
+    const fieldsOk = !winter && !seen.has('farmer') && !seen.has('peasant');
+    const id = wallsOk && (state.day % 2 === 1 || !fieldsOk) ? 'patrol' : fieldsOk ? 'fields' : null;
     if (id) {
       const jobs = id === 'patrol' ? ['guard', 'knight', 'warrior'] : ['farmer', 'peasant'];
       const hero = named.find((n) => jobs.includes(n.job) && !atWork.includes(n) && !keepers.includes(n)) || null;

@@ -6,6 +6,7 @@ import { TIERS, BUILDINGS, JOBS, jobFor, houseCapacity, tiersReached } from './t
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
 import { pickStory } from './stories.js';
+import { pickFeatured, shownJobs } from './featured.js';
 
 export const SCHEMA_VERSION = 1;
 export const ABANDON_DAYS = 7;
@@ -166,6 +167,10 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
     s.weather = diff.weather = 'rain';
     events[0].weather = 'rain';
   }
+  // 6. The named villagers the video shows at work (not yesterday's jobs again)
+  diff.avoidJobs = prev.day > 0 ? shownJobs(prev) : [];
+  diff.featured = pickFeatured(s, { avoidJobs: diff.avoidJobs });
+  s.featured = diff.featured;
   diff.population = target;
   diff.next = nextGoal(target, s.unlockedTiers);
   return { state: s, diff };

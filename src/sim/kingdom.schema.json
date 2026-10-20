@@ -26,7 +26,8 @@
     "commentsSeen": { "type": ["string", "null"] },
     "storyLog": { "type": "object" },
     "story": { "type": ["object", "null"] },
-    "storyArc": { "type": ["object", "null"] }
+    "storyArc": { "type": ["object", "null"] },
+    "featured": { "type": "array" }
   },
   "$defs": {
     "villager": {

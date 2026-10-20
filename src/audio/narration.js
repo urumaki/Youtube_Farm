@@ -170,17 +170,21 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   // villagers named by commenters today are welcomed by job; otherwise up to two newcomers (special jobs first)
   if ((diff.named || []).length) add(pick(L.caravan)(diff.named.length), 'caravan', 9);
   const granted = (diff.requests || []).filter((q) => q.granted), waiting = (diff.requests || []).filter((q) => !q.granted);
-  if (granted.length) add(pick(L.granted)(granted.length, job(granted[0].job)), 'requests', 9, granted[0].job);
+  // the villagers the video shows at work (src/sim/featured.js): the narrator only names jobs on screen
+  const featured = diff.featured || null;
+  const onScreen = new Set((featured || []).map((f) => f.job));
+  const g0 = granted.find((q) => onScreen.has(q.job)) || granted[0];
+  if (granted.length) add(pick(L.granted)(granted.length, job(g0.job)), 'requests', 9, g0.job);
   if (waiting.length) add(pick(L.apprentice)(waiting.length), 'requests', 6);
   if ((diff.promoted || []).length) add(pick(L.promoted)(job(diff.promoted[0].job)), 'requests', 8, diff.promoted[0].job);
-  const welcomed = (diff.named || []).slice(0, 3);
-  const byJob = [...new Set(welcomed.map((v) => v.job))].slice(0, 2);
+  const welcomed = featured ? (diff.named || []).filter((v) => featured.some((f) => f.today && f.job === v.job)) : (diff.named || []).slice(0, 3);
+  const byJob = featured ? featured.filter((f) => f.today).map((f) => f.job).slice(0, 2) : [...new Set(welcomed.map((v) => v.job))].slice(0, 2);
   byJob.forEach((j, i) => {
     const n = welcomed.filter((v) => v.job === j).length;
     const text = n > 1 && lang === 'en' ? `Welcome our ${n === 2 ? 'two' : 'three'} new ${plural(job(j))}!` : pick(L.welcome)({ job: job(j) });
     add(text, 'person', 9 - i, j);
   });
-  if (!welcomed.length) {
+  if (!(diff.named || []).length) {
     const special = diff.added.filter((v) => !['farmer', 'peasant'].includes(v.job));
     const shown = [...special, ...diff.added.filter((v) => !special.includes(v))].slice(0, special.length ? 2 : 1);
     shown.forEach((v, i) => add(pick(L.person)({ job: job(v.job) }), 'person', 6 - i, v.job));
@@ -251,7 +255,10 @@ export function sentenceAnchors(sentences, cues = []) {
     if (FIXED_AT[s.role] !== undefined) return FIXED_AT[s.role];
     const match = SHOT_OF[s.role];
     // a sentence naming a job waits for that villager's shot; otherwise the next shot of its kind
-    const cue = match && (cues.find((c) => match(c) && s.job && c.job === s.job && !used.has(c)) || cues.find((c) => match(c) && !used.has(c)));
+    // a sentence naming a job waits for that villager's shot (and for no other); otherwise the next shot of its kind
+    const cue = match && (s.job && (s.role === 'person' || s.role === 'requests')
+      ? cues.find((c) => match(c) && c.job === s.job && !used.has(c))
+      : cues.find((c) => match(c) && !used.has(c)));
     if (!cue) return null;
     used.add(cue);
     return cue.t0 + 0.25;

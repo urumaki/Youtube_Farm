@@ -58,9 +58,15 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   torches, thunderstorm over the square (only on grey days; the day turns to rain). Owner: medieval only, nothing magic
   (no wizards, witches, spells; the alchemist became the Apothecary, "speziale"). Tone rule (owner): named villagers are heroes or comic, never
   villains or victims; nobody gets hurt. Test one with `npm run render -- --real --subs N --story bandits`.
+- Who is shown at work (`src/sim/featured.js`, owner 2026-10-20): picked by the simulation and saved as
+  `state.featured`: villagers named today first (the narrator welcomes only jobs on screen), then granted
+  requests, never a job the previous video showed (`diff.avoidJobs`), one per job. Saves without
+  `featured` use the old rule to know what the previous video showed.
+- `npm run render -- --day 2026-10-20` renders a saved day again with today's code (read only,
+  `output/<day>_<lang>_again.mp4`). Replacing a published video is the owner's call.
 - Everyday shots (`src/render/scene/ambient.js`, owner 2026-10-20): when the update has room, a guard
   patrolling the castle wall walk (odd days, and in winter) or farmers hoeing in the field nearest the
-  castle (even days); a named guard or farmer not shown elsewhere gets the name tag.
+  castle (even days), never a job already shown yesterday or today; a named guard or farmer not shown elsewhere gets the name tag.
 - In-between goals (owner, 2026-10-20): tier at 175 (Town Crier + Crier's Stand) and 750 (Executioner,
   who chops cabbages, + Pillory). Their structures are virtual lots on the market square (`onPlaza`), so
   house plots never move. Only add tiers above the current population, or existing villagers change job.
