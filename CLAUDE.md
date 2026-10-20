@@ -18,7 +18,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 ## Commands
 - `npm test` — must stay green (node:test, ~30 tests).
 - `npm run render -- --subs 118 --from 72 [--names "A,B"] [--stills 4,15,24]` — test render, never
-  touches `state/`. `--names` fakes commenters.
+  touches `state/`. `--names` fakes commenters. `--real` starts from the real `state/` (next day, read
+  only) instead of a fresh two-day test kingdom: needed to test anything that exists only later (tavern).
 - `npm run daily -- --dry-run --subs 80` — simulate the next real day without saving.
 - `node scripts/verify-video.js output/x.mp4` — format checks.
 - `npm run auth:youtube -- --save` — one-time OAuth refresh token (owner runs it on their PC).
@@ -38,7 +39,10 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Shot plan in `timeline.js`. Days with named villagers (owner's choice, 2026-10-19): the video opens on the
   caravan of today's named villagers with name tags (`caravan.js`, no castle hook; the counter shows over it
   for 2 s) → up to 2 new buildings, ~2.5 s each → 3 named villagers at work (`work.js`) → wide shot with
-  credits → call to action. New houses are not shown one by one on those days. Days without any named
+  credits → call to action. New houses are not shown one by one on those days. Once the tavern is built,
+  the "at work" part is 2 villagers in their crofts plus the tavern interior (`tavern.js`, hard cut in and
+  out): named innkeepers/brewers behind the bar, other named villagers drinking at the tables with name
+  tags, its own warm lamps (`env.set(..., interior)`). Days without any named
   villager keep the old order: castle hook → new buildings → new houses → wide shot → call to action.
   Narration sentences follow the same order (`src/audio/narration.js`).
 - `src/audio/` narration templates (names are never read aloud), Kokoro TTS (`am_adam`), procedural
@@ -50,8 +54,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 ## Open ideas the owner mentioned
 - Choose a less robotic free voice (Chatterbox or Edge voices; samples via the Voice samples action).
 - Done: comment text picks a job and a name (`src/sim/requests.js`), end credits roll in the wide shot
-  (`overlay.js`). Owner does not want royal family or noble titles (prince, princess) as jobs for now. Ideas not done: tavern scene with several
-  named patrons, narrator jokes for refused requests ("clone me", "landlord").
+  (`overlay.js`). Owner does not want royal family or noble titles (prince, princess) as jobs for now. Done: tavern interior with named patrons.
+  Ideas not done: narrator jokes for refused requests ("clone me", "landlord").
 
 ## Status at handoff (2026-10-19)
 - Daily upload works (videos 74VLgbuvzGU, YQjmBQNZlo4, 2mydn7mgvjU). ~118 subscribers, 24 named villagers.

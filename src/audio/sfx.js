@@ -285,7 +285,7 @@ const SCENES = {
   lighthouse: [['water', 0.6]],
   well: [['water', 0.25], ['chatter', 0.12]],
   market: [['chatter', 0.35], ['cart', 0.35]],
-  tavern: [['chatter', 0.4]],
+  tavern: [['chatter', 0.45], ['fire', 0.15]],
   district: [['chatter', 0.3], ['cart', 0.3]],
   chapel: [['bell', 0.5]],
   cathedral: [['bell', 0.55], ['chisel', 0.3]],
@@ -327,6 +327,7 @@ function sceneFor(cue) {
   if (cue.kind === 'loss') return 'loss';
   if (cue.kind === 'villager') return null; // handled with synced strikes below
   if (cue.kind === 'caravan') return 'caravan';
+  if (cue.kind === 'tavern') return 'tavern';
   if (cue.kind === 'castle' || cue.kind === 'gate') return 'castle';
   if (cue.kind === 'building' || cue.kind === 'story') {
     const id = (cue.id || '').startsWith('district') ? 'district' : cue.id;

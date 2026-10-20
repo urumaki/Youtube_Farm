@@ -1,6 +1,6 @@
 // Narration script from the day's diff: template-based with seeded variation, ~60-75 words for 30 s.
 import { rng } from '../sim/prng.js';
-import { JOBS, BUILDINGS } from '../sim/tiers.js';
+import { JOBS, BUILDINGS, tavernScene } from '../sim/tiers.js';
 
 const T = {
   en: {
@@ -22,6 +22,7 @@ const T = {
     apprentice: [(n) => `${n === 1 ? 'One apprentice waits' : `${n} apprentices wait`} for their trade to arrive.`],
     promoted: [(j) => `An apprentice finally becomes a ${j}!`],
     caravan: [(n) => (n === 1 ? 'A traveler arrives with a cart full of belongings!' : `A caravan of ${n} newcomers rolls into town!`)],
+    tavern: ['Meanwhile, the tavern is full tonight!', 'Over at the tavern, the mugs are full!', 'At the tavern, the cider is flowing!'],
     houses1: ['A new house rises along the road.', 'Builders finished a fresh new home.'],
     houses: [(n) => `${n} new houses rise along the roads.`, (n) => `Builders raised ${n} new homes.`],
     rebuilt: [(n) => `${n === 1 ? 'An old ruin was' : `${n} old ruins were`} rebuilt.`],
@@ -62,6 +63,7 @@ T.it = {
   apprentice: [(n) => `${n === 1 ? 'Un apprendista aspetta' : `${n} apprendisti aspettano`} il suo mestiere.`],
   promoted: [(j) => `Un apprendista diventa finalmente ${j}!`],
   caravan: [(n) => (n === 1 ? 'Arriva un viandante con il suo carro!' : `Arriva una carovana con ${n} nuovi abitanti!`)],
+  tavern: ['Intanto la taverna è piena!', 'In taverna i boccali sono pieni!'],
   houses1: ['Una nuova casa sorge lungo la strada.'],
   houses: [(n) => `${n} nuove case sorgono lungo le strade.`],
   rebuilt: [(n) => `${n === 1 ? 'Una rovina è stata ricostruita' : `${n} rovine sono state ricostruite`}.`],
@@ -146,6 +148,8 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
     const shown = [...special, ...diff.added.filter((v) => !special.includes(v))].slice(0, special.length ? 2 : 1);
     shown.forEach((v, i) => add(pick(L.person)({ job: job(v.job) }), 'person', 6 - i));
   }
+  // the tavern interior is shown on these days (see makePlan in src/render/scene/timeline.js)
+  if (tavernScene(state)) add(pick(L.tavern), 'tavern', 6);
   const nb = diff.housesBuilt.length;
   if (nb === 1) add(pick(L.houses1), 'houses', 5);
   else if (nb > 1) add(pick(L.houses)(nb.toLocaleString('en-US')), 'houses', 5);
@@ -174,7 +178,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
 
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
   // same order as the shots: caravan, new buildings, villagers at work, then the rest
-  const order = ['open', 'delta', 'caravan', 'completed', 'unlocked', 'requests', 'count', 'person', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
+  const order = ['open', 'delta', 'caravan', 'completed', 'unlocked', 'requests', 'count', 'person', 'tavern', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
     const victim = [...S].sort((a, b) => a.priority - b.priority)[0];

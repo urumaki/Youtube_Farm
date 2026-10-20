@@ -1,7 +1,7 @@
 // The 30-second shot plan, computed from the day's diff. evaluate(t) gives camera pose, light phase,
 // construction progress, visible labels and overlay state. Pure function of (plan, t).
 import * as THREE from 'three';
-import { BUILDINGS, JOBS } from '../../sim/tiers.js';
+import { BUILDINGS, JOBS, tavernScene } from '../../sim/tiers.js';
 import { CASTLE } from '../../sim/world.js';
 
 export const DURATION = 30;
@@ -39,14 +39,27 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const named = Object.entries(state.names || {}).map(([id, n]) => ({ id: Number(id), ...n, job: state.villagers[Number(id)]?.job }))
     .filter((n) => n.id < state.villagers.length)
     .sort((a, b) => asked(b) - asked(a) || (b.day ?? 0) - (a.day ?? 0) || (INTEREST.indexOf(a.job) + 1 || 99) - (INTEREST.indexOf(b.job) + 1 || 99) || a.id - b.id);
+  // the tavern interior closes the "at work" part when the tavern stands: named innkeepers and brewers
+  // serve behind the bar, other named villagers drink at the tables
+  const tavern = people && named.length > 0 && buildings.items.tavern && tavernScene(state);
+  const keepers = tavern ? named.filter((n) => n.job === 'innkeeper' || n.job === 'brewer').slice(0, 2) : [];
   const picked = [];
-  for (const n of named) if (!picked.some((p) => p.job === n.job)) picked.push(n); // one per job: variety
-  for (const n of picked.slice(0, people ? 3 : Math.min(3, Math.max(2, maxTargets - targets.length - 2)))) {
+  for (const n of named) if (!keepers.includes(n) && !picked.some((p) => p.job === n.job)) picked.push(n); // one per job: variety
+  const atWork = picked.slice(0, tavern ? 2 : people ? 3 : Math.min(3, Math.max(2, maxTargets - targets.length - 2)));
+  for (const n of atWork) {
     const apprentice = n.job === 'apprentice' && n.wants;
     const sub = apprentice ? `Apprentice ${jobLabel(n.wants)}` : jobLabel(n.job);
     targets.push({
       kind: 'villager', id: n.id, job: n.job, sceneJob: apprentice ? n.wants : n.job, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
       label: { title: n.name, sub }, work: null, weight: 1.1,
+    });
+  }
+  if (tavern) {
+    const patrons = named.filter((n) => !keepers.includes(n) && !atWork.includes(n)).slice(0, 8);
+    targets.push({
+      kind: 'tavern', id: 'tavern', pos: buildings.items.tavern.focus.clone(), radius: 10, front: 0, label: null, labels: [],
+      weight: 1.8, cut: true, // a hard cut inside (and out again): the camera never flies through the walls
+      patrons: patrons.map((n) => ({ name: n.name, job: n.job })), keepers: keepers.map((n) => ({ name: n.name, job: n.job })),
     });
   }
   // 3) new or rebuilt houses fill the rest (a spread of them), only on days without named villagers
@@ -124,6 +137,7 @@ const HOOK_FROM = { pos: new THREE.Vector3(150, 44, 64), look: new THREE.Vector3
 const HOOK_TO = { pos: new THREE.Vector3(72, 17, -13), look: new THREE.Vector3(CASTLE.half + 4, CASTLE.ground + 9, 0) };
 
 function orbitPose(tg, u) {
+  if (tg.kind === 'tavern' && tg.cam) return tg.cam(u);
   if (tg.kind === 'caravan' && tg.track) {
     // in the road ahead of the column, looking back at it as it comes into town
     const t = tg.t0 + u * (tg.t1 - tg.t0);
@@ -186,7 +200,8 @@ export function evaluate(plan, t) {
     const u = (t - tg.t0) / (tg.t1 - tg.t0);
     const here = orbitPose(tg, u);
     // the first shot flies in from the hook, unless the video opens directly on it (caravan)
-    const prev = i <= 0 ? (start > 0 ? HOOK_TO : null) : orbitPose(plan.targets[i - 1], 1);
+    // shots marked `cut` (the tavern interior) start and end with a hard cut
+    const prev = tg.cut || plan.targets[i - 1]?.cut ? null : i <= 0 ? (start > 0 ? HOOK_TO : null) : orbitPose(plan.targets[i - 1], 1);
     const flyT = Math.min(1.1, (tg.t1 - tg.t0) * 0.35);
     pose = prev && t - tg.t0 < flyT ? fly(prev, here, (t - tg.t0) / flyT) : here;
     out.shadowRadius = Math.max(80, tg.radius * 2.6);
@@ -195,7 +210,7 @@ export function evaluate(plan, t) {
   } else if (t < WIDE_END) {
     const last = orbitPose(plan.targets.at(-1), 1);
     const wide = widePose(plan, (t - UPDATE_END) / (WIDE_END - UPDATE_END));
-    pose = t - UPDATE_END < 1.4 ? fly(last, wide, (t - UPDATE_END) / 1.4) : wide;
+    pose = !plan.targets.at(-1).cut && t - UPDATE_END < 1.4 ? fly(last, wide, (t - UPDATE_END) / 1.4) : wide;
     out.shadowRadius = Math.max(260, plan.extent * 0.75);
   } else {
     pose = fly(widePose(plan, 1), HOOK_FROM, (t - WIDE_END) / (DURATION - WIDE_END));

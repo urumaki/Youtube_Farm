@@ -121,8 +121,11 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
 
   return {
     sun, composer, bloom, grade,
-    /** phase 0 = afternoon, 1 = dusk; focus = point the shadows should cover; radius = shadow extent */
-    set(phase, focus, radius, t) {
+    /**
+     * phase 0 = afternoon, 1 = dusk; focus = point the shadows should cover; radius = shadow extent;
+     * interior 1 = the camera is inside a building lit by its own lamps (the tavern)
+     */
+    set(phase, focus, radius, t, interior = 0) {
       const el = THREE.MathUtils.degToRad(THREE.MathUtils.lerp(33, 1.5, phase));
       const az = THREE.MathUtils.lerp(0.95, 0.35, phase); // from the south-east toward the south-west
       sunDir.set(Math.cos(el) * Math.sin(az + 0.6), Math.sin(el), Math.cos(el) * Math.cos(az + 0.6)).normalize();
@@ -155,6 +158,16 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
       sc.updateProjectionMatrix();
       for (const c of clouds) c.position.x = c.userData.base.x + (t || 0) * 3;
       for (const c of clouds) c.material.color.setScalar(1 - 0.45 * phase);
+      if (interior > 0) {
+        // indoors: no sun, little sky light, the room's own warm lamps do the work; candles bloom
+        sun.intensity *= 1 - interior;
+        hemi.intensity *= THREE.MathUtils.lerp(1, 0.3, interior);
+        scene.environmentIntensity *= THREE.MathUtils.lerp(1, 0.2, interior);
+        renderer.toneMappingExposure = THREE.MathUtils.lerp(renderer.toneMappingExposure, 0.8, interior);
+        grade.uniforms.warmth.value = Math.max(grade.uniforms.warmth.value, 0.6 * interior);
+        bloom.enabled = true;
+        bloom.strength = Math.max(bloom.strength, 0.4 * interior);
+      }
       return night;
     },
   };

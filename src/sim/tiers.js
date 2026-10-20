@@ -123,3 +123,8 @@ export function houseCapacity(population) {
   if (population < 2000) return 4;
   return 8;
 }
+
+/** The video shows the tavern interior on days with named villagers once the tavern is built. */
+export function tavernScene(state) {
+  return Object.keys(state.names || {}).length > 0 && state.buildings.some((b) => b.id === 'tavern' && b.status === 'done');
+}

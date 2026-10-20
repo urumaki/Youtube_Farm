@@ -33,6 +33,7 @@ export function parseArgs(argv) {
     else if (k === '--no-video') a.noVideo = true;
     else if (k === '--stills') a.stills = v() || '1,10,25';
     else if (k === '--state-dir') a.stateDir = v();
+    else if (k === '--real') a.real = true; // test renders: start from the real state/ (read only)
     else if (k === '--names') a.names = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: fake commenters
     else throw new Error(`unknown option ${k}`);
   }
@@ -75,6 +76,16 @@ export async function produceVideo(state, diff, { lang = 'en', out, quality, tts
   if (result.errors.length) log.error(`[render] browser console errors: ${result.errors.join(' | ')}`);
   fs.writeFileSync(out.replace(/\.mp4$/, '.json'), JSON.stringify({ date: state.date, subscribers: state.subscriberCount, lang, script: script.text, tts: voice.provider, captions, stats: result.stats, renderSeconds: result.seconds }, null, 1));
   return { out, script, voice, result };
+}
+
+/** --real: the next day of the real kingdom in state/ (never saved), with --names as today's commenters. */
+function realNextDay({ subs, names = [], stateDir }) {
+  const dir = stateDir || STATE_DIR;
+  const cur = JSON.parse(fs.readFileSync(path.join(dir, 'kingdom.json'), 'utf8'));
+  const date = new Date(Date.parse(cur.date) + 86400000).toISOString().slice(0, 10);
+  const base = baseStateFor(date, { dir });
+  const commenters = names.map(fakeCommenter(date, 'test'));
+  return advance(base, { subscribers: subs, date, source: 'test', commenters, blocked: loadBlocked(dir) });
 }
 
 /** Build a two-day test kingdom ending at `subs` (default start: ~88% of it), without touching state/. */
@@ -124,7 +135,7 @@ export async function daily(args, log = console) {
 
 export async function testRender(args, log = console) {
   if (!Number.isFinite(args.subs)) throw new Error('--subs N is required');
-  const { state, diff } = testKingdom({ subs: args.subs, from: args.from, date: args.date, seed: args.seed, names: args.names });
+  const { state, diff } = args.real ? realNextDay(args) : testKingdom({ subs: args.subs, from: args.from, date: args.date, seed: args.seed, names: args.names });
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));
   if (args.stills) {
     const times = args.stills.split(',').map(Number);

@@ -15,6 +15,7 @@ import { makePlan, evaluate } from './timeline.js';
 import { createOverlay } from './overlay.js';
 import { buildWorkScene } from './work.js';
 import { buildCaravan } from './caravan.js';
+import { buildTavernInterior } from './tavern.js';
 import { heightAt } from '../../sim/world.js';
 
 const FPS = 30;
@@ -84,7 +85,7 @@ async function setup(data) {
   scene.add(life.group);
   // named villagers are shown at work in their croft; today's named villagers arrive in a caravan
   const works = [];
-  let caravan = null;
+  let caravan = null, tavern = null;
   const yFn = (x, z) => heightAt(w, x, z) + 0.03;
   if (plan) for (const tg of plan.targets) {
     if (tg.kind === 'villager') {
@@ -109,12 +110,17 @@ async function setup(data) {
       tg.track = (t) => caravan.headAt(t, tg.t0);
       tg.banner = data.lang === 'it' ? `La carovana: ${caravan.count} nuov${caravan.count === 1 ? 'o arrivo' : 'i arrivi'}` : `The caravan: ${caravan.count} newcomer${caravan.count === 1 ? '' : 's'}`;
       tg.caravan = caravan;
+    } else if (tg.kind === 'tavern') {
+      tavern = buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, patrons: tg.patrons, keepers: tg.keepers });
+      tg.labels = tavern.labels;
+      tg.cam = tavern.cam;
+      tg.banner = data.lang === 'it' ? 'La Taverna' : 'The Tavern';
     }
   }
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
   const overlay = viewer ? null : createOverlay(document.getElementById('stage'), data);
 
-  const ctx = { renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, caravan };
+  const ctx = { renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, caravan, tavern };
   ctx.stats = {
     setupMs: Math.round(performance.now() - t0), houses: state.houses.length, animated: animated.size, trees: nature.count,
     walkers: life.walkers, guards: life.guards, targets: plan?.targets.map((t) => `${t.kind}:${t.id ?? ''}`),
@@ -136,13 +142,15 @@ function applyFrame(ctx, t) {
   const ct = ctx.caravan && plan.targets.find((x) => x.kind === 'caravan');
   if (ct) ctx.caravan.update(t, ct.t0, ct.t1);
   const ev = evaluate(plan, t);
+  const inside = ev.active?.kind === 'tavern';
+  if (ctx.tavern) ctx.tavern.update(t, inside);
   // flights between shots can dip into a hill: keep the camera a few metres above the ground
   const ground = heightAt(ctx.w, ev.camera.pos.x, ev.camera.pos.z) + 3;
-  if (ev.camera.pos.y < ground) ev.camera.pos.y = ground;
+  if (!inside && ev.camera.pos.y < ground) ev.camera.pos.y = ground;
   camera.position.copy(ev.camera.pos);
   camera.lookAt(ev.camera.look);
   camera.updateMatrixWorld();
-  const night = env.set(ev.phase, ev.camera.look, ev.shadowRadius, t);
+  const night = env.set(ev.phase, ev.camera.look, ev.shadowRadius, t, inside ? 1 : 0);
   M.setNight(night);
   castle.update(t, { bridgeOpen: ev.bridge });
   for (const [id, a] of animated) a.set(ev.progress.has('h' + id) ? ev.progress.get('h' + id) : 1);

@@ -12,16 +12,27 @@ const ease = (x) => x * x * (3 - 2 * x);
 const flat = (g) => { const q = g.index ? g.toNonIndexed() : g; q.deleteAttribute('uv'); return q; };
 const merged = (parts) => mergeGeometries(parts.map(flat));
 
-/** A person with arms on shoulder pivots so they can swing tools. Faces +z. */
-function rig(M, color) {
+/**
+ * A person with arms on shoulder pivots so they can swing tools. Faces +z.
+ * seated: hips at seat height (0.47), thighs forward and shins down to the floor (for benches).
+ */
+export function rig(M, color, { seated = false } = {}) {
   const root = new THREE.Group();
   const body = new THREE.Group(); // bends at the hips
-  body.position.y = 0.62;
+  body.position.y = seated ? 0.47 : 0.62;
   root.add(body);
   const tunic = M.people.clone();
   tunic.color.set(color);
   const add = (parent, geo, mat, cast = true) => { const m = new THREE.Mesh(geo, mat); m.castShadow = cast; m.receiveShadow = true; parent.add(m); return m; };
-  add(root, merged([cylGeo(0.075, 0.085, 0.6, 6).translate(-0.09, 0.3, 0), cylGeo(0.075, 0.085, 0.6, 6).translate(0.09, 0.3, 0),
+  if (seated) {
+    const legs = [];
+    for (const x of [-0.09, 0.09]) {
+      legs.push(cylGeo(0.08, 0.085, 0.42, 6).rotateX(Math.PI / 2).translate(x, 0.47, 0.2)); // thigh on the seat
+      legs.push(cylGeo(0.075, 0.08, 0.45, 6).translate(x, 0.24, 0.4)); // shin down to the floor
+      legs.push(boxGeo(0.13, 0.08, 0.24).translate(x, 0.04, 0.45));
+    }
+    add(root, merged(legs), M.gear);
+  } else add(root, merged([cylGeo(0.075, 0.085, 0.6, 6).translate(-0.09, 0.3, 0), cylGeo(0.075, 0.085, 0.6, 6).translate(0.09, 0.3, 0),
     boxGeo(0.13, 0.08, 0.24).translate(-0.09, 0.04, 0.04), boxGeo(0.13, 0.08, 0.24).translate(0.09, 0.04, 0.04)]), M.gear);
   add(body, merged([cylGeo(0.19, 0.33, 0.9, 12).translate(0, 0.36, 0),
     new THREE.SphereGeometry(0.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.25, 0.5, 0.85).translate(0, 0.8, 0)]), tunic);
@@ -96,7 +107,7 @@ function striker(g, M, { beta, len, back = 0.06, head }) {
   g.userData.tip = tip;
 }
 
-function toolGeo(kind, M) {
+export function toolGeo(kind, M) {
   const wood = M.woodDark, iron = M.iron;
   const g = new THREE.Group();
   const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m); };
