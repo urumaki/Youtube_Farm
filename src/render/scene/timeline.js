@@ -6,6 +6,7 @@ import { CASTLE } from '../../sim/world.js';
 
 export const DURATION = 30;
 const HOOK = 2, UPDATE_END = 22, WIDE_END = 27;
+const CARAVAN_SECONDS = 4.5;
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 
 export function makePlan({ state, diff, houses, animated, buildings, castle, maxTargets = 7 }) {
@@ -118,9 +119,17 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
 
   // the caravan replaces the castle hook: it starts at 0 s, the counter overlay still shows over it
   const start = targets[0]?.kind === 'caravan' ? 0 : HOOK;
-  const totalW = targets.reduce((a, tg) => a + (tg.weight || 1), 0);
+  // some shots have a fixed length (owner: the caravan lasts 4-5 s at most); the rest share the remaining
+  // time by weight
+  const fixedLen = (tg) => (tg.kind === 'caravan' && targets.length > 1 ? CARAVAN_SECONDS : null);
+  const fixedTotal = targets.reduce((a, tg) => a + (fixedLen(tg) ?? 0), 0);
+  const totalW = targets.reduce((a, tg) => a + (fixedLen(tg) === null ? tg.weight || 1 : 0), 0);
   let tc = start;
-  for (const tg of targets) { tg.t0 = tc; tc += ((UPDATE_END - start) * (tg.weight || 1)) / totalW; tg.t1 = tc; }
+  for (const tg of targets) {
+    tg.t0 = tc;
+    tc += fixedLen(tg) ?? ((UPDATE_END - start - fixedTotal) * (tg.weight || 1)) / totalW;
+    tg.t1 = tc;
+  }
   // overcast days keep more light at the end so the wide shot stays readable
   const dusk = ['fog', 'rain', 'snow', 'cloudy'].includes(diff.weather) ? 0.55 : 0.8;
   return { targets, center, extent: Math.max(size.x, size.z), story, dusk, start };
