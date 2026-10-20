@@ -25,7 +25,8 @@
     "namedAuthors": { "type": "array", "items": { "type": "string" } },
     "commentsSeen": { "type": ["string", "null"] },
     "storyLog": { "type": "object" },
-    "story": { "type": ["object", "null"] }
+    "story": { "type": ["object", "null"] },
+    "storyArc": { "type": ["object", "null"] }
   },
   "$defs": {
     "villager": {

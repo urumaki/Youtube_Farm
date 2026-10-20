@@ -67,8 +67,24 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
       label: { title: n.name, sub }, work: null, weight: 1.1,
     });
   }
+  // an everyday shot when there is time for it: a guard patrolling the castle walls or farmers hoeing
+  // (not in winter); a named guard or farmer not shown elsewhere gets the name tag
+  const month = Number(state.date.slice(5, 7)), winter = month === 12 || month <= 2;
+  const flexible = targets.filter((t) => t.kind !== 'caravan' && t.kind !== 'event').length;
+  let ambient = null;
+  if (people && flexible <= (tavern ? 3 : 4)) {
+    const walls = state.unlockedTiers.includes('guard') && (winter || state.day % 2 === 1);
+    const id = walls ? 'patrol' : winter ? null : 'fields';
+    if (id) {
+      const jobs = id === 'patrol' ? ['guard', 'knight', 'warrior'] : ['farmer', 'peasant'];
+      const hero = named.find((n) => jobs.includes(n.job) && !atWork.includes(n) && !keepers.includes(n)) || null;
+      ambient = { kind: 'ambient', id, pos: castle.keep.clone(), radius: 8, front: 0, label: null, labels: [], weight: 1.1, cut: true,
+        hero: hero && { id: hero.id, name: hero.name, job: hero.job }, sceneJob: id === 'fields' ? 'farmer' : null };
+      targets.push(ambient);
+    }
+  }
   if (tavern) {
-    const patrons = named.filter((n) => !keepers.includes(n) && !atWork.includes(n)).slice(0, 8);
+    const patrons = named.filter((n) => !keepers.includes(n) && !atWork.includes(n) && n.id !== ambient?.hero?.id).slice(0, 8);
     targets.push({
       kind: 'tavern', id: 'tavern', pos: buildings.items.tavern.focus.clone(), radius: 10, front: 0, label: null, labels: [],
       weight: 1.8, cut: true, // a hard cut inside (and out again): the camera never flies through the walls

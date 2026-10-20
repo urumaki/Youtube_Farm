@@ -63,10 +63,10 @@ export function summarizeDiff(diff) {
 export async function produceVideo(state, diff, { lang = 'en', out, quality, tts, log = console, workDir } = {}) {
   const dir = workDir || path.join('.cache', 'work', `${state.date}_${lang}_${state.subscriberCount}`);
   fs.mkdirSync(dir, { recursive: true });
-  const script = buildScript(state, diff, { lang });
-  log.log(`[audio] script (${script.words} words): ${script.text}`);
   // the shot plan first, so each sentence can wait for the shot it talks about
   const cues = await sceneCues({ mode: 'video', state, diff, lang, quality }, { log });
+  const script = buildScript(state, diff, { lang, shots: cues });
+  log.log(`[audio] script (${script.words} words): ${script.text}`);
   const anchors = sentenceAnchors(script.sentences, cues);
   const sentences = script.sentences.map((s, i) => ({ ...s, at: anchors[i] === null ? null : anchors[i] - VOICE_DELAY }));
   const voice = await synthesize(sentences, { lang, outDir: dir, provider: tts, log });
@@ -143,10 +143,13 @@ export async function testRender(args, log = console) {
   if (!Number.isFinite(args.subs)) throw new Error('--subs N is required');
   const { state, diff } = args.real ? realNextDay(args) : testKingdom({ subs: args.subs, from: args.from, date: args.date, seed: args.seed, names: args.names });
   if (args.story) diff.story = state.story = storyFor(state, args.story);
+  if (args.story === 'storm') diff.weather = state.weather = 'rain'; // as the daily simulation does
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));
   if (args.stills) {
     const times = args.stills.split(',').map(Number);
     const r = await renderStills({ mode: 'video', state, diff, lang: args.lang, quality: args.quality }, times, path.join('output', `stills_${args.subs}`));
+    log.log('[shots] ' + (r.stats.cues || []).map((c) => `${c.kind}:${c.id ?? ''} ${c.t0.toFixed(1)}-${c.t1.toFixed(1)}`).join(' | '));
+    if (r.errors.length) log.error('[render] browser errors: ' + r.errors.join(' | '));
     log.log(r.files.join('\n'));
     return r;
   }

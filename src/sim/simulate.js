@@ -34,6 +34,7 @@ export function genesis({ seed = DEFAULT_SEED, date = '1970-01-01' } = {}) {
     commentsSeen: null, // publishedAt of the newest comment already processed
     storyLog: {},     // story event id -> last day it happened (cooldowns)
     story: null,      // today's story event
+    storyArc: null,   // a story to continue on a later day: { id, day, ... }
   };
 }
 
@@ -161,6 +162,10 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   // 5. At most one story event with its own scene (src/sim/stories.js)
   diff.story = pickStory(s);
   s.story = diff.story;
+  if (diff.story?.id === 'storm') { // the storm brings the rain to the whole video
+    s.weather = diff.weather = 'rain';
+    events[0].weather = 'rain';
+  }
   diff.population = target;
   diff.next = nextGoal(target, s.unlockedTiers);
   return { state: s, diff };

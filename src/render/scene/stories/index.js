@@ -4,8 +4,14 @@ import { buildQuarrel } from './quarrel.js';
 import { buildMerchants } from './merchants.js';
 import { buildBandits } from './bandits.js';
 import { buildHalloween } from './halloween.js';
+import { buildFire, buildRebuild } from './house.js';
+import { buildWolves } from './wolves.js';
+import { buildStorm } from './storm.js';
 
-const BUILDERS = { quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween };
+const BUILDERS = {
+  quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween,
+  fire: buildFire, rebuild: buildRebuild, wolves: buildWolves, storm: buildStorm,
+};
 
 export function buildStory(args) {
   const fn = BUILDERS[args.story?.id];
@@ -13,4 +19,4 @@ export function buildStory(args) {
 }
 
 /** Scenes that play at dusk: the shot cuts in and out instead of flying (the light changes). */
-export const NIGHT_STORIES = new Set(['bandits', 'halloween']);
+export const NIGHT_STORIES = new Set(['bandits', 'halloween', 'wolves']);

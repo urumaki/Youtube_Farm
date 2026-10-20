@@ -52,9 +52,15 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   happen on their date (Halloween 31/10); otherwise ~50% of days, each kind with a cooldown
   (`state.storyLog`). Done: quarrel in the square (chicken/goat/cabbage), merchant caravan on the
   south-east road, bandits at dusk on the mill track chased off by guards with named heroes, Halloween
-  bonfire with named villagers in costume (ghost, scarecrow, pumpkin). Owner: medieval only, nothing magic
+  bonfire with named villagers in costume (ghost, scarecrow, pumpkin). Added 2026-10-20: house fire put out
+  by a bucket chain (never a named villager's house; named villagers are the heroes) and rebuilt by the
+  carpenters the next day (`state.storyArc`), wolves at night on the sawmill track scared off with
+  torches, thunderstorm over the square (only on grey days; the day turns to rain). Owner: medieval only, nothing magic
   (no wizards, witches, spells; the alchemist became the Apothecary, "speziale"). Tone rule (owner): named villagers are heroes or comic, never
   villains or victims; nobody gets hurt. Test one with `npm run render -- --real --subs N --story bandits`.
+- Everyday shots (`src/render/scene/ambient.js`, owner 2026-10-20): when the update has room, a guard
+  patrolling the castle wall walk (odd days, and in winter) or farmers hoeing in the field nearest the
+  castle (even days); a named guard or farmer not shown elsewhere gets the name tag.
 - In-between goals (owner, 2026-10-20): tier at 175 (Town Crier + Crier's Stand) and 750 (Executioner,
   who chops cabbages, + Pillory). Their structures are virtual lots on the market square (`onPlaza`), so
   house plots never move. Only add tiers above the current population, or existing villagers change job.
@@ -76,7 +82,6 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 
 ## Status at handoff (2026-10-19)
 - Daily upload works (videos 74VLgbuvzGU, YQjmBQNZlo4, 2mydn7mgvjU). ~118 subscribers, 24 named villagers.
-- More story events the owner may pick: house fire then rebuild, wedding, wolves at night, storm,
-  tournament, villager leaving with a bundle on unsubscribe, Christmas, New Year fireworks.
+- More story events the owner may pick: wedding, tournament, villager leaving with a bundle on unsubscribe, Christmas, New Year fireworks.
 - Voice still `am_adam`; owner may switch after listening to the Voice samples action.
 - Owner pinned (or will pin) a comment: "call me <name>" + a job, "watch the end credits".

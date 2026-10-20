@@ -250,6 +250,34 @@ const GEN = {
     for (let k = 0; k < sec * 25; k++) noiseBurst(o, Math.round(r.float(0, sec - 0.02) * RATE), 0.01, r.float(0.05, 0.2), r, [new Biquad('bp', r.float(2000, 6000), 2)]);
     return o;
   },
+  thunder(sec, r) { // two rolls of thunder, timed with the lightning of the storm scene (stories/storm.js)
+    const o = buf(sec);
+    for (const at of [0.3, 0.72]) {
+      const st = 0.2 + at * (sec - 0.4), lp = new Biquad('lp', 160), lp2 = new Biquad('lp', 700);
+      const len = Math.min(o.length - Math.round(st * RATE), Math.round(2.6 * RATE));
+      for (let i = 0; i < len; i++) {
+        const x = i / RATE, env = Math.min(1, x / 0.03) * Math.exp(-x / 0.9) * (1 + 0.5 * Math.sin(x * 9 + r.float(0, 0.3)));
+        const crack = x < 0.12 ? lp2.run(r.float(-1, 1)) * (1 - x / 0.12) : 0;
+        o[Math.round(st * RATE) + i] += lp.run(r.float(-1, 1)) * env * 1.6 + crack * 0.8;
+      }
+    }
+    return o;
+  },
+  howl(sec, r) { // one wolf howl in the middle of the wolves scene (stories/wolves.js), the pack answering softly
+    const o = buf(sec);
+    const voices = [[0.2 + 0.43 * (sec - 0.4), 1, 1], [0.2 + 0.52 * (sec - 0.4), 0.35, 1.12]];
+    for (const [st, amp, k] of voices) {
+      const len = Math.min(o.length - Math.round(st * RATE), Math.round(1.9 * RATE));
+      let ph = 0;
+      for (let i = 0; i < len; i++) {
+        const x = i / len, f = k * (380 + 260 * Math.sin(Math.PI * Math.min(1, x * 1.6)) - 120 * x) * (1 + 0.012 * Math.sin(i / RATE * 34));
+        ph += (TAU * f) / RATE;
+        const env = Math.min(1, x * 8) * Math.min(1, (1 - x) * 4);
+        o[Math.round(st * RATE) + i] += (Math.sin(ph) * 0.8 + Math.sin(2 * ph) * 0.15) * env * amp * 0.35;
+      }
+    }
+    return o;
+  },
   chime(sec, r) { // a soft bright chime for the call to action
     const o = buf(sec);
     [0, 0.12, 0.24].forEach((d, i) => modes(o, Math.round(d * RATE), [[[1318, 1568, 2093][i], 0.4, 0.6], [[1318, 1568, 2093][i] * 2, 0.1, 0.3]], 0.3, r));
@@ -304,6 +332,12 @@ const SCENES = {
   ev_merchants: [['cart', 0.5], ['chatter', 0.25]],
   ev_bandits: [['chatter', 0.4], ['fire', 0.25]],
   ev_halloween: [['fire', 0.5], ['chatter', 0.3]],
+  ev_fire: [['fire', 0.85], ['chatter', 0.4]],
+  ev_rebuild: [['hammer', 0.9], ['saw', 0.35]],
+  ev_wolves: [['breeze', 0.5], ['howl', 0.55]],
+  ev_storm: [['rain', 0.75], ['thunder', 0.8]],
+  // everyday shots
+  patrol: [['breeze', 0.45], ['chatter', 0.08]],
 };
 
 /** One impact, synced to a strike in the animation (blacksmith, woodcutter, farmer, mason). */
@@ -333,6 +367,7 @@ function sceneFor(cue) {
   if (cue.kind === 'villager') return null; // handled with synced strikes below
   if (cue.kind === 'caravan') return 'caravan';
   if (cue.kind === 'tavern') return 'tavern';
+  if (cue.kind === 'ambient') return SCENES[cue.id] ? cue.id : null; // the fields: hoe strikes below
   if (cue.kind === 'event') return SCENES['ev_' + cue.id] ? 'ev_' + cue.id : 'story';
   if (cue.kind === 'castle' || cue.kind === 'gate') return 'castle';
   if (cue.kind === 'building' || cue.kind === 'story') {
@@ -376,7 +411,7 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
     for (const [name, gain] of SCENES[scene]) place(sound(name, len, r, workDir), cue.t0 - 0.2, gain, cue.pan ?? 0);
     if (cue.kind === 'house') place(sound('thud', 0.8, r, workDir), cue.t0 + (cue.t1 - cue.t0) * 0.66, 0.35, cue.pan ?? 0, 0.005, 0.3);
   }
-  for (const cue of cues.filter((c) => c.kind === 'villager')) {
+  for (const cue of cues.filter((c) => c.kind === 'villager' || (c.kind === 'ambient' && c.strikes?.length))) {
     const len = cue.t1 - cue.t0 + 0.4;
     for (const [name, gain] of WORK_BEDS[cue.job] || []) place(sound(name, len, r, workDir), cue.t0 - 0.2, gain, cue.pan ?? 0);
     for (const ts of cue.strikes || []) place(hit(cue.strikeSound, r), ts - 0.005, cue.strikeSound === 'anvil' ? 0.6 : 0.75, cue.pan ?? 0, 0.002, 0.3);

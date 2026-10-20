@@ -14,6 +14,7 @@ export const FROM_IT = {
 };
 export const GOODS_IT = { spices: 'spezie', wool: 'lana', salt: 'sale', silk: 'seta', amber: 'ambra', wine: 'vino', 'iron tools': 'attrezzi di ferro', honey: 'miele', 'dyed cloth': 'stoffe colorate' };
 const HEROES = ['knight', 'warrior', 'guard', 'fletcher'];
+const BUILDERS = ['carpenter', 'stonemason'];
 const COSTUMES = ['ghost', 'scarecrow', 'pumpkin']; // folk costumes only, nothing magic (owner)
 
 /**
@@ -25,6 +26,12 @@ export const STORIES = {
   bandits: { minPop: 25, cooldown: 10, weight: 2 }, // the guard tier: someone to chase them off
   quarrel: { minPop: 50, cooldown: 4, weight: 3, needs: (s) => built(s, 'market') }, // in the square
   merchants: { minPop: 50, cooldown: 5, weight: 3, needs: (s) => built(s, 'market') },
+  // a fire in a house (nobody hurt: the neighbours put it out with buckets), rebuilt the next day
+  fire: { minPop: 25, cooldown: 20, weight: 1, needs: (s) => !['rain', 'snow'].includes(s.weather), next: (story, state) => ({ id: 'rebuild', day: state.day + 1, house: story.house }) },
+  rebuild: { arc: true }, // only as the day after a fire
+  wolves: { minPop: 10, cooldown: 12, weight: 2 },
+  // only on grey days; the day turns to rain (src/sim/simulate.js)
+  storm: { minPop: 1, cooldown: 14, weight: 2, needs: (s) => ['rain', 'cloudy'].includes(s.weather) },
 };
 const STORY_CHANCE = 0.5;
 
@@ -71,6 +78,36 @@ const BUILD = {
   merchants(state, r) {
     return { cast: [], from: r.pick(PLACES), goods: r.pick(GOODS), wagons: r.int(2, 3) };
   },
+  fire(state, r) {
+    // a house without named villagers burns (they are never victims); named villagers lead the buckets
+    const named = namedVillagers(state);
+    const namedIds = new Set(named.map((n) => n.id));
+    const houses = state.houses.filter((h) => h.status === 'occupied' && h.occupants.length && !h.occupants.some((id) => namedIds.has(id)));
+    if (!houses.length) return null;
+    const heroes = named.length ? [r.pick(named.slice(0, 12))] : [];
+    const other = named.filter((n) => !heroes.includes(n));
+    if (other.length) heroes.push(r.pick(other.slice(0, 12)));
+    return { cast: heroes, house: r.pick(houses.slice(0, 200)).id };
+  },
+  rebuild(state, r, arc) {
+    const house = arc?.house ?? BUILD.fire(state, r)?.house;
+    if (house === undefined) return null;
+    const named = namedVillagers(state);
+    const crew = named.filter((n) => BUILDERS.includes(n.job)).slice(0, 2);
+    if (!crew.length && named.length) crew.push(r.pick(named.slice(0, 12)));
+    return { cast: crew, house };
+  },
+  wolves(state, r) {
+    const named = namedVillagers(state);
+    const heroes = named.filter((n) => HEROES.includes(n.job) || n.job === 'farmer' || n.job === 'peasant').slice(0, 2);
+    if (!heroes.length && named.length) heroes.push(r.pick(named.slice(0, 12)));
+    return { cast: heroes, wolves: r.int(4, 6) };
+  },
+  storm(state, r) {
+    const pool = namedVillagers(state).slice(0, 12), cast = [];
+    while (cast.length < 4 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    return { cast };
+  },
 };
 
 /**
@@ -84,9 +121,16 @@ export function pickStory(state) {
   const mmdd = state.date.slice(5);
   const possible = (id, s) => pop >= (s.minPop ?? 1) && (!s.needs || s.needs(state));
   let id = Object.keys(STORIES).find((k) => STORIES[k].date === mmdd && possible(k, STORIES[k]));
+  // then a story that continues from an earlier day (the house rebuilt after a fire)
+  const arc = state.storyArc;
+  if (!id && arc && arc.day <= state.day) {
+    state.storyArc = null;
+    const story = BUILD[arc.id](state, r, arc);
+    if (story) { state.storyLog[arc.id] = state.day; return { id: arc.id, ...story }; }
+  }
   if (!id) {
     if (!r.chance(STORY_CHANCE)) return null;
-    const options = Object.entries(STORIES).filter(([k, s]) => !s.date && possible(k, s)
+    const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && possible(k, s)
       && (state.storyLog[k] === undefined || state.day - state.storyLog[k] >= s.cooldown));
     if (!options.length) return null;
     id = r.weighted(options, ([, s]) => s.weight)[0];
@@ -94,6 +138,7 @@ export function pickStory(state) {
   const story = BUILD[id](state, r);
   if (!story) return null;
   state.storyLog[id] = state.day;
+  if (STORIES[id].next) state.storyArc = STORIES[id].next(story, state);
   return { id, ...story };
 }
 

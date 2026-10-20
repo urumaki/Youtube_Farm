@@ -163,6 +163,9 @@ export function toolGeo(kind, M) {
     add(cylGeo(0.095, 0.09, 0.24, 12).translate(0, -0.02, 0.12), M.wood);
     add(cylGeo(0.098, 0.098, 0.035, 12).translate(0, 0.115, 0.12), M.clothIvory); // foam
     add(new THREE.TorusGeometry(0.06, 0.015, 5, 10).rotateY(Math.PI / 2).translate(0, 0, 0.23), M.woodDark); // handle
+  } else if (kind === 'bucket') {
+    add(cylGeo(0.16, 0.12, 0.26, 10).translate(0, -0.2, 0.1), M.wood);
+    add(new THREE.TorusGeometry(0.13, 0.012, 4, 10, Math.PI).translate(0, -0.08, 0.1), M.iron);
   } else if (kind === 'handbell') {
     add(cylGeo(0.025, 0.03, 0.2, 8).translate(0, 0.02, 0.06), wood);
     add(cylGeo(0.05, 0.13, 0.17, 12).translate(0, -0.15, 0.06), M.gold);

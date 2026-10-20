@@ -29,6 +29,15 @@ const T = {
       merchants: [(e) => `Merchants from ${e.from} pass through with ${e.goods}.`, (e) => `A merchant caravan from ${e.from} rolls in, selling ${e.goods}.`],
       bandits: [(e) => (e.cast.length ? 'Bandits crept up at dusk, but our heroes chased them away!' : 'Bandits crept up at dusk, but the guards chased them away!'), () => 'Bandits attacked the fields, and ran off empty-handed!'],
       halloween: ['Happy Halloween! The villagers dance in costume around the bonfire.', 'Happy Halloween! Pumpkins glow all around the square tonight.'],
+      fire: [(e) => (e.cast.length ? 'Fire! A house is burning, but our heroes lead the buckets and save it!' : 'Fire! A house is burning, but the neighbours put it out with buckets!'), () => 'A roof caught fire today, and the whole street formed a bucket chain!'],
+      rebuild: ['The carpenters are already rebuilding the burnt house.', 'Hammers ring on the street: the burnt house is being rebuilt.'],
+      wolves: ['Wolves crept out of the forest tonight, but torches sent them running!', 'A pack of wolves howled at the edge of town, then fled from the torches!'],
+      storm: ['A storm breaks over the kingdom, and everyone runs for cover!', 'Thunder rolls over the square as the rain pours down!'],
+    },
+    // everyday shots (src/render/scene/ambient.js)
+    ambient: {
+      patrol: ['Up on the walls, the guards keep watch.', 'The castle guards walk their rounds.'],
+      fields: ['Out in the fields, the farmers work the soil.', 'In the fields, the hoes never rest.'],
     },
     tavern: ['Meanwhile, the tavern is full tonight!', 'Over at the tavern, the mugs are full!', 'At the tavern, the cider is flowing!'],
     houses1: ['A new house rises along the road.', 'Builders finished a fresh new home.'],
@@ -76,6 +85,14 @@ T.it = {
     merchants: [(e) => `Passano mercanti ${FROM_IT[e.from] || 'da terre lontane'} con ${GOODS_IT[e.goods] || 'merci rare'}.`],
     bandits: [(e) => (e.cast.length ? 'Al tramonto arrivano i banditi, ma i nostri eroi li mettono in fuga!' : 'Al tramonto arrivano i banditi, ma le guardie li mettono in fuga!')],
     halloween: ['Buon Halloween! Gli abitanti ballano in maschera intorno al falò.'],
+    fire: [(e) => (e.cast.length ? 'Al fuoco! Una casa brucia, ma i nostri eroi guidano i secchi e la salvano!' : 'Al fuoco! Una casa brucia, ma i vicini la spengono con i secchi!')],
+    rebuild: ['I carpentieri ricostruiscono già la casa bruciata.'],
+    wolves: ['Stanotte i lupi sono usciti dal bosco, ma le torce li hanno messi in fuga!'],
+    storm: ['Una tempesta si abbatte sul regno e tutti corrono al riparo!'],
+  },
+  ambient: {
+    patrol: ['Sulle mura, le guardie fanno la ronda.'],
+    fields: ['Nei campi, i contadini lavorano la terra.'],
   },
   tavern: ['Intanto la taverna è piena!', 'In taverna i boccali sono pieni!'],
   houses1: ['Una nuova casa sorge lungo la strada.'],
@@ -130,7 +147,7 @@ const words = (s) => s.split(/\s+/).filter(Boolean).length;
 /**
  * @returns {{ sentences: {text:string, role:string}[], text: string, words: number }}
  */
-export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}) {
+export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots = [] } = {}) {
   const L = T[lang] || T.en;
   const r = rng(seed, 'narration', diff.date, lang);
   const pick = (a) => r.pick(a);
@@ -170,6 +187,9 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
   }
   if (diff.story && L.story[diff.story.id]) { const f = pick(L.story[diff.story.id]); add(typeof f === 'function' ? f(diff.story) : f, 'story', 9); }
   // the tavern interior is shown on these days (see makePlan in src/render/scene/timeline.js)
+  // shots: the renderer's shot plan, when known (an everyday shot gets a short line)
+  const amb = shots.find((c) => c.kind === 'ambient');
+  if (amb && L.ambient[amb.id]) add(pick(L.ambient[amb.id]), 'ambient', 4);
   if (tavernScene(state)) add(pick(L.tavern), 'tavern', 6);
   const nb = diff.housesBuilt.length;
   if (nb === 1) add(pick(L.houses1), 'houses', 5);
@@ -200,7 +220,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
   // same order as the shots: caravan, new buildings, villagers at work, then the rest
   // the comment invitation comes with the named villagers (tavern), so the goal and the call to action keep the end
-  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'requests', 'count', 'person', 'tavern', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
+  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'requests', 'count', 'person', 'ambient', 'tavern', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
     const victim = [...S].sort((a, b) => a.priority - b.priority)[0];
@@ -214,7 +234,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
 // Which shot each kind of sentence talks about (see makePlan in src/render/scene/timeline.js).
 const SHOT_OF = {
   story: (c) => c.kind === 'event', completed: (c) => c.kind === 'building', unlocked: (c) => c.kind === 'building',
-  requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', comment: (c) => c.kind === 'tavern',
+  requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', comment: (c) => c.kind === 'tavern', ambient: (c) => c.kind === 'ambient',
   houses: (c) => c.kind === 'house', rebuilt: (c) => c.kind === 'house', abandoned: (c) => c.kind === 'loss', ruined: (c) => c.kind === 'loss',
 };
 // fixed parts of the video: the wide shot with the goal (23.5 s) and the call to action (27 s)

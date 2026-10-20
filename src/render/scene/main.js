@@ -17,6 +17,7 @@ import { buildWorkScene } from './work.js';
 import { buildCaravan } from './caravan.js';
 import { buildTavernInterior } from './tavern.js';
 import { buildStory } from './stories/index.js';
+import { buildPatrol, buildFields } from './ambient.js';
 import { heightAt } from '../../sim/world.js';
 
 const FPS = 30;
@@ -127,6 +128,16 @@ async function setup(data) {
       tg.banner = st.banner;
       if (st.phase !== undefined) tg.phase = st.phase;
       if (st.focus) tg.pos.copy(st.focus);
+      stories.push({ st, tg });
+    } else if (tg.kind === 'ambient') {
+      const st = tg.id === 'patrol' ? buildPatrol({ castle, M, hero: tg.hero, lang: data.lang }) : buildFields({ w, M, seed: state.seed, hero: tg.hero, lang: data.lang });
+      if (!st) continue;
+      scene.add(st.group);
+      tg.labels = st.labels;
+      tg.cam = st.cam;
+      tg.banner = st.banner;
+      tg.pos.copy(st.focus);
+      if (st.work) tg.work = st.work;
       stories.push({ st, tg });
     }
   }
