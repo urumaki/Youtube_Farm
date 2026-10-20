@@ -1,6 +1,5 @@
 // YouTube upload (Data API v3, videos.insert, resumable). Credentials come only from environment
-// variables: YT_OAUTH_CLIENT_ID, YT_OAUTH_CLIENT_SECRET, YT_OAUTH_REFRESH_TOKEN (scopes youtube.upload, and
-// youtube for adding the videos to the playlist YT_PLAYLIST_ID).
+// variables: YT_OAUTH_CLIENT_ID, YT_OAUTH_CLIENT_SECRET, YT_OAUTH_REFRESH_TOKEN (scope youtube.upload).
 // A 1080x1920 clip of 30 s is classified as a Short by YouTube automatically.
 import fs from 'node:fs';
 
@@ -36,33 +35,6 @@ export function videoResource({ title, description, tags, lang, privacy = 'publi
     snippet: { title: title.slice(0, 100), description: description.slice(0, 5000), tags, categoryId: '24', defaultLanguage: lang, defaultAudioLanguage: lang },
     status,
   };
-}
-
-/**
- * Put a video in a playlist (YT_PLAYLIST_ID), unless it is there already. Scheduled (private) videos can
- * be added too: they show in the playlist once they go public. Needs the `youtube` scope on the refresh
- * token (`npm run auth:youtube`); with only `youtube.upload` YouTube answers 403.
- * Returns 'added' or 'present'.
- */
-export async function addToPlaylist({ playlistId, videoId, token, fetchImpl = fetch }) {
-  const auth = { authorization: `Bearer ${token}` };
-  const q = new URLSearchParams({ part: 'id', playlistId, videoId, maxResults: '1' });
-  const found = await fetchImpl(`https://www.googleapis.com/youtube/v3/playlistItems?${q}`, { headers: auth, signal: AbortSignal.timeout(20000) });
-  if (!found.ok) throw new Error(playlistError('playlistItems.list', found.status, await found.text()));
-  if ((await found.json()).items?.length) return 'present';
-  const res = await fetchImpl('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet', {
-    method: 'POST',
-    headers: { ...auth, 'content-type': 'application/json; charset=UTF-8' },
-    body: JSON.stringify({ snippet: { playlistId, resourceId: { kind: 'youtube#video', videoId } } }),
-    signal: AbortSignal.timeout(20000),
-  });
-  if (!res.ok) throw new Error(playlistError('playlistItems.insert', res.status, await res.text()));
-  return 'added';
-}
-
-function playlistError(call, status, text) {
-  const hint = status === 403 ? ' (the refresh token needs the youtube scope: run `npm run auth:youtube` again and update YT_OAUTH_REFRESH_TOKEN)' : '';
-  return `${call} HTTP ${status}${hint}: ${text.slice(0, 200)}`;
 }
 
 /** Upload one MP4. Returns the video id. Retries transient (5xx / network) errors. */

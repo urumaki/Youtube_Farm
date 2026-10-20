@@ -66,7 +66,6 @@ jobs:
           PUBLISH_TARGETS: ${{ vars.PUBLISH_TARGETS }}
           YT_PRIVACY: ${{ vars.YT_PRIVACY || 'public' }}
           YT_PUBLISH_AT: ${{ vars.YT_PUBLISH_AT }}
-          YT_PLAYLIST_ID: ${{ vars.YT_PLAYLIST_ID }}
         run: |
           ARGS="--lang ${{ github.event.inputs.lang || 'en' }}"
           if [ -n "${{ github.event.inputs.subs }}" ]; then ARGS="$ARGS --subs ${{ github.event.inputs.subs }}"; fi
