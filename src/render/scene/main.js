@@ -106,7 +106,8 @@ async function setup(data) {
       at.y = yFn(at.x, at.z);
       return make({ job, variant, anchor: at, face: Math.atan2(ax, az) + homeTurn, M, seed: state.seed, id });
     }
-    return make({ job, variant, anchor, face: Math.atan2(ax, az) + 1.1, M, seed: state.seed, id });
+    // turned 1.1 rad from the camera side (a profile view of the work), or as the scene asks
+    return make({ job, variant, anchor, face: Math.atan2(ax, az) + (sceneOf(job, variant).turn ?? 1.1), M, seed: state.seed, id });
   };
   if (plan) for (const tg of plan.targets) {
     if (tg.kind === 'villager' && (tg.variant === 'walls' || tg.variant === 'sparring')) {

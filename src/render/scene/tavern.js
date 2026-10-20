@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { rand01 } from '../../sim/prng.js';
 import { JOBS } from '../../sim/tiers.js';
 import { Builder, boxGeo, cylGeo } from './kit.js';
-import { rig, toolGeo } from './work.js';
+import { rig, toolGeo, lute } from './work.js';
 
 const F = 0.3; // floor top above the lot level (above the neighbouring bakery's pad)
 const HX = 6.3, HZ = 4.3, CEIL = 3.5; // inner half sizes and ceiling height
@@ -147,6 +147,10 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [] 
   // seats: far benches (facing the camera) first, then the near ones
   const seats = [];
   for (const side of [1, -1]) for (const [tx, tz] of TABLES) for (const dx of [-0.45, 0.45]) seats.push({ x: tx + dx, z: tz + side * 0.78, face: side > 0 ? Math.PI : 0 });
+  // a bard plays in the corner by the fireplace: a named bard when one is among the patrons, else a travelling one
+  const bardIdx = patrons.findIndex((p) => p.job === 'bard');
+  const bard = bardIdx >= 0 ? patrons[bardIdx] : null;
+  if (bard) patrons = patrons.filter((p, i) => i !== bardIdx);
   const nAnon = 11 - Math.min(patrons.length, 11);
   const sitters = [...patrons.slice(0, 11).map((p) => ({ ...p, named: true }))];
   for (let i = 0; i < nAnon; i++) sitters.push({ name: null, job: null });
@@ -165,6 +169,15 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [] 
     people.push({ P, kind: 'drinker', period: 4.2 + rand01(seed, 'tavern-period', n) * 2.6, offset: rand01(seed, 'tavern-off', n) * 6, talk: rand01(seed, 'tavern-talk', n) });
     if (p.named) labels.push({ pos: toWorld(s.x, F + 2.0, s.z), title: p.name, sub: JOBS[p.job]?.label || p.job });
   });
+  {
+    const B = rig(M, JOBS.bard.color);
+    B.root.position.set(-4.2, F, 2.9);
+    B.root.rotation.y = 2.5; // facing the door corner, where the camera ends up
+    B.body.add(lute(M));
+    group.add(B.root);
+    people.push({ P: B, kind: 'bard' });
+    if (bard) labels.push({ pos: toWorld(-4.2, F + 2.3, 2.9), title: bard.name, sub: JOBS.bard.label });
+  }
   // barkeepers behind the counter, facing the room: one pours from the tap, one wipes the counter
   const barSpots = [{ z: -1.5, kind: 'pour' }, { z: 1.3, kind: 'wipe' }];
   barSpots.forEach((spot, i) => {
@@ -220,6 +233,11 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [] 
           P.l.g.rotation.set(-0.6 - talk * 0.35 * Math.max(0, Math.sin(t * 2.3 + p.offset * 3)), 0, 0.05);
           P.body.rotation.y = talk * 0.18 * Math.sin(t * 0.9 + p.offset);
           P.body.rotation.z = 0.03 * Math.sin(t * 1.7 + p.offset);
+        } else if (p.kind === 'bard') {
+          P.r.g.rotation.set(-0.75 + 0.12 * Math.sin(t * 13), 0, -0.45 + 0.1 * Math.sin(t * 13));
+          P.l.g.rotation.set(-1.35 + 0.08 * Math.sin(t * 2.1), 0, -0.25);
+          P.body.rotation.set(-0.05, 0.12 * Math.sin(t * 1.3), 0.05 * Math.sin(t * 2.6));
+          P.root.position.y = F + 0.03 * Math.abs(Math.sin(t * 4.2)); // tapping along
         } else if (p.kind === 'pour') {
           P.r.g.rotation.set(-1.35 + 0.05 * Math.sin(t * 2), 0, 0);
           P.l.g.rotation.set(-1.0, 0, 0.15);

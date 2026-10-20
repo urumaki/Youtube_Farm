@@ -143,6 +143,10 @@ Object.assign(JOB_SCENES, {
   'fisherman:net': { period: 2.8, hit: 0.42, raise: -2.3, down: -0.8, bend: 0.15, fx: 'splash', sound: 'none', tool: 'net', props: 'pond', smooth: true, both: true, net: true },
   'miller:quern': { period: 1.2, hit: 0.5, raise: -1.1, down: -1.1, bend: 0.25, fx: 'flour', sound: 'none', tool: null, props: 'quern', stir: true, left: -0.9 },
   'fletcher:shoot': { period: 2.6, hit: 0.62, raise: -1.5, down: -1.5, bend: 0, fx: null, sound: 'straw', tool: null, props: 'butts', archer: true },
+  // the bard plays the lute sitting on a stool by the house (stool and lute: props 'stool', cfg.lute)
+  bard: { period: 0.5, raise: -0.8, down: -0.6, bend: -0.05, sound: 'none', tool: null, props: 'stool', lute: true, seated: true, focusH: 0.95, labelH: 2.0, turn: 0.35 },
+  // the woodcutter loads logs from a pile onto a handcart
+  'woodcutter:cart': { period: 2.3, hit: 0.5, raise: -1.45, down: -0.7, bend: 0.45, fx: null, sound: 'none', tool: 'logs', props: 'logcart', smooth: true, both: true, carry: true },
   'beggar:collapsed': { period: 3.8, raise: 0, down: 0, bend: 0, sound: 'none', tool: null, props: 'asleep', sleep: true, home: 2.4, homeTurn: Math.PI / 2, focusH: 0.45, labelH: 1.15, radius: 5 },
   'beggar:hat': { period: 3.4, raise: -1.5, down: -0.35, bend: 0.28, sound: 'none', tool: 'tankard', props: 'begging', smooth: true, left: -0.15, sway: true },
   'innkeeper:barrel': { period: 2.6, hit: 0.4, raise: -1.15, down: -0.95, bend: 0.1, fx: 'ale', sound: 'none', tool: 'tankard', props: 'keg', smooth: true, left: -0.7 },
@@ -360,6 +364,27 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       for (const [x, z, r] of [[-0.6, 0.35, 0.4], [-0.75, 0.6, 2.1], [0.9, 0.9, 1.2]]) add(emptyBottle().rotateY(r).translate(x, 0.065, z), M.greens);
       return new THREE.Vector3(0, 0.9, 0.3);
     }
+    case 'stool': { // a three-legged stool, an open lute case, a hat for coins
+      add(cylGeo(0.22, 0.22, 0.06, 12).translate(0, 0.45, -0.05), M.wood);
+      for (let i = 0; i < 3; i++) { const a = (i / 3) * Math.PI * 2; add(cylGeo(0.025, 0.03, 0.46, 5).translate(Math.cos(a) * 0.14, 0.22, -0.05 + Math.sin(a) * 0.14), M.woodDark); }
+      add(boxGeo(0.4, 0.08, 0.8).translate(-0.7, 0.04, 0.3).rotateY(0.3), M.woodDark);
+      add(cylGeo(0.18, 0.14, 0.1, 10).translate(0.6, 0.05, 0.7), M.gear);
+      for (let i = 0; i < 3; i++) add(cylGeo(0.03, 0.03, 0.01, 8).translate(0.56 + i * 0.04, 0.1, 0.68), M.gold);
+      return new THREE.Vector3(0, 1.0, 0.4);
+    }
+    case 'logcart': { // a two-wheeled handcart half full of logs in front, the woodpile behind on the left
+      const wood = M.wood;
+      add(boxGeo(1.1, 0.08, 1.6).translate(0.15, 0.62, 1.45), M.woodDark);
+      for (const s of [-1, 1]) add(boxGeo(0.05, 0.3, 1.6).translate(0.15 + s * 0.53, 0.78, 1.45), M.woodDark);
+      for (const s of [-1, 1]) {
+        add(new THREE.TorusGeometry(0.42, 0.04, 6, 16).rotateY(Math.PI / 2).translate(0.15 + s * 0.65, 0.42, 1.55), M.woodDark);
+        add(cylGeo(0.06, 0.06, 0.1, 8).rotateZ(Math.PI / 2).translate(0.15 + s * 0.65, 0.42, 1.55), M.iron);
+      }
+      for (const s of [-1, 1]) add(cylGeo(0.03, 0.03, 1.1, 6).rotateX(Math.PI / 2 - 0.25).translate(0.15 + s * 0.4, 0.45, 0.4), M.woodDark); // handles
+      for (let i = 0; i < 5; i++) add(cylGeo(0.1, 0.1, 1.3, 8).rotateX(Math.PI / 2).translate(-0.17 + (i % 3) * 0.22, 0.76 + Math.floor(i / 3) * 0.19, 1.5), wood);
+      for (let i = 0; i < 9; i++) add(cylGeo(0.11, 0.11, 1.2, 8).rotateZ(Math.PI / 2).translate(-1.35, 0.11 + Math.floor(i / 4) * 0.2, -0.5 + (i % 4) * 0.23), wood);
+      return new THREE.Vector3(0.15, 0.9, 1.4);
+    }
     case 'asleep': { // the bottle rolled away from the hand, a mug on its side, the hat fallen off
       add(emptyBottle().rotateY(0.5).translate(0.85, 0.065, -0.9), M.greens);
       add(cylGeo(0.095, 0.09, 0.24, 12).rotateZ(Math.PI / 2).translate(-0.7, 0.095, -0.4), M.wood);
@@ -536,6 +561,21 @@ const FX = {
   ale: { n: 14, color: '#c98a2b', size: 0.05, add: false, speed: [0, 0.05], up: [-0.6, -0.2], life: 0.35, bias: 0 },
 };
 
+/** A lute held across the chest (child of the body): pear-shaped body low right, the neck up to the left. */
+export function lute(M) {
+  const g = new THREE.Group();
+  const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m); return m; };
+  add(new THREE.SphereGeometry(0.17, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2).rotateX(-Math.PI / 2).scale(1, 1.3, 0.8), M.wood);
+  add(cylGeo(0.155, 0.155, 0.01, 16).rotateX(Math.PI / 2).scale(1, 1.3, 1).translate(0, 0, 0.005), M.hay); // the soundboard
+  add(cylGeo(0.035, 0.035, 0.01, 10).rotateX(Math.PI / 2).translate(0, 0.04, 0.012), M.gear); // the rose
+  add(boxGeo(0.06, 0.42, 0.03).translate(0, 0.38, 0.01), M.woodDark); // the neck
+  add(boxGeo(0.07, 0.14, 0.03).rotateX(-0.9).translate(0, 0.62, -0.04), M.woodDark); // the bent-back head
+  g.position.set(0.08, 0.5, 0.29);
+  g.rotation.set(0, 0, 0.95);
+  g.scale.setScalar(1.35);
+  return g;
+}
+
 /** A white letter Z on a sprite (browser only). */
 function zSprite() {
   if (typeof document === 'undefined') return null;
@@ -569,7 +609,8 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
   const group = new THREE.Group();
   group.position.copy(anchor);
   group.rotation.y = face;
-  const P = rig(M, color || JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer, ground: !!cfg.ground });
+  const P = rig(M, color || JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer, ground: !!cfg.ground, seated: !!cfg.seated });
+  if (cfg.lute) P.body.add(lute(M));
   group.add(P.root);
   const propsG = new THREE.Group();
   group.add(propsG);
@@ -738,6 +779,20 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
         }
       }
       for (const f of anim) f(t, c, THREE.MathUtils.clamp(swing, 0, 1));
+      if (cfg.carry) {
+        // pick a log up from the pile on the left, turn and lay it on the cart in front
+        const u = cycleU, turn = u < 0.4 ? 1 - ease(u / 0.4) : u < 0.6 ? 0 : ease((u - 0.6) / 0.4);
+        P.root.rotation.y = 1.25 * turn;
+        const low = Math.abs(Math.cos(Math.PI * u)); // bent down at the pile and at the cart
+        P.body.rotation.x = cfg.bend * low;
+        if (tool) tool.visible = u > 0.05 && u < 0.5;
+      }
+      if (cfg.lute) {
+        // strumming hand on the strings, the other hand moving along the neck, head nodding to the tune
+        P.r.g.rotation.set(-0.75 + 0.12 * Math.sin(t * 13), 0, -0.45 + 0.1 * Math.sin(t * 13));
+        P.l.g.rotation.set(-1.35 + 0.08 * Math.sin(t * 2.1), 0, -0.25);
+        P.body.rotation.set(-0.05, 0.12 * Math.sin(t * 1.3), 0.05 * Math.sin(t * 2.6));
+      }
       if (cfg.drink) {
         // most of the time the bottle rests on the lap; every few seconds a long swig, head back
         const u = cycleU, lift = u < 0.14 ? ease(u / 0.14) : u < 0.42 ? 1 : u < 0.55 ? 1 - ease((u - 0.42) / 0.13) : 0;

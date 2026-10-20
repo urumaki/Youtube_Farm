@@ -19,7 +19,7 @@ const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 const FIGHTER_SCENES = ['walls', 'sparring', 'dummy'];
 export const VARIANTS = {
   guard: FIGHTER_SCENES, knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
-  farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
+  farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell', 'cart'], stonemason: ['block', 'stack'],
   blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw'],
   baker: ['oven', 'knead'], fisherman: ['rod', 'net'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
   innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
