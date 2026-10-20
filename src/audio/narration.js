@@ -115,7 +115,7 @@ const JOB_IT = {
   peasant: 'contadino', farmer: 'agricoltore', woodcutter: 'taglialegna', fisherman: 'pescatore', blacksmith: 'fabbro', baker: 'fornaio',
   guard: 'guardia', stonemason: 'scalpellino', merchant: 'mercante', innkeeper: 'oste', priest: 'prete', miller: 'mugnaio',
   carpenter: 'carpentiere', reeve: 'balivo', sailor: 'marinaio', knight: 'cavaliere', bishop: 'vescovo', scholar: 'studioso',
-  mayor: 'sindaco', weaver: 'tessitore', physician: 'medico', alchemist: 'alchimista', bard: 'bardo', noble: 'nobile',
+  mayor: 'sindaco', weaver: 'tessitore', physician: 'medico', apothecary: 'speziale', bard: 'bardo', noble: 'nobile',
   chronicler: 'cronista', admiral: 'ammiraglio', fletcher: 'arcaio', weirdo: 'stravagante del paese', beggar: 'mendicante',
   jester: 'giullare', warrior: 'guerriero', toolsmith: 'fabbro di attrezzi', brewer: 'birraio', apprentice: 'apprendista',
   crier: 'banditore', executioner: 'boia',

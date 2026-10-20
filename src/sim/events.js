@@ -13,7 +13,7 @@ const ACTIVITIES = {
   carpenter: 'raises a new roof beam', reeve: 'counts the tax sheaves twice', sailor: 'ties knots faster than anyone in port',
   knight: 'polishes armor for the tournament', bishop: 'blesses the new bells', scholar: 'copies an ancient map',
   mayor: 'reads the town charter aloud', weaver: 'finishes a banner in the royal colors', physician: 'brews a remedy of sage and mint',
-  alchemist: 'turns lead into slightly shinier lead', bard: 'writes a song about the newest villagers', noble: 'hosts a grand feast',
+  apothecary: 'grinds sage and mint into a cough remedy', bard: 'writes a song about the newest villagers', noble: 'hosts a grand feast',
   chronicler: 'records today in the kingdom chronicle', admiral: 'charts a route to distant lands',
   fletcher: 'fletches a bundle of arrows', weirdo: 'dances alone in the square for no reason', beggar: 'raises a mug to every passer-by',
   jester: 'juggles for a crowd of children', warrior: 'trains with the sword until sunset', toolsmith: 'forges new hoes and sickles for the farmers',

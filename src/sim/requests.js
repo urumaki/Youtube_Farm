@@ -31,7 +31,7 @@ const KEYWORDS = [
   [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
   [/scholar|\bscribe|librar|studioso/, 'scholar'],
   [/doctor|healer|physician|medico|guaritore/, 'physician'],
-  [/alchemist|wizard|\bmage\b|sorcer|alchimista|mago/, 'alchemist'],
+  [/apothecar|alchemist|alchimista|speziale|farmacist|\bremed|rimedi/, 'apothecary'], // medieval only: no wizards (owner)
   [/\blord\b|landlord|\bnoble|\bduke|\bbaron|nobile|signore/, 'noble'],
   [/\bmayor|sindaco/, 'mayor'],
   [/executioner|headsman|\bboia\b|carnefice|giustiziere/, 'executioner'],

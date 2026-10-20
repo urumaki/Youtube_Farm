@@ -53,7 +53,7 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (`state.storyLog`). Done: quarrel in the square (chicken/goat/cabbage), merchant caravan on the
   south-east road, bandits at dusk on the mill track chased off by guards with named heroes, Halloween
   bonfire with named villagers in costume (ghost, scarecrow, pumpkin). Owner: medieval only, nothing magic
-  (no wizards, witches, spells). Tone rule (owner): named villagers are heroes or comic, never
+  (no wizards, witches, spells; the alchemist became the Apothecary, "speziale"). Tone rule (owner): named villagers are heroes or comic, never
   villains or victims; nobody gets hurt. Test one with `npm run render -- --real --subs N --story bandits`.
 - In-between goals (owner, 2026-10-20): tier at 175 (Town Crier + Crier's Stand) and 750 (Executioner,
   who chops cabbages, + Pillory). Their structures are virtual lots on the market square (`onPlaza`), so
