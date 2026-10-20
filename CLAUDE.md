@@ -55,7 +55,12 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   bonfire with named villagers in costume (ghost, scarecrow, pumpkin). Added 2026-10-20: house fire put out
   by a bucket chain (never a named villager's house; named villagers are the heroes) and rebuilt by the
   carpenters the next day (`state.storyArc`), wolves at night on the sawmill track scared off with
-  torches, thunderstorm over the square (only on grey days; the day turns to rain). Owner: medieval only, nothing magic
+  torches, thunderstorm over the square (only on grey days; the day turns to rain). Picked by the owner
+  2026-10-20: the King (the owner) rides through town in an open carriage while the crowd cheers (`royal.js`),
+  a pig loose in the square chased by the farmer (`pig.js`), an archery contest with a winner's rosette
+  (`archery.js`), the river flooding with a sandbag wall on rainy days (`flood.js`), New Year's Eve
+  countdown round the bonfire on 31/12 (`newyear.js`; the big title changes over time via `bannerAt`).
+  Owner: medieval only, nothing magic
   (no wizards, witches, spells; the alchemist became the Apothecary, "speziale"). Tone rule (owner): named villagers are heroes or comic, never
   villains or victims; nobody gets hurt. Test one with `npm run render -- --real --subs N --story bandits`.
 - Who is shown at work (`src/sim/featured.js`, owner 2026-10-20): picked by the simulation and saved as
@@ -64,10 +69,11 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   `featured` use the old rule to know what the previous video showed.
 - `npm run render -- --day 2026-10-20` renders a saved day again with today's code (read only,
   `output/<day>_<lang>_again.mp4`). Replacing a published video is the owner's call.
-- Everyday shots (`src/render/scene/ambient.js`, owner 2026-10-20): when the update has room, guards
-  (odd days, and in winter: patrolling the castle wall walk or sparring in the courtyard) or farmers
-  hoeing in the field nearest the castle (even days), never a job already shown yesterday or today; a
-  named guard or farmer not shown elsewhere gets the name tag.
+- Everyday shots (`ambient.js`, `everyday.js`, owner 2026-10-20): when the update has room, guards
+  (odd days, and in winter: patrolling the castle wall walk or sparring in the courtyard), else one of
+  farmers hoeing in the field nearest the castle, a shepherd with the flock on the grass beyond the fields,
+  or washing day at the river; never a job already shown yesterday or today; a named guard, farmer or
+  peasant not shown elsewhere gets the name tag. Test one with `--gallery ambient:pasture`.
 - Villager shots vary (owner 2026-10-20): every common job has 2-3 scenes, one picked per villager and day
   (`VARIANTS` in `timeline.js`; `'job:variant'` entries in `JOB_SCENES`, `work.js`): guards on the walls,
   sparring or at the straw dummy (`drills.js`); farmers hoeing, sowing or reaping; the smith at the anvil,
@@ -77,6 +83,9 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   the peel, its own wide-lens camera and a hard cut in and out like the tavern; guests walk in by the door.
   The beggar sits against the back wall of his house swigging from a bottle, or lies asleep by it snoring
   (Z sprites), or stands by a crate with a mug (`home`/`homeTurn` in `JOB_SCENES` place a scene by the house).
+  Bards strum a lute on a stool (and one always plays in the tavern); woodcutters also load a handcart.
+  Scenes away from the croft (`AWAY_VARIANTS`, own camera, hard cut): guards on the walls, sparring, or on
+  the night watch with a lantern at dusk; fishermen in a rowing boat on the river (`away.js`).
 - Everybody gets a turn (owner 2026-10-20): `state.lastShown` records the day each named villager was
   last on screen; after today's names and requests, those never shown and those waiting longest come
   first. A shot can show two villagers together (`PAIRS` in `featured.js`, `visit.js`): the guest walks

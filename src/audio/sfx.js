@@ -298,6 +298,21 @@ const GEN = {
     for (let k = 0; k < sec * 22; k++) noiseBurst(o, Math.round(r.float(0, sec - 0.05) * RATE), 0.03, r.float(0.1, 0.25), r, [hp]);
     return o;
   },
+  baa(sec, r) { // sheep bleating now and then across the meadow
+    const o = buf(sec);
+    for (let at = r.float(0.2, 0.8); at < sec - 0.7; at += r.float(0.7, 1.6)) {
+      const f0 = r.float(230, 380), dur = r.float(0.45, 0.7), bp = new Biquad('bp', r.float(900, 1300), 2.5);
+      const i0 = Math.round(at * RATE), len = Math.min(o.length - i0, Math.round(dur * RATE)), gain = r.float(0.3, 0.6);
+      let ph = 0;
+      for (let i = 0; i < len; i++) {
+        const x = i / len, vib = 1 + 0.06 * Math.sin(i / RATE * TAU * 11); // the quaver of a bleat
+        ph += (TAU * f0 * vib * (1 - 0.1 * x)) / RATE;
+        const src = ((ph / TAU) % 1) * 2 - 1;
+        o[i0 + i] += bp.run(src) * Math.sin(Math.PI * Math.min(1, x * 1.3)) * gain;
+      }
+    }
+    return o;
+  },
   oink(sec, r) { // a pig grunting and squealing as it runs
     const o = buf(sec);
     for (let at = r.float(0.05, 0.3); at < sec - 0.3; at += r.float(0.25, 0.6)) {
@@ -397,6 +412,8 @@ const SCENES = {
   sparring: [['chatter', 0.12]],
   boat: [['water', 0.65], ['oars', 0.15]],
   nightwatch: [['breeze', 0.45], ['fire', 0.06]],
+  pasture: [['breeze', 0.4], ['baa', 0.45]],
+  laundry: [['water', 0.55], ['chatter', 0.25]],
 };
 
 /** One impact, synced to a strike in the animation (blacksmith, woodcutter, farmer, mason, guards training). */

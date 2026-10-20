@@ -114,11 +114,14 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const seen = new Set([...(diff.avoidJobs || []), ...atWork.map((n) => n.job), ...atWork.map((n) => n.wants).filter(Boolean)]);
     const wallsOk = state.unlockedTiers.includes('guard') && !['guard', 'knight', 'warrior'].some((j) => seen.has(j));
     const fieldsOk = !winter && !seen.has('farmer') && !seen.has('peasant');
-    // the guards either walk the walls or spar in the courtyard
+    // the guards either walk the walls or spar in the courtyard; on the other days, life around town:
+    // farmers in the fields, a shepherd with the flock, washing day at the river
     const guards = rand01(state.seed, 'ambient', state.day) < 0.5 ? 'patrol' : 'sparring';
-    const id = wallsOk && (state.day % 2 === 1 || !fieldsOk) ? guards : fieldsOk ? 'fields' : null;
+    const country = [fieldsOk && 'fields', !winter && !seen.has('peasant') && 'pasture', !seen.has('peasant') && 'laundry'].filter(Boolean);
+    const life = country[Math.floor(rand01(state.seed, 'country', state.day) * country.length)];
+    const id = wallsOk && (state.day % 2 === 1 || !life) ? guards : life || null;
     if (id) {
-      const jobs = id === 'fields' ? ['farmer', 'peasant'] : ['guard', 'knight', 'warrior'];
+      const jobs = id === 'fields' ? ['farmer', 'peasant'] : id === 'pasture' || id === 'laundry' ? ['peasant', 'farmer'] : ['guard', 'knight', 'warrior'];
       const hero = named.find((n) => jobs.includes(n.job) && !atWork.includes(n) && !keepers.includes(n)) || null;
       ambient = { kind: 'ambient', id, pos: castle.keep.clone(), radius: 8, front: 0, label: null, labels: [], weight: 1.1, cut: true,
         hero: hero && { id: hero.id, name: hero.name, job: hero.job }, sceneJob: id === 'fields' ? 'farmer' : null };

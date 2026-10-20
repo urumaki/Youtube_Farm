@@ -18,6 +18,7 @@ import { buildCaravan } from './caravan.js';
 import { buildTavernInterior } from './tavern.js';
 import { buildStory } from './stories/index.js';
 import { buildPatrol, buildFields } from './ambient.js';
+import { buildPasture, buildLaundry } from './everyday.js';
 import { buildSparring, buildDummyDrill } from './drills.js';
 import { buildBoat, buildNightWatch } from './away.js';
 import { buildVisit } from './visit.js';
@@ -96,6 +97,11 @@ async function setup(data) {
   const stories = [];
   const yFn = (x, z) => heightAt(w, x, z) + 0.03;
   const interiors = []; // villagers working inside a building (the baker's bakehouse), lit while the camera is in
+  const ambientScene = (id, hero) => {
+    const a = { w, M, seed: state.seed, hero, lang: data.lang };
+    return id === 'patrol' ? buildPatrol({ castle, M, hero, lang: data.lang })
+      : id === 'sparring' ? buildSparring(a) : id === 'pasture' ? buildPasture(a) : id === 'laundry' ? buildLaundry(a) : buildFields(a);
+  };
   const awayScene = (variant, hero, home) => {
     const ground = (x, z) => heightAt(w, x, z);
     return variant === 'walls' ? buildPatrol({ castle, M, hero, lang: data.lang, tag: false })
@@ -181,9 +187,7 @@ async function setup(data) {
       if (st.focus) tg.pos.copy(st.focus);
       stories.push({ st, tg });
     } else if (tg.kind === 'ambient') {
-      const st = tg.id === 'patrol' ? buildPatrol({ castle, M, hero: tg.hero, lang: data.lang })
-        : tg.id === 'sparring' ? buildSparring({ M, seed: state.seed, hero: tg.hero, lang: data.lang })
-          : buildFields({ w, M, seed: state.seed, hero: tg.hero, lang: data.lang });
+      const st = ambientScene(tg.id, tg.hero);
       if (!st) continue;
       scene.add(st.group);
       tg.labels = st.labels;
@@ -204,8 +208,8 @@ async function setup(data) {
     const away = Math.atan2(az, ax);
     ctx0.galleryAway = away;
     ctx0.gallery = data.gallery.map((g, i) => {
-      if (AWAY_VARIANTS.has(g.variant)) { // scenes with their own camera, played over 3 s
-        const st = awayScene(g.variant, { id: 9100 + i, name: 'Test', job: g.job }, sh);
+      if (AWAY_VARIANTS.has(g.variant) || g.job === 'ambient') { // scenes with their own camera, played over 3 s
+        const st = g.job === 'ambient' ? ambientScene(g.variant, { id: 9100 + i, name: 'Test', job: 'peasant' }) : awayScene(g.variant, { id: 9100 + i, name: 'Test', job: g.job }, sh);
         st.setWindow?.(0, 3);
         scene.add(st.group);
         return { ws: { group: st.group, update: (t) => st.update(t, 0, 3) }, st, focus: st.focus };
