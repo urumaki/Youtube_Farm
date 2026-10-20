@@ -298,6 +298,22 @@ const GEN = {
     for (let k = 0; k < sec * 22; k++) noiseBurst(o, Math.round(r.float(0, sec - 0.05) * RATE), 0.03, r.float(0.1, 0.25), r, [hp]);
     return o;
   },
+  oink(sec, r) { // a pig grunting and squealing as it runs
+    const o = buf(sec);
+    for (let at = r.float(0.05, 0.3); at < sec - 0.3; at += r.float(0.25, 0.6)) {
+      const squeal = r.chance(0.35), dur = squeal ? r.float(0.25, 0.4) : r.float(0.1, 0.18);
+      const f0 = squeal ? r.float(700, 1000) : r.float(110, 170), bp = new Biquad('bp', squeal ? 1800 : 600, 3);
+      const i0 = Math.round(at * RATE), len = Math.min(o.length - i0, Math.round(dur * RATE));
+      let ph = 0;
+      for (let i = 0; i < len; i++) {
+        const x = i / len;
+        ph += (TAU * f0 * (squeal ? 1 + 0.3 * Math.sin(Math.PI * x) : 1 - 0.2 * x)) / RATE;
+        const src = ((ph / TAU) % 1) * 2 - 1 + r.float(-0.3, 0.3);
+        o[i0 + i] += bp.run(src) * Math.sin(Math.PI * x) * (squeal ? 0.35 : 0.6);
+      }
+    }
+    return o;
+  },
   fanfare(sec, r) { // a short brass fanfare at the start (the King's arrival): G C E G, the last note held
     const o = buf(sec);
     const notes = [[392, 0.15, 0.2], [523.3, 0.38, 0.2], [659.3, 0.61, 0.2], [784, 0.84, 1.1]];
@@ -372,6 +388,8 @@ const SCENES = {
   ev_wolves: [['breeze', 0.5], ['howl', 0.55]],
   ev_storm: [['rain', 0.75], ['thunder', 0.8]],
   ev_royal: [['fanfare', 0.6], ['cheer', 0.6], ['cart', 0.35]],
+  ev_pig: [['oink', 0.55], ['chatter', 0.4], ['cheer', 0.2]],
+  ev_archery: [['chatter', 0.3], ['cheer', 0.3]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],

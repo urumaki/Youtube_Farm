@@ -166,6 +166,7 @@ async function setup(data) {
       tg.cam = st.cam;
       tg.banner = st.banner;
       if (st.phase !== undefined) tg.phase = st.phase;
+      if (st.work) tg.work = st.work; // arrows hitting the targets
       if (st.focus) tg.pos.copy(st.focus);
       stories.push({ st, tg });
     } else if (tg.kind === 'ambient') {

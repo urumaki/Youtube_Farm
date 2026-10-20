@@ -34,6 +34,8 @@ export const STORIES = {
   storm: { minPop: 1, cooldown: 14, weight: 2, needs: (s) => ['rain', 'cloudy'].includes(s.weather) },
   // the King (the channel's owner) rides through town in his carriage; named villagers cheer in the front row
   royal: { minPop: 30, cooldown: 10, weight: 2, needs: (s) => !['rain', 'snow', 'storm'].includes(s.weather) },
+  pig: { minPop: 20, cooldown: 8, weight: 2 }, // a pig loose in the square, the farmer gives chase
+  archery: { minPop: 40, cooldown: 10, weight: 2, needs: (s) => !['rain', 'snow'].includes(s.weather) },
 };
 const STORY_CHANCE = 0.5;
 
@@ -104,6 +106,20 @@ const BUILD = {
     const heroes = named.filter((n) => HEROES.includes(n.job) || n.job === 'farmer' || n.job === 'peasant').slice(0, 2);
     if (!heroes.length && named.length) heroes.push(r.pick(named.slice(0, 12)));
     return { cast: heroes, wolves: r.int(4, 6) };
+  },
+  pig(state, r) {
+    const named = namedVillagers(state);
+    const farmers = named.filter((n) => n.job === 'farmer' || n.job === 'peasant');
+    const chaser = farmers.length ? r.pick(farmers.slice(0, 8)) : castMember(state, r, named);
+    return chaser ? { cast: [chaser] } : null;
+  },
+  archery(state, r) {
+    // archers and guards first; the winner is the first of the cast
+    const named = namedVillagers(state);
+    const pool = [...named.filter((n) => n.job === 'fletcher' || HEROES.includes(n.job)), ...named.filter((n) => n.job !== 'fletcher' && !HEROES.includes(n.job))].slice(0, 8);
+    const cast = [];
+    while (cast.length < 3 && pool.length) cast.push(pool.splice(r.int(0, Math.min(pool.length - 1, 3)), 1)[0]);
+    return { cast };
   },
   royal(state, r) {
     const pool = namedVillagers(state).slice(0, 16), cast = [];

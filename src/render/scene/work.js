@@ -564,12 +564,12 @@ function arrowGroup(M) {
  * @param anchor  world point (ground) where the worker stands
  * @param face    yaw the worker faces (radians, world)
  */
-export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id }) {
+export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id, color = null }) {
   const cfg = sceneOf(job, variant);
   const group = new THREE.Group();
   group.position.copy(anchor);
   group.rotation.y = face;
-  const P = rig(M, JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer, ground: !!cfg.ground });
+  const P = rig(M, color || JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer, ground: !!cfg.ground });
   group.add(P.root);
   const propsG = new THREE.Group();
   group.add(propsG);

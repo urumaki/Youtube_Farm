@@ -35,6 +35,8 @@ const T = {
       wolves: ['Wolves crept out of the forest tonight, but torches sent them running!', 'A pack of wolves howled at the edge of town, then fled from the torches!'],
       storm: ['A storm breaks over the kingdom, and everyone runs for cover!', 'Thunder rolls over the square as the rain pours down!'],
       royal: ['Make way! The King rides through town, and the people cheer!', 'Long live the King! The royal carriage rolls down the main street!'],
+      pig: ['A pig got loose in the square, and the farmer gives chase!', 'Catch that pig! It runs circles around the whole square!'],
+      archery: ['An archery contest in the square! The best shot wins a golden rosette.', 'Bows drawn! Three archers compete for the golden rosette.'],
     },
     // everyday shots (src/render/scene/ambient.js)
     ambient: {
@@ -110,6 +112,8 @@ T.it = {
     wolves: ['Stanotte i lupi sono usciti dal bosco, ma le torce li hanno messi in fuga!'],
     storm: ['Una tempesta si abbatte sul regno e tutti corrono al riparo!'],
     royal: ['Fate largo! Il Re attraversa la città tra gli applausi!', 'Viva il Re! La carrozza reale percorre la via principale!'],
+    pig: ['Un maiale è scappato in piazza e il contadino lo insegue!', 'Prendete quel maiale! Fa il giro di tutta la piazza!'],
+    archery: ['Gara di tiro con l’arco in piazza: il miglior arciere vince la coccarda d’oro!'],
   },
   ambient: {
     patrol: ['Sulle mura, le guardie fanno la ronda.'],
