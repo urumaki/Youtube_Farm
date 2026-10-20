@@ -10,10 +10,12 @@ import { buildStorm } from './storm.js';
 import { buildRoyal } from './royal.js';
 import { buildPig } from './pig.js';
 import { buildArchery } from './archery.js';
+import { buildFlood } from './flood.js';
+import { buildNewYear } from './newyear.js';
 
 const BUILDERS = {
   quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween,
-  fire: buildFire, rebuild: buildRebuild, wolves: buildWolves, storm: buildStorm, royal: buildRoyal, pig: buildPig, archery: buildArchery,
+  fire: buildFire, rebuild: buildRebuild, wolves: buildWolves, storm: buildStorm, royal: buildRoyal, pig: buildPig, archery: buildArchery, flood: buildFlood, newyear: buildNewYear,
 };
 
 export function buildStory(args) {
@@ -22,4 +24,4 @@ export function buildStory(args) {
 }
 
 /** Scenes that play at dusk: the shot cuts in and out instead of flying (the light changes). */
-export const NIGHT_STORIES = new Set(['bandits', 'halloween', 'wolves']);
+export const NIGHT_STORIES = new Set(['bandits', 'halloween', 'wolves', 'newyear']);

@@ -158,7 +158,7 @@ async function setup(data) {
       tg.cam = tavern.cam;
       tg.banner = data.lang === 'it' ? 'La Taverna' : 'The Tavern';
     } else if (tg.kind === 'event') {
-      const st = buildStory({ story: tg.story, w, state, M, buildings, houses, yFn, seed: state.seed, lang: data.lang });
+      const st = buildStory({ story: tg.story, w, state, M, buildings, houses, yFn, seed: state.seed, lang: data.lang, water });
       if (!st) continue;
       scene.add(st.group);
       st.setWindow?.(tg.t0, tg.t1);
@@ -232,7 +232,10 @@ function applyFrame(ctx, t) {
   for (const ws of ctx.works || []) ws.update(t);
   const ct = ctx.caravan && plan.targets.find((x) => x.kind === 'caravan');
   if (ct) ctx.caravan.update(t, ct.t0, ct.t1);
-  for (const { st, tg } of ctx.stories || []) st.update(t, tg.t0, tg.t1);
+  for (const { st, tg } of ctx.stories || []) {
+    st.update(t, tg.t0, tg.t1);
+    if (st.bannerAt) tg.banner = st.bannerAt(t, tg.t0, tg.t1); // a title that changes (the New Year countdown)
+  }
   const ev = evaluate(plan, t);
   const inside = ev.active?.kind === 'tavern' || !!ev.active?.interior;
   if (ctx.tavern) ctx.tavern.update(t, ev.active?.kind === 'tavern');

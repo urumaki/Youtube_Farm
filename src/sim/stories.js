@@ -23,6 +23,7 @@ const COSTUMES = ['ghost', 'scarecrow', 'pumpkin']; // folk costumes only, nothi
  */
 export const STORIES = {
   halloween: { date: '10-31', minPop: 1 },
+  newyear: { date: '12-31', minPop: 1 }, // the countdown round the bonfire
   bandits: { minPop: 25, cooldown: 10, weight: 2 }, // the guard tier: someone to chase them off
   quarrel: { minPop: 50, cooldown: 4, weight: 3, needs: (s) => built(s, 'market') }, // in the square
   merchants: { minPop: 50, cooldown: 5, weight: 3, needs: (s) => built(s, 'market') },
@@ -35,6 +36,7 @@ export const STORIES = {
   // the King (the channel's owner) rides through town in his carriage; named villagers cheer in the front row
   royal: { minPop: 30, cooldown: 10, weight: 2, needs: (s) => !['rain', 'snow', 'storm'].includes(s.weather) },
   pig: { minPop: 20, cooldown: 8, weight: 2 }, // a pig loose in the square, the farmer gives chase
+  flood: { minPop: 30, cooldown: 25, weight: 2, needs: (s) => s.weather === 'rain' }, // sandbags on the bank
   archery: { minPop: 40, cooldown: 10, weight: 2, needs: (s) => !['rain', 'snow'].includes(s.weather) },
 };
 const STORY_CHANCE = 0.5;
@@ -106,6 +108,14 @@ const BUILD = {
     const heroes = named.filter((n) => HEROES.includes(n.job) || n.job === 'farmer' || n.job === 'peasant').slice(0, 2);
     if (!heroes.length && named.length) heroes.push(r.pick(named.slice(0, 12)));
     return { cast: heroes, wolves: r.int(4, 6) };
+  },
+  newyear(state) {
+    return { cast: namedVillagers(state).slice(0, 8) };
+  },
+  flood(state, r) {
+    const pool = namedVillagers(state).slice(0, 12), cast = [];
+    while (cast.length < 3 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    return { cast };
   },
   pig(state, r) {
     const named = namedVillagers(state);

@@ -36,6 +36,8 @@ const T = {
       storm: ['A storm breaks over the kingdom, and everyone runs for cover!', 'Thunder rolls over the square as the rain pours down!'],
       royal: ['Make way! The King rides through town, and the people cheer!', 'Long live the King! The royal carriage rolls down the main street!'],
       pig: ['A pig got loose in the square, and the farmer gives chase!', 'Catch that pig! It runs circles around the whole square!'],
+      flood: ['The river is rising! Everyone grabs a sandbag to save the houses.', 'After the rain the river floods, and the villagers build a wall of sandbags!'],
+      newyear: ['Three, two, one... Happy New Year from the whole kingdom!', 'The villagers gather round the bonfire to count down to the New Year!'],
       archery: ['An archery contest in the square! The best shot wins a golden rosette.', 'Bows drawn! Three archers compete for the golden rosette.'],
     },
     // everyday shots (src/render/scene/ambient.js)
@@ -113,6 +115,8 @@ T.it = {
     storm: ['Una tempesta si abbatte sul regno e tutti corrono al riparo!'],
     royal: ['Fate largo! Il Re attraversa la città tra gli applausi!', 'Viva il Re! La carrozza reale percorre la via principale!'],
     pig: ['Un maiale è scappato in piazza e il contadino lo insegue!', 'Prendete quel maiale! Fa il giro di tutta la piazza!'],
+    flood: ['Il fiume si alza! Tutti prendono un sacco di sabbia per salvare le case.'],
+    newyear: ['Tre, due, uno... Buon anno da tutto il regno!', 'Gli abitanti si radunano intorno al falò per il conto alla rovescia!'],
     archery: ['Gara di tiro con l’arco in piazza: il miglior arciere vince la coccarda d’oro!'],
   },
   ambient: {

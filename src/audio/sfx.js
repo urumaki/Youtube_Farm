@@ -390,6 +390,8 @@ const SCENES = {
   ev_royal: [['fanfare', 0.6], ['cheer', 0.6], ['cart', 0.35]],
   ev_pig: [['oink', 0.55], ['chatter', 0.4], ['cheer', 0.2]],
   ev_archery: [['chatter', 0.3], ['cheer', 0.3]],
+  ev_flood: [['rain', 0.55], ['water', 0.7], ['chatter', 0.3]],
+  ev_newyear: [['fire', 0.5], ['chatter', 0.3], ['cheer', 0.45]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],

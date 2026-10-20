@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { rand01 } from '../../../sim/prng.js';
 import { JOBS } from '../../../sim/tiers.js';
-import { person, stage, flameMaterial, flicker } from './common.js';
+import { person, stage, bonfire } from './common.js';
 
 const COSTUME = { ghost: ['Ghost', 'Fantasma'], scarecrow: ['Scarecrow', 'Spaventapasseri'], pumpkin: ['Pumpkin', 'Zucca'] };
 const EXTRAS = ['ghost', 'scarecrow', 'pumpkin', 'scarecrow', 'ghost', 'pumpkin'];
@@ -45,21 +45,7 @@ export function buildHalloween({ story, M, buildings, seed, lang }) {
   group.visible = false;
   const C = st.square ? new THREE.Vector3(2, 0, 2) : new THREE.Vector3(0, 0, 5);
   const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(C.x + x, y, C.z + z); m.castShadow = true; m.receiveShadow = true; group.add(m); return m; };
-  // the bonfire: crossed logs, three flames and glowing embers
-  for (let i = 0; i < 6; i++) {
-    const log = add(new THREE.CylinderGeometry(0.1, 0.12, 1.6, 7), M.woodDark, 0, 0.42, 0);
-    log.rotation.set(0.75, (i / 6) * Math.PI * 2, 0, 'YXZ');
-  }
-  add(new THREE.CylinderGeometry(0.75, 0.85, 0.12, 14), M.stoneDark, 0, 0.06, 0);
-  const flames = [['#ff7a1a', 0.55, 1.5], ['#ffb347', 0.4, 1.15], ['#ffe08a', 0.22, 0.8]].map(([c, r, h], k) => {
-    const f = add(new THREE.ConeGeometry(r, h, 10).translate(0, h / 2, 0), flameMaterial(c), 0, 0.25, 0);
-    f.castShadow = false;
-    f.userData.k = k;
-    return f;
-  });
-  const fire = new THREE.PointLight('#ff8a3d', 45, 30, 2);
-  fire.position.set(C.x, 1.6, C.z);
-  group.add(fire);
+  const fire = bonfire(group, M, C);
   // jack-o'-lanterns in a ring
   const lantern = pumpkinMat(1.3);
   for (let i = 0; i < 12; i++) {
@@ -92,10 +78,8 @@ export function buildHalloween({ story, M, buildings, seed, lang }) {
     },
     update(t, t0, t1) {
       group.visible = t >= t0 && t <= t1;
-      fire.visible = group.visible;
+      fire.update(t, group.visible);
       if (!group.visible) return;
-      for (const f of flames) flicker(f, t, f.userData.k * 3);
-      fire.intensity = 45 * (1 + 0.12 * Math.sin(t * 17) + 0.08 * Math.sin(t * 29));
       dancers.forEach(({ P, a0 }, i) => {
         const a = a0 + (t - t0) * 0.55, r = 3.0;
         P.root.position.set(C.x + Math.cos(a) * r, 0, C.z + Math.sin(a) * r);
