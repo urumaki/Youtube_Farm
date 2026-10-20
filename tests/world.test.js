@@ -66,3 +66,17 @@ test('streets never cross: every street ends free or in a T-junction', () => {
   }
   assert.equal(n, 0, `${n} street crossings`);
 });
+
+test('guard scenes vary by day and two guards never share one', async () => {
+  const { pickVariant, VARIANTS } = await import('../src/render/scene/timeline.js');
+  assert.equal(pickVariant('baker', 1, 3, 4), null);
+  const seen = new Set();
+  for (let day = 1; day <= 30; day++) {
+    const a = pickVariant('guard', 42, day, 7);
+    assert.equal(a, pickVariant('guard', 42, day, 7)); // deterministic
+    assert.ok(VARIANTS.guard.includes(a));
+    assert.notEqual(pickVariant('knight', 42, day, 9, new Set([a])), a);
+    seen.add(a);
+  }
+  assert.equal(seen.size, VARIANTS.guard.length);
+});

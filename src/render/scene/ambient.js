@@ -1,5 +1,5 @@
-// Everyday shots that fill the video when there is time: a guard patrolling the castle wall walk, or
-// farmers hoeing in the fields. Same interface as the story scenes: { group, labels, banner, cam, update }.
+// Everyday shots that fill the video when there is time: a guard patrolling the castle wall walk, guards
+// sparring in the courtyard (drills.js), or farmers hoeing in the fields. Same interface as the story scenes: { group, labels, banner, cam, update }.
 import * as THREE from 'three';
 import { JOBS } from '../../sim/tiers.js';
 import { heightAt } from '../../sim/world.js';
@@ -10,7 +10,7 @@ import { person, stride, castTag } from './stories/common.js';
 const SPEED = 1.1;
 
 /** A guard walking along the north wall walk, the camera ahead of them looking back. */
-export function buildPatrol({ castle, M, hero, lang }) {
+export function buildPatrol({ castle, M, hero, lang, tag = true }) {
   const walk = castle.guardWalks[0];
   const a = new THREE.Vector3(...walk.a), b = new THREE.Vector3(...walk.b);
   const dir = b.clone().sub(a).normalize();
@@ -23,13 +23,15 @@ export function buildPatrol({ castle, M, hero, lang }) {
   helm.castShadow = true;
   P.body.add(helm);
   group.add(P.root);
-  const labels = hero ? [castTag(hero, lang, lang === 'it' ? 'Di ronda' : 'On patrol')] : [];
+  const labels = hero && tag ? [castTag(hero, lang, lang === 'it' ? 'Di ronda' : 'On patrol')] : [];
+  const labelPos = new THREE.Vector3(); // above the guard's head, for a big name label (villager shots)
   const at = (u) => a.clone().addScaledVector(dir, len * (0.25 + 0.3 * u));
   // the courtyard side of the north wall is +z
   const inside = new THREE.Vector3(0, 0, 1);
   return {
     group,
     labels,
+    labelPos,
     banner: lang === 'it' ? 'Ronda sulle mura' : 'Watch on the walls',
     focus: at(0.5).setY(a.y + 1.2),
     cam(u) {
@@ -46,7 +48,8 @@ export function buildPatrol({ castle, M, hero, lang }) {
       stride(P, (t - t0) * SPEED * 3.4, 0.45, { arms: false });
       P.r.g.rotation.set(-0.35, 0, 0); // spear upright at the shoulder
       P.l.g.rotation.x = 0.3 * Math.sin((t - t0) * SPEED * 3.4);
-      if (labels[0]) labels[0].pos.copy(g).setY(a.y + 2.4);
+      labelPos.copy(g).setY(a.y + 2.4);
+      if (labels[0]) labels[0].pos.copy(labelPos);
     },
   };
 }

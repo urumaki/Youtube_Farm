@@ -63,7 +63,7 @@ export function rig(M, color, { seated = false, walk = false } = {}) {
   return { root, body, r: arm(1), l: arm(-1), legs: walkLegs, tunic };
 }
 
-function particles(count, color, size, additive) {
+export function particles(count, color, size, additive) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
   const mat = new THREE.PointsMaterial({ color, size, sizeAttenuation: true, transparent: true, depthWrite: false, blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending, opacity: additive ? 1 : 0.85 });

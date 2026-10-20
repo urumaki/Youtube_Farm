@@ -119,8 +119,8 @@ export function createOverlay(root, data) {
       // labels for the active target, projected and clamped to the safe zone
       for (const [, el] of labelEls) el.style.display = 'none';
       const tg = ev.active;
-      // a walking villager is tiny until the camera has landed in front of them
-      const u0 = tg?.kind === 'villager' ? 0.4 : 0.12;
+      // after a flight the villager is tiny until the camera has landed in front of them
+      const u0 = tg?.kind === 'villager' && !tg.cut && !tg.cutIn ? 0.4 : 0.12;
       if (tg && tg.label && !tg.labels && ev.activeU > u0 && ev.activeU < 0.97) {
         let el = labelEls.get(tg);
         if (!el) {
@@ -139,6 +139,11 @@ export function createOverlay(root, data) {
         const cy = Math.min(sh - 260, Math.max(hEl + 10, y - 30));
         el.style.left = `${cx}px`; el.style.top = `${cy}px`;
         el.style.opacity = Math.min(1, (ev.activeU - u0) * 8, (0.97 - ev.activeU) * 12);
+        // the name label pops in with a small overshoot
+        const k = Math.min(1, (ev.activeU - u0) * 6);
+        const pop = k >= 1 ? 1 : 0.55 + 0.45 * (1 + 2.2 * (k - 1) ** 3 + 1.2 * (k - 1) ** 2);
+        el.style.transformOrigin = '50% 100%';
+        el.style.transform = `translate(-50%,-100%) scale(${pop.toFixed(3)})`;
       }
       // many small name tags (the caravan): nearest first, hidden when they would overlap
       for (const el of tagEls) el.style.display = 'none';

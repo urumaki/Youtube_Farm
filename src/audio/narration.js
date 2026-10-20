@@ -37,6 +37,7 @@ const T = {
     // everyday shots (src/render/scene/ambient.js)
     ambient: {
       patrol: ['Up on the walls, the guards keep watch.', 'The castle guards walk their rounds.'],
+      sparring: ['In the castle yard, the guards train with sword and shield.', 'Clang! The guards practise in the courtyard.'],
       fields: ['Out in the fields, the farmers work the soil.', 'In the fields, the hoes never rest.'],
     },
     tavern: ['Meanwhile, the tavern is full tonight!', 'Over at the tavern, the mugs are full!', 'At the tavern, the cider is flowing!'],
@@ -92,6 +93,7 @@ T.it = {
   },
   ambient: {
     patrol: ['Sulle mura, le guardie fanno la ronda.'],
+    sparring: ['Nel cortile del castello, le guardie si allenano con spada e scudo.'],
     fields: ['Nei campi, i contadini lavorano la terra.'],
   },
   tavern: ['Intanto la taverna è piena!', 'In taverna i boccali sono pieni!'],

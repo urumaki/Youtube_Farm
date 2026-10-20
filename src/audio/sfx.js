@@ -338,9 +338,10 @@ const SCENES = {
   ev_storm: [['rain', 0.75], ['thunder', 0.8]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
+  sparring: [['chatter', 0.12]],
 };
 
-/** One impact, synced to a strike in the animation (blacksmith, woodcutter, farmer, mason). */
+/** One impact, synced to a strike in the animation (blacksmith, woodcutter, farmer, mason, guards training). */
 function hit(kind, r) {
   const o = buf(kind === 'anvil' ? 0.9 : 0.4);
   if (kind === 'anvil') {
@@ -353,6 +354,13 @@ function hit(kind, r) {
   } else if (kind === 'hoe') {
     modes(o, 0, [[r.float(95, 130), 0.6, 0.07]], 0.6, r);
     noiseBurst(o, 0, 0.09, 0.55, r, [new Biquad('lp', 900)]);
+  } else if (kind === 'clang') { // two swords meeting: a short bright ring
+    const f = r.float(1500, 1900);
+    modes(o, 0, [[f, 0.5, 0.18], [f * 2.41, 0.35, 0.1], [f * 3.9, 0.2, 0.06], [f * 0.63, 0.25, 0.08]], 0.55, r);
+    noiseBurst(o, 0, 0.012, 0.6, r, [new Biquad('hp', 2800)]);
+  } else if (kind === 'straw') { // a blade into the straw dummy: a dull thump and a rustle
+    modes(o, 0, [[r.float(110, 150), 0.6, 0.06]], 0.5, r);
+    noiseBurst(o, 0, 0.12, 0.5, r, [new Biquad('bp', 2200, 0.8)]);
   } else if (kind === 'chisel') {
     modes(o, 0, [[r.float(2100, 2600), 0.4, 0.03], [r.float(5200, 6000), 0.2, 0.015]], 0.5, r);
     noiseBurst(o, 0, 0.015, 0.4, r, [new Biquad('hp', 2500)]);
@@ -364,7 +372,7 @@ const WORK_BEDS = { blacksmith: [['fire', 0.25]], toolsmith: [['fire', 0.25]], b
 function sceneFor(cue) {
   if (cue.kind === 'house') return cue.rebuilt ? 'rebuilt' : 'house';
   if (cue.kind === 'loss') return 'loss';
-  if (cue.kind === 'villager') return null; // handled with synced strikes below
+  if (cue.kind === 'villager') return cue.variant === 'walls' ? 'patrol' : cue.variant === 'sparring' ? 'sparring' : null; // work: synced strikes below
   if (cue.kind === 'caravan') return 'caravan';
   if (cue.kind === 'tavern') return 'tavern';
   if (cue.kind === 'ambient') return SCENES[cue.id] ? cue.id : null; // the fields: hoe strikes below
@@ -414,7 +422,7 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
   for (const cue of cues.filter((c) => c.kind === 'villager' || (c.kind === 'ambient' && c.strikes?.length))) {
     const len = cue.t1 - cue.t0 + 0.4;
     for (const [name, gain] of WORK_BEDS[cue.job] || []) place(sound(name, len, r, workDir), cue.t0 - 0.2, gain, cue.pan ?? 0);
-    for (const ts of cue.strikes || []) place(hit(cue.strikeSound, r), ts - 0.005, cue.strikeSound === 'anvil' ? 0.6 : 0.75, cue.pan ?? 0, 0.002, 0.3);
+    for (const ts of cue.strikes || []) place(hit(cue.strikeSound, r), ts - 0.005, cue.strikeSound === 'anvil' || cue.strikeSound === 'clang' ? 0.6 : 0.75, cue.pan ?? 0, 0.002, 0.3);
   }
   // wide shot: a distant bell if the kingdom has one; chains again as the bridge rises for the loop
   if (cues.some((c) => c.hasChapel)) place(sound('bell', 4.5, r, workDir), 23.9, 0.18, -0.3, 0.2, 1.2);

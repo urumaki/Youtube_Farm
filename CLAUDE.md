@@ -64,9 +64,15 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   `featured` use the old rule to know what the previous video showed.
 - `npm run render -- --day 2026-10-20` renders a saved day again with today's code (read only,
   `output/<day>_<lang>_again.mp4`). Replacing a published video is the owner's call.
-- Everyday shots (`src/render/scene/ambient.js`, owner 2026-10-20): when the update has room, a guard
-  patrolling the castle wall walk (odd days, and in winter) or farmers hoeing in the field nearest the
-  castle (even days), never a job already shown yesterday or today; a named guard or farmer not shown elsewhere gets the name tag.
+- Everyday shots (`src/render/scene/ambient.js`, owner 2026-10-20): when the update has room, guards
+  (odd days, and in winter: patrolling the castle wall walk or sparring in the courtyard) or farmers
+  hoeing in the field nearest the castle (even days), never a job already shown yesterday or today; a
+  named guard or farmer not shown elsewhere gets the name tag.
+- Villager shots vary (owner 2026-10-20): guards, knights and warriors get one of several scenes per day
+  (`VARIANTS` in `timeline.js`: on the walls, sparring with another guard, cutting at a straw dummy;
+  `drills.js`), and the croft shots cut in hard and move the camera a different way each time
+  (`CAM_STYLES`: push in, pull back from the hands, orbit, low angle). Name labels pop in. More jobs can
+  get variants the same way.
 - In-between goals (owner, 2026-10-20): tier at 175 (Town Crier + Crier's Stand) and 750 (Executioner,
   who chops cabbages, + Pillory). Their structures are virtual lots on the market square (`onPlaza`), so
   house plots never move. Only add tiers above the current population, or existing villagers change job.

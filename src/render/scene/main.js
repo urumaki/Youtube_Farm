@@ -18,6 +18,7 @@ import { buildCaravan } from './caravan.js';
 import { buildTavernInterior } from './tavern.js';
 import { buildStory } from './stories/index.js';
 import { buildPatrol, buildFields } from './ambient.js';
+import { buildSparring, buildDummyDrill } from './drills.js';
 import { heightAt } from '../../sim/world.js';
 
 const FPS = 30;
@@ -91,14 +92,25 @@ async function setup(data) {
   const stories = [];
   const yFn = (x, z) => heightAt(w, x, z) + 0.03;
   if (plan) for (const tg of plan.targets) {
-    if (tg.kind === 'villager') {
+    if (tg.kind === 'villager' && (tg.variant === 'walls' || tg.variant === 'sparring')) {
+      // a guard on the castle walls or sparring in the courtyard, with the big name label
+      const hero = { id: tg.id, name: tg.label.title, job: tg.sceneJob };
+      const st = tg.variant === 'walls' ? buildPatrol({ castle, M, hero, lang: data.lang, tag: false }) : buildSparring({ M, seed: state.seed, hero, lang: data.lang, tag: false });
+      scene.add(st.group);
+      tg.cam = st.cam;
+      tg.labelPos = st.labelPos;
+      tg.pos.copy(st.focus);
+      if (st.work) tg.work = st.work;
+      stories.push({ st, tg });
+    } else if (tg.kind === 'villager') {
       const v = state.villagers[tg.id];
       const sh = houses.shapes.get(v.house);
       const c = Math.cos(sh.rot), s = Math.sin(sh.rot);
       const ax = -s * sh.side, az = c * sh.side; // from the house toward its croft
       const anchor = new THREE.Vector3(sh.x + ax * (sh.D / 2 + 4.2), 0, sh.z + az * (sh.D / 2 + 4.2));
       anchor.y = yFn(anchor.x, anchor.z);
-      const ws = buildWorkScene({ job: tg.sceneJob || v.job, anchor, face: Math.atan2(ax, az) + 1.1, M, seed: state.seed, id: tg.id });
+      const make = tg.variant === 'dummy' ? buildDummyDrill : buildWorkScene;
+      const ws = make({ job: tg.sceneJob || v.job, anchor, face: Math.atan2(ax, az) + 1.1, M, seed: state.seed, id: tg.id });
       scene.add(ws.group);
       works.push(ws);
       tg.work = ws;
@@ -130,7 +142,9 @@ async function setup(data) {
       if (st.focus) tg.pos.copy(st.focus);
       stories.push({ st, tg });
     } else if (tg.kind === 'ambient') {
-      const st = tg.id === 'patrol' ? buildPatrol({ castle, M, hero: tg.hero, lang: data.lang }) : buildFields({ w, M, seed: state.seed, hero: tg.hero, lang: data.lang });
+      const st = tg.id === 'patrol' ? buildPatrol({ castle, M, hero: tg.hero, lang: data.lang })
+        : tg.id === 'sparring' ? buildSparring({ M, seed: state.seed, hero: tg.hero, lang: data.lang })
+          : buildFields({ w, M, seed: state.seed, hero: tg.hero, lang: data.lang });
       if (!st) continue;
       scene.add(st.group);
       tg.labels = st.labels;
@@ -152,7 +166,7 @@ async function setup(data) {
     cues: plan?.targets.map((t, i) => ({
       kind: t.kind, id: t.id ?? null, t0: t.t0, t1: t.t1, completed: t.completed ?? null, rebuilt: !!t.rebuilt, pan: i % 2 ? 0.25 : -0.25,
       hasChapel: state.buildings.some((b) => (b.id === 'chapel' || b.id === 'cathedral') && b.status === 'done'),
-      job: t.sceneJob ?? t.job ?? null, strikes: t.work ? t.work.strikeTimes(t.t0, t.t1) : [], strikeSound: t.work?.sound ?? null,
+      job: t.sceneJob ?? t.job ?? null, variant: t.variant ?? null, strikes: t.work ? t.work.strikeTimes(t.t0, t.t1) : [], strikeSound: t.work?.sound ?? null,
     })) ?? [],
   };
   window.__ctx = ctx;
@@ -169,8 +183,10 @@ function applyFrame(ctx, t) {
   const ev = evaluate(plan, t);
   const inside = ev.active?.kind === 'tavern';
   if (ctx.tavern) ctx.tavern.update(t, inside);
-  // flights between shots can dip into a hill: keep the camera a few metres above the ground
-  const ground = heightAt(ctx.w, ev.camera.pos.x, ev.camera.pos.z) + 3;
+  // flights between shots can dip into a hill: keep the camera a few metres above the ground (less in the
+  // villager shots, which film people from eye level and below)
+  const low = !ev.flying && ev.active?.kind === 'villager';
+  const ground = heightAt(ctx.w, ev.camera.pos.x, ev.camera.pos.z) + (low ? 0.6 : 3);
   if (!inside && ev.camera.pos.y < ground) ev.camera.pos.y = ground;
   camera.position.copy(ev.camera.pos);
   camera.lookAt(ev.camera.look);

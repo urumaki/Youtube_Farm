@@ -5,12 +5,19 @@ import { BUILDINGS, JOBS, tavernScene } from '../../sim/tiers.js';
 import { CASTLE } from '../../sim/world.js';
 import { NIGHT_STORIES } from './stories/index.js';
 import { pickFeatured } from '../../sim/featured.js';
+import { rand01 } from '../../sim/prng.js';
 
 export const DURATION = 30;
 // the wide shot with the goal and the end credits is short (3.5 s) so the daily update keeps the time
 const HOOK = 2, UPDATE_END = 23.5, WIDE_END = 27;
 const CARAVAN_SECONDS = 4.5, STORY_SECONDS = 4.5;
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
+// Owner (2026-10-20): a guard is not always shown the same way. Each fighting job has a few scenes, one
+// picked per villager and day: on the castle walls, sparring in the courtyard, or at the straw dummy.
+export const VARIANTS = { guard: ['walls', 'sparring', 'dummy'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'] };
+const CASTLE_VARIANTS = new Set(['walls', 'sparring']); // own camera at the castle, a hard cut in and out
+// the croft shots move the camera in different ways, never the same way twice in a row
+export const CAM_STYLES = ['push', 'reveal', 'orbit', 'low'];
 
 export function makePlan({ state, diff, houses, animated, buildings, castle, maxTargets = 7 }) {
   const targets = [];
@@ -62,12 +69,21 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const featured = diff.featured || pickFeatured(state);
   const picked = featured.map((f) => named.find((n) => n.id === f.id)).filter((n) => n && !keepers.includes(n));
   const atWork = picked.slice(0, tavern ? 2 : people ? 3 : Math.min(3, Math.max(2, maxTargets - targets.length - 2)));
+  const camFrom = Math.floor(rand01(state.seed, 'camstyle', state.day) * CAM_STYLES.length);
+  const usedVariants = new Set();
+  let crofts = 0;
   for (const n of atWork) {
     const apprentice = n.job === 'apprentice' && n.wants;
     const sub = apprentice ? `Apprentice ${jobLabel(n.wants)}` : jobLabel(n.job);
+    const sceneJob = apprentice ? n.wants : n.job;
+    const variant = pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants);
+    if (variant) usedVariants.add(variant);
+    const castleShot = CASTLE_VARIANTS.has(variant);
     targets.push({
-      kind: 'villager', id: n.id, job: n.job, sceneJob: apprentice ? n.wants : n.job, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
-      label: { title: n.name, sub }, work: null, weight: 1.1,
+      kind: 'villager', id: n.id, job: n.job, sceneJob, variant, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
+      // a hard cut into each villager (a flight down into a croft only shows roofs and grass)
+      label: { title: n.name, sub }, work: null, weight: 1.1, cut: castleShot, cutIn: true,
+      camStyle: castleShot ? null : CAM_STYLES[(camFrom + crofts++) % CAM_STYLES.length],
     });
   }
   // an everyday shot when there is time for it: a guard patrolling the castle walls or farmers hoeing
@@ -77,12 +93,14 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   let ambient = null;
   if (people && flexible <= (tavern ? 3 : 4)) {
     // not a job the previous video or today's workers already showed (diff.avoidJobs: yesterday's jobs)
-    const seen = new Set([...(diff.avoidJobs || []), ...atWork.map((n) => n.job)]);
+    const seen = new Set([...(diff.avoidJobs || []), ...atWork.map((n) => n.job), ...atWork.map((n) => n.wants).filter(Boolean)]);
     const wallsOk = state.unlockedTiers.includes('guard') && !['guard', 'knight', 'warrior'].some((j) => seen.has(j));
     const fieldsOk = !winter && !seen.has('farmer') && !seen.has('peasant');
-    const id = wallsOk && (state.day % 2 === 1 || !fieldsOk) ? 'patrol' : fieldsOk ? 'fields' : null;
+    // the guards either walk the walls or spar in the courtyard
+    const guards = rand01(state.seed, 'ambient', state.day) < 0.5 ? 'patrol' : 'sparring';
+    const id = wallsOk && (state.day % 2 === 1 || !fieldsOk) ? guards : fieldsOk ? 'fields' : null;
     if (id) {
-      const jobs = id === 'patrol' ? ['guard', 'knight', 'warrior'] : ['farmer', 'peasant'];
+      const jobs = id === 'fields' ? ['farmer', 'peasant'] : ['guard', 'knight', 'warrior'];
       const hero = named.find((n) => jobs.includes(n.job) && !atWork.includes(n) && !keepers.includes(n)) || null;
       ambient = { kind: 'ambient', id, pos: castle.keep.clone(), radius: 8, front: 0, label: null, labels: [], weight: 1.1, cut: true,
         hero: hero && { id: hero.id, name: hero.name, job: hero.job }, sceneJob: id === 'fields' ? 'farmer' : null };
@@ -169,6 +187,15 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   return { targets, center, extent: Math.max(size.x, size.z), story, dusk, start };
 }
 
+/** The scene for a villager of this job today (null: the job's only scene), not one already used today. */
+export function pickVariant(job, seed, day, id, used = new Set()) {
+  const opts = VARIANTS[job];
+  if (!opts) return null;
+  const k = Math.floor(rand01(seed, 'variant', day, id) * opts.length);
+  for (let i = 0; i < opts.length; i++) if (!used.has(opts[(k + i) % opts.length])) return opts[(k + i) % opts.length];
+  return opts[k];
+}
+
 function pickSpread(n, k) {
   if (k <= 0) return [];
   if (k >= n) return [...Array(n).keys()];
@@ -194,10 +221,15 @@ function orbitPose(tg, u) {
   }
   if (tg.kind === 'villager' && tg.away !== undefined) {
     // at work in the croft: the camera stands on the open side, the house behind as a backdrop
-    const a = tg.away + 0.45 - 0.9 * u;
+    const R = tg.radius, e = ease(u);
+    let a, r, h, lookY;
+    if (tg.camStyle === 'push') { a = tg.away + 0.3 - 0.4 * u; r = R * (1.4 - 0.65 * e); h = 3.4 - 2.1 * e; lookY = -0.35 + 0.25 * e; } // from wide and high, a dolly in to a close shot
+    else if (tg.camStyle === 'reveal') { a = tg.away - 0.55 + 0.85 * e; r = 2.7 + (R - 2.7) * e; h = 0.75 + 1.0 * e; lookY = -0.4 + 0.3 * e; } // close on the hands, pulling back to show the scene
+    else if (tg.camStyle === 'low') { a = tg.away + 0.75 - 1.5 * u; r = R * 0.8; h = 0.1; lookY = 0.35; } // low angle, tracking past
+    else { a = tg.away + 0.45 - 0.9 * u; r = R; h = 1.7; lookY = -0.1; }
     return {
-      pos: new THREE.Vector3(tg.pos.x + Math.cos(a) * tg.radius, tg.pos.y + 1.7, tg.pos.z + Math.sin(a) * tg.radius),
-      look: tg.pos.clone().add(new THREE.Vector3(0, -0.1, 0)),
+      pos: new THREE.Vector3(tg.pos.x + Math.cos(a) * r, tg.pos.y + h, tg.pos.z + Math.sin(a) * r),
+      look: tg.pos.clone().add(new THREE.Vector3(0, lookY, 0)),
     };
   }
   const r = tg.radius;
@@ -243,10 +275,11 @@ export function evaluate(plan, t) {
     const u = (t - tg.t0) / (tg.t1 - tg.t0);
     const here = orbitPose(tg, u);
     // the first shot flies in from the hook, unless the video opens directly on it (caravan)
-    // shots marked `cut` (the tavern interior) start and end with a hard cut
-    const prev = tg.cut || plan.targets[i - 1]?.cut ? null : i <= 0 ? (start > 0 ? HOOK_TO : null) : orbitPose(plan.targets[i - 1], 1);
+    // shots marked `cut` (the tavern interior) start and end with a hard cut, `cutIn` only start with one
+    const prev = tg.cut || tg.cutIn || plan.targets[i - 1]?.cut ? null : i <= 0 ? (start > 0 ? HOOK_TO : null) : orbitPose(plan.targets[i - 1], 1);
     const flyT = Math.min(1.1, (tg.t1 - tg.t0) * 0.35);
-    pose = prev && t - tg.t0 < flyT ? fly(prev, here, (t - tg.t0) / flyT) : here;
+    out.flying = !!prev && t - tg.t0 < flyT;
+    pose = out.flying ? fly(prev, here, (t - tg.t0) / flyT) : here;
     out.shadowRadius = Math.max(80, tg.radius * 2.6);
     out.active = tg;
     out.activeU = u;
