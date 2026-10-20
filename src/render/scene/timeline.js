@@ -18,13 +18,14 @@ const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 // on the castle walls, sparring in the courtyard or at the straw dummy; farmers hoeing, sowing or reaping...
 const FIGHTER_SCENES = ['walls', 'sparring', 'dummy'];
 export const VARIANTS = {
-  guard: FIGHTER_SCENES, knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
+  guard: [...FIGHTER_SCENES, 'night'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
   farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell', 'cart'], stonemason: ['block', 'stack'],
   blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw'],
-  baker: ['oven', 'knead'], fisherman: ['rod', 'net'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
+  baker: ['oven', 'knead'], fisherman: ['rod', 'net', 'boat'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
   innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
 };
-const CASTLE_VARIANTS = new Set(['walls', 'sparring']); // own camera at the castle, a hard cut in and out
+// scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
+export const AWAY_VARIANTS = new Set(['walls', 'sparring', 'boat', 'night']);
 // scenes inside a building (the baker's bakehouse, bakery.js): own camera, a hard cut in and out
 export const indoorScene = (job, variant) => job === 'baker' && BAKEHOUSE_VARIANTS.has(variant);
 // the croft shots move the camera in different ways, never the same way twice in a row
@@ -93,12 +94,12 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     // a host with a guest stays at home (the castle scenes have no croft to walk into)
     const variant = pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g });
     if (variant) usedVariants.add(variant);
-    const castleShot = CASTLE_VARIANTS.has(variant);
+    const castleShot = AWAY_VARIANTS.has(variant);
     const indoor = indoorScene(sceneJob, variant);
     targets.push({
       kind: 'villager', id: n.id, job: n.job, sceneJob, variant, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
       // a hard cut into each villager (a flight down into a croft only shows roofs and grass)
-      label: { title: n.name, sub: jobSub(n) }, work: null, weight: g ? 1.45 : 1.1, cut: castleShot || indoor, cutIn: true, interior: indoor,
+      label: { title: n.name, sub: jobSub(n) }, work: null, weight: g ? 1.45 : 1.1, cut: castleShot || indoor, cutIn: true, interior: indoor, phase: variant === 'night' ? 1 : undefined,
       camStyle: castleShot || indoor ? null : CAM_STYLES[(camFrom + crofts++) % CAM_STYLES.length],
       ...(g ? { pair: f.pair, guest: { id: g.id, name: g.name, job: g.job }, label2: { title: g.name, sub: jobSub(g) }, labelPos2: new THREE.Vector3() } : {}),
     });
@@ -206,7 +207,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
 
 /** The scene for a villager of this job today (null: the job's only scene), not one already used today. */
 export function pickVariant(job, seed, day, id, used = new Set(), { croft = false } = {}) {
-  const opts = VARIANTS[job]?.filter((v) => !(croft && CASTLE_VARIANTS.has(v)));
+  const opts = VARIANTS[job]?.filter((v) => !(croft && AWAY_VARIANTS.has(v)));
   if (!opts?.length) return null;
   const k = Math.floor(rand01(seed, 'variant', day, id) * opts.length);
   for (let i = 0; i < opts.length; i++) if (!used.has(opts[(k + i) % opts.length])) return opts[(k + i) % opts.length];

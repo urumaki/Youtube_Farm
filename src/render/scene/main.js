@@ -11,7 +11,7 @@ import { buildBuildings } from './buildings.js';
 import { buildNature } from './nature.js';
 import { buildLife } from './life.js';
 import { buildEnvironment } from './env.js';
-import { makePlan, evaluate, indoorScene } from './timeline.js';
+import { makePlan, evaluate, indoorScene, AWAY_VARIANTS } from './timeline.js';
 import { createOverlay } from './overlay.js';
 import { buildWorkScene, sceneOf } from './work.js';
 import { buildCaravan } from './caravan.js';
@@ -19,6 +19,7 @@ import { buildTavernInterior } from './tavern.js';
 import { buildStory } from './stories/index.js';
 import { buildPatrol, buildFields } from './ambient.js';
 import { buildSparring, buildDummyDrill } from './drills.js';
+import { buildBoat, buildNightWatch } from './away.js';
 import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
 import { heightAt } from '../../sim/world.js';
@@ -95,6 +96,13 @@ async function setup(data) {
   const stories = [];
   const yFn = (x, z) => heightAt(w, x, z) + 0.03;
   const interiors = []; // villagers working inside a building (the baker's bakehouse), lit while the camera is in
+  const awayScene = (variant, hero, home) => {
+    const ground = (x, z) => heightAt(w, x, z);
+    return variant === 'walls' ? buildPatrol({ castle, M, hero, lang: data.lang, tag: false })
+      : variant === 'sparring' ? buildSparring({ M, seed: state.seed, hero, lang: data.lang, tag: false })
+        : variant === 'boat' ? buildBoat({ w, M, hero, home, heightAt: ground })
+          : buildNightWatch({ w, M, hero, home, heightAt: ground });
+  };
   // the work scene in a croft: the bakehouse for bakers, the straw dummy for fighters, else work.js
   const workScene = ({ job, variant, anchor, ax, az, away, id }) => {
     if (indoorScene(job, variant)) return buildBakehouse({ variant, anchor, away, M, seed: state.seed, id, heightAt: (x, z) => heightAt(w, x, z) });
@@ -110,10 +118,12 @@ async function setup(data) {
     return make({ job, variant, anchor, face: Math.atan2(ax, az) + (sceneOf(job, variant).turn ?? 1.1), M, seed: state.seed, id });
   };
   if (plan) for (const tg of plan.targets) {
-    if (tg.kind === 'villager' && (tg.variant === 'walls' || tg.variant === 'sparring')) {
-      // a guard on the castle walls or sparring in the courtyard, with the big name label
+    if (tg.kind === 'villager' && AWAY_VARIANTS.has(tg.variant)) {
+      // away from the croft, with the big name label: a guard on the castle walls, sparring in the courtyard
+      // or on the night watch; a fisherman out in a boat
       const hero = { id: tg.id, name: tg.label.title, job: tg.sceneJob };
-      const st = tg.variant === 'walls' ? buildPatrol({ castle, M, hero, lang: data.lang, tag: false }) : buildSparring({ M, seed: state.seed, hero, lang: data.lang, tag: false });
+      const st = awayScene(tg.variant, hero, houses.shapes.get(state.villagers[tg.id].house));
+      st.setWindow?.(tg.t0, tg.t1);
       scene.add(st.group);
       tg.cam = st.cam;
       tg.labelPos = st.labelPos;
@@ -194,6 +204,12 @@ async function setup(data) {
     const away = Math.atan2(az, ax);
     ctx0.galleryAway = away;
     ctx0.gallery = data.gallery.map((g, i) => {
+      if (AWAY_VARIANTS.has(g.variant)) { // scenes with their own camera, played over 3 s
+        const st = awayScene(g.variant, { id: 9100 + i, name: 'Test', job: g.job }, sh);
+        st.setWindow?.(0, 3);
+        scene.add(st.group);
+        return { ws: { group: st.group, update: (t) => st.update(t, 0, 3) }, st, focus: st.focus };
+      }
       const ws = workScene({ job: g.job, variant: g.variant, anchor, ax, az, away, id: 9100 + i });
       scene.add(ws.group);
       if (ws.room) scene.add(ws.room);
@@ -302,6 +318,11 @@ async function galleryShot(i, t, turn = 0.25) {
   g.ws.update(t, !!g.ws.room);
   g.visit?.update(t);
   if (g.visit) g.visit.group.visible = true;
+  if (g.st) {
+    g.st.group.visible = true;
+    const c = g.st.cam(Math.min(1, t / 3));
+    return shot(c.pos.toArray(), c.look.toArray(), 10, g.st.phase);
+  }
   if (g.ws.room) { // inside the bakehouse: its own camera and lights (the gallery shot lasts 3 s)
     const c = g.ws.cam(Math.min(1, t / 3), !!g.visit);
     return shot(c.pos.toArray(), c.look.toArray(), 10, undefined, 1, c.fov);
