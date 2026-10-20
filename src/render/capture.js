@@ -106,7 +106,9 @@ export async function renderVideo(data, outFile, { audioFile, audio, log = conso
     else args.push('-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=48000');
     args.push(
       '-map', '0:v:0', '-map', '1:a:0',
-      '-c:v', 'libx264', '-preset', process.env.X264_PRESET || 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-r', String(FPS),
+      // JPEG frames are full range; newer ffmpeg keeps that (yuvj420p). Convert to limited-range yuv420p for players.
+      '-vf', 'scale=in_range=full:out_range=limited',
+      '-c:v', 'libx264', '-preset', process.env.X264_PRESET || 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-color_range', 'tv', '-r', String(FPS),
       '-profile:v', 'high', '-level', '4.2', '-g', String(FPS * 2),
       '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-ac', '2',
       '-t', String(DURATION), '-movflags', '+faststart', outFile,

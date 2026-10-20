@@ -4,9 +4,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { readWav, writeWav, speechBounds } from '../wav.js';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const exe = process.platform === 'win32' ? '.exe' : '';
 const GAP = 0.28; // seconds between sentences
 

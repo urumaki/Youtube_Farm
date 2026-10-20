@@ -25,7 +25,9 @@ export function mixSoundtrack({ narration, outDir, seed, date, weather, cues = [
     `[1:a]aresample=48000,aformat=channel_layouts=stereo,aloop=loop=-1:size=2e9,volume=0.42[m]`,
     `[m][key]sidechaincompress=threshold=0.03:ratio=8:attack=20:release=350:makeup=1[md]`,
     `[2:a]aresample=48000,aformat=channel_layouts=stereo,apad,volume=0.9[a]`,
-    `[v][md][a]amix=inputs=3:duration=longest:normalize=0,atrim=0:${duration},afade=t=out:st=${duration - 0.6}:d=0.6,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[out]`,
+    // amix divides by the input count; volume=3 undoes it (same as normalize=0, which ffmpeg < 4.4 lacks).
+    // All three inputs are padded or looped forever, so the divisor stays 3 for the whole mix.
+    `[v][md][a]amix=inputs=3:duration=longest,volume=3,atrim=0:${duration},afade=t=out:st=${duration - 0.6}:d=0.6,loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000[out]`,
   ].join(';');
   const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', narration, '-i', music, '-i', amb, '-filter_complex', filter, '-map', '[out]', '-t', String(duration), '-c:a', 'aac', '-b:a', '192k', out], { encoding: 'utf8' });
   if (r.status !== 0) throw new Error('ffmpeg mix failed: ' + r.stderr);
