@@ -46,7 +46,7 @@ export function kokoroConfig(lang, env = process.env) {
   };
 }
 
-function kokoro(sentences, { lang, outDir, speed }) {
+function kokoro(sentences, { lang, outDir, speed, limit }) {
   const cfg = kokoroConfig(lang);
   if (!fs.existsSync(cfg.model) || !fs.existsSync(cfg.voices)) throw new Error(`kokoro model not found in ${path.dirname(cfg.model)} (run npm run setup:tts)`);
   const script = path.join(ROOT, 'scripts', 'py', 'kokoro_tts.py');
@@ -54,31 +54,50 @@ function kokoro(sentences, { lang, outDir, speed }) {
     input: sentences.map((s) => s.text.replace(/\s+/g, ' ')).join('\n'), encoding: 'utf8', maxBuffer: 1 << 24,
   });
   if (r.status !== 0) throw new Error(`kokoro failed: ${(r.stderr || r.error?.message || '').slice(-400)}`);
-  return assemble(sentences, sentences.map((_, i) => readWav(path.resolve(outDir, `tts_${i}.wav`))), outDir, 'kokoro');
+  return assemble(sentences, sentences.map((_, i) => readWav(path.resolve(outDir, `tts_${i}.wav`))), outDir, 'kokoro', limit);
 }
 
-/** Trim each sentence to its audible span, join with short pauses, time the words. */
-function assemble(sentences, parts, outDir, provider) {
-  const rate = parts[0].rate;
-  const chunks = [], words = [];
+/**
+ * When each sentence starts: right after the previous one, or later at its anchor (`at`, seconds on the
+ * narration track) so it lines up with its shot; never so late that the rest no longer fits in `limit`.
+ */
+export function schedule(lengths, anchors = [], limit = Infinity) {
+  const n = lengths.length, starts = [];
+  const rest = new Array(n + 1).fill(0); // speech still to come from sentence i on, with pauses
+  for (let i = n - 1; i >= 0; i--) rest[i] = rest[i + 1] + lengths[i] + GAP;
   let t = 0;
-  parts.forEach((p, i) => {
+  for (let i = 0; i < n; i++) {
+    const at = anchors[i];
+    if (at !== null && at !== undefined) t = Math.max(t, Math.min(at, limit - rest[i] + GAP));
+    starts.push(t);
+    t += lengths[i] + GAP;
+  }
+  return starts;
+}
+
+/** Trim each sentence to its audible span, place it at its scheduled start, time the words. */
+function assemble(sentences, parts, outDir, provider, limit) {
+  const rate = parts[0].rate;
+  const segs = parts.map((p) => {
     const b = speechBounds(p);
     const a = Math.max(0, Math.floor((b.start - 0.03) * rate)), z = Math.min(p.samples.length, Math.ceil((b.end + 0.06) * rate));
-    const seg = p.samples.subarray(a, z);
-    words.push(...timeWords(sentences[i].text, t + 0.03, t + seg.length / rate - 0.06));
-    chunks.push(seg, new Float32Array(Math.round(GAP * rate)));
-    t += seg.length / rate + GAP;
+    return p.samples.subarray(a, z);
   });
-  const all = new Float32Array(chunks.reduce((n, c) => n + c.length, 0));
-  let o = 0;
-  for (const c of chunks) { all.set(c, o); o += c.length; }
+  const lengths = segs.map((g) => g.length / rate);
+  const starts = schedule(lengths, sentences.map((s) => s.at), limit);
+  const words = [];
+  const all = new Float32Array(Math.round((starts.at(-1) + lengths.at(-1) + GAP) * rate) + 1);
+  segs.forEach((g, i) => {
+    all.set(g, Math.min(all.length - g.length, Math.round(starts[i] * rate)));
+    words.push(...timeWords(sentences[i].text, starts[i] + 0.03, starts[i] + lengths[i] - 0.06));
+  });
   const file = path.join(outDir, 'narration.wav');
   writeWav(file, [all], rate);
-  return { file, duration: all.length / rate, words, provider };
+  // speech: the length without the waits for the shots (what a faster voice can shorten)
+  return { file, duration: all.length / rate, speech: lengths.reduce((a, b) => a + b + GAP, 0), words, provider };
 }
 
-function piper(sentences, { lang, outDir, lengthScale = 1 }) {
+function piper(sentences, { lang, outDir, lengthScale = 1, limit }) {
   const cfg = piperConfig(lang);
   if (!fs.existsSync(cfg.bin)) throw new Error(`piper binary not found at ${cfg.bin} (run npm run setup:piper)`);
   if (!fs.existsSync(cfg.model)) throw new Error(`piper voice not found at ${cfg.model}`);
@@ -91,7 +110,7 @@ function piper(sentences, { lang, outDir, lengthScale = 1 }) {
     if (r.status !== 0 || !fs.existsSync(out)) throw new Error(`piper failed: ${r.stderr?.slice(-400)}`);
     parts.push(readWav(out));
   });
-  return assemble(sentences, parts, outDir, 'piper');
+  return assemble(sentences, parts, outDir, 'piper', limit);
 }
 
 async function elevenlabs(sentences, { outDir, lang, env = process.env }) {
@@ -125,46 +144,47 @@ async function elevenlabs(sentences, { outDir, lang, env = process.env }) {
   return { file, duration: readWav(file).duration, words, provider: 'elevenlabs' };
 }
 
-function silent(sentences, { outDir }) {
-  const words = [];
-  let t = 0;
-  for (const s of sentences) {
-    const n = s.text.split(/\s+/).filter(Boolean).length;
-    words.push(...timeWords(s.text, t, t + n / 2.7));
-    t += n / 2.7 + GAP;
-  }
+function silent(sentences, { outDir, limit }) {
+  const lengths = sentences.map((s) => s.text.split(/\s+/).filter(Boolean).length / 2.7);
+  const starts = schedule(lengths, sentences.map((s) => s.at), limit);
+  const words = sentences.flatMap((s, i) => timeWords(s.text, starts[i], starts[i] + lengths[i]));
+  const t = starts.at(-1) + lengths.at(-1) + GAP;
   const rate = 22050, file = path.join(outDir, 'narration.wav');
   writeWav(file, [new Float32Array(Math.round(t * rate))], rate);
-  return { file, duration: t, words, provider: 'none' };
+  return { file, duration: t, speech: lengths.reduce((a, b) => a + b + GAP, 0), words, provider: 'none' };
 }
 
-/** Synthesize the script. maxDuration: if the voice runs long, retry faster (piper) before giving up. */
+/**
+ * Synthesize the script. maxDuration: if the voice runs long, retry faster before giving up.
+ * A sentence with `at` (seconds on the narration track) waits until then, to line up with its shot.
+ */
 export async function synthesize(sentences, { lang = 'en', outDir, provider = process.env.TTS_PROVIDER || 'kokoro', maxDuration = 28.3, log = console } = {}) {
   fs.mkdirSync(outDir, { recursive: true });
   const chain = { elevenlabs: ['elevenlabs', 'kokoro', 'piper', 'none'], kokoro: ['kokoro', 'piper', 'none'], piper: ['piper', 'none'], none: ['none'] }[provider] || ['kokoro', 'piper', 'none'];
   for (const p of chain) {
     try {
       if (p === 'elevenlabs') return await elevenlabs(sentences, { outDir, lang });
+      const limit = maxDuration;
       if (p === 'kokoro') {
         let speed = kokoroConfig(lang).speed;
-        let out = kokoro(sentences, { lang, outDir, speed });
-        for (let k = 0; k < 2 && out.duration > maxDuration; k++) {
-          speed = Math.min(1.35, speed * (out.duration / maxDuration) * 1.06);
-          out = kokoro(sentences, { lang, outDir, speed });
+        let out = kokoro(sentences, { lang, outDir, speed, limit });
+        for (let k = 0; k < 2 && out.speech > maxDuration; k++) {
+          speed = Math.min(1.35, speed * (out.speech / maxDuration) * 1.06);
+          out = kokoro(sentences, { lang, outDir, speed, limit });
         }
         return out;
       }
       if (p === 'piper') {
-        let out = piper(sentences, { lang, outDir });
-        if (out.duration > maxDuration) out = piper(sentences, { lang, outDir, lengthScale: Math.max(0.82, maxDuration / out.duration) });
+        let out = piper(sentences, { lang, outDir, limit });
+        if (out.speech > maxDuration) out = piper(sentences, { lang, outDir, limit, lengthScale: Math.max(0.82, maxDuration / out.speech) });
         return out;
       }
-      return silent(sentences, { outDir });
+      return silent(sentences, { outDir, limit });
     } catch (e) {
       log.error?.(`[tts] ${p} failed: ${e.message}`);
     }
   }
-  return silent(sentences, { outDir });
+  return silent(sentences, { outDir, limit: maxDuration });
 }
 
 /** Group timed words into short caption phrases (<= 4 words, <= 24 chars, never across a sentence end). */

@@ -36,6 +36,16 @@ export async function captureFrame(page, f, type = 'jpeg') {
   return page.screenshot({ type, quality: type === 'jpeg' ? 93 : undefined, clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT } });
 }
 
+/** The shot plan of a video (stats.cues: kind, t0, t1 per shot) without rendering any frame. */
+export async function sceneCues(data, { log = console } = {}) {
+  const { browser, page } = await openPage({ log });
+  try {
+    return (await setupScene(page, data)).cues || [];
+  } finally {
+    await browser.close();
+  }
+}
+
 /** Render stills at the given times (seconds) to PNG files. */
 export async function renderStills(data, times, outDir, { log = console } = {}) {
   const { browser, page, errors } = await openPage({ log });

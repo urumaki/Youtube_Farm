@@ -60,6 +60,10 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   house plots never move. Only add tiers above the current population, or existing villagers change job.
 - `src/audio/` narration templates (names are never read aloud), Kokoro TTS (`am_adam`), procedural
   music, camera-driven sound effects with strikes synced to the work animations (`sfx.js`).
+  The voice follows the shots: `produceVideo` first sets the scene up once to get the shot plan
+  (`sceneCues`), `sentenceAnchors` gives each sentence the start of the shot it talks about (goal at
+  23.7 s, call to action at 27.1 s), and `schedule` in `tts/index.js` waits for those times but never
+  so long that the rest no longer fits. On caravan days there is no "+N villagers" sentence.
 - `src/publish/` YouTube upload (resumable, OAuth); `state/published.json` prevents double uploads.
 - `.github/workflows/daily.yml` runs at 06:17 UTC (GitHub often starts it hours late);
   `voice-samples.yml` renders TTS samples on demand.

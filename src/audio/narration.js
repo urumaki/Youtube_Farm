@@ -137,11 +137,14 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
   const bname = (id) => (lang === 'it' ? BUILDING_IT[id] : BUILDINGS[id].label);
   const job = (j) => (lang === 'it' ? JOB_IT[j] : JOBS[j].label.toLowerCase());
   const S = []; // {text, role, priority} lower priority dropped first when too long
-  const add = (text, role, priority) => text && S.push({ text, role, priority });
+  const add = (text, role, priority, about = null) => text && S.push({ text, role, priority, job: about }); // about: the job it names
 
   add(pick(L.open)(diff), 'open', 9);
   const d = diff.delta;
-  if (d === 1) add(pick(L.up1), 'delta', 10);
+  // on caravan days the counter already shows "+N villagers" and the caravan sentence says it: the
+  // opening stays short enough to end with the caravan shot (4.5 s)
+  if ((diff.named || []).length && d >= 0) { /* no delta sentence */ }
+  else if (d === 1) add(pick(L.up1), 'delta', 10);
   else if (d > 1) add(pick(L.up)(d.toLocaleString('en-US')), 'delta', 10);
   else if (d === -1) add(pick(L.down1), 'delta', 10);
   else if (d < -1) add(pick(L.down)((-d).toLocaleString('en-US')), 'delta', 10);
@@ -150,20 +153,20 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
   // villagers named by commenters today are welcomed by job; otherwise up to two newcomers (special jobs first)
   if ((diff.named || []).length) add(pick(L.caravan)(diff.named.length), 'caravan', 9);
   const granted = (diff.requests || []).filter((q) => q.granted), waiting = (diff.requests || []).filter((q) => !q.granted);
-  if (granted.length) add(pick(L.granted)(granted.length, job(granted[0].job)), 'requests', 9);
+  if (granted.length) add(pick(L.granted)(granted.length, job(granted[0].job)), 'requests', 9, granted[0].job);
   if (waiting.length) add(pick(L.apprentice)(waiting.length), 'requests', 6);
-  if ((diff.promoted || []).length) add(pick(L.promoted)(job(diff.promoted[0].job)), 'requests', 8);
+  if ((diff.promoted || []).length) add(pick(L.promoted)(job(diff.promoted[0].job)), 'requests', 8, diff.promoted[0].job);
   const welcomed = (diff.named || []).slice(0, 3);
   const byJob = [...new Set(welcomed.map((v) => v.job))].slice(0, 2);
   byJob.forEach((j, i) => {
     const n = welcomed.filter((v) => v.job === j).length;
     const text = n > 1 && lang === 'en' ? `Welcome our ${n === 2 ? 'two' : 'three'} new ${plural(job(j))}!` : pick(L.welcome)({ job: job(j) });
-    add(text, 'person', 9 - i);
+    add(text, 'person', 9 - i, j);
   });
   if (!welcomed.length) {
     const special = diff.added.filter((v) => !['farmer', 'peasant'].includes(v.job));
     const shown = [...special, ...diff.added.filter((v) => !special.includes(v))].slice(0, special.length ? 2 : 1);
-    shown.forEach((v, i) => add(pick(L.person)({ job: job(v.job) }), 'person', 6 - i));
+    shown.forEach((v, i) => add(pick(L.person)({ job: job(v.job) }), 'person', 6 - i, v.job));
   }
   if (diff.story && L.story[diff.story.id]) { const f = pick(L.story[diff.story.id]); add(typeof f === 'function' ? f(diff.story) : f, 'story', 9); }
   // the tavern interior is shown on these days (see makePlan in src/render/scene/timeline.js)
@@ -196,7 +199,8 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
 
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
   // same order as the shots: caravan, new buildings, villagers at work, then the rest
-  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'requests', 'count', 'person', 'tavern', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
+  // the comment invitation comes with the named villagers (tavern), so the goal and the call to action keep the end
+  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'requests', 'count', 'person', 'tavern', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
     const victim = [...S].sort((a, b) => a.priority - b.priority)[0];
@@ -204,7 +208,34 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
     S.splice(S.indexOf(victim), 1);
   }
   const text = S.map((s) => s.text).join(' ');
-  return { sentences: S.map(({ text, role }) => ({ text, role })), text, words: words(text) };
+  return { sentences: S.map(({ text, role, job: about }) => ({ text, role, ...(about ? { job: about } : {}) })), text, words: words(text) };
+}
+
+// Which shot each kind of sentence talks about (see makePlan in src/render/scene/timeline.js).
+const SHOT_OF = {
+  story: (c) => c.kind === 'event', completed: (c) => c.kind === 'building', unlocked: (c) => c.kind === 'building',
+  requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', comment: (c) => c.kind === 'tavern',
+  houses: (c) => c.kind === 'house', rebuilt: (c) => c.kind === 'house', abandoned: (c) => c.kind === 'loss', ruined: (c) => c.kind === 'loss',
+};
+// fixed parts of the video: the wide shot with the goal (23.5 s) and the call to action (27 s)
+const FIXED_AT = { goal: 23.7, cta: 27.1 };
+
+/**
+ * Video time at which each sentence should start, so the narrator talks about what is on screen:
+ * the first sentence about a shot waits for that shot. null = right after the previous sentence.
+ * cues: the shots from the renderer ([{kind, t0, t1}]).
+ */
+export function sentenceAnchors(sentences, cues = []) {
+  const used = new Set();
+  return sentences.map((s) => {
+    if (FIXED_AT[s.role] !== undefined) return FIXED_AT[s.role];
+    const match = SHOT_OF[s.role];
+    // a sentence naming a job waits for that villager's shot; otherwise the next shot of its kind
+    const cue = match && (cues.find((c) => match(c) && s.job && c.job === s.job && !used.has(c)) || cues.find((c) => match(c) && !used.has(c)));
+    if (!cue) return null;
+    used.add(cue);
+    return cue.t0 + 0.25;
+  });
 }
 
 function goalIt(next) {

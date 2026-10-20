@@ -64,3 +64,18 @@ test('effects follow the camera: hammering on a house shot, nothing loud elsewhe
   assert.ok(peak < 0.99);
   assert.ok(rms(4, 7) < 0.05, 'background bed stays quiet');
 });
+
+test('narration waits for its shot: anchors from the shot plan, soft so everything still fits', async () => {
+  const { sentenceAnchors } = await import('../src/audio/narration.js');
+  const { schedule } = await import('../src/audio/tts/index.js');
+  const roles = ['open', 'caravan', 'story', 'completed', 'person', 'tavern', 'comment', 'goal', 'cta'];
+  const cues = [{ kind: 'caravan', t0: 0, t1: 4.5 }, { kind: 'event', t0: 4.5, t1: 9 }, { kind: 'building', t0: 9, t1: 11.7 },
+    { kind: 'villager', t0: 11.7, t1: 14.9 }, { kind: 'tavern', t0: 18.2, t1: 23.5 }];
+  const at = sentenceAnchors(roles.map((role) => ({ role })), cues);
+  assert.deepEqual(at.slice(0, 6), [null, null, 4.75, 9.25, 11.95, 18.45]);
+  const lengths = [1.8, 2.3, 3, 1.8, 1.6, 2, 2.2, 1.7, 2.4];
+  const starts = schedule(lengths, at, 28.3);
+  for (let i = 1; i < starts.length; i++) assert.ok(starts[i] >= starts[i - 1] + lengths[i - 1], 'no overlap');
+  assert.ok(Math.abs(starts[2] - 4.75) < 1e-9 && Math.abs(starts[5] - 18.45) < 1e-9, 'sentences start with their shots');
+  assert.ok(starts.at(-1) + lengths.at(-1) <= 28.3 + 1e-9, 'still ends in time');
+});

@@ -7,10 +7,10 @@ import { baseStateFor, saveDay, lastKnownCount, STATE_DIR } from './sim/state.js
 import { getSubscriberCount } from './fetch/youtube.js';
 import { fetchCommenters } from './fetch/comments.js';
 import { wantsFromText, nameFromText } from './sim/requests.js';
-import { buildScript } from './audio/narration.js';
+import { buildScript, sentenceAnchors } from './audio/narration.js';
 import { synthesize, captionPhrases } from './audio/tts/index.js';
 import { mixSoundtrack, VOICE_DELAY } from './audio/mix.js';
-import { renderVideo, renderStills } from './render/capture.js';
+import { renderVideo, renderStills, sceneCues } from './render/capture.js';
 import { publish } from './publish/index.js';
 
 export function today() {
@@ -65,7 +65,11 @@ export async function produceVideo(state, diff, { lang = 'en', out, quality, tts
   fs.mkdirSync(dir, { recursive: true });
   const script = buildScript(state, diff, { lang });
   log.log(`[audio] script (${script.words} words): ${script.text}`);
-  const voice = await synthesize(script.sentences, { lang, outDir: dir, provider: tts, log });
+  // the shot plan first, so each sentence can wait for the shot it talks about
+  const cues = await sceneCues({ mode: 'video', state, diff, lang, quality }, { log });
+  const anchors = sentenceAnchors(script.sentences, cues);
+  const sentences = script.sentences.map((s, i) => ({ ...s, at: anchors[i] === null ? null : anchors[i] - VOICE_DELAY }));
+  const voice = await synthesize(sentences, { lang, outDir: dir, provider: tts, log });
   log.log(`[audio] ${voice.provider} narration ${voice.duration.toFixed(2)} s`);
   const captions = captionPhrases(voice.words, VOICE_DELAY);
   const data = { mode: 'video', state, diff, lang, captions, quality };
