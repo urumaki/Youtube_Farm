@@ -376,7 +376,7 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
     for (const ts of cue.strikes || []) place(hit(cue.strikeSound, r), ts - 0.005, cue.strikeSound === 'anvil' ? 0.6 : 0.75, cue.pan ?? 0, 0.002, 0.3);
   }
   // wide shot: a distant bell if the kingdom has one; chains again as the bridge rises for the loop
-  if (cues.some((c) => c.hasChapel)) place(sound('bell', 4.5, r, workDir), 22.5, 0.18, -0.3, 0.2, 1.2);
+  if (cues.some((c) => c.hasChapel)) place(sound('bell', 4.5, r, workDir), 23.9, 0.18, -0.3, 0.2, 1.2);
   place(sound('chime', 1.2, r, workDir), 27.1, 0.4, 0, 0.005, 0.5);
   place(sound('chain', 1.7, r, workDir), 28.2, 0.25, 0.3, 0.1, 0.4);
   // gentle limiter

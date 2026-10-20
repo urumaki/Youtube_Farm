@@ -39,7 +39,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Shot plan in `timeline.js`. Days with named villagers (owner's choice, 2026-10-19): the video opens on the
   caravan of today's named villagers with name tags (`caravan.js`, no castle hook; the counter shows over it
   for 2 s) → up to 2 new buildings, ~2.5 s each → 3 named villagers at work (`work.js`) → wide shot with
-  credits → call to action. The caravan shot lasts 4.5 s (owner: 4-5 s at most); the other shots share the
+  credits (23.5-27 s: a still card with the 10 newest names and "and N more villagers", so it stays
+  readable as names grow) → call to action. The caravan shot lasts 4.5 s (owner: 4-5 s at most); the other shots share the
   rest by weight. New houses are not shown one by one on those days. Once the tavern is built,
   the "at work" part is 2 villagers in their crofts plus the tavern interior (`tavern.js`, hard cut in and
   out): named innkeepers/brewers behind the bar, other named villagers drinking at the tables with name

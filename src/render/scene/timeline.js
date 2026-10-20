@@ -5,7 +5,8 @@ import { BUILDINGS, JOBS, tavernScene } from '../../sim/tiers.js';
 import { CASTLE } from '../../sim/world.js';
 
 export const DURATION = 30;
-const HOOK = 2, UPDATE_END = 22, WIDE_END = 27;
+// the wide shot with the goal and the end credits is short (3.5 s) so the daily update keeps the time
+const HOOK = 2, UPDATE_END = 23.5, WIDE_END = 27;
 const CARAVAN_SECONDS = 4.5;
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 
