@@ -197,18 +197,19 @@ const BUILD = {
     out.focusH = 8;
   },
   chapel(b, lot, out) {
-    b.add('stone', boxGeo(10, 7, 18), 0, 3.5, 2);
-    b.add('slate', gableGeo(18.8, 11, 5.5).rotateY(Math.PI / 2), 0, 7, 2);
-    for (const z of [-4, 1, 6]) for (const s of [-1, 1]) {
+    // the tower and door face +z, the side the building shots look from (and the market square)
+    b.add('stone', boxGeo(10, 7, 18), 0, 3.5, -2);
+    b.add('slate', gableGeo(18.8, 11, 5.5).rotateY(Math.PI / 2), 0, 7, -2);
+    for (const z of [-6, -1, 4]) for (const s of [-1, 1]) {
       b.add('stained', boxGeo(0.2, 3, 1.2), s * 5.05, 3.8, z);
       b.add('stained', cylGeo(0.6, 0.6, 0.2, 10).rotateZ(Math.PI / 2), s * 5.05, 5.3, z);
     }
-    tower(b, 0, -9.5, 2.8, 13, 0, 'stone');
-    b.add('stone', boxGeo(5, 13, 5), 0, 6.5, -9.5);
-    b.add('slate', pyramidGeo(5.6, 5.6, 9), 0, 13, -9.5);
-    b.add('gold', boxGeo(0.25, 2.2, 0.25), 0, 23, -9.5); b.add('gold', boxGeo(1.2, 0.25, 0.25), 0, 23.5, -9.5);
-    b.add('stained', cylGeo(1.4, 1.4, 0.2, 18).rotateX(Math.PI / 2), 0, 9.2, -12.06);
-    b.add('woodDark', boxGeo(2, 3.2, 0.3), 0, 1.6, -12.1);
+    tower(b, 0, 9.5, 2.8, 13, 0, 'stone');
+    b.add('stone', boxGeo(5, 13, 5), 0, 6.5, 9.5);
+    b.add('slate', pyramidGeo(5.6, 5.6, 9), 0, 13, 9.5);
+    b.add('gold', boxGeo(0.25, 2.2, 0.25), 0, 23, 9.5); b.add('gold', boxGeo(1.2, 0.25, 0.25), 0, 23.5, 9.5);
+    b.add('stained', cylGeo(1.4, 1.4, 0.2, 18).rotateX(Math.PI / 2), 0, 9.2, 12.06);
+    b.add('woodDark', boxGeo(2, 3.2, 0.3), 0, 1.6, 12.1);
     out.focusH = 12;
   },
   windmill(b, lot, out, ctx) {

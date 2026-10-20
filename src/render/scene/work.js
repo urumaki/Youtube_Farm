@@ -97,7 +97,9 @@ const JOB_SCENES = {
   woodcutter: { period: 1.45, hit: 0.72, raise: -2.8, down: -0.9, bend: 0.25, fx: 'chips', sound: 'chop', tool: 'axe', props: 'stump', both: true },
   stonemason: { period: 0.55, hit: 0.75, raise: -1.75, down: -1.15, bend: 0.2, fx: 'dust', sound: 'chisel', tool: 'mallet', props: 'block', left: -1.05 },
   carpenter: { period: 0.6, hit: 0.75, raise: -1.9, down: -1.0, bend: 0.2, fx: 'chips', sound: 'chop', tool: 'hammer', props: 'bench', left: -0.9 },
-  baker: { period: 1.6, hit: 0.55, raise: -1.15, down: -1.45, bend: 0.1, fx: 'embers', sound: 'none', tool: 'peel', props: 'oven', both: true, push: true },
+  // the baker works inside the bakehouse (bakery.js), which builds the oven around the mouth; the peel is
+  // highest when pushed into the oven and carries a loaf in
+  baker: { period: 1.8, hit: 0.55, raise: -1.0, down: -0.88, bend: 0.1, fx: 'embers', sound: 'none', tool: 'peel', props: 'ovenmouth', both: true, push: true, loaf: true },
   fisherman: { period: 2.6, hit: 0.5, raise: -2.2, down: -1.0, bend: 0.05, fx: 'splash', sound: 'none', tool: 'rod', props: 'pond', both: true },
   miller: { period: 1.5, hit: 0.6, raise: -1.6, down: -1.0, bend: 0.25, fx: 'dust', sound: 'none', tool: 'sack', props: 'sacks', both: true },
   guard: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'spear', props: 'post', left: -0.6, look: true },
@@ -127,7 +129,6 @@ Object.assign(JOB_SCENES, {
   'stonemason:stack': { period: 2.4, hit: 0.5, raise: -1.45, down: -0.75, bend: 0.45, fx: 'dust', sound: 'none', tool: 'stone', props: 'wall', smooth: true, both: true },
   'carpenter:saw': { period: 0.7, hit: 0.5, raise: -1.2, down: -0.95, bend: 0.3, fx: 'sawdust', sound: 'none', tool: 'saw', props: 'trestle', push: true, left: -1.0 },
   'baker:knead': { period: 1.0, hit: 0.5, raise: -1.3, down: -1.0, bend: 0.3, fx: 'flour', sound: 'none', tool: null, props: 'dough', push: true, both: true },
-  'baker:stall': { ...DEFAULT_SCENE, props: 'breadstall' },
   'fisherman:net': { period: 2.8, hit: 0.42, raise: -2.3, down: -0.8, bend: 0.15, fx: 'splash', sound: 'none', tool: 'net', props: 'pond', smooth: true, both: true, net: true },
   'miller:quern': { period: 1.2, hit: 0.5, raise: -1.1, down: -1.1, bend: 0.25, fx: 'flour', sound: 'none', tool: null, props: 'quern', stir: true, left: -0.9 },
   'fletcher:shoot': { period: 2.6, hit: 0.62, raise: -1.5, down: -1.5, bend: 0, fx: null, sound: 'straw', tool: null, props: 'butts', archer: true },
@@ -188,8 +189,15 @@ export function toolGeo(kind, M) {
       return 0;
     } });
   } else if (kind === 'peel') {
-    add(cylGeo(0.02, 0.02, 1.6, 6).translate(0, -0.6, 0), wood);
-    add(boxGeo(0.32, 0.02, 0.38).translate(0, -1.42, 0), M.wood);
+    // a long handle held level in front of the waist (tilted up from the arm), the flat blade in line with
+    // it, face up, with a loaf on it
+    const p = new THREE.Group();
+    p.rotation.x = -0.6;
+    g.add(p);
+    const put = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; p.add(m); return m; };
+    put(cylGeo(0.02, 0.02, 1.5, 6).translate(0, -0.6, 0), wood);
+    put(boxGeo(0.34, 0.4, 0.02).translate(0, -1.5, 0), M.wood);
+    g.userData.loaf = put(new THREE.SphereGeometry(0.12, 10, 8).scale(1.4, 1.1, 0.6).translate(0, -1.5, 0.08), M.hay);
   } else if (kind === 'rod') {
     add(cylGeo(0.012, 0.025, 2.6, 6).translate(0, -1.2, 0), wood);
   } else if (kind === 'spear') {
@@ -292,14 +300,8 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       add(boxGeo(1.2, 0.1, 0.25).translate(0, 0.89, 0.6), M.wood);
       return new THREE.Vector3(0, 0.95, 0.55);
     }
-    case 'oven': {
-      add(new THREE.SphereGeometry(1.0, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2).translate(0, 0.4, 2.2), M.stone);
-      add(boxGeo(2.1, 0.4, 2.1).translate(0, 0.2, 2.2), M.stoneDark);
-      add(boxGeo(0.55, 0.42, 0.1).translate(0, 0.62, 1.22), M.ember);
-      add(boxGeo(1.2, 0.08, 0.6).translate(-1.6, 0.85, 0.6), M.wood);
-      for (let i = 0; i < 4; i++) add(new THREE.SphereGeometry(0.13, 8, 6).scale(1.4, 0.7, 1).translate(-2.0 + i * 0.27, 0.93, 0.6), M.hay);
-      return new THREE.Vector3(0, 0.7, 1.3);
-    }
+    case 'ovenmouth': // the oven itself is part of the bakehouse (bakery.js)
+      return new THREE.Vector3(0, 1.1, 1.95);
     case 'pond': {
       add(new THREE.CylinderGeometry(2.0, 2.0, 0.05, 24).translate(0, 0.03, 3.0), new THREE.MeshStandardMaterial({ color: '#46707f', roughness: 0.15, metalness: 0.1 }));
       add(new THREE.TorusGeometry(2.0, 0.18, 6, 24).rotateX(Math.PI / 2).translate(0, 0.04, 3.0), M.stone);
@@ -434,13 +436,6 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       dough.position.set(-0.05, 0.88, 0.55);
       anim.push((t, c, swing) => { dough.scale.set(1 + 0.15 * swing, 1 - 0.3 * swing, 1 + 0.1 * swing); });
       return new THREE.Vector3(0, 0.9, 0.55);
-    }
-    case 'breadstall': { // the baker sells loaves from a stall
-      add(boxGeo(1.8, 0.9, 0.7).translate(0, 0.45, 1.0), M.wood);
-      for (let i = 0; i < 6; i++) add(new THREE.SphereGeometry(0.13, 10, 8).scale(1.5, 0.75, 1).translate(-0.65 + i * 0.26, 1.0, 0.95 + (i % 2) * 0.12), M.hay);
-      for (const x of [-0.85, 0.85]) add(boxGeo(0.07, 1.9, 0.07).translate(x, 0.95, 1.3), M.woodDark);
-      add(boxGeo(2.0, 0.05, 1.0).translate(0, 1.9, 1.1), M.clothIvory);
-      return new THREE.Vector3(0, 1.0, 1.0);
     }
     case 'quern': { // a hand mill: the top stone turns round on the bottom one
       add(cylGeo(0.36, 0.42, 0.5, 12).translate(0, 0.25, 0.62), M.wood);
@@ -713,6 +708,8 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id 
         });
       }
       if (cfg.push) P.root.position.z = 0.25 * Math.sin(((t + offset) / cfg.period) * Math.PI * 2);
+      // a loaf on the peel on the way into the oven, none on the way back
+      if (cfg.loaf && tool?.userData.loaf) tool.userData.loaf.visible = Math.cos(c * Math.PI * 2) > 0;
       // particles from the last two impacts
       if (pts) {
         const arr = pts.geometry.attributes.position.array;

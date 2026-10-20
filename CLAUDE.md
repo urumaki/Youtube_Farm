@@ -72,7 +72,9 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (`VARIANTS` in `timeline.js`; `'job:variant'` entries in `JOB_SCENES`, `work.js`): guards on the walls,
   sparring or at the straw dummy (`drills.js`); farmers hoeing, sowing or reaping; the smith at the anvil,
   quenching or at the bellows; the fletcher shooting at a target... The croft shots cut in hard and move
-  the camera a different way each time (`CAM_STYLES`). Name labels pop in.
+  the camera a different way each time (`CAM_STYLES`). Name labels pop in. Bakers never work in the
+  open (owner 2026-10-20): a bakehouse stands in their croft (`bakery.js`), with the oven beside them,
+  the peel, its own wide-lens camera and a hard cut in and out like the tavern; guests walk in by the door.
 - Everybody gets a turn (owner 2026-10-20): `state.lastShown` records the day each named villager was
   last on screen; after today's names and requests, those never shown and those waiting longest come
   first. A shot can show two villagers together (`PAIRS` in `featured.js`, `visit.js`): the guest walks

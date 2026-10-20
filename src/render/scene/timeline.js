@@ -6,6 +6,7 @@ import { CASTLE } from '../../sim/world.js';
 import { NIGHT_STORIES } from './stories/index.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
+import { BAKEHOUSE_VARIANTS } from './bakery.js';
 
 export const DURATION = 30;
 // the wide shot with the goal and the end credits is short (3.5 s) so the daily update keeps the time
@@ -20,10 +21,12 @@ export const VARIANTS = {
   guard: FIGHTER_SCENES, knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
   farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
   blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw'],
-  baker: ['oven', 'knead', 'stall'], fisherman: ['rod', 'net'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
+  baker: ['oven', 'knead'], fisherman: ['rod', 'net'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
   innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'],
 };
 const CASTLE_VARIANTS = new Set(['walls', 'sparring']); // own camera at the castle, a hard cut in and out
+// scenes inside a building (the baker's bakehouse, bakery.js): own camera, a hard cut in and out
+export const indoorScene = (job, variant) => job === 'baker' && BAKEHOUSE_VARIANTS.has(variant);
 // the croft shots move the camera in different ways, never the same way twice in a row
 export const CAM_STYLES = ['push', 'reveal', 'orbit', 'low'];
 
@@ -91,11 +94,12 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const variant = pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g });
     if (variant) usedVariants.add(variant);
     const castleShot = CASTLE_VARIANTS.has(variant);
+    const indoor = indoorScene(sceneJob, variant);
     targets.push({
       kind: 'villager', id: n.id, job: n.job, sceneJob, variant, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
       // a hard cut into each villager (a flight down into a croft only shows roofs and grass)
-      label: { title: n.name, sub: jobSub(n) }, work: null, weight: g ? 1.45 : 1.1, cut: castleShot, cutIn: true,
-      camStyle: castleShot ? null : CAM_STYLES[(camFrom + crofts++) % CAM_STYLES.length],
+      label: { title: n.name, sub: jobSub(n) }, work: null, weight: g ? 1.45 : 1.1, cut: castleShot || indoor, cutIn: true, interior: indoor,
+      camStyle: castleShot || indoor ? null : CAM_STYLES[(camFrom + crofts++) % CAM_STYLES.length],
       ...(g ? { pair: f.pair, guest: { id: g.id, name: g.name, job: g.job }, label2: { title: g.name, sub: jobSub(g) }, labelPos2: new THREE.Vector3() } : {}),
     });
   }
