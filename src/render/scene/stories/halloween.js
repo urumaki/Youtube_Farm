@@ -5,8 +5,8 @@ import { rand01 } from '../../../sim/prng.js';
 import { JOBS } from '../../../sim/tiers.js';
 import { person, stage, flameMaterial, flicker } from './common.js';
 
-const COSTUME = { ghost: ['Ghost', 'Fantasma'], witch: ['Witch', 'Strega'], pumpkin: ['Pumpkin', 'Zucca'] };
-const EXTRAS = ['ghost', 'witch', 'pumpkin', 'witch', 'ghost', 'pumpkin'];
+const COSTUME = { ghost: ['Ghost', 'Fantasma'], scarecrow: ['Scarecrow', 'Spaventapasseri'], pumpkin: ['Pumpkin', 'Zucca'] };
+const EXTRAS = ['ghost', 'scarecrow', 'pumpkin', 'scarecrow', 'ghost', 'pumpkin'];
 
 function pumpkinMat(glow) {
   return new THREE.MeshStandardMaterial({ color: '#d9701c', roughness: 0.6, emissive: '#ff7a10', emissiveIntensity: glow });
@@ -24,10 +24,13 @@ function dress(P, kind, M) {
     P.body.add(m);
     add(new THREE.SphereGeometry(0.26, 12, 10).translate(0, 1.12, 0), sheet);
     for (const x of [-0.08, 0.08]) add(new THREE.SphereGeometry(0.04, 6, 5).translate(x, 1.16, 0.23), M.iron);
-  } else if (kind === 'witch') {
-    P.tunic.color.set('#2a1f33');
-    add(new THREE.CylinderGeometry(0.4, 0.4, 0.03, 16).translate(0, 1.22, 0), M.iron);
-    add(new THREE.ConeGeometry(0.2, 0.6, 12).rotateZ(0.12).translate(0.02, 1.52, 0), M.iron);
+  } else if (kind === 'scarecrow') {
+    // straw-coloured smock with a patch, a wide straw hat and straw sticking out at the neck
+    P.tunic.color.set('#b59a5a');
+    add(new THREE.CylinderGeometry(0.42, 0.44, 0.04, 16).translate(0, 1.24, 0), M.hay);
+    add(new THREE.CylinderGeometry(0.15, 0.2, 0.22, 12).translate(0, 1.36, 0), M.hay);
+    add(new THREE.CylinderGeometry(0.26, 0.2, 0.12, 10, 1, true).translate(0, 0.84, 0), M.hay);
+    add(new THREE.BoxGeometry(0.16, 0.16, 0.02).translate(0.08, 0.5, 0.27), M.clothRed);
   } else {
     P.tunic.color.set('#3f6b2a');
     add(new THREE.SphereGeometry(0.29, 14, 10).scale(1.15, 0.9, 1.15).translate(0, 1.08, 0), pumpkinMat(0.9));

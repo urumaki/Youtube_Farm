@@ -14,7 +14,7 @@ export const FROM_IT = {
 };
 export const GOODS_IT = { spices: 'spezie', wool: 'lana', salt: 'sale', silk: 'seta', amber: 'ambra', wine: 'vino', 'iron tools': 'attrezzi di ferro', honey: 'miele', 'dyed cloth': 'stoffe colorate' };
 const HEROES = ['knight', 'warrior', 'guard', 'fletcher'];
-const COSTUMES = ['ghost', 'witch', 'pumpkin'];
+const COSTUMES = ['ghost', 'scarecrow', 'pumpkin']; // folk costumes only, nothing magic (owner)
 
 /**
  * Catalog. date: 'MM-DD' calendar event; minPop: population needed; cooldown: days before it can come
