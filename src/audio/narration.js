@@ -173,7 +173,8 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
   }
 
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
-  const order = ['open', 'delta', 'caravan', 'requests', 'count', 'person', 'houses', 'rebuilt', 'completed', 'unlocked', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
+  // same order as the shots: caravan, new buildings, villagers at work, then the rest
+  const order = ['open', 'delta', 'caravan', 'completed', 'unlocked', 'requests', 'count', 'person', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
     const victim = [...S].sort((a, b) => a.priority - b.priority)[0];

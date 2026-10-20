@@ -136,6 +136,9 @@ function applyFrame(ctx, t) {
   const ct = ctx.caravan && plan.targets.find((x) => x.kind === 'caravan');
   if (ct) ctx.caravan.update(t, ct.t0, ct.t1);
   const ev = evaluate(plan, t);
+  // flights between shots can dip into a hill: keep the camera a few metres above the ground
+  const ground = heightAt(ctx.w, ev.camera.pos.x, ev.camera.pos.z) + 3;
+  if (ev.camera.pos.y < ground) ev.camera.pos.y = ground;
   camera.position.copy(ev.camera.pos);
   camera.lookAt(ev.camera.look);
   camera.updateMatrixWorld();

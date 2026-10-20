@@ -13,20 +13,26 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const addedByHouse = new Map();
   for (const a of diff.added) if (!addedByHouse.has(a.house)) addedByHouse.set(a.house, a);
   const jobLabel = (j) => JOBS[j]?.label || j;
-  // 1) buildings unlocked or finished today come first: a new building is the day's headline
+  // Days with named villagers follow the owner's order: the caravan opens the video (no castle hook),
+  // then a few seconds of new buildings, then the named villagers at work. New houses are not shown
+  // one by one on those days (they still appear finished in the town and in the wide shot).
+  const people = (diff.named || []).length > 0 || Object.keys(state.names || {}).length > 0;
+  const maxBuildings = people ? 2 : 3;
+  // 1) buildings unlocked or finished today: a new building is the day's headline
   for (const id of [...diff.buildingsStarted, ...diff.buildingsCompleted]) {
     const it = buildings.items[id];
-    if (!it || targets.some((t) => t.id === id) || targets.length >= 3) continue;
+    if (!it || targets.some((t) => t.id === id) || targets.length >= maxBuildings) continue;
     const big = ['cathedral', 'palace', 'tournament', 'harbor', 'wall2', 'university', 'colossus', 'townhall'].includes(id);
     targets.push({
       kind: 'building', id, pos: it.focus.clone(), radius: big ? 70 : 30, front: (it.lot?.rot ?? 0) + Math.PI / 2,
       label: { title: BUILDINGS[id].label.replace(/^the /, 'The '), sub: diff.buildingsCompleted.includes(id) ? 'Completed!' : 'Construction begins' },
       completed: diff.buildingsCompleted.includes(id),
+      weight: people ? 0.9 : 1, // "a few seconds" each when the caravan and the workers share the video
     });
   }
   // 2) the caravan of villagers named today, then a few named villagers at work
   const today = diff.named || [];
-  if (today.length) targets.unshift({ kind: 'caravan', id: 'caravan', pos: new THREE.Vector3(), radius: 14, front: 0, label: null, labels: [], weight: 1.7, count: today.length });
+  if (today.length) targets.unshift({ kind: 'caravan', id: 'caravan', pos: new THREE.Vector3(), radius: 14, front: 0, label: null, labels: [], weight: 2.8, count: today.length });
   const INTEREST = ['blacksmith', 'toolsmith', 'woodcutter', 'baker', 'stonemason', 'fisherman', 'carpenter', 'miller', 'guard', 'knight', 'farmer', 'peasant'];
   // requests granted today come first ("you asked, the Lord granted"), then the newest names
   const asked = (n) => (n.requestDay === state.day ? 1 : 0);
@@ -35,17 +41,17 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     .sort((a, b) => asked(b) - asked(a) || (b.day ?? 0) - (a.day ?? 0) || (INTEREST.indexOf(a.job) + 1 || 99) - (INTEREST.indexOf(b.job) + 1 || 99) || a.id - b.id);
   const picked = [];
   for (const n of named) if (!picked.some((p) => p.job === n.job)) picked.push(n); // one per job: variety
-  for (const n of picked.slice(0, Math.min(3, Math.max(2, maxTargets - targets.length - 2)))) {
+  for (const n of picked.slice(0, people ? 3 : Math.min(3, Math.max(2, maxTargets - targets.length - 2)))) {
     const apprentice = n.job === 'apprentice' && n.wants;
     const sub = apprentice ? `Apprentice ${jobLabel(n.wants)}` : jobLabel(n.job);
     targets.push({
       kind: 'villager', id: n.id, job: n.job, sceneJob: apprentice ? n.wants : n.job, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
-      label: { title: n.name, sub }, work: null,
+      label: { title: n.name, sub }, work: null, weight: 1.1,
     });
   }
-  // 3) new or rebuilt houses fill the rest (a spread of them)
+  // 3) new or rebuilt houses fill the rest (a spread of them), only on days without named villagers
   const fresh = [...diff.housesBuilt, ...diff.housesRebuilt].filter((id) => animated.has(id));
-  const houseIdx = pickSpread(fresh.length, Math.min(Math.max(0, maxTargets - targets.length), fresh.length));
+  const houseIdx = people ? [] : pickSpread(fresh.length, Math.min(Math.max(0, maxTargets - targets.length), fresh.length));
   for (const i of houseIdx) {
     const id = fresh[i];
     const a = animated.get(id);
@@ -97,12 +103,14 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
 
+  // the caravan replaces the castle hook: it starts at 0 s, the counter overlay still shows over it
+  const start = targets[0]?.kind === 'caravan' ? 0 : HOOK;
   const totalW = targets.reduce((a, tg) => a + (tg.weight || 1), 0);
-  let tc = HOOK;
-  for (const tg of targets) { tg.t0 = tc; tc += ((UPDATE_END - HOOK) * (tg.weight || 1)) / totalW; tg.t1 = tc; }
+  let tc = start;
+  for (const tg of targets) { tg.t0 = tc; tc += ((UPDATE_END - start) * (tg.weight || 1)) / totalW; tg.t1 = tc; }
   // overcast days keep more light at the end so the wide shot stays readable
   const dusk = ['fog', 'rain', 'snow', 'cloudy'].includes(diff.weather) ? 0.55 : 0.8;
-  return { targets, center, extent: Math.max(size.x, size.z), story, dusk };
+  return { targets, center, extent: Math.max(size.x, size.z), story, dusk, start };
 }
 
 function pickSpread(n, k) {
@@ -168,7 +176,8 @@ export function evaluate(plan, t) {
   // drawbridge lowers in the hook and rises again at the end so the video loops
   out.bridge = t < 1.8 ? ease(t / 1.8) : t > 28.2 ? 1 - ease((t - 28.2) / 1.8) : 1;
   let pose;
-  if (t < HOOK) {
+  const start = plan.start ?? HOOK;
+  if (t < start) {
     pose = mixPose(HOOK_FROM, HOOK_TO, easeOut(t / HOOK));
     out.shadowRadius = 140;
   } else if (t < UPDATE_END) {
@@ -176,9 +185,10 @@ export function evaluate(plan, t) {
     const tg = plan.targets[Math.max(0, i)];
     const u = (t - tg.t0) / (tg.t1 - tg.t0);
     const here = orbitPose(tg, u);
-    const prev = i <= 0 ? HOOK_TO : orbitPose(plan.targets[i - 1], 1);
+    // the first shot flies in from the hook, unless the video opens directly on it (caravan)
+    const prev = i <= 0 ? (start > 0 ? HOOK_TO : null) : orbitPose(plan.targets[i - 1], 1);
     const flyT = Math.min(1.1, (tg.t1 - tg.t0) * 0.35);
-    pose = t - tg.t0 < flyT ? fly(prev, here, (t - tg.t0) / flyT) : here;
+    pose = prev && t - tg.t0 < flyT ? fly(prev, here, (t - tg.t0) / flyT) : here;
     out.shadowRadius = Math.max(80, tg.radius * 2.6);
     out.active = tg;
     out.activeU = u;
@@ -201,7 +211,7 @@ export function evaluate(plan, t) {
     }
   }
   out.camera = pose;
-  out.section = t < HOOK ? 'hook' : t < UPDATE_END ? 'update' : t < WIDE_END ? 'wide' : 'cta';
+  out.section = t < start ? 'hook' : t < UPDATE_END ? 'update' : t < WIDE_END ? 'wide' : 'cta';
   return out;
 }
 

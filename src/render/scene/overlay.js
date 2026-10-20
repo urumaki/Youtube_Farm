@@ -145,7 +145,8 @@ export function createOverlay(root, data) {
       banner.style.opacity = 0;
       if (tg && tg.labels && ev.activeU > 0.08 && ev.activeU < 0.97) {
         banner.textContent = tg.banner || '';
-        banner.style.opacity = Math.min(1, (ev.activeU - 0.08) * 6, (0.97 - ev.activeU) * 12);
+        // when the caravan opens the video, the banner waits for the counter to leave the top of the frame
+        banner.style.opacity = hook ? 0 : Math.max(0, Math.min(1, (ev.activeU - 0.08) * 6, (t - 2.2) * 6, (0.97 - ev.activeU) * 12));
         const sw = W - SAFE.left - SAFE.right, sh = H - SAFE.top - SAFE.bottom;
         const placed = [];
         const items = tg.labels.map((lb) => {

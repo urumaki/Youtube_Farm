@@ -6,6 +6,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 ## Ground rules
 - Work on branch `claude/gallant-fermat-pyz8n3` (it is the repo's default branch; the daily GitHub Action
   runs from it and commits `state/` there). Pull before pushing.
+- Owner's standing rule: commit and push every change to GitHub as soon as it is done and tested, without
+  asking (`git pull --rebase --autostash` first). Leave the owner's own uncommitted local edits alone.
 - Never commit keys. Secrets live only in the owner's local `.env` and in GitHub Actions secrets
   (`YOUTUBE_API_KEY`, `YT_OAUTH_CLIENT_ID`, `YT_OAUTH_CLIENT_SECRET`, `YT_OAUTH_REFRESH_TOKEN`).
   Variables: `PUBLISH_TARGETS=youtube`, optional `YT_PUBLISH_AT` (HH:MM UTC), `YT_PRIVACY`.
@@ -21,14 +23,24 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - `node scripts/verify-video.js output/x.mp4` — format checks.
 - `npm run auth:youtube -- --save` — one-time OAuth refresh token (owner runs it on their PC).
 
+## Owner's Windows PC (local renders)
+- ffmpeg 9.0.2 in `C:\ffmpeg\bin` (first on PATH; the 2020 build is kept in `C:\ffmpeg\bin_old_2020`).
+  The code also works with ffmpeg older than 4.4 (`mix.js` does not use `amix normalize`).
+- Kokoro needs Python < 3.14: a Python 3.12 venv in `tools/venv`, set as `PYTHON` in `.env`.
+- Playwright needs its headless shell: `npx playwright install chromium-headless-shell`.
+
 ## How it works (short)
 - `src/sim/` deterministic simulation (seeded PRNG); `state/kingdom.json` + `state/history/`.
   Villagers are nameless until someone comments on a channel video: `src/fetch/comments.js` reads public
   comments (same API key), `assignNames` in `src/sim/simulate.js` gives one villager per commenter.
   `state/blocked.json` removes names. Comment text is never stored (see `PRIVACY.md`).
 - `src/render/scene/` Three.js scene rendered frame by frame in headless Chromium (`capture.js`).
-  Shot plan in `timeline.js`: hook → caravan of today's named villagers (`caravan.js`) → new buildings →
-  named villagers at work (`work.js`) → new houses → wide shot → call to action.
+  Shot plan in `timeline.js`. Days with named villagers (owner's choice, 2026-10-19): the video opens on the
+  caravan of today's named villagers with name tags (`caravan.js`, no castle hook; the counter shows over it
+  for 2 s) → up to 2 new buildings, ~2.5 s each → 3 named villagers at work (`work.js`) → wide shot with
+  credits → call to action. New houses are not shown one by one on those days. Days without any named
+  villager keep the old order: castle hook → new buildings → new houses → wide shot → call to action.
+  Narration sentences follow the same order (`src/audio/narration.js`).
 - `src/audio/` narration templates (names are never read aloud), Kokoro TTS (`am_adam`), procedural
   music, camera-driven sound effects with strikes synced to the work animations (`sfx.js`).
 - `src/publish/` YouTube upload (resumable, OAuth); `state/published.json` prevents double uploads.
