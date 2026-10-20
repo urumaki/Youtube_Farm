@@ -278,6 +278,41 @@ const GEN = {
     }
     return o;
   },
+  cheer(sec, r) { // a crowd cheering: many open "ah" voices swelling and falling, and clapping
+    const o = buf(sec);
+    for (let v = 0; v < 14; v++) {
+      const f0 = r.float(140, 320), f1 = new Biquad('bp', r.float(700, 950), 4), f2 = new Biquad('bp', r.float(1100, 1500), 5);
+      const st = r.float(0, 0.6), dur = r.float(1.2, 2.4);
+      let ph = 0;
+      for (let rep = st; rep < sec; rep += dur + r.float(0.2, 0.9)) {
+        const i0 = Math.round(rep * RATE), len = Math.min(o.length - i0, Math.round(dur * RATE));
+        for (let i = 0; i < len; i++) {
+          const x = i / len, f = f0 * (1 + 0.25 * Math.sin(Math.PI * x)) * (1 + 0.02 * Math.sin(i / 900));
+          ph += (TAU * f) / RATE;
+          const src = (ph % TAU) / TAU - 0.5, env = Math.sin(Math.PI * Math.min(1, x * 1.2)) ** 0.7;
+          o[i0 + i] += (f1.run(src) + 0.6 * f2.run(src)) * env * 0.16;
+        }
+      }
+    }
+    const hp = new Biquad('hp', 900);
+    for (let k = 0; k < sec * 22; k++) noiseBurst(o, Math.round(r.float(0, sec - 0.05) * RATE), 0.03, r.float(0.1, 0.25), r, [hp]);
+    return o;
+  },
+  fanfare(sec, r) { // a short brass fanfare at the start (the King's arrival): G C E G, the last note held
+    const o = buf(sec);
+    const notes = [[392, 0.15, 0.2], [523.3, 0.38, 0.2], [659.3, 0.61, 0.2], [784, 0.84, 1.1]];
+    for (const [f, at, dur] of notes) {
+      const lp = new Biquad('lp', 2400), i0 = Math.round(at * RATE), len = Math.min(o.length - i0, Math.round(dur * RATE));
+      let ph = 0;
+      for (let i = 0; i < len; i++) {
+        const x = i / RATE;
+        ph += (TAU * f * (1 + (x > 0.25 ? 0.006 * Math.sin(x * 33) : 0))) / RATE;
+        const saw = ((ph / TAU) % 1) * 2 - 1, env = Math.min(1, x / 0.03) * Math.min(1, (dur - x) / 0.06);
+        o[i0 + i] += lp.run(saw) * env * 0.35;
+      }
+    }
+    return o;
+  },
   chime(sec, r) { // a soft bright chime for the call to action
     const o = buf(sec);
     [0, 0.12, 0.24].forEach((d, i) => modes(o, Math.round(d * RATE), [[[1318, 1568, 2093][i], 0.4, 0.6], [[1318, 1568, 2093][i] * 2, 0.1, 0.3]], 0.3, r));
@@ -336,6 +371,7 @@ const SCENES = {
   ev_rebuild: [['hammer', 0.9], ['saw', 0.35]],
   ev_wolves: [['breeze', 0.5], ['howl', 0.55]],
   ev_storm: [['rain', 0.75], ['thunder', 0.8]],
+  ev_royal: [['fanfare', 0.6], ['cheer', 0.6], ['cart', 0.35]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],

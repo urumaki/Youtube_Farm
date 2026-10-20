@@ -34,6 +34,7 @@ const T = {
       rebuild: ['The carpenters are already rebuilding the burnt house.', 'Hammers ring on the street: the burnt house is being rebuilt.'],
       wolves: ['Wolves crept out of the forest tonight, but torches sent them running!', 'A pack of wolves howled at the edge of town, then fled from the torches!'],
       storm: ['A storm breaks over the kingdom, and everyone runs for cover!', 'Thunder rolls over the square as the rain pours down!'],
+      royal: ['Make way! The King rides through town, and the people cheer!', 'Long live the King! The royal carriage rolls down the main street!'],
     },
     // everyday shots (src/render/scene/ambient.js)
     ambient: {
@@ -108,6 +109,7 @@ T.it = {
     rebuild: ['I carpentieri ricostruiscono già la casa bruciata.'],
     wolves: ['Stanotte i lupi sono usciti dal bosco, ma le torce li hanno messi in fuga!'],
     storm: ['Una tempesta si abbatte sul regno e tutti corrono al riparo!'],
+    royal: ['Fate largo! Il Re attraversa la città tra gli applausi!', 'Viva il Re! La carrozza reale percorre la via principale!'],
   },
   ambient: {
     patrol: ['Sulle mura, le guardie fanno la ronda.'],

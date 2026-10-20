@@ -7,10 +7,11 @@ import { buildHalloween } from './halloween.js';
 import { buildFire, buildRebuild } from './house.js';
 import { buildWolves } from './wolves.js';
 import { buildStorm } from './storm.js';
+import { buildRoyal } from './royal.js';
 
 const BUILDERS = {
   quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween,
-  fire: buildFire, rebuild: buildRebuild, wolves: buildWolves, storm: buildStorm,
+  fire: buildFire, rebuild: buildRebuild, wolves: buildWolves, storm: buildStorm, royal: buildRoyal,
 };
 
 export function buildStory(args) {

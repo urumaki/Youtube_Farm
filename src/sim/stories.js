@@ -32,6 +32,8 @@ export const STORIES = {
   wolves: { minPop: 10, cooldown: 12, weight: 2 },
   // only on grey days; the day turns to rain (src/sim/simulate.js)
   storm: { minPop: 1, cooldown: 14, weight: 2, needs: (s) => ['rain', 'cloudy'].includes(s.weather) },
+  // the King (the channel's owner) rides through town in his carriage; named villagers cheer in the front row
+  royal: { minPop: 30, cooldown: 10, weight: 2, needs: (s) => !['rain', 'snow', 'storm'].includes(s.weather) },
 };
 const STORY_CHANCE = 0.5;
 
@@ -102,6 +104,11 @@ const BUILD = {
     const heroes = named.filter((n) => HEROES.includes(n.job) || n.job === 'farmer' || n.job === 'peasant').slice(0, 2);
     if (!heroes.length && named.length) heroes.push(r.pick(named.slice(0, 12)));
     return { cast: heroes, wolves: r.int(4, 6) };
+  },
+  royal(state, r) {
+    const pool = namedVillagers(state).slice(0, 16), cast = [];
+    while (cast.length < 6 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    return { cast };
   },
   storm(state, r) {
     const pool = namedVillagers(state).slice(0, 12), cast = [];
