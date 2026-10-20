@@ -75,6 +75,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   the camera a different way each time (`CAM_STYLES`). Name labels pop in. Bakers never work in the
   open (owner 2026-10-20): a bakehouse stands in their croft (`bakery.js`), with the oven beside them,
   the peel, its own wide-lens camera and a hard cut in and out like the tavern; guests walk in by the door.
+  The beggar sits against the back wall of his house swigging from a bottle, or lies asleep by it snoring
+  (Z sprites), or stands by a crate with a mug (`home`/`homeTurn` in `JOB_SCENES` place a scene by the house).
 - Everybody gets a turn (owner 2026-10-20): `state.lastShown` records the day each named villager was
   last on screen; after today's names and requests, those never shown and those waiting longest come
   first. A shot can show two villagers together (`PAIRS` in `featured.js`, `visit.js`): the guest walks

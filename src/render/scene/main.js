@@ -13,7 +13,7 @@ import { buildLife } from './life.js';
 import { buildEnvironment } from './env.js';
 import { makePlan, evaluate, indoorScene } from './timeline.js';
 import { createOverlay } from './overlay.js';
-import { buildWorkScene } from './work.js';
+import { buildWorkScene, sceneOf } from './work.js';
 import { buildCaravan } from './caravan.js';
 import { buildTavernInterior } from './tavern.js';
 import { buildStory } from './stories/index.js';
@@ -99,6 +99,13 @@ async function setup(data) {
   const workScene = ({ job, variant, anchor, ax, az, away, id }) => {
     if (indoorScene(job, variant)) return buildBakehouse({ variant, anchor, away, M, seed: state.seed, id, heightAt: (x, z) => heightAt(w, x, z) });
     const make = variant === 'dummy' ? buildDummyDrill : buildWorkScene;
+    // scenes by the house (the beggar against its back wall): `home` metres out from the wall, facing the croft
+    const { home, homeTurn = 0 } = sceneOf(job, variant);
+    if (home !== undefined) {
+      const at = anchor.clone().addScaledVector(new THREE.Vector3(ax, 0, az), home - 4.2);
+      at.y = yFn(at.x, at.z);
+      return make({ job, variant, anchor: at, face: Math.atan2(ax, az) + homeTurn, M, seed: state.seed, id });
+    }
     return make({ job, variant, anchor, face: Math.atan2(ax, az) + 1.1, M, seed: state.seed, id });
   };
   if (plan) for (const tg of plan.targets) {
@@ -126,6 +133,7 @@ async function setup(data) {
       tg.work = ws;
       tg.pos.copy(ws.focus);
       tg.labelPos.copy(ws.labelPos);
+      if (ws.radius) tg.radius = ws.radius;
       if (tg.guest) {
         // a second named villager walks in: frame them both, a little wider
         const visit = buildVisit({ host: ws, hostJob: tg.sceneJob || v.job, guest: tg.guest, pair: tg.pair, away: tg.away, M, yFn: ws.floorAt || yFn, t0: tg.t0, t1: tg.t1 });

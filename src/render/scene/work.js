@@ -16,16 +16,24 @@ const merged = (parts) => mergeGeometries(parts.map(flat));
  * A person with arms on shoulder pivots so they can swing tools. Faces +z.
  * seated: hips at seat height (0.47), thighs forward and shins down to the floor (for benches).
  */
-export function rig(M, color, { seated = false, walk = false } = {}) {
+export function rig(M, color, { seated = false, walk = false, ground = false } = {}) {
   const root = new THREE.Group();
   const body = new THREE.Group(); // bends at the hips
-  body.position.y = seated ? 0.47 : 0.62;
+  body.position.y = ground ? 0.1 : seated ? 0.47 : 0.62;
   root.add(body);
   const tunic = M.people.clone();
   tunic.color.set(color);
   let walkLegs = null;
   const add = (parent, geo, mat, cast = true) => { const m = new THREE.Mesh(geo, mat); m.castShadow = cast; m.receiveShadow = true; parent.add(m); return m; };
-  if (seated) {
+  if (ground) {
+    // sitting on the ground, legs stretched out in front, feet up
+    const legs = [];
+    for (const x of [-0.1, 0.12]) {
+      legs.push(cylGeo(0.08, 0.085, 0.62, 6).rotateX(Math.PI / 2).translate(x, 0.09, 0.3 + (x > 0 ? 0.04 : 0)));
+      legs.push(boxGeo(0.13, 0.24, 0.08).translate(x, 0.13, 0.64 + (x > 0 ? 0.04 : 0)));
+    }
+    add(root, merged(legs), M.gear);
+  } else if (seated) {
     const legs = [];
     for (const x of [-0.09, 0.09]) {
       legs.push(cylGeo(0.08, 0.085, 0.42, 6).rotateX(Math.PI / 2).translate(x, 0.47, 0.2)); // thigh on the seat
@@ -106,7 +114,10 @@ const JOB_SCENES = {
   knight: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'sword', props: 'post', left: -0.6, look: true },
   // jobs asked for in the comments
   innkeeper: { period: 2.4, raise: -1.75, down: -0.45, bend: 0, sound: 'none', tool: 'tankard', props: 'tavern', smooth: true, left: -0.5 },
-  beggar: { period: 3.4, raise: -1.5, down: -0.35, bend: 0.28, sound: 'none', tool: 'tankard', props: 'begging', smooth: true, left: -0.15, sway: true },
+  // the town beggar (owner 2026-10-20): sitting against the back wall of his house, swigging from a
+  // bottle; 'collapsed' is asleep on the ground, snoring; 'hat' stands by a crate raising a mug. `home`:
+  // metres out from the house wall (not in the croft), `homeTurn`: yaw from facing the croft
+  beggar: { period: 4.6, raise: -2.1, down: -0.6, bend: -0.2, sound: 'none', tool: 'bottle', props: 'slump', drink: true, left: -0.35, ground: true, home: 0.42, focusH: 0.75, labelH: 1.75, radius: 4.6 },
   weirdo: { period: 1.1, raise: -2.6, down: -0.4, bend: 0, sound: 'none', tool: null, props: 'none', dance: true },
   jester: { period: 0.9, raise: -1.2, down: -0.8, bend: 0, sound: 'none', tool: null, props: 'none', juggle: true },
   fletcher: { period: 0.6, raise: -1.35, down: -1.05, bend: 0.22, sound: 'none', tool: null, props: 'fletch', smooth: true, left: -1.15 },
@@ -132,6 +143,8 @@ Object.assign(JOB_SCENES, {
   'fisherman:net': { period: 2.8, hit: 0.42, raise: -2.3, down: -0.8, bend: 0.15, fx: 'splash', sound: 'none', tool: 'net', props: 'pond', smooth: true, both: true, net: true },
   'miller:quern': { period: 1.2, hit: 0.5, raise: -1.1, down: -1.1, bend: 0.25, fx: 'flour', sound: 'none', tool: null, props: 'quern', stir: true, left: -0.9 },
   'fletcher:shoot': { period: 2.6, hit: 0.62, raise: -1.5, down: -1.5, bend: 0, fx: null, sound: 'straw', tool: null, props: 'butts', archer: true },
+  'beggar:collapsed': { period: 3.8, raise: 0, down: 0, bend: 0, sound: 'none', tool: null, props: 'asleep', sleep: true, home: 2.4, homeTurn: Math.PI / 2, focusH: 0.45, labelH: 1.15, radius: 5 },
+  'beggar:hat': { period: 3.4, raise: -1.5, down: -0.35, bend: 0.28, sound: 'none', tool: 'tankard', props: 'begging', smooth: true, left: -0.15, sway: true },
   'innkeeper:barrel': { period: 2.6, hit: 0.4, raise: -1.15, down: -0.95, bend: 0.1, fx: 'ale', sound: 'none', tool: 'tankard', props: 'keg', smooth: true, left: -0.7 },
   'brewer:stir': { period: 2.0, hit: 0.5, raise: -1.2, down: -1.2, bend: 0.2, fx: 'steam', sound: 'none', tool: 'paddle', props: 'vat', stir: true, both: true },
 });
@@ -213,6 +226,12 @@ export function toolGeo(kind, M) {
   } else if (kind === 'bucket') {
     add(cylGeo(0.16, 0.12, 0.26, 10).translate(0, -0.2, 0.1), M.wood);
     add(new THREE.TorusGeometry(0.13, 0.012, 4, 10, Math.PI).translate(0, -0.08, 0.1), M.iron);
+  } else if (kind === 'bottle') {
+    // held so that at the top of a swig (the beggar's arm at -2.1, -0.4) the neck is at the mouth
+    const b = new THREE.Group();
+    b.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(-0.48, 0.86, 0.19).normalize());
+    g.add(b);
+    for (const geo of [cylGeo(0.06, 0.065, 0.24, 10).translate(0, 0.1, 0), cylGeo(0.022, 0.05, 0.15, 8).translate(0, 0.29, 0)]) b.add(Object.assign(new THREE.Mesh(geo, M.greens), { castShadow: true }));
   } else if (kind === 'handbell') {
     add(cylGeo(0.025, 0.03, 0.2, 8).translate(0, 0.02, 0.06), wood);
     add(cylGeo(0.05, 0.13, 0.17, 12).translate(0, -0.15, 0.06), M.gold);
@@ -256,6 +275,9 @@ export function toolGeo(kind, M) {
   }
   return g;
 }
+
+/** A bottle lying on its side along x. */
+const emptyBottle = () => merged([cylGeo(0.06, 0.065, 0.24, 10), cylGeo(0.022, 0.05, 0.15, 8).translate(0, 0.19, 0)]).rotateZ(Math.PI / 2);
 
 /** Props around the worker, in the worker's frame (worker at origin facing +z). Returns impact point. */
 function buildProps(kind, M, add, anim = [], holder = null) {
@@ -331,6 +353,18 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       for (let i = 0; i < 3; i++) add(cylGeo(0.035, 0.035, 0.01, 8).translate(0.1 + i * 0.05, 0.12, 0.58), M.gold);
       add(cylGeo(0.1, 0.1, 0.35, 8).rotateZ(1.3).translate(-0.5, 0.1, 0.5), M.clothIvory); // empty bottle
       return new THREE.Vector3(0, 1.2, 0.4);
+    }
+    case 'slump': { // an upturned hat with a few coins, empty bottles lying about
+      add(cylGeo(0.2, 0.16, 0.12, 10).translate(0.55, 0.06, 0.45), M.gear);
+      for (let i = 0; i < 3; i++) add(cylGeo(0.035, 0.035, 0.01, 8).translate(0.5 + i * 0.05, 0.12, 0.43), M.gold);
+      for (const [x, z, r] of [[-0.6, 0.35, 0.4], [-0.75, 0.6, 2.1], [0.9, 0.9, 1.2]]) add(emptyBottle().rotateY(r).translate(x, 0.065, z), M.greens);
+      return new THREE.Vector3(0, 0.9, 0.3);
+    }
+    case 'asleep': { // the bottle rolled away from the hand, a mug on its side, the hat fallen off
+      add(emptyBottle().rotateY(0.5).translate(0.85, 0.065, -0.9), M.greens);
+      add(cylGeo(0.095, 0.09, 0.24, 12).rotateZ(Math.PI / 2).translate(-0.7, 0.095, -0.4), M.wood);
+      add(new THREE.ConeGeometry(0.2, 0.26, 12).rotateX(1.9).translate(-0.3, 0.14, -1.95), M.gear);
+      return new THREE.Vector3(0, 0.3, -1.6);
     }
     case 'fletch': {
       add(boxGeo(1.4, 0.08, 0.6).translate(0, 0.8, 0.6), M.wood);
@@ -502,6 +536,19 @@ const FX = {
   ale: { n: 14, color: '#c98a2b', size: 0.05, add: false, speed: [0, 0.05], up: [-0.6, -0.2], life: 0.35, bias: 0 },
 };
 
+/** A white letter Z on a sprite (browser only). */
+function zSprite() {
+  if (typeof document === 'undefined') return null;
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d');
+  g.font = '800 54px Inter, sans-serif';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.lineWidth = 8; g.strokeStyle = 'rgba(40,40,60,0.8)'; g.strokeText('Z', 32, 34);
+  g.fillStyle = '#ffffff'; g.fillText('Z', 32, 34);
+  return new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false }));
+}
+
 /** An arrow lying along -x, the head at x = -0.75 (the nock at the origin). */
 function arrowGroup(M) {
   const g = new THREE.Group();
@@ -522,7 +569,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id 
   const group = new THREE.Group();
   group.position.copy(anchor);
   group.rotation.y = face;
-  const P = rig(M, JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer });
+  const P = rig(M, JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer, ground: !!cfg.ground });
   group.add(P.root);
   const propsG = new THREE.Group();
   group.add(propsG);
@@ -550,7 +597,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id 
     group.updateMatrixWorld(true);
     return group.worldToLocal(tipObj.getWorldPosition(at.set(0, 0, 0)));
   };
-  if (tipObj && !cfg.wave && !cfg.push && !cfg.look && !cfg.smooth && !cfg.sweep && !cfg.stir && !cfg.archer) {
+  if (tipObj && !cfg.wave && !cfg.push && !cfg.look && !cfg.smooth && !cfg.sweep && !cfg.stir && !cfg.archer && !cfg.drink) {
     for (let a = cfg.raise + 0.6; a < 0.6; a += 0.01) {
       const tp = tipAt(a);
       if (tp.z > 0.15 && tp.y <= impact.y) { down = a; break; }
@@ -580,6 +627,9 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id 
     group.add(flying);
     archer = { string, tipTop, tipLow, nocked, flying };
   }
+  // snoring: Z letters float up from the sleeper's head and fade (sprites, so they always face the camera)
+  const snores = cfg.sleep ? [0, 1, 2].map(() => zSprite()).filter(Boolean) : [];
+  for (const z of snores) group.add(z);
   // the fisherman's net opens over the water and sinks
   let net = null;
   if (cfg.net) {
@@ -622,11 +672,12 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id 
   const v = new THREE.Vector3(), w = new THREE.Vector3();
   // the archer's target is a few metres away: frame the archer and the target together
   group.updateMatrixWorld(true);
-  const focus = cfg.archer ? group.localToWorld(new THREE.Vector3(0, 1.1, 0).lerp(impact, 0.4)) : anchor.clone().add(new THREE.Vector3(0, 1.1, 0));
+  const focus = cfg.archer ? group.localToWorld(new THREE.Vector3(0, 1.1, 0).lerp(impact, 0.4)) : anchor.clone().add(new THREE.Vector3(0, cfg.focusH ?? 1.1, 0));
   return {
     group,
     focus,
-    labelPos: anchor.clone().add(new THREE.Vector3(0, 2.45, 0)),
+    labelPos: anchor.clone().add(new THREE.Vector3(0, cfg.labelH ?? 2.45, 0)),
+    radius: cfg.radius, // closer than usual for people on the ground
     face,
     sound: cfg.sound,
     strikeTimes,
@@ -687,6 +738,27 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id 
         }
       }
       for (const f of anim) f(t, c, THREE.MathUtils.clamp(swing, 0, 1));
+      if (cfg.drink) {
+        // most of the time the bottle rests on the lap; every few seconds a long swig, head back
+        const u = cycleU, lift = u < 0.14 ? ease(u / 0.14) : u < 0.42 ? 1 : u < 0.55 ? 1 - ease((u - 0.42) / 0.13) : 0;
+        P.r.g.rotation.set(lerp(down, cfg.raise, lift), 0, lerp(-0.05, -0.4, lift));
+        P.body.rotation.set(cfg.bend - 0.18 * lift + 0.03 * Math.sin(t * 1.1), 0, 0.05 * Math.sin(t * 0.7));
+        P.l.g.rotation.set(cfg.left, 0, 0.12);
+      }
+      if (cfg.sleep) {
+        // flat on his back, arms flung out, the chest rising and falling
+        P.root.rotation.set(-Math.PI / 2, 0, 0);
+        P.root.position.set(0, 0.24, 0.7);
+        P.r.g.rotation.set(0.1, 0, -1.25); P.l.g.rotation.set(-0.3, 0, 1.0);
+        P.body.scale.set(1, 1, 1 + 0.07 * Math.sin(c * Math.PI * 2));
+        P.body.rotation.set(0, 0.08 * Math.sin(t * 0.3), 0);
+        snores.forEach((z, i) => {
+          const q = (c * 0.5 + i / 3) % 1;
+          z.position.set(0.15 + 0.25 * q, 0.55 + 0.9 * q, -1.55 + 0.1 * Math.sin(q * 6 + i));
+          z.scale.setScalar(0.16 + 0.22 * q);
+          z.material.opacity = Math.sin(Math.PI * q) * 0.95;
+        });
+      }
       if (cfg.look) P.root.rotation.y = 0.5 * Math.sin(t * 0.8);
       if (cfg.sway) P.root.rotation.z = 0.06 * Math.sin(t * 1.3);
       if (cfg.dance) {

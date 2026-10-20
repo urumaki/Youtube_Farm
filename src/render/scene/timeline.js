@@ -22,7 +22,7 @@ export const VARIANTS = {
   farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
   blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw'],
   baker: ['oven', 'knead'], fisherman: ['rod', 'net'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
-  innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'],
+  innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
 };
 const CASTLE_VARIANTS = new Set(['walls', 'sparring']); // own camera at the castle, a hard cut in and out
 // scenes inside a building (the baker's bakehouse, bakery.js): own camera, a hard cut in and out
