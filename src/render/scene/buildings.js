@@ -20,6 +20,14 @@ function lotFrame(w, lot) {
   return { base, lo, m };
 }
 
+// structures inside a square stand on the square's paving: the square's frame moved to the spot
+function plazaFrame(w, parent, lot) {
+  const f = lotFrame(w, parent);
+  const c = Math.cos(-parent.rot), s = Math.sin(-parent.rot), dx = lot.x - parent.x, dz = lot.z - parent.z;
+  const m = f.m.clone().multiply(new THREE.Matrix4().makeTranslation(dx * c - dz * s, 0.05, dx * s + dz * c));
+  return { base: f.base + 0.05, lo: f.base, m };
+}
+
 // ------------------------------------------------------------------ small helpers
 function house(b, x, z, w, d, h, { roof = 'roofRed', wall = 'timber', ry = 0, roofH = d * 0.6 } = {}) {
   b.add(wall, boxGeo(w, h, d, 4), x, h / 2, z, ry);
@@ -144,6 +152,36 @@ const BUILD = {
       b.add('arms', new THREE.PlaneGeometry(1.2, 1.5), 8, 3.6, 14.78);
     }
     out.focusH = 6;
+  },
+  crier_stand(b, lot, out) {
+    // a low wooden stand with steps, a bell on a post and a notice board
+    b.add('wood', boxGeo(2.6, 0.7, 2.6), 0, 0.35, 0);
+    b.add('woodDark', boxGeo(2.8, 0.1, 2.8), 0, 0.72, 0);
+    for (let i = 0; i < 2; i++) b.add('wood', boxGeo(1.2, 0.23, 0.4), 0, 0.12 + i * 0.23, 1.5 - i * 0.02 + 0.2 * (1 - i));
+    b.add('woodDark', boxGeo(0.18, 3.2, 0.18), -1.1, 2.3, -1.1);
+    b.add('woodDark', boxGeo(1.0, 0.14, 0.14), -0.7, 3.8, -1.1);
+    b.add('gold', cylGeo(0.08, 0.26, 0.38, 12), -0.35, 3.52, -1.1);
+    b.add('woodDark', boxGeo(0.12, 1.9, 0.12), 0.9, 1.65, -1.25); b.add('woodDark', boxGeo(0.12, 1.9, 0.12), 1.9, 1.65, -1.25);
+    b.add('wood', boxGeo(1.4, 1.0, 0.08), 1.4, 2.1, -1.25);
+    for (const [x, y] of [[1.1, 2.25], [1.6, 2.0], [1.45, 2.35]]) b.add('ivory', boxGeo(0.34, 0.42, 0.02), x, y, -1.2);
+    out.flags.push([-1.1, 3.95, -1.1, 0.9, 0.6]);
+    out.focusH = 2.4;
+  },
+  pillory(b, lot, out) {
+    // a raised wooden platform with the pillory, a chopping block (with a cabbage) and a basket
+    b.add('wood', boxGeo(5, 1.0, 3.2), 0, 0.5, 0);
+    b.add('woodDark', boxGeo(5.2, 0.1, 3.4), 0, 1.02, 0);
+    for (let i = 0; i < 3; i++) b.add('wood', boxGeo(1.3, 0.33, 0.45), 1.6, 0.17 + i * 0.33, 1.95 - i * 0.22 + 0.2);
+    for (const x of [-2.2, -0.8]) b.add('woodDark', boxGeo(0.2, 2.0, 0.2), x, 2.0, -0.6);
+    b.add('wood', boxGeo(1.6, 0.36, 0.22), -1.5, 2.3, -0.6);
+    for (const x of [-1.95, -1.5, -1.05]) b.add('stoneDark', cylGeo(x === -1.5 ? 0.13 : 0.08, x === -1.5 ? 0.13 : 0.08, 0.24, 10).rotateX(Math.PI / 2), x, 2.3, -0.6);
+    b.add('wood', cylGeo(0.42, 0.48, 0.6, 12), 1.0, 1.35, -0.3);
+    b.add('greens', new THREE.SphereGeometry(0.2, 10, 8), 1.0, 1.82, -0.3);
+    b.add('woodDark', boxGeo(0.06, 0.9, 0.06).rotateZ(0.5), 1.35, 1.95, -0.3);
+    b.add('wood', cylGeo(0.4, 0.32, 0.4, 12), -0.1, 1.25, 0.9);
+    for (const [x, z] of [[-0.2, 0.85], [0.05, 0.95], [-0.1, 1.05]]) b.add('greens', new THREE.SphereGeometry(0.16, 8, 6), x, 1.5, z);
+    out.flags.push([2.3, 2.2, -1.4, 0.8, 0.5]);
+    out.focusH = 2.6;
   },
   tavern(b, lot, out, ctx) {
     house(b, 0, 0, 13, 9, 7, { roof: 'thatch', wall: 'timber', roofH: 5 });
@@ -401,7 +439,8 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     const lot = w.lots[bd.id];
     const fn = BUILD[bd.id];
     if (!lot || !fn) continue;
-    const frame = lotFrame(w, lot);
+    const parent = lot.onPlaza && w.lots[lot.onPlaza];
+    const frame = parent ? plazaFrame(w, parent, lot) : lotFrame(w, lot);
     const b = new Builder();
     const out = { smoke: [], lights: [], flags: [], banners: [], focusH: 6 };
     ctx.boats = []; ctx.sails = []; ctx.lamps = [];
@@ -428,7 +467,7 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     const body = new THREE.Group();
     body.add(inner);
     root.add(body);
-    if (!lot.onWater && bd.id !== 'quarry') root.add(foundation); // squares too: stalls and crosses need a level floor
+    if (!lot.onWater && !parent && bd.id !== 'quarry') root.add(foundation); // squares too: stalls and crosses need a level floor
     // construction site extras, standing on the ground (or the river bed) below the lot level
     const drop = lot.onWater ? 4 : frame.base - frame.lo + 0.3;
     const site = new Builder();

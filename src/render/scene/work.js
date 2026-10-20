@@ -16,13 +16,14 @@ const merged = (parts) => mergeGeometries(parts.map(flat));
  * A person with arms on shoulder pivots so they can swing tools. Faces +z.
  * seated: hips at seat height (0.47), thighs forward and shins down to the floor (for benches).
  */
-export function rig(M, color, { seated = false } = {}) {
+export function rig(M, color, { seated = false, walk = false } = {}) {
   const root = new THREE.Group();
   const body = new THREE.Group(); // bends at the hips
   body.position.y = seated ? 0.47 : 0.62;
   root.add(body);
   const tunic = M.people.clone();
   tunic.color.set(color);
+  let walkLegs = null;
   const add = (parent, geo, mat, cast = true) => { const m = new THREE.Mesh(geo, mat); m.castShadow = cast; m.receiveShadow = true; parent.add(m); return m; };
   if (seated) {
     const legs = [];
@@ -32,6 +33,15 @@ export function rig(M, color, { seated = false } = {}) {
       legs.push(boxGeo(0.13, 0.08, 0.24).translate(x, 0.04, 0.45));
     }
     add(root, merged(legs), M.gear);
+  } else if (walk) {
+    // legs on hip pivots, for walking and running (story events)
+    walkLegs = [-0.09, 0.09].map((x) => {
+      const g = new THREE.Group();
+      g.position.set(x, 0.6, 0);
+      root.add(g);
+      add(g, merged([cylGeo(0.075, 0.085, 0.6, 6).translate(0, -0.3, 0), boxGeo(0.13, 0.08, 0.24).translate(0, -0.56, 0.04)]), M.gear);
+      return g;
+    });
   } else add(root, merged([cylGeo(0.075, 0.085, 0.6, 6).translate(-0.09, 0.3, 0), cylGeo(0.075, 0.085, 0.6, 6).translate(0.09, 0.3, 0),
     boxGeo(0.13, 0.08, 0.24).translate(-0.09, 0.04, 0.04), boxGeo(0.13, 0.08, 0.24).translate(0.09, 0.04, 0.04)]), M.gear);
   add(body, merged([cylGeo(0.19, 0.33, 0.9, 12).translate(0, 0.36, 0),
@@ -50,7 +60,7 @@ export function rig(M, color, { seated = false } = {}) {
     g.add(hand);
     return { g, hand };
   };
-  return { root, body, r: arm(1), l: arm(-1) };
+  return { root, body, r: arm(1), l: arm(-1), legs: walkLegs, tunic };
 }
 
 function particles(count, color, size, additive) {
@@ -83,6 +93,10 @@ const JOB_SCENES = {
   weirdo: { period: 1.1, raise: -2.6, down: -0.4, bend: 0, sound: 'none', tool: null, props: 'none', dance: true },
   jester: { period: 0.9, raise: -1.2, down: -0.8, bend: 0, sound: 'none', tool: null, props: 'none', juggle: true },
   fletcher: { period: 0.6, raise: -1.35, down: -1.05, bend: 0.22, sound: 'none', tool: null, props: 'fletch', smooth: true, left: -1.15 },
+  // in-between goals: the town crier rings a hand bell by the notice board, the executioner (nobody gets
+  // hurt in the kingdom) chops cabbages on the block
+  crier: { period: 0.42, raise: -2.75, down: -2.2, bend: 0, sound: 'none', tool: 'handbell', props: 'notice', smooth: true, left: -1.3 },
+  executioner: { period: 1.6, hit: 0.72, raise: -2.8, down: -0.9, bend: 0.25, fx: 'leaves', sound: 'chop', tool: 'axe', props: 'chopblock', both: true, hood: true },
 };
 JOB_SCENES.warrior = JOB_SCENES.knight;
 JOB_SCENES.toolsmith = JOB_SCENES.blacksmith;
@@ -149,6 +163,9 @@ export function toolGeo(kind, M) {
     add(cylGeo(0.095, 0.09, 0.24, 12).translate(0, -0.02, 0.12), M.wood);
     add(cylGeo(0.098, 0.098, 0.035, 12).translate(0, 0.115, 0.12), M.clothIvory); // foam
     add(new THREE.TorusGeometry(0.06, 0.015, 5, 10).rotateY(Math.PI / 2).translate(0, 0, 0.23), M.woodDark); // handle
+  } else if (kind === 'handbell') {
+    add(cylGeo(0.025, 0.03, 0.2, 8).translate(0, 0.02, 0.06), wood);
+    add(cylGeo(0.05, 0.13, 0.17, 12).translate(0, -0.15, 0.06), M.gold);
   } else if (kind === 'sack') {
     add(new THREE.SphereGeometry(0.28, 10, 8).scale(1, 1.2, 0.8).translate(0, -0.1, 0.25), M.hay);
   }
@@ -244,6 +261,20 @@ function buildProps(kind, M, add) {
       add(new THREE.TorusGeometry(0.6, 0.02, 5, 20, Math.PI * 0.9).rotateZ(-Math.PI * 0.45).translate(0.95, 0.9, 0.85), M.woodDark); // bow
       return new THREE.Vector3(0, 0.9, 0.5);
     }
+    case 'notice': {
+      add(boxGeo(0.1, 1.9, 0.1).translate(-1.0, 0.95, 0.5), M.woodDark); add(boxGeo(0.1, 1.9, 0.1).translate(-1.0, 0.95, -0.7), M.woodDark);
+      add(boxGeo(0.06, 0.9, 1.3).translate(-1.0, 1.45, -0.1), M.wood);
+      for (const [y, z] of [[1.6, -0.4], [1.35, 0.1], [1.65, 0.25]]) add(boxGeo(0.02, 0.36, 0.28).translate(-0.96, y, z), M.clothIvory);
+      add(new THREE.CylinderGeometry(0.035, 0.035, 0.32, 8).rotateZ(Math.PI / 2).translate(-0.2, 0.95, 0.45), M.clothIvory); // the scroll
+      return new THREE.Vector3(0, 1.2, 0.4);
+    }
+    case 'chopblock': {
+      add(cylGeo(0.4, 0.46, 0.55, 12).translate(0, 0.27, 0.75), M.wood);
+      add(new THREE.SphereGeometry(0.2, 10, 8).translate(0, 0.72, 0.75), M.greens);
+      add(cylGeo(0.42, 0.34, 0.42, 12).translate(1.3, 0.21, 0.2), M.wood); // basket of cabbages
+      for (const [x, z] of [[1.2, 0.15], [1.42, 0.27], [1.3, 0.05]]) add(new THREE.SphereGeometry(0.17, 8, 6).translate(x, 0.5, z), M.greens);
+      return new THREE.Vector3(0, 0.82, 0.75);
+    }
     case 'none':
       return new THREE.Vector3(0, 1.2, 0.4);
     default: { // a little stall with goods
@@ -262,6 +293,7 @@ const FX = {
   chips: { n: 22, color: '#d9b27c', size: 0.08, add: false, speed: [1.5, 3.5], up: [1.5, 3.5], life: 0.8 },
   dust: { n: 24, color: '#bdb7aa', size: 0.08, add: false, speed: [0.6, 1.6], up: [0.6, 1.6], life: 0.9 },
   embers: { n: 18, color: '#ff8a3d', size: 0.05, add: true, speed: [0.2, 0.8], up: [1.0, 2.2], life: 1.2 },
+  leaves: { n: 26, color: '#6f9a3c', size: 0.09, add: false, speed: [1.2, 2.8], up: [1.2, 2.8], life: 0.8 },
   splash: { n: 20, color: '#cfe6f2', size: 0.07, add: false, speed: [0.5, 1.4], up: [1.5, 2.6], life: 0.7 },
 };
 
@@ -283,6 +315,13 @@ export function buildWorkScene({ job, anchor, face, M, seed, id }) {
   const impact = buildProps(cfg.props, M, add);
   const tool = cfg.tool ? toolGeo(cfg.tool, M) : null;
   if (tool) P.r.hand.add(tool);
+  if (cfg.hood) {
+    // the executioner's black hood over the head and shoulders
+    const hood = new THREE.Mesh(new THREE.ConeGeometry(0.27, 0.62, 12).translate(0, 1.14, 0), M.people.clone());
+    hood.material.color.set('#151214');
+    hood.castShadow = true;
+    P.body.add(hood);
+  }
   // calibrate: find the arm angle where the tool's face reaches the work surface, then slide the
   // props so the anvil/log/soil sits exactly under it
   const tipObj = tool?.userData.tip;

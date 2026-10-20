@@ -282,3 +282,33 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
   assert.equal(deriveVillagers(r.state)[0].name, 'Hank');
   checkInvariants(r.state);
 });
+
+test('story events: deterministic, Halloween on its date, cooldowns kept, named villagers only as heroes', async () => {
+  const { STORIES } = await import('../src/sim/stories.js');
+  const run = () => {
+    let s = genesis({ seed: SEED, date: '2026-09-30' });
+    const out = [];
+    const d = new Date('2026-10-01T00:00:00Z');
+    for (let i = 0; i < 70; i++) {
+      const date = d.toISOString().slice(0, 10);
+      d.setUTCDate(d.getUTCDate() + 1);
+      const commenters = i === 0 ? ['Ada', 'Bo', 'Cy', 'Dee'].map((n, k) => ({ author: 'a' + k, name: n, at: `${date}T0${k}:00:00Z`, wants: k === 0 ? ['guard'] : [] })) : [];
+      s = advance(s, { subscribers: 60 + i, date, commenters }).state;
+      out.push({ date, day: s.day, story: s.story });
+    }
+    return out;
+  };
+  const a = run(), b = run();
+  assert.deepEqual(a, b);
+  assert.equal(a.find((x) => x.date === '2026-10-31').story?.id, 'halloween');
+  const last = {};
+  for (const x of a) {
+    if (!x.story) continue;
+    const cd = STORIES[x.story.id].cooldown;
+    if (cd && last[x.story.id] !== undefined) assert.ok(x.day - last[x.story.id] >= cd, `${x.story.id} cooldown`);
+    last[x.story.id] = x.day;
+    if (x.story.id === 'bandits') for (const c of x.story.cast) assert.ok(c.name, 'bandit heroes are named villagers');
+  }
+  const days = a.filter((x) => x.story).length;
+  assert.ok(days > 15 && days < 55, `stories on ${days} of 70 days`);
+});

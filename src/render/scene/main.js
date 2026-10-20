@@ -16,6 +16,7 @@ import { createOverlay } from './overlay.js';
 import { buildWorkScene } from './work.js';
 import { buildCaravan } from './caravan.js';
 import { buildTavernInterior } from './tavern.js';
+import { buildStory } from './stories/index.js';
 import { heightAt } from '../../sim/world.js';
 
 const FPS = 30;
@@ -86,6 +87,7 @@ async function setup(data) {
   // named villagers are shown at work in their croft; today's named villagers arrive in a caravan
   const works = [];
   let caravan = null, tavern = null;
+  const stories = [];
   const yFn = (x, z) => heightAt(w, x, z) + 0.03;
   if (plan) for (const tg of plan.targets) {
     if (tg.kind === 'villager') {
@@ -115,12 +117,23 @@ async function setup(data) {
       tg.labels = tavern.labels;
       tg.cam = tavern.cam;
       tg.banner = data.lang === 'it' ? 'La Taverna' : 'The Tavern';
+    } else if (tg.kind === 'event') {
+      const st = buildStory({ story: tg.story, w, state, M, buildings, houses, yFn, seed: state.seed, lang: data.lang });
+      if (!st) continue;
+      scene.add(st.group);
+      st.setWindow?.(tg.t0, tg.t1);
+      tg.labels = st.labels;
+      tg.cam = st.cam;
+      tg.banner = st.banner;
+      if (st.phase !== undefined) tg.phase = st.phase;
+      if (st.focus) tg.pos.copy(st.focus);
+      stories.push({ st, tg });
     }
   }
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
   const overlay = viewer ? null : createOverlay(document.getElementById('stage'), data);
 
-  const ctx = { renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, caravan, tavern };
+  const ctx = { renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, caravan, tavern, stories };
   ctx.stats = {
     setupMs: Math.round(performance.now() - t0), houses: state.houses.length, animated: animated.size, trees: nature.count,
     walkers: life.walkers, guards: life.guards, targets: plan?.targets.map((t) => `${t.kind}:${t.id ?? ''}`),
@@ -141,6 +154,7 @@ function applyFrame(ctx, t) {
   for (const ws of ctx.works || []) ws.update(t);
   const ct = ctx.caravan && plan.targets.find((x) => x.kind === 'caravan');
   if (ct) ctx.caravan.update(t, ct.t0, ct.t1);
+  for (const { st, tg } of ctx.stories || []) st.update(t, tg.t0, tg.t1);
   const ev = evaluate(plan, t);
   const inside = ev.active?.kind === 'tavern';
   if (ctx.tavern) ctx.tavern.update(t, inside);

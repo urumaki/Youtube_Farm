@@ -23,7 +23,9 @@
     "names": { "type": "object" },
     "nameQueue": { "type": "array", "items": { "type": "object", "required": ["name", "author"] } },
     "namedAuthors": { "type": "array", "items": { "type": "string" } },
-    "commentsSeen": { "type": ["string", "null"] }
+    "commentsSeen": { "type": ["string", "null"] },
+    "storyLog": { "type": "object" },
+    "story": { "type": ["object", "null"] }
   },
   "$defs": {
     "villager": {

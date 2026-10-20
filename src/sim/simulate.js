@@ -5,6 +5,7 @@ import { availableJobs } from './requests.js';
 import { TIERS, BUILDINGS, JOBS, jobFor, houseCapacity, tiersReached } from './tiers.js';
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
+import { pickStory } from './stories.js';
 
 export const SCHEMA_VERSION = 1;
 export const ABANDON_DAYS = 7;
@@ -31,6 +32,8 @@ export function genesis({ seed = DEFAULT_SEED, date = '1970-01-01' } = {}) {
     nameQueue: [],    // commenters waiting for an unnamed villager
     namedAuthors: [], // every commenter who ever received a name (one villager per person)
     commentsSeen: null, // publishedAt of the newest comment already processed
+    storyLog: {},     // story event id -> last day it happened (cooldowns)
+    story: null,      // today's story event
   };
 }
 
@@ -155,6 +158,9 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   diff.weather = weather;
   diff.events = events;
   s.events = events;
+  // 5. At most one story event with its own scene (src/sim/stories.js)
+  diff.story = pickStory(s);
+  s.story = diff.story;
   diff.population = target;
   diff.next = nextGoal(target, s.unlockedTiers);
   return { state: s, diff };

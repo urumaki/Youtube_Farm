@@ -34,6 +34,8 @@ const KEYWORDS = [
   [/alchemist|wizard|\bmage\b|sorcer|alchimista|mago/, 'alchemist'],
   [/\blord\b|landlord|\bnoble|\bduke|\bbaron|nobile|signore/, 'noble'],
   [/\bmayor|sindaco/, 'mayor'],
+  [/executioner|headsman|\bboia\b|carnefice|giustiziere/, 'executioner'],
+  [/town\s*crier|\bcrier\b|\bherald|banditore|araldo|messaggero/, 'crier'],
 ];
 
 // "maybe later, when there are proper guards" is a wish for the kingdom, not a job request

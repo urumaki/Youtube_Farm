@@ -3,11 +3,12 @@
 import * as THREE from 'three';
 import { BUILDINGS, JOBS, tavernScene } from '../../sim/tiers.js';
 import { CASTLE } from '../../sim/world.js';
+import { NIGHT_STORIES } from './stories/index.js';
 
 export const DURATION = 30;
 // the wide shot with the goal and the end credits is short (3.5 s) so the daily update keeps the time
 const HOOK = 2, UPDATE_END = 23.5, WIDE_END = 27;
-const CARAVAN_SECONDS = 4.5;
+const CARAVAN_SECONDS = 4.5, STORY_SECONDS = 4.5;
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 
 export function makePlan({ state, diff, houses, animated, buildings, castle, maxTargets = 7 }) {
@@ -24,9 +25,10 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   for (const id of [...diff.buildingsStarted, ...diff.buildingsCompleted]) {
     const it = buildings.items[id];
     if (!it || targets.some((t) => t.id === id) || targets.length >= maxBuildings) continue;
+    const SMALL = ['crier_stand', 'pillory'];
     const big = ['cathedral', 'palace', 'tournament', 'harbor', 'wall2', 'university', 'colossus', 'townhall'].includes(id);
     targets.push({
-      kind: 'building', id, pos: it.focus.clone(), radius: big ? 70 : 30, front: (it.lot?.rot ?? 0) + Math.PI / 2,
+      kind: 'building', id, pos: it.focus.clone(), radius: big ? 70 : SMALL.includes(id) ? 13 : 30, front: (it.lot?.rot ?? 0) + Math.PI / 2,
       label: { title: BUILDINGS[id].label.replace(/^the /, 'The '), sub: diff.buildingsCompleted.includes(id) ? 'Completed!' : 'Construction begins' },
       completed: diff.buildingsCompleted.includes(id),
       weight: people ? 0.9 : 1, // "a few seconds" each when the caravan and the workers share the video
@@ -35,6 +37,15 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   // 2) the caravan of villagers named today, then a few named villagers at work
   const today = diff.named || [];
   if (today.length) targets.unshift({ kind: 'caravan', id: 'caravan', pos: new THREE.Vector3(), radius: 14, front: 0, label: null, labels: [], weight: 2.8, count: today.length });
+  // the day's story event (bandits, a quarrel, merchants, Halloween...) comes right after the caravan
+  if (diff.story) {
+    const night = NIGHT_STORIES.has(diff.story.id);
+    targets.splice(today.length ? 1 : 0, 0, {
+      kind: 'event', id: diff.story.id, story: diff.story, pos: (buildings.items.market || buildings.items.well)?.focus.clone() ?? castle.keep.clone(),
+      // a hard cut in and out ("meanwhile..."): no high flight over the town, and dusk scenes change the light
+      radius: 12, front: 0, label: null, labels: [], weight: 2, cut: true, phase: night ? 1 : undefined,
+    });
+  }
   const INTEREST = ['blacksmith', 'toolsmith', 'woodcutter', 'baker', 'stonemason', 'fisherman', 'carpenter', 'miller', 'guard', 'knight', 'farmer', 'peasant'];
   // requests granted today come first ("you asked, the Lord granted"), then the newest names
   const asked = (n) => (n.requestDay === state.day ? 1 : 0);
@@ -122,7 +133,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const start = targets[0]?.kind === 'caravan' ? 0 : HOOK;
   // some shots have a fixed length (owner: the caravan lasts 4-5 s at most); the rest share the remaining
   // time by weight
-  const fixedLen = (tg) => (tg.kind === 'caravan' && targets.length > 1 ? CARAVAN_SECONDS : null);
+  const fixedLen = (tg) => (targets.length < 2 ? null : tg.kind === 'caravan' ? CARAVAN_SECONDS : tg.kind === 'event' ? STORY_SECONDS : null);
   const fixedTotal = targets.reduce((a, tg) => a + (fixedLen(tg) ?? 0), 0);
   const totalW = targets.reduce((a, tg) => a + (fixedLen(tg) === null ? tg.weight || 1 : 0), 0);
   let tc = start;
@@ -147,7 +158,7 @@ const HOOK_FROM = { pos: new THREE.Vector3(150, 44, 64), look: new THREE.Vector3
 const HOOK_TO = { pos: new THREE.Vector3(72, 17, -13), look: new THREE.Vector3(CASTLE.half + 4, CASTLE.ground + 9, 0) };
 
 function orbitPose(tg, u) {
-  if (tg.kind === 'tavern' && tg.cam) return tg.cam(u);
+  if (tg.cam) return tg.cam(u); // scenes with their own camera (tavern interior, story events)
   if (tg.kind === 'caravan' && tg.track) {
     // in the road ahead of the column, looking back at it as it comes into town
     const t = tg.t0 + u * (tg.t1 - tg.t0);
@@ -217,6 +228,7 @@ export function evaluate(plan, t) {
     out.shadowRadius = Math.max(80, tg.radius * 2.6);
     out.active = tg;
     out.activeU = u;
+    if (tg.phase !== undefined) out.phase = tg.phase; // dusk scenes (cut in and out)
   } else if (t < WIDE_END) {
     const last = orbitPose(plan.targets.at(-1), 1);
     const wide = widePose(plan, (t - UPDATE_END) / (WIDE_END - UPDATE_END));

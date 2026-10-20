@@ -186,6 +186,10 @@ function buildLots(w, r) {
   lots.guardposts = { id: 'guardposts', x: 0, z: 0, hw: 0, hd: 0, rot: 0, virtual: true };
   lots.fields = { id: 'fields', x: 0, z: -120, hw: 0, hd: 0, rot: 0, virtual: true };
   lots.charter_stone = { id: 'charter_stone', x: MARKET.x, z: 10, hw: 0, hd: 0, rot: 0, virtual: true };
+  // small structures inside the market square: virtual (house plots and roads ignore them), drawn on the
+  // square's paving (onPlaza)
+  lots.crier_stand = { id: 'crier_stand', x: MARKET.x - 11, z: -13.8, hw: 1.6, hd: 1.6, rot: 0, virtual: true, onPlaza: 'market' };
+  lots.pillory = { id: 'pillory', x: MARKET.x - 11, z: 14.2, hw: 2.6, hd: 1.7, rot: 0, virtual: true, onPlaza: 'market' };
   void r;
   return lots;
 }

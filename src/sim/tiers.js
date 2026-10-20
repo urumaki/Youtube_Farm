@@ -30,6 +30,8 @@ export const JOBS = {
   noble: { label: 'Noble', color: '#5b2a86' },
   chronicler: { label: 'Chronicler', color: '#55443a' },
   admiral: { label: 'Admiral', color: '#0f3057' },
+  crier: { label: 'Town Crier', color: '#c23b22' },
+  executioner: { label: 'Executioner', color: '#2a2326' },
   // jobs that only exist because someone asked for them in a comment (see requests.js)
   fletcher: { label: 'Fletcher', color: '#5e7d3a', requestOnly: true },
   weirdo: { label: 'Town Weirdo', color: '#c04fb4', requestOnly: true },
@@ -52,6 +54,7 @@ export const BUILDINGS = {
   quarry: { label: 'the Quarry', days: 1 },
   market: { label: 'the Market Square', days: 2 },
   tavern: { label: 'the Tavern', days: 2 },
+  crier_stand: { label: "the Crier's Stand", days: 1 },
   chapel: { label: 'the Chapel', days: 3 },
   windmill: { label: 'the Windmill', days: 2 },
   wall2: { label: 'the Second Wall', days: 7 },
@@ -59,6 +62,7 @@ export const BUILDINGS = {
   harbor: { label: 'the Harbor', days: 7 },
   cathedral: { label: 'the Cathedral', days: 21 },
   tournament: { label: 'the Tournament Ground', days: 5 },
+  pillory: { label: 'the Pillory', days: 1 },
   district_east: { label: 'the East Ward', days: 3 },
   charter_stone: { label: 'the Charter Stone', days: 1 },
   district_north: { label: 'the North Ward', days: 3 },
@@ -77,8 +81,13 @@ export const TIERS = [
   { id: 'guard', at: 25, title: 'Guarded Village', unique: ['guard', 'stonemason'], pool: { guard: 2, stonemason: 1.2 }, buildings: ['guardposts', 'quarry'], goal: 'the Guard takes the walls' },
   { id: 'market', at: 50, title: 'Market Town', unique: ['merchant', 'innkeeper'], pool: { merchant: 1.5 }, buildings: ['market', 'tavern'], goal: 'the Market opens' },
   { id: 'faith', at: 100, title: 'Chapel Town', unique: ['priest', 'miller'], pool: { miller: 0.4 }, buildings: ['chapel', 'windmill'], goal: 'the Chapel bell rings' },
+  // small in-between goals (owner, 2026-10-20): a new job and a small structure in the market square,
+  // so the wait between two big goals is shorter. Only add tiers above the current population, or
+  // existing villagers would change job.
+  { id: 'crier', at: 175, title: 'Busy Town', unique: ['crier'], pool: {}, buildings: ['crier_stand'], goal: 'the Town Crier rings the bell' },
   { id: 'walled', at: 250, title: 'Walled Town', unique: ['reeve', 'carpenter'], pool: { carpenter: 1.2, guard: 1 }, buildings: ['wall2', 'townhall'], goal: 'the Second Wall rises' },
   { id: 'harbor', at: 500, title: 'Harbor Town', unique: ['bishop', 'knight', 'sailor'], pool: { sailor: 1.5, knight: 0.5 }, buildings: ['harbor', 'cathedral', 'tournament'], goal: 'the Harbor opens' },
+  { id: 'justice', at: 750, title: 'Town of Law', unique: ['executioner'], pool: {}, buildings: ['pillory'], goal: 'the Executioner takes up the axe' },
   { id: 'charter', at: 1000, title: 'Chartered City', unique: ['mayor', 'scholar'], pool: { scholar: 0.6, weaver: 1.2 }, buildings: ['charter_stone', 'district_east'], goal: 'the Town Charter is signed' },
   { id: 'north', at: 2500, title: 'Growing City', unique: ['physician', 'weaver'], pool: { physician: 0.5 }, buildings: ['district_north'], goal: 'the North Ward is founded' },
   { id: 'learned', at: 5000, title: 'City of Learning', unique: ['alchemist', 'bard'], pool: { alchemist: 0.3, bard: 0.6 }, buildings: ['university', 'district_south'], goal: 'the University opens' },

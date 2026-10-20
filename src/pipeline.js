@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { genesis, advance } from './sim/simulate.js';
+import { storyFor } from './sim/stories.js';
 import { baseStateFor, saveDay, lastKnownCount, STATE_DIR } from './sim/state.js';
 import { getSubscriberCount } from './fetch/youtube.js';
 import { fetchCommenters } from './fetch/comments.js';
@@ -33,6 +34,7 @@ export function parseArgs(argv) {
     else if (k === '--no-video') a.noVideo = true;
     else if (k === '--stills') a.stills = v() || '1,10,25';
     else if (k === '--state-dir') a.stateDir = v();
+    else if (k === '--story') a.story = v(); // test renders: force today's story event (bandits, quarrel, merchants, halloween)
     else if (k === '--real') a.real = true; // test renders: start from the real state/ (read only)
     else if (k === '--names') a.names = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: fake commenters
     else throw new Error(`unknown option ${k}`);
@@ -136,6 +138,7 @@ export async function daily(args, log = console) {
 export async function testRender(args, log = console) {
   if (!Number.isFinite(args.subs)) throw new Error('--subs N is required');
   const { state, diff } = args.real ? realNextDay(args) : testKingdom({ subs: args.subs, from: args.from, date: args.date, seed: args.seed, names: args.names });
+  if (args.story) diff.story = state.story = storyFor(state, args.story);
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));
   if (args.stills) {
     const times = args.stills.split(',').map(Number);

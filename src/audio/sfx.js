@@ -299,6 +299,11 @@ const SCENES = {
   castle: [['chain', 0.25]],
   story: [['chatter', 0.2]],
   caravan: [['cart', 0.45], ['chatter', 0.25]],
+  // story events (src/sim/stories.js)
+  ev_quarrel: [['chatter', 0.55]],
+  ev_merchants: [['cart', 0.5], ['chatter', 0.25]],
+  ev_bandits: [['chatter', 0.4], ['fire', 0.25]],
+  ev_halloween: [['fire', 0.5], ['chatter', 0.3]],
 };
 
 /** One impact, synced to a strike in the animation (blacksmith, woodcutter, farmer, mason). */
@@ -328,6 +333,7 @@ function sceneFor(cue) {
   if (cue.kind === 'villager') return null; // handled with synced strikes below
   if (cue.kind === 'caravan') return 'caravan';
   if (cue.kind === 'tavern') return 'tavern';
+  if (cue.kind === 'event') return SCENES['ev_' + cue.id] ? 'ev_' + cue.id : 'story';
   if (cue.kind === 'castle' || cue.kind === 'gate') return 'castle';
   if (cue.kind === 'building' || cue.kind === 'story') {
     const id = (cue.id || '').startsWith('district') ? 'district' : cue.id;

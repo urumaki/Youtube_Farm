@@ -1,6 +1,7 @@
 // Narration script from the day's diff: template-based with seeded variation, ~60-75 words for 30 s.
 import { rng } from '../sim/prng.js';
 import { JOBS, BUILDINGS, tavernScene } from '../sim/tiers.js';
+import { FROM_IT, GOODS_IT } from '../sim/stories.js';
 
 const T = {
   en: {
@@ -22,6 +23,13 @@ const T = {
     apprentice: [(n) => `${n === 1 ? 'One apprentice waits' : `${n} apprentices wait`} for their trade to arrive.`],
     promoted: [(j) => `An apprentice finally becomes a ${j}!`],
     caravan: [(n) => (n === 1 ? 'A traveler arrives with a cart full of belongings!' : `A caravan of ${n} newcomers rolls into town!`)],
+    // story events (src/sim/stories.js): named villagers are heroes or comic characters, nobody gets hurt
+    story: {
+      quarrel: [(e) => `Two villagers are quarrelling in the square over ${OVER_EN[e.over]}!`, (e) => `Trouble in the square: a loud quarrel over ${OVER_EN[e.over]}!`],
+      merchants: [(e) => `Merchants from ${e.from} pass through with ${e.goods}.`, (e) => `A merchant caravan from ${e.from} rolls in, selling ${e.goods}.`],
+      bandits: [(e) => (e.cast.length ? 'Bandits crept up at dusk, but our heroes chased them away!' : 'Bandits crept up at dusk, but the guards chased them away!'), () => 'Bandits attacked the fields, and ran off empty-handed!'],
+      halloween: ['Happy Halloween! The villagers dance in costume around the bonfire.', 'Happy Halloween! Pumpkins glow all around the square tonight.'],
+    },
     tavern: ['Meanwhile, the tavern is full tonight!', 'Over at the tavern, the mugs are full!', 'At the tavern, the cider is flowing!'],
     houses1: ['A new house rises along the road.', 'Builders finished a fresh new home.'],
     houses: [(n) => `${n} new houses rise along the roads.`, (n) => `Builders raised ${n} new homes.`],
@@ -63,6 +71,12 @@ T.it = {
   apprentice: [(n) => `${n === 1 ? 'Un apprendista aspetta' : `${n} apprendisti aspettano`} il suo mestiere.`],
   promoted: [(j) => `Un apprendista diventa finalmente ${j}!`],
   caravan: [(n) => (n === 1 ? 'Arriva un viandante con il suo carro!' : `Arriva una carovana con ${n} nuovi abitanti!`)],
+  story: {
+    quarrel: [(e) => `Due abitanti litigano in piazza per ${OVER_IT[e.over]}!`, (e) => `Guai in piazza: una lite furiosa per ${OVER_IT[e.over]}!`],
+    merchants: [(e) => `Passano mercanti ${FROM_IT[e.from] || 'da terre lontane'} con ${GOODS_IT[e.goods] || 'merci rare'}.`],
+    bandits: [(e) => (e.cast.length ? 'Al tramonto arrivano i banditi, ma i nostri eroi li mettono in fuga!' : 'Al tramonto arrivano i banditi, ma le guardie li mettono in fuga!')],
+    halloween: ['Buon Halloween! Gli abitanti ballano in maschera intorno al falò.'],
+  },
   tavern: ['Intanto la taverna è piena!', 'In taverna i boccali sono pieni!'],
   houses1: ['Una nuova casa sorge lungo la strada.'],
   houses: [(n) => `${n} nuove case sorgono lungo le strade.`],
@@ -94,7 +108,7 @@ const BUILDING_IT = {
   windmill: 'il Mulino', wall2: 'la Seconda cinta', townhall: 'il Municipio', harbor: 'il Porto', cathedral: 'la Cattedrale',
   tournament: 'il Campo del torneo', district_east: 'il Quartiere Est', charter_stone: 'la Pietra della Carta', district_north: 'il Quartiere Nord',
   university: "l'Università", district_south: 'il Quartiere Sud', palace: 'il Palazzo Reale', district_far: 'il Quartiere Lontano',
-  lighthouse: 'il Faro', colossus: 'il Colosso degli Iscritti',
+  lighthouse: 'il Faro', colossus: 'il Colosso degli Iscritti', crier_stand: 'il Palco del Banditore', pillory: 'la Gogna',
 };
 
 const JOB_IT = {
@@ -104,8 +118,11 @@ const JOB_IT = {
   mayor: 'sindaco', weaver: 'tessitore', physician: 'medico', alchemist: 'alchimista', bard: 'bardo', noble: 'nobile',
   chronicler: 'cronista', admiral: 'ammiraglio', fletcher: 'arcaio', weirdo: 'stravagante del paese', beggar: 'mendicante',
   jester: 'giullare', warrior: 'guerriero', toolsmith: 'fabbro di attrezzi', brewer: 'birraio', apprentice: 'apprendista',
+  crier: 'banditore', executioner: 'boia',
 };
 
+const OVER_EN = { chicken: 'a runaway chicken', goat: 'a stubborn goat', cabbage: 'the last cabbage' };
+const OVER_IT = { chicken: 'una gallina scappata', goat: 'una capra testarda', cabbage: "l'ultimo cavolo" };
 function plural(j) { return j.endsWith('man') ? j.slice(0, -3) + 'men' : j + 's'; }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 const words = (s) => s.split(/\s+/).filter(Boolean).length;
@@ -148,6 +165,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
     const shown = [...special, ...diff.added.filter((v) => !special.includes(v))].slice(0, special.length ? 2 : 1);
     shown.forEach((v, i) => add(pick(L.person)({ job: job(v.job) }), 'person', 6 - i));
   }
+  if (diff.story && L.story[diff.story.id]) { const f = pick(L.story[diff.story.id]); add(typeof f === 'function' ? f(diff.story) : f, 'story', 9); }
   // the tavern interior is shown on these days (see makePlan in src/render/scene/timeline.js)
   if (tavernScene(state)) add(pick(L.tavern), 'tavern', 6);
   const nb = diff.housesBuilt.length;
@@ -160,7 +178,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
   if (diff.housesRuined.length) add(pick(L.ruined)(diff.housesRuined.length), 'ruined', 7);
   const milestone = diff.events.filter((e) => e.type === 'milestone').at(-1); // the biggest one passed today
   if (milestone) add(pick(L.milestone)(milestone.value.toLocaleString('en-US')), 'milestone', 7);
-  const story = diff.events.find((e) => L.events[e.type]);
+  const story = !diff.story && diff.events.find((e) => L.events[e.type]); // a story event replaces the flavor line
   if (story) add(L.events[story.type](story), 'event', 4);
   const prog = diff.events.find((e) => e.type === 'construction' && !diff.buildingsStarted.includes(e.building));
   if (prog) add(pick(L.progress)(bname(prog.building), Math.round(prog.progress * 100)), 'progress', 3);
@@ -178,7 +196,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
 
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
   // same order as the shots: caravan, new buildings, villagers at work, then the rest
-  const order = ['open', 'delta', 'caravan', 'completed', 'unlocked', 'requests', 'count', 'person', 'tavern', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
+  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'requests', 'count', 'person', 'tavern', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta', 'comment'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
     const victim = [...S].sort((a, b) => a.priority - b.priority)[0];
@@ -190,6 +208,6 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed } = {}
 }
 
 function goalIt(next) {
-  const b = { woodfolk: 'arriva il Taglialegna', crafts: 'arriva il Fabbro', guard: 'la Guardia sale sulle mura', market: 'apre il Mercato', faith: 'suona la campana della Cappella', walled: 'sorge la Seconda cinta', harbor: 'apre il Porto', charter: 'si firma la Carta della città', north: 'nasce il Quartiere Nord', learned: "apre l'Università", royal: 'si costruisce il Palazzo Reale', maritime: 'si accende il Faro', legend: 'si innalza il Colosso' };
+  const b = { woodfolk: 'arriva il Taglialegna', crafts: 'arriva il Fabbro', guard: 'la Guardia sale sulle mura', market: 'apre il Mercato', crier: 'il Banditore suona la campana', justice: 'il Boia prende la scure', faith: 'suona la campana della Cappella', walled: 'sorge la Seconda cinta', harbor: 'apre il Porto', charter: 'si firma la Carta della città', north: 'nasce il Quartiere Nord', learned: "apre l'Università", royal: 'si costruisce il Palazzo Reale', maritime: 'si accende il Faro', legend: 'si innalza il Colosso' };
   return b[next.tier] || next.goal;
 }

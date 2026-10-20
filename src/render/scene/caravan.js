@@ -25,7 +25,7 @@ function personParts() {
 }
 
 /** Covered wagon with cargo, pulled by an ox. Faces +z (the ox in front). */
-function wagon(M, seed, k) {
+export function wagon(M, seed, k, coverColor = null) {
   const g = new THREE.Group();
   const add = (geo, mat, parent = g) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; };
   add(boxGeo(1.7, 0.5, 3.6).translate(0, 1.05, 0), M.wood);
@@ -35,6 +35,7 @@ function wagon(M, seed, k) {
   const cover = new THREE.CylinderGeometry(0.95, 0.95, 3.1, 18, 1, true, Math.PI / 2, Math.PI).rotateX(Math.PI / 2);
   const canvas = M.clothIvory.clone();
   canvas.side = THREE.DoubleSide;
+  if (coverColor) canvas.color.set(coverColor);
   add(cover.translate(0, 1.3, 0.15), canvas);
   for (const z of [-1.35, 0, 1.35]) add(new THREE.TorusGeometry(0.97, 0.04, 6, 16, Math.PI).translate(0, 1.3, z), M.woodDark);
   // cargo: barrels, sacks, a chest
