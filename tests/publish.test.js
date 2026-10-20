@@ -49,6 +49,34 @@ test('publish uploads to YouTube once per day and language', async () => {
   assert.equal(again.length, 0, 'second run must not upload again');
 });
 
+test('each upload goes in the playlist once, older uploads are caught up', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pub-'));
+  const video = path.join(dir, 'v.mp4');
+  fs.writeFileSync(video, Buffer.alloc(1024));
+  // an older upload already in the playlist (added by hand), recorded before the playlist feature
+  fs.writeFileSync(path.join(dir, 'published.json'), JSON.stringify({ '2026-10-15_en': { youtube: 'old1' } }));
+  const env = { PUBLISH_TARGETS: 'youtube', YT_OAUTH_CLIENT_ID: 'id', YT_OAUTH_CLIENT_SECRET: 'sec', YT_OAUTH_REFRESH_TOKEN: 'rt', YT_PLAYLIST_ID: 'PL1' };
+  const calls = [];
+  const base = mockFetch(calls);
+  const fetchImpl = async (url, init = {}) => {
+    const u = String(url);
+    if (u.includes('/playlistItems?part=id')) { calls.push({ url: u, init }); return new Response(JSON.stringify({ items: u.includes('videoId=old1') ? [{ id: 'x' }] : [] }), { status: 200 }); }
+    if (u.includes('/playlistItems?part=snippet')) { calls.push({ url: u, init }); return new Response('{}', { status: 200 }); }
+    return base(url, init);
+  };
+  const r = await publish({ video, ...sample(), lang: 'en', env, stateDir: dir, fetchImpl, log: quiet });
+  assert.equal(r.playlist, 'added');
+  const inserts = calls.filter((c) => c.url.includes('/playlistItems?part=snippet'));
+  assert.equal(inserts.length, 1, 'the video already in the playlist is not added twice');
+  assert.deepEqual(JSON.parse(inserts[0].init.body).snippet, { playlistId: 'PL1', resourceId: { kind: 'youtube#video', videoId: 'vid123' } });
+  const ledger = JSON.parse(fs.readFileSync(path.join(dir, 'published.json'), 'utf8'));
+  assert.equal(ledger['2026-10-15_en'].playlist, 'PL1');
+  assert.equal(ledger['2026-10-16_en'].playlist, 'PL1');
+  const again = [];
+  await publish({ video, ...sample(), lang: 'en', env, stateDir: dir, fetchImpl: mockFetch(again), log: quiet });
+  assert.equal(again.length, 0, 'nothing left to do on a second run');
+});
+
 test('publish never throws when credentials are missing', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pub-'));
   const video = path.join(dir, 'v.mp4');

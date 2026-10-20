@@ -150,7 +150,7 @@ An API key can only read. Uploading needs OAuth for the account that owns the ch
 1. Google Cloud Console, same project as the API key → *APIs & Services* → **YouTube Data API v3**
    enabled (also **YouTube Analytics API** for the exact count).
 2. *OAuth consent screen* (Google Auth Platform): user type **External**, add yourself as user,
-   scopes `youtube.upload` (+ `yt-analytics.readonly`). Set the publishing status to
+   scopes `youtube.upload`, `youtube` (for the playlist) and `yt-analytics.readonly`. Set the publishing status to
    **In production** — in *Testing* the refresh token expires after 7 days. The "unverified app"
    warning is fine for your own account.
 3. *Credentials* → **Create OAuth client ID** → **Desktop app** → put the client ID and secret in
@@ -159,13 +159,18 @@ An API key can only read. Uploading needs OAuth for the account that owns the ch
    Subscriber Kingdom channel; the refresh token is written to `.env` (never shown anywhere else).
 5. GitHub → *Settings → Secrets and variables → Actions*: secrets `YT_OAUTH_CLIENT_ID`,
    `YT_OAUTH_CLIENT_SECRET`, `YT_OAUTH_REFRESH_TOKEN`; variable `PUBLISH_TARGETS=youtube`
-   (optional `YT_PRIVACY=public|unlisted|private`, `YT_PUBLISH_AT=17:00` in UTC).
+   (optional `YT_PRIVACY=public|unlisted|private`, `YT_PUBLISH_AT=17:00` in UTC, `YT_PLAYLIST_ID=PL...`
+   to add every new Short to a playlist: the id is the `list=` part of the playlist's link).
 6. **Audit**: YouTube may lock videos uploaded through an unverified API project to *private*
    (this channel's first upload went public without it). If that happens, submit the *YouTube API
    Services – Audit and Quota Extension* form and publish by hand in YouTube Studio meanwhile.
 
 Each upload is recorded in `state/published.json`, so re-running a day never uploads twice. A
 failed upload is logged and does not fail the daily run. One upload a day fits the free quota.
+With `YT_PLAYLIST_ID` set, each run also puts the day's video in the playlist (scheduled videos too:
+they appear there when they go public), and catches up on recent uploads that are not in it yet; a
+refresh token made before the playlist feature lacks the `youtube` scope (HTTP 403): run step 4 again
+and update the `YT_OAUTH_REFRESH_TOKEN` secret.
 
 ## Commands
 

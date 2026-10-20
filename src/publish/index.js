@@ -4,7 +4,7 @@
 // A failed upload is logged and never fails the daily cycle (the state is already saved).
 import fs from 'node:fs';
 import path from 'node:path';
-import { accessToken, publishAtFor, uploadVideo, videoResource } from './youtube.js';
+import { accessToken, addToPlaylist, publishAtFor, uploadVideo, videoResource } from './youtube.js';
 
 // Owner (2026-10-20): at most 5 hashtags per video, title and description together, none repeated.
 // Usual advice for Shorts: #shorts once as the format tag (in the title), then the channel's own tag and a
@@ -38,19 +38,39 @@ export async function publish({ video, state, diff, lang, log = console, env = p
     const ledgerFile = path.join(stateDir, 'published.json');
     const ledger = readJson(ledgerFile);
     const key = `${state.date}_${lang}`;
-    if (ledger[key]?.youtube) { log.log(`[publish] youtube: ${key} already uploaded (${ledger[key].youtube})`); continue; }
-    try {
-      const token = await accessToken({ clientId: env.YT_OAUTH_CLIENT_ID, clientSecret: env.YT_OAUTH_CLIENT_SECRET, refreshToken: env.YT_OAUTH_REFRESH_TOKEN, fetchImpl });
-      const publishAt = publishAtFor(env.YT_PUBLISH_AT, now);
-      const resource = videoResource({ ...meta, lang, privacy: env.YT_PRIVACY || 'public', publishAt });
-      const r = await uploadVideo({ file: video, resource, token, fetchImpl, log });
-      log.log(`[publish] youtube: https://youtube.com/shorts/${r.id} (${r.privacy}${publishAt ? `, goes public ${publishAt}` : ''})`);
-      ledger[key] = { ...ledger[key], youtube: r.id, uploadedAt: now.toISOString() };
-      fs.mkdirSync(stateDir, { recursive: true });
-      fs.writeFileSync(ledgerFile, JSON.stringify(ledger, null, 1) + '\n');
-      results.youtube = r.id;
-    } catch (e) {
-      log.error(`[publish] youtube upload failed: ${e.message}`);
+    const save = () => { fs.mkdirSync(stateDir, { recursive: true }); fs.writeFileSync(ledgerFile, JSON.stringify(ledger, null, 1) + '\n'); };
+    let token = null;
+    const getToken = async () => (token ??= await accessToken({ clientId: env.YT_OAUTH_CLIENT_ID, clientSecret: env.YT_OAUTH_CLIENT_SECRET, refreshToken: env.YT_OAUTH_REFRESH_TOKEN, fetchImpl }));
+    if (ledger[key]?.youtube) log.log(`[publish] youtube: ${key} already uploaded (${ledger[key].youtube})`);
+    else {
+      try {
+        const publishAt = publishAtFor(env.YT_PUBLISH_AT, now);
+        const resource = videoResource({ ...meta, lang, privacy: env.YT_PRIVACY || 'public', publishAt });
+        const r = await uploadVideo({ file: video, resource, token: await getToken(), fetchImpl, log });
+        log.log(`[publish] youtube: https://youtube.com/shorts/${r.id} (${r.privacy}${publishAt ? `, goes public ${publishAt}` : ''})`);
+        ledger[key] = { ...ledger[key], youtube: r.id, uploadedAt: now.toISOString() };
+        save();
+        results.youtube = r.id;
+      } catch (e) {
+        log.error(`[publish] youtube upload failed: ${e.message}`);
+      }
+    }
+    // the playlist (owner 2026-10-20): today's video, and any recent upload not added yet (a run that
+    // failed to add it, or one from before the playlist); never fails the daily cycle
+    const playlistId = env.YT_PLAYLIST_ID;
+    if (!playlistId) continue;
+    const pending = Object.keys(ledger).filter((k) => ledger[k].youtube && ledger[k].playlist !== playlistId).sort().slice(-10);
+    for (const k of pending) {
+      try {
+        const how = await addToPlaylist({ playlistId, videoId: ledger[k].youtube, token: await getToken(), fetchImpl });
+        log.log(`[publish] playlist: ${k} ${how}`);
+        ledger[k].playlist = playlistId;
+        save();
+        if (k === key) results.playlist = how;
+      } catch (e) {
+        log.error(`[publish] playlist: ${k} not added: ${e.message}`);
+        break; // the same error would repeat for the others
+      }
     }
   }
   return results;

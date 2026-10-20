@@ -1,4 +1,4 @@
-// One-time authorization: get a refresh token for your YouTube channel (upload + analytics scopes).
+// One-time authorization: get a refresh token for your YouTube channel (upload, playlist + analytics scopes).
 // Run on your own computer: `npm run auth:youtube` (add `-- --save` to write it into .env).
 // Needs YT_OAUTH_CLIENT_ID and YT_OAUTH_CLIENT_SECRET (OAuth client of type "Desktop app") in .env.
 // The token is printed only in your terminal; never paste it into chats or commit it.
@@ -15,7 +15,8 @@ if (!clientId || !clientSecret) {
   console.error('Set YT_OAUTH_CLIENT_ID and YT_OAUTH_CLIENT_SECRET in .env first (Google Cloud → Credentials → OAuth client ID → Desktop app).');
   process.exit(1);
 }
-const scopes = ['https://www.googleapis.com/auth/youtube.upload', 'https://www.googleapis.com/auth/yt-analytics.readonly'];
+// youtube: adding each new Short to the channel's playlist (YT_PLAYLIST_ID)
+const scopes = ['https://www.googleapis.com/auth/youtube.upload', 'https://www.googleapis.com/auth/youtube', 'https://www.googleapis.com/auth/yt-analytics.readonly'];
 const verifier = crypto.randomBytes(48).toString('base64url');
 const challenge = crypto.createHash('sha256').update(verifier).digest('base64url');
 const stateParam = crypto.randomBytes(16).toString('hex');
