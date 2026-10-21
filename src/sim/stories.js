@@ -3,8 +3,8 @@
 // Tone (owner's rule): named villagers are heroes or comic characters, never villains or victims, and
 // nobody gets hurt. Calendar events always happen on their date; otherwise a story happens on about
 // half the days, each kind with its own cooldown so the same scene does not repeat too often.
-// Owner (2026-10-21): no story at all on a day with BUSY_DAY or more new subscribers (the video needs the
-// time for the newcomers' names), and a story can go on for a few days, one step a day: the merchants
+// Owner (2026-10-21): no story at all on a day with BUSY_DAY or more new commenters on the previous video
+// (the video needs the time for the newcomers' names), and a story can go on for a few days, one step a day: the merchants
 // arrive, dance round the fire at night, then leave (`steps`). A story in progress waits for the next
 // quiet day.
 import { rng } from './prng.js';
@@ -50,7 +50,7 @@ export const STORIES = {
   archery: { minPop: 40, cooldown: 12, weight: 2, needs: (s) => !['rain', 'snow'].includes(s.weather), steps: ['heats', 'final'] },
 };
 const STORY_CHANCE = 0.5;
-export const BUSY_DAY = 50; // new subscribers from one day to the next: no story on busier days
+export const BUSY_DAY = 15; // new commenters since the previous video: no story on busier days
 
 function built(state, id) {
   return state.buildings.some((b) => b.id === id && b.status === 'done');
@@ -161,11 +161,12 @@ const BUILD = {
 
 /**
  * Today's story, or null. Records it in state.storyLog (id -> last day) for the cooldowns.
- * Call after the population and names of the day are settled. `newSubs`: subscribers gained since yesterday.
+ * Call after the population and names of the day are settled. `newCommenters`: people who commented for the
+ * first time since the previous video.
  */
-export function pickStory(state, { newSubs = 0 } = {}) {
+export function pickStory(state, { newCommenters = 0 } = {}) {
   state.storyLog ??= {};
-  if (newSubs >= BUSY_DAY) return null; // a story in progress waits for a quieter day
+  if (newCommenters >= BUSY_DAY) return null; // a story in progress waits for a quieter day
   const r = rng(state.seed, 'story', state.date);
   const pop = state.subscriberCount;
   const mmdd = state.date.slice(5);

@@ -171,12 +171,13 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
 
 /**
  * The parts of the video the simulation picks (and remembers for the next days): at most one story event
- * with its own scene (not on busy days), the named villagers shown at work (not yesterday's jobs again;
+ * with its own scene (not when many new people commented), the named villagers shown at work (not yesterday's jobs again;
  * those never shown first) and the scenes (none shown again within three days). Also used to plan a saved
  * day again (scripts/replan-day.js): `s` must then hold yesterday's storyLog, storyArc, lastShown and sceneLog.
  */
 export function planDay(s, prev, diff) {
-  diff.story = pickStory(s, { newSubs: diff.delta });
+  // (saves from before diff.newCommenters: the villagers named that day)
+  diff.story = pickStory(s, { newCommenters: diff.newCommenters ?? diff.named.length });
   s.story = diff.story;
   if (diff.story?.id === 'storm') { // the storm brings the rain to the whole video
     s.weather = diff.weather = 'rain';
@@ -205,6 +206,7 @@ function assignNames(s, commenters, blocked, diff) {
   diff.promoted = [];
   diff.renamed = [];
   diff.complaints = [];
+  diff.newCommenters = 0; // people commenting for the first time (no story on busy days, stories.js)
   const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
   const avail = availableJobs(s.subscriberCount);
   const villagerOf = (author) => Object.keys(s.names).find((id) => s.names[id].author === author);
@@ -242,6 +244,7 @@ function assignNames(s, commenters, blocked, diff) {
     if (!name) continue;
     known.add(c.author);
     s.namedAuthors.push(c.author);
+    diff.newCommenters += 1;
     s.nameQueue.push({ name, author: c.author, ...(wants.length ? { wants } : {}) });
   }
   // names blocked after they were given are taken back

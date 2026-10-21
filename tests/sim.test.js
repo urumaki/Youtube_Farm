@@ -344,7 +344,7 @@ test('every named villager gets a turn on screen, two at a time when they work t
   assert.equal(seen.size, jobs.length, `shown: ${[...seen]}`);
 });
 
-test('story events: none on busy days, multi-day stories go on step by step on the next quiet days', async () => {
+test('story events: none when many new people commented, multi-day stories go on step by step on the next quiet days', async () => {
   const { STORIES, BUSY_DAY } = await import('../src/sim/stories.js');
   let s = genesis({ seed: SEED, date: '2026-09-30' });
   const d = new Date('2026-10-01T00:00:00Z');
@@ -354,11 +354,13 @@ test('story events: none on busy days, multi-day stories go on step by step on t
     const date = d.toISOString().slice(0, 10);
     d.setUTCDate(d.getUTCDate() + 1);
     const busy = i % 4 === 2;
-    subs += busy ? BUSY_DAY : 1;
-    const commenters = i === 0 ? ['Ada', 'Bo', 'Cy', 'Dee'].map((n, k) => ({ author: 'a' + k, name: n, at: `${date}T0${k}:00:00Z` })) : [];
+    subs += busy ? BUSY_DAY + 5 : 3;
+    const n = i === 0 ? 4 : busy ? BUSY_DAY : 1;
+    const commenters = Array.from({ length: n }, (_, k) => ({ author: `a${i}-${k}`, name: `N${i}x${k}`, at: `${date}T00:${String(k).padStart(2, '0')}:00Z` }));
     const r = advance(s, { subscribers: subs, date, commenters });
     s = r.state;
-    if (busy) assert.equal(r.diff.story, null, `no story on a day with ${r.diff.delta} new subscribers`);
+    assert.equal(r.diff.newCommenters, n);
+    if (busy) assert.equal(r.diff.story, null, `no story on a day with ${n} new commenters`);
     if (r.diff.story) seen.push(r.diff.story);
   }
   // every multi-day story that starts goes through its steps in order
