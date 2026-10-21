@@ -1,5 +1,6 @@
 // Two villagers quarrel in the market square (or at the well) over a runaway chicken, a goat or the
-// last cabbage, while a small crowd watches. Comic, nobody gets hurt.
+// last cabbage, while a small crowd watches. Comic, nobody gets hurt. The next quiet day (step 'peace')
+// they make up: a handshake in the square, then arms up together while the crowd claps.
 import * as THREE from 'three';
 import { rand01 } from '../../../sim/prng.js';
 import { JOBS } from '../../../sim/tiers.js';
@@ -66,9 +67,11 @@ export function buildQuarrel({ story, M, buildings, seed, lang }) {
     group.add(P.root);
     return P;
   });
+  const peace = story.step === 'peace';
+  if (peace) { A.root.position.copy(at(-0.45, 0)); B.root.position.copy(at(0.45, 0)); } // close enough to shake hands
   const labels = [castTag(ca, lang), castTag(cb, lang)];
   const head = new THREE.Vector3();
-  const banner = st.square ? (lang === 'it' ? 'Lite in piazza!' : 'A quarrel in the square!') : (lang === 'it' ? 'Lite al pozzo!' : 'A quarrel at the well!');
+  const banner = peace ? (lang === 'it' ? 'Hanno fatto pace!' : 'Friends again!') : st.square ? (lang === 'it' ? 'Lite in piazza!' : 'A quarrel in the square!') : (lang === 'it' ? 'Lite al pozzo!' : 'A quarrel at the well!');
   return {
     group,
     labels,
@@ -81,9 +84,21 @@ export function buildQuarrel({ story, M, buildings, seed, lang }) {
     update(t, t0, t1) {
       group.visible = t >= t0 - 0.2 && t <= t1 + 0.2;
       if (!group.visible) return;
+      const u = (t - t0) / (t1 - t0);
+      if (peace) {
+        // a long handshake (the hands pumping up and down), then both arms up together
+        [A, B].forEach((P, k) => {
+          const shake = u < 0.55;
+          P.body.rotation.x = shake ? 0.08 : -0.05;
+          P.r.g.rotation.set(shake ? -1.15 + 0.18 * Math.sin(t * 12) : -2.7 + 0.2 * Math.sin(t * 8 + k), 0, shake ? 0.32 : -0.2);
+          P.l.g.rotation.set(shake ? -0.15 : -2.7 + 0.2 * Math.sin(t * 8 + k + 1), 0, shake ? 0.1 : 0.2);
+          P.root.position.y = shake ? 0 : 0.1 * Math.abs(Math.sin(t * 8 + k));
+          P.legs[0].rotation.x = P.legs[1].rotation.x = 0;
+        });
+      }
       // they take turns: the one speaking leans in and waves both arms, the other shakes a fist
       const turn = Math.floor((t - t0) / 1.05) % 2;
-      [A, B].forEach((P, k) => {
+      if (!peace) [A, B].forEach((P, k) => {
         const talking = k === turn, ph = t * 7.5 + k;
         P.body.rotation.x = talking ? 0.2 + 0.05 * Math.sin(ph) : -0.06;
         P.r.g.rotation.set(talking ? -1.3 - 0.7 * Math.sin(ph) : -2.5 + 0.25 * Math.sin(t * 11), 0, talking ? -0.2 : 0);
@@ -92,13 +107,13 @@ export function buildQuarrel({ story, M, buildings, seed, lang }) {
         P.legs[0].rotation.x = P.legs[1].rotation.x = 0;
       });
       if (pet) {
-        const a = (t - t0) * petSpeed;
+        const a = (t - t0) * petSpeed * (peace ? 0.25 : 1); // calm again
         pet.position.copy(at(Math.cos(a) * petR, Math.sin(a) * petR * 0.6));
         pet.rotation.y = -a + Math.PI; // running along the circle
         pet.position.y = story.over === 'chicken' ? 0.05 * Math.abs(Math.sin(t * 18)) : 0;
       }
       crowd.forEach((P, i) => {
-        const cheer = (i + Math.floor(t * 0.8)) % 3 === 0;
+        const cheer = peace ? u > 0.5 || i % 2 === 0 : (i + Math.floor(t * 0.8)) % 3 === 0;
         P.r.g.rotation.x = cheer ? -2.7 + 0.3 * Math.sin(t * 9 + i) : -0.15;
         P.l.g.rotation.x = cheer ? -0.5 : -0.15;
         P.root.position.y = cheer ? 0.06 * Math.abs(Math.sin(t * 9 + i)) : 0;

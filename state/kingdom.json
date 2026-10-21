@@ -4798,6 +4798,57 @@
   "UCzW3K-tHq1YW1ybTeE6D4QQ"
  ],
  "commentsSeen": "2026-10-21T09:47:40Z",
+ "storyLog": {},
+ "story": null,
+ "featured": [
+  {
+   "id": 57,
+   "name": "Minutebuildsforyou",
+   "job": "blacksmith",
+   "today": true,
+   "with": {
+    "id": 66,
+    "name": "Smol-Kokushibo",
+    "job": "baker",
+    "today": true
+   },
+   "pair": "visit"
+  },
+  {
+   "id": 68,
+   "name": "BoostedDude34",
+   "job": "carpenter",
+   "today": true,
+   "with": {
+    "id": 58,
+    "name": "connorlowe3286",
+    "job": "farmer",
+    "today": true
+   },
+   "pair": "visit"
+  },
+  {
+   "id": 46,
+   "name": "Grawlixtist",
+   "job": "brewer",
+   "today": true,
+   "with": {
+    "id": 60,
+    "name": "gh0styfr13nd",
+    "job": "jester",
+    "today": true
+   },
+   "pair": "visit"
+  }
+ ],
+ "lastShown": {
+  "46": 6,
+  "57": 6,
+  "58": 6,
+  "60": 6,
+  "66": 6,
+  "68": 6
+ },
  "villagers": [
   {
    "id": 0,
@@ -6402,48 +6453,20 @@
    "house": 182
   }
  ],
- "storyLog": {
-  "merchants": 6
+ "storyArc": null,
+ "sceneLog": {
+  "tavern": 5,
+  "blacksmith:bellows": 6,
+  "carpenter:saw": 6,
+  "brewer:tavern": 6
  },
- "story": {
-  "id": "merchants",
-  "cast": [],
-  "from": "the Northern Marches",
-  "goods": "silk",
-  "wagons": 3
- },
- "featured": [
-  {
-   "id": 57,
-   "name": "Minutebuildsforyou",
-   "job": "blacksmith",
-   "today": true,
-   "with": {
-    "id": 66,
-    "name": "Smol-Kokushibo",
-    "job": "baker",
-    "today": true
-   },
-   "pair": "visit"
+ "scenes": {
+  "tavern": false,
+  "variants": {
+   "46": "tavern",
+   "57": "bellows",
+   "68": "saw"
   },
-  {
-   "id": 68,
-   "name": "BoostedDude34",
-   "job": "carpenter",
-   "today": true,
-   "with": {
-    "id": 58,
-    "name": "connorlowe3286",
-    "job": "farmer",
-    "today": true
-   },
-   "pair": "visit"
-  }
- ],
- "lastShown": {
-  "57": 6,
-  "58": 6,
-  "66": 6,
-  "68": 6
+  "ambient": null
  }
 }

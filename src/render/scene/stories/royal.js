@@ -1,7 +1,9 @@
 // The King rides through town (owner 2026-10-20: the King is the channel's owner). An open royal
 // carriage, blue and gold, drawn by two white horses with plumes, guards with banners behind;
 // the townsfolk line the main street, cheer, jump and throw petals. Named villagers stand in the front row
-// with their name tags. The King sits on the back seat, crowned, waving.
+// with their name tags. The King sits on the back seat, crowned, waving. A story over three quiet days
+// (src/sim/stories.js): he rides in (this scene), holds a feast in the square (feast.js), then rides out
+// again the other way (step 'leave', this scene) while the crowd waves goodbye.
 import * as THREE from 'three';
 import { polyline } from '../../../sim/world.js';
 import { rand01 } from '../../../sim/prng.js';
@@ -47,6 +49,21 @@ function horse(M) {
   return { g, legs };
 }
 
+/** The King, seated: a red cloak with an ermine collar, a gold crown (a seated rig, see work.js). */
+export function king(M) {
+  const K = rig(M, '#9b1b30', { seated: true });
+  const add = (geo, m) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; K.body.add(o); return o; };
+  add(cylGeo(0.26, 0.42, 0.95, 14, 4, true).translate(0, 0.42, -0.05), mat(M, '#7d1426', { side: THREE.DoubleSide }));
+  add(new THREE.TorusGeometry(0.22, 0.07, 8, 16).rotateX(Math.PI / 2).translate(0, 0.86, 0), M.clothIvory);
+  add(cylGeo(0.21, 0.2, 0.17, 16, 4, true).translate(0, 1.3, 0), mat(M, ROYAL.gold, { metalness: 0.6, roughness: 0.3, side: THREE.DoubleSide }));
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    add(new THREE.ConeGeometry(0.035, 0.12, 5).translate(Math.cos(a) * 0.2, 1.44, Math.sin(a) * 0.2), M.gold);
+  }
+  add(new THREE.SphereGeometry(0.035, 8, 6).translate(0, 1.32, 0.21), M.clothRed); // a ruby
+  return K;
+}
+
 /** The open carriage (a landau), facing +z, with the King on the back seat and a coachman up front. */
 function carriage(M) {
   const g = new THREE.Group();
@@ -85,18 +102,10 @@ function carriage(M) {
     g.add(w);
     wheels.push({ w, r });
   }
-  // the King: seated, a red cloak with an ermine collar, a gold crown
-  const K = rig(M, '#9b1b30', { seated: true });
+  // the King on the back seat
+  const K = king(M);
   K.root.position.set(0, 0.93, -0.85); // hips on the seat (top at 1.4)
   g.add(K.root);
-  add(cylGeo(0.26, 0.42, 0.95, 14, 4, true).translate(0, 0.42, -0.05), mat(M, '#7d1426', { side: THREE.DoubleSide }), K.body);
-  add(new THREE.TorusGeometry(0.22, 0.07, 8, 16).rotateX(Math.PI / 2).translate(0, 0.86, 0), M.clothIvory, K.body);
-  add(cylGeo(0.21, 0.2, 0.17, 16, 4, true).translate(0, 1.3, 0), mat(M, ROYAL.gold, { metalness: 0.6, roughness: 0.3, side: THREE.DoubleSide }), K.body);
-  for (let i = 0; i < 8; i++) {
-    const a = (i / 8) * Math.PI * 2;
-    add(new THREE.ConeGeometry(0.035, 0.12, 5).translate(Math.cos(a) * 0.2, 1.44, Math.sin(a) * 0.2), M.gold, K.body);
-  }
-  add(new THREE.SphereGeometry(0.035, 8, 6).translate(0, 1.32, 0.21), M.clothRed, K.body); // a ruby
   // the coachman in royal blue
   const C = rig(M, ROYAL.blue, { seated: true });
   C.root.position.set(0, 1.78 - 0.47, 1.25);
@@ -105,7 +114,7 @@ function carriage(M) {
 }
 
 /** A guard with a banner on a pole (royal blue and gold). */
-function bannerGuard(M) {
+export function bannerGuard(M) {
   const P = person(M, ROYAL.blue);
   const helm = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2).translate(0, 1.18, 0), M.iron);
   helm.castShadow = true;
@@ -126,14 +135,17 @@ export function buildRoyal({ story, w, M, seed, yFn, lang }) {
   group.add(coach.g);
   const horses = [-0.45, 0.45].map(() => { const h = horse(M); group.add(h.g); return h; });
   const guards = [0, 1].map(() => { const g = bannerGuard(M); group.add(g.P.root); return g; });
-  // the procession moves toward the market (decreasing s); the crowd lines both sides around its path
+  // the procession moves toward the market (decreasing s); the crowd lines both sides around its path.
+  // Leaving, it goes back out (increasing s) past the same crowd: `back` is the side the rest of the
+  // procession trails on
+  const leave = story.step === 'leave', back = leave ? -1 : 1;
   const S0 = Math.min(pl.total - 40, 64), S_CROWD = [S0 - 16, S0 + 18];
   const P = new THREE.Vector3();
-  const place = (obj, s, lateral) => {
+  const place = (obj, s, lateral, turn = leave) => {
     const [x, z, ang] = pl.at(Math.max(0, Math.min(pl.total, s)));
     P.set(x - Math.sin(ang) * lateral, 0, z + Math.cos(ang) * lateral);
     P.y = yFn(P.x, P.z);
-    if (obj) { obj.position.copy(P); obj.rotation.y = -ang - Math.PI / 2; }
+    if (obj) { obj.position.copy(P); obj.rotation.y = -ang - Math.PI / 2 + (turn ? Math.PI : 0); }
     return ang;
   };
   const cast = story.cast || [];
@@ -147,29 +159,31 @@ export function buildRoyal({ story, w, M, seed, yFn, lang }) {
     const side = i % 2 ? 1 : -1;
     const s = named ? S0 + 5 - i * 2.4 : S_CROWD[0] + rand01(seed, 'royal-s', i) * (S_CROWD[1] - S_CROWD[0]);
     const lat = side * (named ? LATERAL : LATERAL + 0.7 + rand01(seed, 'royal-l', i) * 1.1);
-    const ang = place(p.root, s, lat);
+    const ang = place(p.root, s, lat, false);
     p.root.rotation.y = -ang - Math.PI / 2 - side * Math.PI / 2; // facing the street
     return { p, named, s, phase: rand01(seed, 'royal-ph', i) * 6, pos: P.clone() };
   });
   // petals thrown from the verges over the carriage
   const petalSets = ['#d23a4c', '#f3e6c4', '#e3b23c'].map((c) => { const pts = particles(40, c, 0.13, false); group.add(pts); return pts; });
-  const labels = [{ pos: new THREE.Vector3(), title: lang === 'it' ? 'Il Re' : 'The King', sub: lang === 'it' ? 'Viva il Re!' : 'Long live the King!' }];
+  const labels = [{ pos: new THREE.Vector3(), title: lang === 'it' ? 'Il Re' : 'The King', sub: leave ? (lang === 'it' ? 'Arrivederci!' : 'Farewell!') : lang === 'it' ? 'Viva il Re!' : 'Long live the King!' }];
   for (const c of crowd) if (c.named) labels.push({ ...castTag(c.named, lang), pos: c.pos.clone().setY(c.pos.y + 2.2) });
-  const headS = (t, t0) => S0 - (t - t0) * SPEED; // the lead horses' heads (the procession goes toward s = 0)
+  // the lead horses' heads (arriving, the procession goes toward s = 0); leaving, the carriage passes the
+  // same stretch of crowd the other way
+  const headS = (t, t0) => (leave ? S0 + 1.7 + (t - t0) * SPEED : S0 - (t - t0) * SPEED);
   let T0 = 0, T1 = 1;
   const v = new THREE.Vector3();
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Passa il Re!' : 'The King rides through town!',
+    banner: leave ? (lang === 'it' ? 'Il Re riparte' : 'The King rides home') : lang === 'it' ? 'Passa il Re!' : 'The King rides through town!',
     setWindow(t0, t1) { T0 = t0; T1 = t1; },
     focus: (() => { place(null, S0 - 6, 0); return P.clone().setY(P.y + 1.6); })(),
     cam(u) {
       // ahead of the carriage and to one side, low, looking back at it and the cheering crowd
       const head = headS(T0 + u * (T1 - T0), T0);
-      const ang = place(null, head + 4.6, 0); // the carriage, just ahead of the King
+      const ang = place(null, head + 4.6 * back, 0); // the carriage, just ahead of the King
       const c = P.clone();
-      const dir = ang + Math.PI, a = dir + 0.52 - 0.25 * u; // dir: the way the procession goes; inside the crowd line
+      const dir = ang + (leave ? 0 : Math.PI), a = dir + 0.52 - 0.25 * u; // dir: the way the procession goes; inside the crowd line
       return {
         pos: new THREE.Vector3(c.x + Math.cos(a) * 8.2, c.y + 3.5, c.z + Math.sin(a) * 8.2),
         look: c.clone().add(new THREE.Vector3(0, 1.7, 0)),
@@ -181,11 +195,11 @@ export function buildRoyal({ story, w, M, seed, yFn, lang }) {
       const head = headS(t, t0), went = (t - t0) * SPEED;
       // horses, then the carriage behind them
       horses.forEach((h, k) => {
-        place(h.g, head + 1.2, k ? 0.45 : -0.45);
+        place(h.g, head + 1.2 * back, k ? 0.45 : -0.45);
         h.legs.forEach((l, j) => { l.rotation.x = 0.45 * Math.sin(t * 7.5 + (j === 0 || j === 3 ? 0 : Math.PI)); });
         h.g.position.y += 0.04 * Math.abs(Math.sin(t * 7.5));
       });
-      place(coach.g, head + 5.6, 0);
+      place(coach.g, head + 5.6 * back, 0);
       coach.g.position.y += 0.02 * Math.sin(t * 9);
       coach.wheels.forEach(({ w: wh, r }) => { wh.rotation.x = -went / r; });
       // the King waves to one side, then the other; the coachman holds the reins
@@ -197,14 +211,14 @@ export function buildRoyal({ story, w, M, seed, yFn, lang }) {
       coach.coachman.r.g.rotation.set(-1.0, 0, -0.2); coach.coachman.l.g.rotation.set(-1.0, 0, 0.2);
       // two guards follow the carriage, banners up (none ahead: they would stand in front of the camera)
       guards.forEach(({ P: G, flag }, k) => {
-        place(G.root, head + 9.4, k % 2 ? 1.1 : -1.1);
+        place(G.root, head + 9.4 * back, k % 2 ? 1.1 : -1.1);
         stride(G, went * 2.6 + k, 0.4, { arms: false });
         G.r.g.rotation.set(-0.5, 0, 0);
         G.l.g.rotation.x = 0.3 * Math.sin(went * 2.6 + k);
         flag.rotation.y = 0.15 * Math.sin(t * 3 + k);
       });
       // the crowd cheers louder as the carriage comes near: arms up, hats waved, jumps
-      const carS = head + 5.6;
+      const carS = head + 5.6 * back;
       crowd.forEach((c, i) => {
         const near = clamp01(1 - Math.abs(c.s - carS) / 14);
         const ph = t * 8 + c.phase;
@@ -222,7 +236,7 @@ export function buildRoyal({ story, w, M, seed, yFn, lang }) {
           const n = Math.floor(t * 0.9 + rand01(seed, 'petal', k, i));
           const thrower = crowd[(i * 7 + k * 3 + n * 5) % nCrowd];
           const age = ph * life;
-          place(null, thrower.s, 0);
+          place(null, thrower.s, 0, false);
           const toRoad = v.copy(P).sub(thrower.pos).setY(0).normalize();
           const sx = (rand01(seed, 'pv', k, i, n) - 0.5) * 1.2;
           arr[i * 3] = thrower.pos.x + toRoad.x * 2.4 * age + sx * age;

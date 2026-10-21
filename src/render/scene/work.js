@@ -727,6 +727,8 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     update(t) {
       const { a, k: cycleK, u: cycleU } = pose(t);
       const c = (t + offset) / cfg.period;
+      // facing the work again (a visitor turns the worker round, visit.js)
+      P.root.rotation.y = 0;
       P.r.g.position.x = 0.3;
       P.r.g.rotation.set(a, 0, 0);
       if (cfg.both) { P.l.g.rotation.x = a * 0.95; P.l.g.rotation.z = 0.28; P.r.g.rotation.z = -0.28; } // hands meet on the handle

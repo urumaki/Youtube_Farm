@@ -7,6 +7,7 @@ import { world } from './world.js';
 import { dailyEvents } from './events.js';
 import { pickStory } from './stories.js';
 import { pickFeatured, shownJobs, markShown } from './featured.js';
+import { planScenes, tavernToday, staleJob } from './scenes.js';
 
 export const SCHEMA_VERSION = 1;
 export const ABANDON_DAYS = 7;
@@ -35,7 +36,8 @@ export function genesis({ seed = DEFAULT_SEED, date = '1970-01-01' } = {}) {
     commentsSeen: null, // publishedAt of the newest comment already processed
     storyLog: {},     // story event id -> last day it happened (cooldowns)
     story: null,      // today's story event
-    storyArc: null,   // a story to continue on a later day: { id, day, ... }
+    storyArc: null,   // a story to continue on a later day: { id, day, step?, data? }
+    sceneLog: {},     // scene key -> last day shown (src/sim/scenes.js)
   };
 }
 
@@ -160,21 +162,34 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   diff.weather = weather;
   diff.events = events;
   s.events = events;
-  // 5. At most one story event with its own scene (src/sim/stories.js)
-  diff.story = pickStory(s);
-  s.story = diff.story;
-  if (diff.story?.id === 'storm') { // the storm brings the rain to the whole video
-    s.weather = diff.weather = 'rain';
-    events[0].weather = 'rain';
-  }
-  // 6. The named villagers the video shows at work (not yesterday's jobs again; those never shown first)
-  diff.avoidJobs = prev.day > 0 ? shownJobs(prev) : [];
-  diff.featured = pickFeatured(s, { avoidJobs: diff.avoidJobs });
-  s.featured = diff.featured;
-  markShown(s, diff.featured);
+  // 5-6. The day's story, the villagers shown at work and the scenes
+  planDay(s, prev, diff);
   diff.population = target;
   diff.next = nextGoal(target, s.unlockedTiers);
   return { state: s, diff };
+}
+
+/**
+ * The parts of the video the simulation picks (and remembers for the next days): at most one story event
+ * with its own scene (not on busy days), the named villagers shown at work (not yesterday's jobs again;
+ * those never shown first) and the scenes (none shown again within three days). Also used to plan a saved
+ * day again (scripts/replan-day.js): `s` must then hold yesterday's storyLog, storyArc, lastShown and sceneLog.
+ */
+export function planDay(s, prev, diff) {
+  diff.story = pickStory(s, { newSubs: diff.delta });
+  s.story = diff.story;
+  if (diff.story?.id === 'storm') { // the storm brings the rain to the whole video
+    s.weather = diff.weather = 'rain';
+    diff.events[0].weather = 'rain';
+  }
+  diff.avoidJobs = prev.day > 0 ? shownJobs(prev) : [];
+  const tavern = tavernToday(s);
+  diff.featured = pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, stale: (job) => staleJob(s, job) });
+  s.featured = diff.featured;
+  markShown(s, diff.featured);
+  const shownBuildings = new Set([...diff.buildingsStarted, ...diff.buildingsCompleted]).size;
+  diff.scenes = planScenes(s, { featured: diff.featured, tavern, avoidJobs: diff.avoidJobs, buildingShots: Math.min(2, shownBuildings) });
+  s.scenes = diff.scenes;
 }
 
 /**
@@ -189,6 +204,7 @@ function assignNames(s, commenters, blocked, diff) {
   diff.requests = [];
   diff.promoted = [];
   diff.renamed = [];
+  diff.complaints = [];
   const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
   const avail = availableJobs(s.subscriberCount);
   const villagerOf = (author) => Object.keys(s.names).find((id) => s.names[id].author === author);
@@ -216,6 +232,8 @@ function assignNames(s, commenters, blocked, diff) {
         s.names[id].name = call;
         if (s.villagers[id]) s.villagers[id].name = call;
       } else if (call && q) q.name = call;
+      // "I can't see myself": first in line for the next video (featured.js)
+      if (c.complains && id !== undefined) { s.names[id].complainDay = s.day; diff.complaints.push({ id: Number(id), name: s.names[id].name }); }
       if (id !== undefined && wants.length) applyRequest(id, wants);
       else if (wants.length && q) q.wants = wants;
       continue;

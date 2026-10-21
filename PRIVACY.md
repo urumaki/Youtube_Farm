@@ -11,7 +11,8 @@ to upload the channel's daily video, and the **public comments** posted on the c
 name (without the "@") may be given to one villager and shown in later videos. Only the display name
 and the public channel ID are stored (the ID makes sure each person names one villager only). The
 comment text is read once to spot a job request ("can I work at the tavern?") or a chosen name ("call me
-Violet") and is then discarded: only the resulting job and name are stored, never the text. Names that are offensive are skipped. To have your name removed, reply to any
+Violet"), or a note that you could not find your villager ("I can't see myself", so you are shown in the
+next video), and is then discarded: only the resulting job, name and the day of that note are stored, never the text. Names that are offensive are skipped. To have your name removed, reply to any
 video asking for it or contact the channel: it is added to a block list and disappears from the next
 video. No other data about viewers or subscribers is accessed or stored.
 

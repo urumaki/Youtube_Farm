@@ -1,5 +1,6 @@
-// Which named villagers the video shows at work. Owner (2026-10-20): the villagers named today come
-// first (the narrator welcomes them, so they must be on screen), then granted job requests, then the ones
+// Which named villagers the video shows at work. Owner (2026-10-21): whoever commented that they could not
+// find themselves in the last video comes first. Owner (2026-10-20): the villagers named today come
+// next (the narrator welcomes them, so they must be on screen), then granted job requests, then the ones
 // never shown yet and those not shown for the longest time (`state.lastShown`), so everybody gets a turn
 // in the following videos. A job shown yesterday is not shown again today, one villager per job.
 // To fit more people in 30 seconds, a shot can show two villagers together: one visits the other at work
@@ -39,28 +40,30 @@ function pairOf(a, b) {
 /**
  * The shots of villagers at work, best first: [{ id, name, job, today, with, pair }]. `with` is the
  * visiting villager ({ id, name, job, today }) or null; `pair` the PAIRS id, 'visit' or null.
- * `slots`: how many shots (two when the tavern closes the video, three otherwise).
+ * `slots`: how many shots (two when the tavern closes the video, three otherwise). `tavern`: whether the
+ * tavern closes the video today (src/sim/scenes.js). `stale(job)`: true when every scene of that job was
+ * shown in the last days, so somebody else is shown if possible.
  */
-export function pickFeatured(state, { avoidJobs = [], slots } = {}) {
+export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScene(state), stale = () => false } = {}) {
   const day = state.day;
   const avoid = new Set(avoidJobs);
-  const tavern = tavernScene(state);
   slots ??= tavern ? 2 : 3;
   const people = Object.entries(state.names || {})
     .map(([id, n]) => {
       const last = state.lastShown?.[id];
-      return { id: Number(id), name: n.name, job: state.villagers?.[Number(id)]?.job ?? n.job, today: n.day === day, asked: n.requestDay === day, last: last < day ? last : undefined };
+      return { id: Number(id), name: n.name, job: state.villagers?.[Number(id)]?.job ?? n.job, today: n.day === day, asked: n.requestDay === day, complained: n.complainDay === day, last: last < day ? last : undefined };
     })
     // innkeepers and brewers serve in the tavern scene when it closes the video
     .filter((n) => n.id < state.subscriberCount && n.job && !(tavern && (n.job === 'innkeeper' || n.job === 'brewer')));
-  const score = (n) => (n.today ? 8 : 0) + (n.asked ? 3 : 0) + (n.last === undefined ? 4 : Math.min(3, (day - n.last) / 3))
-    + (avoid.has(n.job) ? -6 : 0) + (n.last === day - 1 ? -10 : 0);
+  // someone who wrote they could not find themselves in the last video comes before everybody (owner 2026-10-21)
+  const score = (n) => (n.complained ? 30 : 0) + (n.today ? 8 : 0) + (n.asked ? 3 : 0) + (n.last === undefined ? 4 : Math.min(3, (day - n.last) / 3))
+    + (avoid.has(n.job) ? -6 : 0) + (n.last === day - 1 ? -10 : 0) + (stale(n.job) ? -4 : 0);
   people.sort((a, b) => score(b) - score(a)
     || (INTEREST.indexOf(a.job) + 1 || 50) - (INTEREST.indexOf(b.job) + 1 || 50)
     || hash(state.seed, 'feat', day, a.id) - hash(state.seed, 'feat', day, b.id)); // a different face each day
   const out = [];
   const usedJobs = new Set(), usedIds = new Set();
-  const free = (n) => !usedIds.has(n.id) && !usedJobs.has(n.job);
+  const free = (n) => !usedIds.has(n.id) && (!usedJobs.has(n.job) || n.complained);
   const entry = (n) => ({ id: n.id, name: n.name, job: n.job, today: n.today });
   for (const n of people) {
     if (out.length >= slots) break;

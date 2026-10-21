@@ -1,7 +1,7 @@
 // Commenters for villager names: public comment threads on the channel's videos (YouTube Data API v3,
 // commentThreads.list with the same API key as the subscriber count). Never throws.
 import { DEFAULT_HANDLE } from './youtube.js';
-import { wantsFromText, nameFromText } from '../sim/requests.js';
+import { wantsFromText, nameFromText, complainsFromText } from '../sim/requests.js';
 
 const API = 'https://www.googleapis.com/youtube/v3';
 
@@ -12,8 +12,8 @@ async function getJson(url, fetchImpl) {
 }
 
 /**
- * Commenters since `since` (ISO time), oldest first: [{ author, name, at, wants, call? }] (wants: requested jobs,
- * call: the name they asked for).
+ * Commenters since `since` (ISO time), oldest first: [{ author, name, at, wants, call?, complains? }] (wants:
+ * requested jobs, call: the name they asked for, complains: they could not find themselves in the video).
  * Only top-level comments count; the channel's own comments are skipped. At most `pages` x 100 threads.
  */
 export async function fetchCommenters({ apiKey, handle = DEFAULT_HANDLE, channelId, since = null, pages = 5, fetchImpl = fetch, log = console }) {
@@ -42,7 +42,8 @@ export async function fetchCommenters({ apiKey, handle = DEFAULT_HANDLE, channel
         // the text is only scanned for a job request and a chosen name here, and never kept
         const text = c.textOriginal ?? c.textDisplay;
         const call = nameFromText(text);
-        out.push({ author, name: c.authorDisplayName, at, wants: wantsFromText(text), ...(call ? { call } : {}) });
+        const complains = complainsFromText(text);
+        out.push({ author, name: c.authorDisplayName, at, wants: wantsFromText(text), ...(call ? { call } : {}), ...(complains ? { complains } : {}) });
       }
       pageToken = body.nextPageToken;
       if (older || !pageToken) break;

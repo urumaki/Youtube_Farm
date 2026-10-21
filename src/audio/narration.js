@@ -1,7 +1,7 @@
 // Narration script from the day's diff: template-based with seeded variation, ~60-75 words for 30 s.
 import { rng } from '../sim/prng.js';
 import { JOBS, BUILDINGS, tavernScene } from '../sim/tiers.js';
-import { FROM_IT, GOODS_IT } from '../sim/stories.js';
+import { FROM_IT, GOODS_IT, storyCue } from '../sim/stories.js';
 import { featuredPeople, visitItem } from '../sim/featured.js';
 
 const T = {
@@ -39,6 +39,14 @@ const T = {
       flood: ['The river is rising! Everyone grabs a sandbag to save the houses.', 'After the rain the river floods, and the villagers build a wall of sandbags!'],
       newyear: ['Three, two, one... Happy New Year from the whole kingdom!', 'The villagers gather round the bonfire to count down to the New Year!'],
       archery: ['An archery contest in the square! The best shot wins a golden rosette.', 'Bows drawn! Three archers compete for the golden rosette.'],
+      // the next steps of the stories told over several days
+      merchants_camp: ['Tonight the merchants dance round the fire with the villagers!', 'A night of music and dancing with the merchants!'],
+      merchants_leave: ['The merchants move on, and the villagers wave goodbye.', 'Farewell, merchants! The wagons roll out of town.'],
+      royal_feast: ['The King holds a feast in the square, and everyone raises a toast!', 'A royal feast! Long tables, roast and ale for all.'],
+      royal_leave: ['The King rides home, and the town waves him goodbye.', 'Farewell, Your Majesty! The royal carriage leaves town.'],
+      archery_final: ['The archery final! Who will win the golden rosette?', 'The final round: three archers, one golden rosette.'],
+      flood_recede: ['The water goes down: the sandbag wall held!', 'The river falls back, and the wall of sandbags held.'],
+      quarrel_peace: ['Yesterday they quarrelled, today they shake hands. Friends again!', 'Peace in the square: the two make up!'],
     },
     // everyday shots (src/render/scene/ambient.js)
     ambient: {
@@ -120,6 +128,13 @@ T.it = {
     flood: ['Il fiume si alza! Tutti prendono un sacco di sabbia per salvare le case.'],
     newyear: ['Tre, due, uno... Buon anno da tutto il regno!', 'Gli abitanti si radunano intorno al falò per il conto alla rovescia!'],
     archery: ['Gara di tiro con l’arco in piazza: il miglior arciere vince la coccarda d’oro!'],
+    merchants_camp: ['Stanotte i mercanti ballano intorno al fuoco con gli abitanti!'],
+    merchants_leave: ['I mercanti ripartono e gli abitanti li salutano.'],
+    royal_feast: ['Il Re offre un banchetto in piazza: tutti brindano!'],
+    royal_leave: ['Il Re riparte e la città lo saluta.'],
+    archery_final: ['La finale con l’arco! Chi vincerà la coccarda d’oro?'],
+    flood_recede: ['L’acqua scende: l’argine di sacchi ha tenuto!'],
+    quarrel_peace: ['Ieri litigavano, oggi si stringono la mano. Di nuovo amici!'],
   },
   ambient: {
     patrol: ['Sulle mura, le guardie fanno la ronda.'],
@@ -249,12 +264,13 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
     const shown = [...special, ...diff.added.filter((v) => !special.includes(v))].slice(0, special.length ? 2 : 1);
     shown.forEach((v, i) => add(pick(L.person)({ job: job(v.job) }), 'person', 6 - i, v.job));
   }
-  if (diff.story && L.story[diff.story.id]) { const f = pick(L.story[diff.story.id]); add(typeof f === 'function' ? f(diff.story) : f, 'story', 9); }
+  const storyLines = diff.story && (L.story[storyCue(diff.story)] || L.story[diff.story.id]);
+  if (storyLines) { const f = pick(storyLines); add(typeof f === 'function' ? f(diff.story) : f, 'story', 9); }
   // the tavern interior is shown on these days (see makePlan in src/render/scene/timeline.js)
   // shots: the renderer's shot plan, when known (an everyday shot gets a short line)
   const amb = shots.find((c) => c.kind === 'ambient');
   if (amb && L.ambient[amb.id]) add(pick(L.ambient[amb.id]), 'ambient', 4);
-  if (tavernScene(state)) add(pick(L.tavern), 'tavern', 6);
+  if (diff.scenes ? diff.scenes.tavern : tavernScene(state)) add(pick(L.tavern), 'tavern', 6);
   const nb = diff.housesBuilt.length;
   if (nb === 1) add(pick(L.houses1), 'houses', 5);
   else if (nb > 1) add(pick(L.houses)(nb.toLocaleString('en-US')), 'houses', 5);

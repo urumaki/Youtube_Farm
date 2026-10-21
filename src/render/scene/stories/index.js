@@ -12,14 +12,22 @@ import { buildPig } from './pig.js';
 import { buildArchery } from './archery.js';
 import { buildFlood } from './flood.js';
 import { buildNewYear } from './newyear.js';
+import { buildCamp } from './camp.js';
+export { storyCue } from '../../../sim/stories.js';
+import { buildFeast } from './feast.js';
 
 const BUILDERS = {
   quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween,
   fire: buildFire, rebuild: buildRebuild, wolves: buildWolves, storm: buildStorm, royal: buildRoyal, pig: buildPig, archery: buildArchery, flood: buildFlood, newyear: buildNewYear,
 };
 
+// later steps of a story told over several days (src/sim/stories.js) with a scene of their own; the other
+// steps are told by the story's own scene (story.step)
+const STEP_BUILDERS = { 'merchants:camp': buildCamp, 'royal:feast': buildFeast };
+
 export function buildStory(args) {
-  const fn = BUILDERS[args.story?.id];
+  const { id, step } = args.story || {};
+  const fn = STEP_BUILDERS[`${id}:${step}`] || BUILDERS[id];
   return fn ? fn(args) : null;
 }
 

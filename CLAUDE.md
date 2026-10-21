@@ -63,6 +63,18 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Owner: medieval only, nothing magic
   (no wizards, witches, spells; the alchemist became the Apothecary, "speziale"). Tone rule (owner): named villagers are heroes or comic, never
   villains or victims; nobody gets hurt. Test one with `npm run render -- --real --subs N --story bandits`.
+- Owner rules 2026-10-21: (1) a commenter who writes they could not find themselves in the last short
+  ("can't see myself", "my name wasn't there", "non mi vedo"; `complainsFromText` in `requests.js`) gets
+  `complainDay` and comes first in the next video (`featured.js`). (2) No story event on a day with 50 or
+  more new subscribers (`BUSY_DAY` in `stories.js`): the time goes to the newcomers' names. (3) No scene
+  again within 3 days (`src/sim/scenes.js`, `state.sceneLog`): the simulation now picks the tavern yes/no,
+  each villager's scene variant and the everyday shot, and saves them as `diff.scenes` (the renderer uses
+  them; older saves still pick in `timeline.js`). (4) Stories over several quiet days (`steps`, one a day,
+  `state.storyArc` waits for the next quiet day): merchants arrive / dance round a fire at night with named
+  villagers (`camp.js`) / leave with named villagers waving; the King arrives / holds a feast in the square
+  (`feast.js`) / rides home; archery heats / final; flood rises / recedes ("the wall held"); quarrel / peace.
+  Test a step with `--story merchants:camp`. `node scripts/replan-day.js <day> [--save]` plans a saved day
+  again with the current rules (used for 2026-10-21, whose short the owner took down).
 - Who is shown at work (`src/sim/featured.js`, owner 2026-10-20): picked by the simulation and saved as
   `state.featured`: villagers named today first (the narrator welcomes only jobs on screen), then granted
   requests, never a job the previous video showed (`diff.avoidJobs`), one per job. Saves without

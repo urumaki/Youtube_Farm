@@ -304,6 +304,9 @@ test('story events: deterministic, Halloween on its date, cooldowns kept, named 
   const last = {};
   for (const x of a) {
     if (!x.story) continue;
+    // a story told over several days: the cooldown counts from its last step to the next start
+    const steps = STORIES[x.story.id].steps;
+    if (steps && x.story.step !== steps[0]) { last[x.story.id] = x.day; continue; }
     const cd = STORIES[x.story.id].cooldown;
     if (cd && last[x.story.id] !== undefined) assert.ok(x.day - last[x.story.id] >= cd, `${x.story.id} cooldown`);
     last[x.story.id] = x.day;
@@ -339,4 +342,74 @@ test('every named villager gets a turn on screen, two at a time when they work t
     markShown(s, today);
   }
   assert.equal(seen.size, jobs.length, `shown: ${[...seen]}`);
+});
+
+test('story events: none on busy days, multi-day stories go on step by step on the next quiet days', async () => {
+  const { STORIES, BUSY_DAY } = await import('../src/sim/stories.js');
+  let s = genesis({ seed: SEED, date: '2026-09-30' });
+  const d = new Date('2026-10-01T00:00:00Z');
+  const seen = [];
+  let subs = 60;
+  for (let i = 0; i < 90; i++) {
+    const date = d.toISOString().slice(0, 10);
+    d.setUTCDate(d.getUTCDate() + 1);
+    const busy = i % 4 === 2;
+    subs += busy ? BUSY_DAY : 1;
+    const commenters = i === 0 ? ['Ada', 'Bo', 'Cy', 'Dee'].map((n, k) => ({ author: 'a' + k, name: n, at: `${date}T0${k}:00:00Z` })) : [];
+    const r = advance(s, { subscribers: subs, date, commenters });
+    s = r.state;
+    if (busy) assert.equal(r.diff.story, null, `no story on a day with ${r.diff.delta} new subscribers`);
+    if (r.diff.story) seen.push(r.diff.story);
+  }
+  // every multi-day story that starts goes through its steps in order
+  const open = {};
+  for (const st of seen) {
+    const steps = STORIES[st.id].steps;
+    if (!steps) continue;
+    const k = steps.indexOf(st.step);
+    assert.ok(k >= 0, `${st.id} has step ${st.step}`);
+    if (k > 0) assert.equal(open[st.id], steps[k - 1], `${st.id}: ${st.step} after ${open[st.id]}`);
+    open[st.id] = k + 1 < steps.length ? st.step : undefined;
+  }
+  assert.ok(seen.some((st) => st.step && st.step !== STORIES[st.id].steps[0]), 'some story went on to a later step');
+});
+
+test('comments saying they cannot find themselves are spotted, and that villager is shown first in the next video', async () => {
+  const { complainsFromText } = await import('../src/sim/requests.js');
+  for (const t of ["I can't see myself", 'where am i??', 'my name wasn’t there :(', 'I was not in the video', 'non mi vedo', "non c'è il mio nome", 'dove sono io?', "couldn't find my villager"]) {
+    assert.ok(complainsFromText(t), t);
+  }
+  for (const t of ['I love this kingdom', 'can I be a baker?', 'I see my house!', 'call me Violet']) assert.ok(!complainsFromText(t), t);
+  let s = genesis({ seed: SEED, date: '2026-09-30' });
+  const names = ['Ada', 'Bo', 'Cy', 'Dee', 'Eve', 'Fay', 'Gus', 'Hal', 'Ivy', 'Jo'];
+  s = advance(s, { subscribers: 40, date: '2026-10-01', commenters: names.map((n, k) => ({ author: 'a' + k, name: n, at: `2026-10-01T0${k}:00:00Z` })) }).state;
+  s = advance(s, { subscribers: 41, date: '2026-10-02', commenters: [] }).state;
+  const shown = new Set(Object.entries(s.lastShown).filter(([, d]) => d === s.day).map(([id]) => Number(id)));
+  const hidden = Object.entries(s.names).find(([id]) => !shown.has(Number(id)) && Number(s.lastShown[id]) !== s.day);
+  const author = hidden[1].author;
+  const r = advance(s, { subscribers: 42, date: '2026-10-03', commenters: [{ author, name: hidden[1].name, at: '2026-10-03T01:00:00Z', complains: true }] });
+  assert.deepEqual(r.diff.complaints.map((c) => c.id), [Number(hidden[0])]);
+  const people = r.diff.featured.flatMap((f) => (f.with ? [f.id, f.with.id] : [f.id]));
+  assert.ok(people.includes(Number(hidden[0])), 'the villager who could not find themselves is on screen');
+});
+
+test('scenes: the same scene does not come back within three days', async () => {
+  const { SCENE_GAP } = await import('../src/sim/scenes.js');
+  let s = genesis({ seed: SEED, date: '2026-09-30' });
+  const d = new Date('2026-10-01T00:00:00Z');
+  const last = {};
+  for (let i = 0; i < 40; i++) {
+    const date = d.toISOString().slice(0, 10);
+    d.setUTCDate(d.getUTCDate() + 1);
+    const commenters = i % 3 === 0 ? [0, 1, 2].map((k) => ({ author: `a${i}-${k}`, name: `N${i}x${k}`, at: `${date}T0${k}:00:00Z` })) : [];
+    const r = advance(s, { subscribers: 150 + i * 3, date, commenters });
+    s = r.state;
+    const keys = Object.entries(s.sceneLog).filter(([, day]) => day === s.day).map(([k]) => k);
+    for (const k of keys) {
+      // a job with few scenes may have to repeat one when its villager must be shown; the tavern and the everyday shots never do
+      if ((k === 'tavern' || k.startsWith('ambient:')) && last[k] !== undefined) assert.ok(s.day - last[k] >= SCENE_GAP, `${k} on day ${last[k]} and ${s.day}`);
+      last[k] = s.day;
+    }
+  }
+  assert.ok(last.tavern !== undefined, 'the tavern was shown');
 });

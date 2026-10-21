@@ -7,7 +7,7 @@ import { pickFeatured, shownJobs } from './sim/featured.js';
 import { baseStateFor, saveDay, lastKnownCount, migrate, STATE_DIR } from './sim/state.js';
 import { getSubscriberCount } from './fetch/youtube.js';
 import { fetchCommenters } from './fetch/comments.js';
-import { wantsFromText, nameFromText } from './sim/requests.js';
+import { wantsFromText, nameFromText, complainsFromText } from './sim/requests.js';
 import { buildScript, sentenceAnchors } from './audio/narration.js';
 import { synthesize, captionPhrases } from './audio/tts/index.js';
 import { mixSoundtrack, VOICE_DELAY } from './audio/mix.js';
@@ -113,7 +113,7 @@ export function testKingdom({ subs, from, date = today(), seed, names = [] }) {
 const fakeCommenter = (date, prefix) => (entry, i) => {
   const [name, text = ''] = entry.split('=');
   const call = nameFromText(text);
-  return { author: `${prefix}-${name}`, name, at: `${date}T00:00:${String(i).padStart(2, '0')}Z`, wants: wantsFromText(text), ...(call ? { call } : {}) };
+  return { author: `${prefix}-${name}`, name, at: `${date}T00:00:${String(i).padStart(2, '0')}Z`, wants: wantsFromText(text), ...(call ? { call } : {}), ...(complainsFromText(text) ? { complains: true } : {}) };
 };
 
 /** state/blocked.json: { "names": ["SomeName"], "authors": ["UC..."] } — names never to show. */
@@ -154,6 +154,8 @@ function savedDay(date, stateDir = STATE_DIR) {
   const state = migrate(raw);
   const prevDate = fs.readdirSync(path.join(stateDir, 'history')).filter((f) => f.slice(0, 10) < date).sort().pop();
   const prev = prevDate ? migrate(JSON.parse(fs.readFileSync(path.join(stateDir, 'history', prevDate), 'utf8')).state) : null;
+  // days saved since 2026-10-21 keep the villagers and scenes they were planned with
+  if (diff.scenes) return { state, diff };
   diff.avoidJobs = prev ? shownJobs(prev) : [];
   diff.featured = state.featured = pickFeatured(state, { avoidJobs: diff.avoidJobs });
   return { state, diff };

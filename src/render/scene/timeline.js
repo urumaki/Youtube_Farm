@@ -3,29 +3,20 @@
 import * as THREE from 'three';
 import { BUILDINGS, JOBS, tavernScene } from '../../sim/tiers.js';
 import { CASTLE } from '../../sim/world.js';
-import { NIGHT_STORIES } from './stories/index.js';
+import { NIGHT_STORIES, storyCue } from './stories/index.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
 import { BAKEHOUSE_VARIANTS } from './bakery.js';
+import { VARIANTS, AWAY_VARIANTS, pickVariant } from '../../sim/scenes.js';
 
 export const DURATION = 30;
 // the wide shot with the goal and the end credits is short (3.5 s) so the daily update keeps the time
 const HOOK = 2, UPDATE_END = 23.5, WIDE_END = 27;
 const CARAVAN_SECONDS = 4.5, STORY_SECONDS = 4.5;
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
-// Owner (2026-10-20): a job is not always shown the same way. Each job has a few scenes, one picked per
-// villager and day (the first is the job's usual scene; the others are 'job:variant' in work.js): guards
-// on the castle walls, sparring in the courtyard or at the straw dummy; farmers hoeing, sowing or reaping...
-const FIGHTER_SCENES = ['walls', 'sparring', 'dummy'];
-export const VARIANTS = {
-  guard: [...FIGHTER_SCENES, 'night'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
-  farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell', 'cart'], stonemason: ['block', 'stack'],
-  blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw'],
-  baker: ['oven', 'knead'], fisherman: ['rod', 'net', 'boat'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
-  innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
-};
-// scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
-export const AWAY_VARIANTS = new Set(['walls', 'sparring', 'boat', 'night']);
+// the scenes of each job and the ones away from the croft live in the simulation, which picks the day's
+// scenes (src/sim/scenes.js); older saves without `diff.scenes` pick them here
+export { VARIANTS, AWAY_VARIANTS, pickVariant };
 // scenes inside a building (the baker's bakehouse, bakery.js): own camera, a hard cut in and out
 export const indoorScene = (job, variant) => job === 'baker' && BAKEHOUSE_VARIANTS.has(variant);
 // the croft shots move the camera in different ways, never the same way twice in a row
@@ -61,7 +52,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   if (diff.story) {
     const night = NIGHT_STORIES.has(diff.story.id);
     targets.splice(today.length ? 1 : 0, 0, {
-      kind: 'event', id: diff.story.id, story: diff.story, pos: (buildings.items.market || buildings.items.well)?.focus.clone() ?? castle.keep.clone(),
+      kind: 'event', id: storyCue(diff.story), story: diff.story, pos: (buildings.items.market || buildings.items.well)?.focus.clone() ?? castle.keep.clone(),
       // a hard cut in and out ("meanwhile..."): no high flight over the town, and dusk scenes change the light
       radius: 12, front: 0, label: null, labels: [], weight: 2, cut: true, phase: night ? 1 : undefined,
     });
@@ -74,7 +65,9 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     .sort((a, b) => asked(b) - asked(a) || (b.day ?? 0) - (a.day ?? 0) || (INTEREST.indexOf(a.job) + 1 || 99) - (INTEREST.indexOf(b.job) + 1 || 99) || a.id - b.id);
   // the tavern interior closes the "at work" part when the tavern stands: named innkeepers and brewers
   // serve behind the bar, other named villagers drink at the tables
-  const tavern = people && named.length > 0 && buildings.items.tavern && tavernScene(state);
+  // (not within three days of the last time: diff.scenes, src/sim/scenes.js)
+  const scenes = diff.scenes || null;
+  const tavern = people && named.length > 0 && buildings.items.tavern && (scenes ? scenes.tavern : tavernScene(state));
   const keepers = tavern ? named.filter((n) => n.job === 'innkeeper' || n.job === 'brewer').slice(0, 2) : [];
   // who is shown at work comes from the simulation (src/sim/featured.js): today's named villagers first,
   // never yesterday's jobs again, one per job; older saves fall back to the same rule without yesterday
@@ -92,7 +85,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const apprentice = n.job === 'apprentice' && n.wants;
     const sceneJob = apprentice ? n.wants : n.job;
     // a host with a guest stays at home (the castle scenes have no croft to walk into)
-    const variant = pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g });
+    const variant = scenes && n.id in scenes.variants ? scenes.variants[n.id] : pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g });
     if (variant) usedVariants.add(variant);
     const castleShot = AWAY_VARIANTS.has(variant);
     const indoor = indoorScene(sceneJob, variant);
@@ -109,7 +102,9 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const month = Number(state.date.slice(5, 7)), winter = month === 12 || month <= 2;
   const flexible = targets.filter((t) => t.kind !== 'caravan' && t.kind !== 'event').length;
   let ambient = null;
-  if (people && flexible <= (tavern ? 3 : 4)) {
+  if (scenes) {
+    ambient = scenes.ambient && makeAmbient(scenes.ambient);
+  } else if (people && flexible <= (tavern ? 3 : 4)) {
     // not a job the previous video or today's workers already showed (diff.avoidJobs: yesterday's jobs)
     const seen = new Set([...(diff.avoidJobs || []), ...atWork.map((n) => n.job), ...atWork.map((n) => n.wants).filter(Boolean)]);
     const wallsOk = state.unlockedTiers.includes('guard') && !['guard', 'knight', 'warrior'].some((j) => seen.has(j));
@@ -120,14 +115,15 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const country = [fieldsOk && 'fields', !winter && !seen.has('peasant') && 'pasture', !seen.has('peasant') && 'laundry'].filter(Boolean);
     const life = country[Math.floor(rand01(state.seed, 'country', state.day) * country.length)];
     const id = wallsOk && (state.day % 2 === 1 || !life) ? guards : life || null;
-    if (id) {
-      const jobs = id === 'fields' ? ['farmer', 'peasant'] : id === 'pasture' || id === 'laundry' ? ['peasant', 'farmer'] : ['guard', 'knight', 'warrior'];
-      const hero = named.find((n) => jobs.includes(n.job) && !atWork.includes(n) && !keepers.includes(n)) || null;
-      ambient = { kind: 'ambient', id, pos: castle.keep.clone(), radius: 8, front: 0, label: null, labels: [], weight: 1.1, cut: true,
-        hero: hero && { id: hero.id, name: hero.name, job: hero.job }, sceneJob: id === 'fields' ? 'farmer' : null };
-      targets.push(ambient);
-    }
+    ambient = id && makeAmbient(id);
   }
+  function makeAmbient(id) {
+    const jobs = id === 'fields' ? ['farmer', 'peasant'] : id === 'pasture' || id === 'laundry' ? ['peasant', 'farmer'] : ['guard', 'knight', 'warrior'];
+    const hero = named.find((n) => jobs.includes(n.job) && !atWork.includes(n) && !keepers.includes(n)) || null;
+    return { kind: 'ambient', id, pos: castle.keep.clone(), radius: 8, front: 0, label: null, labels: [], weight: 1.1, cut: true,
+      hero: hero && { id: hero.id, name: hero.name, job: hero.job }, sceneJob: id === 'fields' ? 'farmer' : null };
+  }
+  if (ambient) targets.push(ambient);
   if (tavern) {
     const patrons = named.filter((n) => !keepers.includes(n) && !atWork.includes(n) && n.id !== ambient?.hero?.id).slice(0, 8);
     targets.push({
@@ -206,15 +202,6 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   // overcast days keep more light at the end so the wide shot stays readable
   const dusk = ['fog', 'rain', 'snow', 'cloudy'].includes(diff.weather) ? 0.55 : 0.8;
   return { targets, center, extent: Math.max(size.x, size.z), story, dusk, start };
-}
-
-/** The scene for a villager of this job today (null: the job's only scene), not one already used today. */
-export function pickVariant(job, seed, day, id, used = new Set(), { croft = false } = {}) {
-  const opts = VARIANTS[job]?.filter((v) => !(croft && AWAY_VARIANTS.has(v)));
-  if (!opts?.length) return null;
-  const k = Math.floor(rand01(seed, 'variant', day, id) * opts.length);
-  for (let i = 0; i < opts.length; i++) if (!used.has(opts[(k + i) % opts.length])) return opts[(k + i) % opts.length];
-  return opts[k];
 }
 
 function pickSpread(n, k) {

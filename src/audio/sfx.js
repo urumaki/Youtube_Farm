@@ -407,6 +407,14 @@ const SCENES = {
   ev_archery: [['chatter', 0.3], ['cheer', 0.3]],
   ev_flood: [['rain', 0.55], ['water', 0.7], ['chatter', 0.3]],
   ev_newyear: [['fire', 0.5], ['chatter', 0.3], ['cheer', 0.45]],
+  // later steps of the stories told over several days
+  ev_merchants_camp: [['fire', 0.5], ['chatter', 0.35], ['cheer', 0.25]],
+  ev_merchants_leave: [['cart', 0.5], ['chatter', 0.3]],
+  ev_royal_feast: [['chatter', 0.55], ['cheer', 0.3]],
+  ev_royal_leave: [['fanfare', 0.45], ['cheer', 0.5], ['cart', 0.35]],
+  ev_archery_final: [['chatter', 0.3], ['cheer', 0.45]],
+  ev_flood_recede: [['water', 0.5], ['cheer', 0.45]],
+  ev_quarrel_peace: [['chatter', 0.4], ['cheer', 0.4]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],
@@ -454,7 +462,7 @@ function sceneFor(cue) {
   if (cue.kind === 'caravan') return 'caravan';
   if (cue.kind === 'tavern') return 'tavern';
   if (cue.kind === 'ambient') return SCENES[cue.id] ? cue.id : null; // the fields: hoe strikes below
-  if (cue.kind === 'event') return SCENES['ev_' + cue.id] ? 'ev_' + cue.id : 'story';
+  if (cue.kind === 'event') return ['ev_' + cue.id, 'ev_' + cue.id.split('_')[0]].find((k) => SCENES[k]) || 'story'; // a later step: its own bed or the story's
   if (cue.kind === 'castle' || cue.kind === 'gate') return 'castle';
   if (cue.kind === 'building' || cue.kind === 'story') {
     const id = (cue.id || '').startsWith('district') ? 'district' : cue.id;

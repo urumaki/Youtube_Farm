@@ -71,6 +71,22 @@ export function tierOfJob(job) {
   return TIERS.find((t) => t.unique.includes(job) || job in t.pool) || null;
 }
 
+// "I can't see myself", "my name wasn't there", "dove sono?": the commenter did not find their villager in
+// the last short. Owner (2026-10-21): they come first in the next one (src/sim/featured.js).
+const COMPLAINT_RE = new RegExp([
+  /\b(can'?t|cannot|can not|couldn'?t|could not|didn'?t|did not|don'?t|do not|never)\s+(see|find|spot)\s+(me|myself|my\b)/,
+  /\bwhere\s+(am i|is my|'?s my|are my)\b/, /\bwhere'?s my\b/, /\bwhere('?s| is| was) (me|i)\b/,
+  /\bi'?m not (in|there|on)\b/, /\bi (wasn'?t|was not|am not) (in|there|shown|on)\b/, /\bnot (in )?(the|this) (video|short)\b/,
+  /\b(no|not|without|missing)\s+my\s+(name|villager)\b/, /\bmy (name|villager)\s+(isn'?t|wasn'?t|is not|was not|never|didn'?t|did not)\b/,
+  /\bforgot (about )?me\b/, /\bwhere did my\b/,
+  /\bnon mi (vedo|trovo|avete|hai|si vede)\b/, /\bnon (c'?è|c'?era|vedo|trovo|si vede) (il )?mio\b/, /\bdove sono( io)?\b/, /\bio non (ci )?sono\b/, /\bmi (avete|hai) dimenticat/,
+].map((r) => r.source).join('|'), 'i');
+
+/** True when the comment says the commenter could not find themselves in the video. */
+export function complainsFromText(text) {
+  return COMPLAINT_RE.test(String(text || '').replace(/[’‘]/g, "'"));
+}
+
 // "call me Violet", "a carpenter named henry", "can I be a villager called sopita?", "chiamami Pino".
 // Only the chosen name is kept (cleaned and checked like any display name in simulate.js).
 const NAME_RE = /\b(?:call me|called|named|name me|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;

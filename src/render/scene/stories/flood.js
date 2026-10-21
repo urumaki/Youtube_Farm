@@ -1,5 +1,6 @@
 // The river floods after the rain: villagers carry sandbags from a cart and stack a wall along the bank
 // by the houses, named villagers leading, while the water creeps up. Nobody gets hurt and the wall holds.
+// The next quiet day (step 'recede') the water goes down behind the finished wall and they cheer on it.
 import * as THREE from 'three';
 import { RIVER_HALF_WIDTH, WATER_LEVEL } from '../../../sim/world.js';
 import { JOBS } from '../../../sim/tiers.js';
@@ -78,13 +79,14 @@ export function buildFlood({ story, w, state, M, houses, yFn, seed, lang, water 
     group.add(P.root);
     return { P, c, sack, off: (i / cast.length) * LOOP + rand01(seed, 'fl', i) * 0.4, x: (i - (cast.length - 1) / 2) * 1.2 };
   });
+  const recede = story.step === 'recede';
   const labels = carriers.filter((k) => k.c).map((k) => ({ k, ...castTag(k.c, lang), pos: new THREE.Vector3() }));
   const tmp = new THREE.Vector3();
   const focus = ground(0, -1.2).add(new THREE.Vector3(0, 1.0, 0));
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Il fiume è in piena!' : 'The river floods!',
+    banner: recede ? (lang === 'it' ? 'L’argine ha tenuto!' : 'The wall held!') : lang === 'it' ? 'Il fiume è in piena!' : 'The river floods!',
     focus,
     cam(u) {
       // from inland, to one side, looking over the carriers at the wall and the river
@@ -94,9 +96,26 @@ export function buildFlood({ story, w, state, M, houses, yFn, seed, lang, water 
       const on = t >= t0 - 0.2 && t <= t1 + 0.2;
       group.visible = on;
       // the river rises during the scene (and only then)
-      if (water) water.position.y = on ? RISE * clamp01((t - t0) / (t1 - t0)) : 0;
-      if (!on) return;
       const u = clamp01((t - t0) / (t1 - t0));
+      if (water) water.position.y = on ? RISE * (recede ? 1 - 0.8 * u : u) : 0;
+      if (!on) return;
+      if (recede) {
+        // the whole wall stands; the carriers line up behind it, cheering, arms up
+        bags.forEach((b) => { b.visible = true; });
+        carriers.forEach((k, i) => {
+          k.P.root.position.copy(ground(k.x, -0.9));
+          k.P.root.rotation.y = frame.rotation.y + Math.PI + (i - 2) * 0.15; // facing the camera, the river behind
+          k.sack.visible = false;
+          const ph = t * 8 + i * 1.3;
+          k.P.legs[0].rotation.x = k.P.legs[1].rotation.x = 0;
+          k.P.body.rotation.x = 0;
+          k.P.r.g.rotation.set(-2.6 + 0.3 * Math.sin(ph), 0, -0.2);
+          k.P.l.g.rotation.set(i % 2 ? -2.5 + 0.3 * Math.sin(ph + 1) : -0.2, 0, 0.2);
+          k.P.root.position.y += 0.1 * Math.abs(Math.sin(ph * 0.8));
+        });
+        for (const lb of labels) lb.pos.copy(tmp.copy(lb.k.P.root.position)).add(new THREE.Vector3(0, 2.3, 0));
+        return;
+      }
       const shown = Math.round(bags.length * (0.35 + 0.65 * u));
       bags.forEach((b, i) => { b.visible = i < shown; });
       carriers.forEach((k, i) => {

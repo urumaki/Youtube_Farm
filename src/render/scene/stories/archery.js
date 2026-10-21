@@ -1,6 +1,7 @@
 // An archery contest in the market square: three archers (named villagers, archers and guards first)
 // shoot side by side at straw targets while the crowd watches; at the end the winner raises the bow and
-// gets a golden rosette pinned on.
+// gets a golden rosette pinned on. Over two quiet days: the heats (step 'heats', no winner yet), then the
+// final with the same three archers.
 import * as THREE from 'three';
 import { rand01 } from '../../../sim/prng.js';
 import { JOBS } from '../../../sim/tiers.js';
@@ -8,7 +9,7 @@ import { buildWorkScene } from '../work.js';
 import { person, stage, castTag, ease, clamp01 } from './common.js';
 
 const CROWD = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d', '#a0522d', '#56606e'];
-const WIN = 0.7; // the share of the shot before the winner is cheered
+const WIN = 0.7; // the share of the shot before the winner is cheered (the final only)
 const AIM = Math.atan2(-Math.cos(1.3), Math.sin(1.3)); // the archer scene shoots along this heading (work.js, 'butts')
 const TO_CAMERA = 2.3; // yaw (in the archer's frame) that faces the camera behind the line
 
@@ -45,6 +46,7 @@ export function buildArchery({ story, M, buildings, seed, lang }) {
   rosette.position.set(0.12, 0.72, 0.2);
   rosette.visible = false;
   archers[0].ws.rig.body.add(rosette);
+  const heats = story.step === 'heats';
   const winSub = lang === 'it' ? 'Vincitore!' : 'Winner!';
   const labels = archers.map(({ c }, k) => (c ? { ...castTag(c, lang), k } : null)).filter(Boolean);
   for (const l of labels) l.sub0 = l.sub;
@@ -52,7 +54,9 @@ export function buildArchery({ story, M, buildings, seed, lang }) {
   return {
     group: (() => { const g = new THREE.Group(); g.add(group, scene); return g; })(),
     labels,
-    banner: lang === 'it' ? 'Gara di tiro con l’arco!' : 'Archery contest!',
+    banner: heats ? (lang === 'it' ? 'Gara con l’arco: le qualificazioni' : 'Archery contest: the heats')
+      : story.step === 'final' ? (lang === 'it' ? 'Gara con l’arco: la finale!' : 'Archery contest: the final!')
+        : lang === 'it' ? 'Gara di tiro con l’arco!' : 'Archery contest!',
     focus: focusW,
     work: { strikeTimes: (a, b) => archers[0].ws.strikeTimes(a, b), sound: 'straw' },
     cam(u) {
@@ -63,7 +67,7 @@ export function buildArchery({ story, M, buildings, seed, lang }) {
       const on = t >= t0 - 0.2 && t <= t1 + 0.2;
       group.visible = scene.visible = on;
       if (!on) return;
-      const won = clamp01((t - t0) / (t1 - t0) - WIN) > 0;
+      const won = !heats && clamp01((t - t0) / (t1 - t0) - WIN) > 0;
       archers.forEach(({ ws }, k) => {
         ws.update(t + k * 0.7); // not in step
         if (k === 0 && won) {

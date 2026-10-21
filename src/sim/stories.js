@@ -3,6 +3,10 @@
 // Tone (owner's rule): named villagers are heroes or comic characters, never villains or victims, and
 // nobody gets hurt. Calendar events always happen on their date; otherwise a story happens on about
 // half the days, each kind with its own cooldown so the same scene does not repeat too often.
+// Owner (2026-10-21): no story at all on a day with BUSY_DAY or more new subscribers (the video needs the
+// time for the newcomers' names), and a story can go on for a few days, one step a day: the merchants
+// arrive, dance round the fire at night, then leave (`steps`). A story in progress waits for the next
+// quiet day.
 import { rng } from './prng.js';
 
 export const PLACES = ['Ashford', 'the Northern Marches', 'Kingsbridge', 'the Salt Coast', 'Ravenscar', 'the Amber Vale', 'Dunmoor', 'the Eastern Isles'];
@@ -19,14 +23,17 @@ const COSTUMES = ['ghost', 'scarecrow', 'pumpkin']; // folk costumes only, nothi
 
 /**
  * Catalog. date: 'MM-DD' calendar event; minPop: population needed; cooldown: days before it can come
- * back; weight: how likely among the stories possible today; needs(state): extra condition.
+ * back; weight: how likely among the stories possible today; needs(state): extra condition; steps: the
+ * story goes on over several days, one step each (story.step).
  */
 export const STORIES = {
   halloween: { date: '10-31', minPop: 1 },
   newyear: { date: '12-31', minPop: 1 }, // the countdown round the bonfire
   bandits: { minPop: 25, cooldown: 10, weight: 2 }, // the guard tier: someone to chase them off
-  quarrel: { minPop: 50, cooldown: 4, weight: 3, needs: (s) => built(s, 'market') }, // in the square
-  merchants: { minPop: 50, cooldown: 5, weight: 3, needs: (s) => built(s, 'market') },
+  // in the square; the next quiet day they make up and share it
+  quarrel: { minPop: 50, cooldown: 6, weight: 3, needs: (s) => built(s, 'market'), steps: ['quarrel', 'peace'] },
+  // they arrive, dance with the villagers round a fire at night, then leave
+  merchants: { minPop: 50, cooldown: 8, weight: 3, needs: (s) => built(s, 'market'), steps: ['arrive', 'camp', 'leave'] },
   // a fire in a house (nobody hurt: the neighbours put it out with buckets), rebuilt the next day
   fire: { minPop: 25, cooldown: 20, weight: 1, needs: (s) => !['rain', 'snow'].includes(s.weather), next: (story, state) => ({ id: 'rebuild', day: state.day + 1, house: story.house }) },
   rebuild: { arc: true }, // only as the day after a fire
@@ -34,12 +41,16 @@ export const STORIES = {
   // only on grey days; the day turns to rain (src/sim/simulate.js)
   storm: { minPop: 1, cooldown: 14, weight: 2, needs: (s) => ['rain', 'cloudy'].includes(s.weather) },
   // the King (the channel's owner) rides through town in his carriage; named villagers cheer in the front row
-  royal: { minPop: 30, cooldown: 10, weight: 2, needs: (s) => !['rain', 'snow', 'storm'].includes(s.weather) },
+  // he rides in, holds a feast in the square, then rides out again
+  royal: { minPop: 30, cooldown: 12, weight: 2, needs: (s) => !['rain', 'snow', 'storm'].includes(s.weather), steps: ['arrive', 'feast', 'leave'] },
   pig: { minPop: 20, cooldown: 8, weight: 2 }, // a pig loose in the square, the farmer gives chase
-  flood: { minPop: 30, cooldown: 25, weight: 2, needs: (s) => s.weather === 'rain' }, // sandbags on the bank
-  archery: { minPop: 40, cooldown: 10, weight: 2, needs: (s) => !['rain', 'snow'].includes(s.weather) },
+  // sandbags on the bank; the next quiet day the water goes down and the wall has held
+  flood: { minPop: 30, cooldown: 25, weight: 2, needs: (s) => s.weather === 'rain', steps: ['rise', 'recede'] },
+  // the heats, then the final with the winner's rosette
+  archery: { minPop: 40, cooldown: 12, weight: 2, needs: (s) => !['rain', 'snow'].includes(s.weather), steps: ['heats', 'final'] },
 };
 const STORY_CHANCE = 0.5;
+export const BUSY_DAY = 50; // new subscribers from one day to the next: no story on busier days
 
 function built(state, id) {
   return state.buildings.some((b) => b.id === id && b.status === 'done');
@@ -74,14 +85,17 @@ const BUILD = {
     if (!heroes.length && named.length) heroes.push(r.pick(named.slice(0, 12))); // a brave villager steps in
     return { cast: heroes, bandits: r.int(5, 7), guards: r.int(2, 3) };
   },
-  quarrel(state, r) {
+  quarrel(state, r, arc) {
+    if (arc?.data) return { cast: arc.data.cast, over: arc.data.over }; // the same two make up
     const named = namedVillagers(state);
     const a = castMember(state, r, named);
     const b = a && castMember(state, r, named, [a]);
     if (!a || !b) return null;
     return { cast: [a, b], over: r.pick(['chicken', 'goat', 'cabbage']) };
   },
-  merchants(state, r) {
+  merchants(state, r, arc) {
+    // at the camp fire the newest named villagers dance with the merchants; they wave goodbye when they leave
+    if (arc?.data) return { ...arc.data, cast: namedVillagers(state).slice(0, arc.step === 'camp' ? 6 : 4) };
     return { cast: [], from: r.pick(PLACES), goods: r.pick(GOODS), wagons: r.int(2, 3) };
   },
   fire(state, r) {
@@ -123,7 +137,8 @@ const BUILD = {
     const chaser = farmers.length ? r.pick(farmers.slice(0, 8)) : castMember(state, r, named);
     return chaser ? { cast: [chaser] } : null;
   },
-  archery(state, r) {
+  archery(state, r, arc) {
+    if (arc?.data) return { cast: arc.data.cast }; // the same three in the final
     // archers and guards first; the winner is the first of the cast
     const named = namedVillagers(state);
     const pool = [...named.filter((n) => n.job === 'fletcher' || HEROES.includes(n.job)), ...named.filter((n) => n.job !== 'fletcher' && !HEROES.includes(n.job))].slice(0, 8);
@@ -132,6 +147,7 @@ const BUILD = {
     return { cast };
   },
   royal(state, r) {
+    // (a new crowd in the front row, or at the feast table, every day)
     const pool = namedVillagers(state).slice(0, 16), cast = [];
     while (cast.length < 6 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
     return { cast };
@@ -145,21 +161,28 @@ const BUILD = {
 
 /**
  * Today's story, or null. Records it in state.storyLog (id -> last day) for the cooldowns.
- * Call after the population and names of the day are settled.
+ * Call after the population and names of the day are settled. `newSubs`: subscribers gained since yesterday.
  */
-export function pickStory(state) {
+export function pickStory(state, { newSubs = 0 } = {}) {
   state.storyLog ??= {};
+  if (newSubs >= BUSY_DAY) return null; // a story in progress waits for a quieter day
   const r = rng(state.seed, 'story', state.date);
   const pop = state.subscriberCount;
   const mmdd = state.date.slice(5);
   const possible = (id, s) => pop >= (s.minPop ?? 1) && (!s.needs || s.needs(state));
   let id = Object.keys(STORIES).find((k) => STORIES[k].date === mmdd && possible(k, STORIES[k]));
-  // then a story that continues from an earlier day (the house rebuilt after a fire)
+  // then a story that continues from an earlier day (the next step, or the house rebuilt after a fire)
   const arc = state.storyArc;
   if (!id && arc && arc.day <= state.day) {
     state.storyArc = null;
     const story = BUILD[arc.id](state, r, arc);
-    if (story) { state.storyLog[arc.id] = state.day; return { id: arc.id, ...story }; }
+    if (story) {
+      state.storyLog[arc.id] = state.day;
+      if (arc.step === undefined) return { id: arc.id, ...story };
+      const steps = STORIES[arc.id].steps, k = steps.indexOf(arc.step);
+      if (k + 1 < steps.length) state.storyArc = { id: arc.id, step: steps[k + 1], day: state.day + 1, data: arc.data };
+      return { id: arc.id, step: arc.step, ...story };
+    }
   }
   if (!id) {
     if (!r.chance(STORY_CHANCE)) return null;
@@ -172,12 +195,27 @@ export function pickStory(state) {
   if (!story) return null;
   state.storyLog[id] = state.day;
   if (STORIES[id].next) state.storyArc = STORIES[id].next(story, state);
+  const steps = STORIES[id].steps;
+  if (steps) {
+    state.storyArc = { id, step: steps[1], day: state.day + 1, data: story };
+    return { id, step: steps[0], ...story };
+  }
   return { id, ...story };
 }
 
 /** A given story for today, whatever the calendar and cooldowns say (test renders: --story bandits). */
 export function storyFor(state, id) {
-  if (!BUILD[id]) throw new Error(`unknown story "${id}" (one of: ${Object.keys(BUILD).join(', ')})`);
-  const story = BUILD[id](state, rng(state.seed, 'story', state.date));
-  return story && { id, ...story };
+  const [name, step] = id.split(':'); // "merchants:camp" for a later step
+  if (!BUILD[name]) throw new Error(`unknown story "${name}" (one of: ${Object.keys(BUILD).join(', ')})`);
+  const r = rng(state.seed, 'story', state.date);
+  const steps = STORIES[name].steps;
+  if (step && !steps?.includes(step)) throw new Error(`story "${name}" has no step "${step}" (${(steps || []).join(', ') || 'one step only'})`);
+  let story = BUILD[name](state, r);
+  if (story && step && step !== steps[0]) story = BUILD[name](state, r, { id: name, step, data: story });
+  return story && { id: name, ...(steps ? { step: step || steps[0] } : {}), ...story };
+}
+
+/** The sound and narration key of a story's scene: 'merchants', or 'merchants_camp' for a later step. */
+export function storyCue(story) {
+  return story.step && story.step !== STORIES[story.id]?.steps?.[0] ? `${story.id}_${story.step}` : story.id;
 }
