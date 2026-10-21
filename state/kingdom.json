@@ -1,10 +1,10 @@
 {
  "schemaVersion": 1,
  "seed": 3999547794,
- "day": 5,
- "date": "2026-10-20",
- "subscriberCount": 183,
- "peakPopulation": 183,
+ "day": 6,
+ "date": "2026-10-21",
+ "subscriberCount": 267,
+ "peakPopulation": 267,
  "countSource": "public",
  "houses": [
   {
@@ -1457,6 +1457,468 @@
    "occupants": [
     181,
     182
+   ]
+  },
+  {
+   "id": 141,
+   "plot": 141,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    183,
+    184
+   ]
+  },
+  {
+   "id": 142,
+   "plot": 142,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    185,
+    186
+   ]
+  },
+  {
+   "id": 143,
+   "plot": 143,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    187,
+    188
+   ]
+  },
+  {
+   "id": 144,
+   "plot": 144,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    189,
+    190
+   ]
+  },
+  {
+   "id": 145,
+   "plot": 145,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    191,
+    192
+   ]
+  },
+  {
+   "id": 146,
+   "plot": 146,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    193,
+    194
+   ]
+  },
+  {
+   "id": 147,
+   "plot": 147,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    195,
+    196
+   ]
+  },
+  {
+   "id": 148,
+   "plot": 148,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    197,
+    198
+   ]
+  },
+  {
+   "id": 149,
+   "plot": 149,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    199,
+    200
+   ]
+  },
+  {
+   "id": 150,
+   "plot": 150,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    201,
+    202
+   ]
+  },
+  {
+   "id": 151,
+   "plot": 151,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    203,
+    204
+   ]
+  },
+  {
+   "id": 152,
+   "plot": 152,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    205,
+    206
+   ]
+  },
+  {
+   "id": 153,
+   "plot": 153,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    207,
+    208
+   ]
+  },
+  {
+   "id": 154,
+   "plot": 154,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    209,
+    210
+   ]
+  },
+  {
+   "id": 155,
+   "plot": 155,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    211,
+    212
+   ]
+  },
+  {
+   "id": 156,
+   "plot": 156,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    213,
+    214
+   ]
+  },
+  {
+   "id": 157,
+   "plot": 157,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    215,
+    216
+   ]
+  },
+  {
+   "id": 158,
+   "plot": 158,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    217,
+    218
+   ]
+  },
+  {
+   "id": 159,
+   "plot": 159,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    219,
+    220
+   ]
+  },
+  {
+   "id": 160,
+   "plot": 160,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    221,
+    222
+   ]
+  },
+  {
+   "id": 161,
+   "plot": 161,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    223,
+    224
+   ]
+  },
+  {
+   "id": 162,
+   "plot": 162,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    225,
+    226
+   ]
+  },
+  {
+   "id": 163,
+   "plot": 163,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    227,
+    228
+   ]
+  },
+  {
+   "id": 164,
+   "plot": 164,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    229,
+    230
+   ]
+  },
+  {
+   "id": 165,
+   "plot": 165,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    231,
+    232
+   ]
+  },
+  {
+   "id": 166,
+   "plot": 166,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    233,
+    234
+   ]
+  },
+  {
+   "id": 167,
+   "plot": 167,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    235,
+    236
+   ]
+  },
+  {
+   "id": 168,
+   "plot": 168,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    237,
+    238
+   ]
+  },
+  {
+   "id": 169,
+   "plot": 169,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    239,
+    240
+   ]
+  },
+  {
+   "id": 170,
+   "plot": 170,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    241,
+    242
+   ]
+  },
+  {
+   "id": 171,
+   "plot": 171,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    243,
+    244
+   ]
+  },
+  {
+   "id": 172,
+   "plot": 172,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    245,
+    246
+   ]
+  },
+  {
+   "id": 173,
+   "plot": 173,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    247,
+    248
+   ]
+  },
+  {
+   "id": 174,
+   "plot": 174,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    249,
+    250
+   ]
+  },
+  {
+   "id": 175,
+   "plot": 175,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    251,
+    252
+   ]
+  },
+  {
+   "id": 176,
+   "plot": 176,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    253,
+    254
+   ]
+  },
+  {
+   "id": 177,
+   "plot": 177,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    255,
+    256
+   ]
+  },
+  {
+   "id": 178,
+   "plot": 178,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    257,
+    258
+   ]
+  },
+  {
+   "id": 179,
+   "plot": 179,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    259,
+    260
+   ]
+  },
+  {
+   "id": 180,
+   "plot": 180,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    261,
+    262
+   ]
+  },
+  {
+   "id": 181,
+   "plot": 181,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    263,
+    264
+   ]
+  },
+  {
+   "id": 182,
+   "plot": 182,
+   "capacity": 2,
+   "status": "occupied",
+   "builtDay": 6,
+   "occupants": [
+    265,
+    266
    ]
   }
  ],
@@ -3152,6 +3614,510 @@
    "rot": -1.2930461052030617,
    "facing": 1,
    "road": "northeast"
+  },
+  {
+   "id": 141,
+   "x": 408.1783763704734,
+   "z": 14.06345350855402,
+   "y": 3.2986620978848245,
+   "yMin": 3.172863616856906,
+   "hw": 3.886695825960487,
+   "hd": 7.314012321294285,
+   "rot": 1.6045506854464915,
+   "facing": -1,
+   "road": "lane2"
+  },
+  {
+   "id": 142,
+   "x": 327.29982886241396,
+   "z": -161.78799952610362,
+   "y": 3.7489367992169984,
+   "yMin": 3.5082639786581966,
+   "hw": 4.474591500591487,
+   "hd": 9.657387297367677,
+   "rot": 0.9635834409117964,
+   "facing": -1,
+   "road": "lane28"
+  },
+  {
+   "id": 143,
+   "x": 338.35290743758657,
+   "z": 182.10245826524098,
+   "y": 2.821631105087851,
+   "yMin": 2.646525690419757,
+   "hw": 3.3490617722272873,
+   "hd": 9.892104067839682,
+   "rot": 0.6673029975382223,
+   "facing": -1,
+   "road": "southeast"
+  },
+  {
+   "id": 144,
+   "x": 332.50787146635804,
+   "z": 219.0964856662093,
+   "y": 2.636747593695286,
+   "yMin": 2.466030917344392,
+   "hw": 3.725397412478924,
+   "hd": 11.524722149712034,
+   "rot": 0.6220993886136619,
+   "facing": 1,
+   "road": "southeast"
+  },
+  {
+   "id": 145,
+   "x": 334.7774716831186,
+   "z": -200.53226795984864,
+   "y": 3.6573560248190127,
+   "yMin": 3.6016311427910916,
+   "hw": 4.088512502238155,
+   "hd": 10.954336311668158,
+   "rot": -1.2038152098326926,
+   "facing": 1,
+   "road": "northeast"
+  },
+  {
+   "id": 146,
+   "x": 303.4646403545135,
+   "z": -218.5812027906673,
+   "y": 4.061103927776152,
+   "yMin": 3.8968333800660147,
+   "hw": 4.417919587343931,
+   "hd": 11.858345696353354,
+   "rot": -1.1906856139187685,
+   "facing": -1,
+   "road": "northeast"
+  },
+  {
+   "id": 147,
+   "x": 339.99931407646784,
+   "z": 224.80754859638293,
+   "y": 2.5940209240407133,
+   "yMin": 2.479449348026782,
+   "hw": 3.5596293333917854,
+   "hd": 12.59268868714571,
+   "rot": 0.6932728040773614,
+   "facing": 1,
+   "road": "southeast"
+  },
+  {
+   "id": 148,
+   "x": 263.72500527710156,
+   "z": 209.31020318422705,
+   "y": 2.734103067316209,
+   "yMin": 2.6693219190457875,
+   "hw": 4.431496882811189,
+   "hd": 9.879805167205632,
+   "rot": 2.0813615017235723,
+   "facing": 1,
+   "road": "lane42"
+  },
+  {
+   "id": 149,
+   "x": 363.26135868008794,
+   "z": 198.24344136720944,
+   "y": 2.734878178543082,
+   "yMin": 2.685982444636264,
+   "hw": 3.316452873125672,
+   "hd": 10.699131090310402,
+   "rot": 0.7038832524927525,
+   "facing": -1,
+   "road": "southeast"
+  },
+  {
+   "id": 150,
+   "x": 427.3989234474187,
+   "z": 21.353138971630838,
+   "y": 3.4505756024557637,
+   "yMin": 3.175902979115213,
+   "hw": 4.425881910696626,
+   "hd": 11.189295036485419,
+   "rot": 0.038019125897494434,
+   "facing": 1,
+   "road": "east"
+  },
+  {
+   "id": 151,
+   "x": 414.33885510810916,
+   "z": -14.62886040156502,
+   "y": 3.3380781916327016,
+   "yMin": 3.2338407790682715,
+   "hw": 3.2036853041499853,
+   "hd": 12.93368226941675,
+   "rot": 0.019417770782210478,
+   "facing": -1,
+   "road": "east"
+  },
+  {
+   "id": 152,
+   "x": 134.732756961715,
+   "z": -190.80595267536899,
+   "y": 3.496134627587221,
+   "yMin": 3.3204135413632034,
+   "hw": 3.700825855601579,
+   "hd": 7.327721765148453,
+   "rot": -2.4883249961364493,
+   "facing": -1,
+   "road": "lane27"
+  },
+  {
+   "id": 153,
+   "x": 350.6451981981825,
+   "z": 186.9798846553656,
+   "y": 2.7652167517448256,
+   "yMin": 2.6495298134991625,
+   "hw": 3.201392164453864,
+   "hd": 12.949843524838798,
+   "rot": 0.6750028209573271,
+   "facing": -1,
+   "road": "southeast"
+  },
+  {
+   "id": 154,
+   "x": 337.4564147227864,
+   "z": -219.7397877494174,
+   "y": 3.786635957059925,
+   "yMin": 3.664402436582812,
+   "hw": 3.294467468932271,
+   "hd": 9.354171414510347,
+   "rot": -1.4387209943798074,
+   "facing": 1,
+   "road": "northeast"
+  },
+  {
+   "id": 155,
+   "x": 311.89629406222,
+   "z": -131.9888959880746,
+   "y": 3.635671712496196,
+   "yMin": 3.5072994035875746,
+   "hw": 5.155473382212222,
+   "hd": 8.846550541347824,
+   "rot": 1.117956019427664,
+   "facing": 1,
+   "road": "lane28"
+  },
+  {
+   "id": 156,
+   "x": 264.2824917064022,
+   "z": -172.27386898469334,
+   "y": 3.9740017086769526,
+   "yMin": 3.8553974190824705,
+   "hw": 3.834877673536539,
+   "hd": 7.47703294607345,
+   "rot": -0.6033516398985165,
+   "facing": 1,
+   "road": "lane125"
+  },
+  {
+   "id": 157,
+   "x": 423.32157828822557,
+   "z": -15.325386807657978,
+   "y": 3.192983488044846,
+   "yMin": 3.046607094825946,
+   "hw": 3.917044033110142,
+   "hd": 12.206403147429228,
+   "rot": 0.028257197528468878,
+   "facing": -1,
+   "road": "east"
+  },
+  {
+   "id": 158,
+   "x": 342.8653930120301,
+   "z": -244.44237446311158,
+   "y": 3.888314545299939,
+   "yMin": 3.738416163789034,
+   "hw": 4.495663091540337,
+   "hd": 11.781659997417592,
+   "rot": -1.4612632935603214,
+   "facing": 1,
+   "road": "northeast"
+  },
+  {
+   "id": 159,
+   "x": 346.88066525518417,
+   "z": 229.7450269640594,
+   "y": 2.676475831312777,
+   "yMin": 2.491400758002051,
+   "hw": 3.5511214289814235,
+   "hd": 11.780594436451793,
+   "rot": 0.6929385256843686,
+   "facing": 1,
+   "road": "southeast"
+  },
+  {
+   "id": 160,
+   "x": 290.3604406272717,
+   "z": 220.17296011057869,
+   "y": 2.785826080885157,
+   "yMin": 2.632435041162947,
+   "hw": 5.21385608939454,
+   "hd": 8.873874522512779,
+   "rot": 2.094166591016411,
+   "facing": -1,
+   "road": "lane42"
+  },
+  {
+   "id": 161,
+   "x": 408.41719937150697,
+   "z": 42.37540223862349,
+   "y": 3.1781850121357804,
+   "yMin": 3.1074943505954105,
+   "hw": 4.887252556625754,
+   "hd": 7.59311058674939,
+   "rot": 1.6661112030117655,
+   "facing": -1,
+   "road": "lane2"
+  },
+  {
+   "id": 162,
+   "x": 305.3839383640619,
+   "z": -232.77942531299675,
+   "y": 4.03092108009215,
+   "yMin": 3.8771044628737634,
+   "hw": 4.440698666125536,
+   "hd": 13.234728993033059,
+   "rot": -1.4011012798114895,
+   "facing": -1,
+   "road": "northeast"
+  },
+  {
+   "id": 163,
+   "x": 410.7339190485318,
+   "z": 23.715917634903498,
+   "y": 3.342806556508903,
+   "yMin": 3.17658846794584,
+   "hw": 4.3061456442810595,
+   "hd": 10.38723295100499,
+   "rot": 1.6533279091942434,
+   "facing": -1,
+   "road": "lane2"
+  },
+  {
+   "id": 164,
+   "x": 269.778271662129,
+   "z": 202.11430200352214,
+   "y": 2.8740778139872787,
+   "yMin": 2.7716743977551643,
+   "hw": 3.281320383772254,
+   "hd": 8.199894877965562,
+   "rot": 2.1399407821035226,
+   "facing": 1,
+   "road": "lane42"
+  },
+  {
+   "id": 165,
+   "x": 259.272017527634,
+   "z": 219.20888730487937,
+   "y": 2.7232651260750007,
+   "yMin": 2.644226908322387,
+   "hw": 5.0618902877904475,
+   "hd": 7.0772446925984696,
+   "rot": 2.0675595007904755,
+   "facing": 1,
+   "road": "lane42"
+  },
+  {
+   "id": 166,
+   "x": 142.8002394439325,
+   "z": -219.02005199915686,
+   "y": 3.949367424490425,
+   "yMin": 3.6713838873128366,
+   "hw": 4.9019066649489105,
+   "hd": 9.009909705491737,
+   "rot": -2.4833845164019963,
+   "facing": 1,
+   "road": "lane27"
+  },
+  {
+   "id": 167,
+   "x": 376.9210871108325,
+   "z": 211.82017994170607,
+   "y": 2.7790536664497822,
+   "yMin": 2.721852361394311,
+   "hw": 3.706699117273092,
+   "hd": 10.039101828821003,
+   "rot": 0.626462628841769,
+   "facing": -1,
+   "road": "southeast"
+  },
+  {
+   "id": 168,
+   "x": 308.6445578265535,
+   "z": -256.53227236956934,
+   "y": 3.9910931696224234,
+   "yMin": 3.7637504625662426,
+   "hw": 4.337529994547367,
+   "hd": 12.017649355810136,
+   "rot": -1.451599494413968,
+   "facing": -1,
+   "road": "northeast"
+  },
+  {
+   "id": 169,
+   "x": 433.2914052365293,
+   "z": -14.806748196439429,
+   "y": 3.2307864526783305,
+   "yMin": 2.9535648190640895,
+   "hw": 4.460282215103507,
+   "hd": 12.819232517620549,
+   "rot": -0.004781257074269185,
+   "facing": -1,
+   "road": "east"
+  },
+  {
+   "id": 170,
+   "x": 135.11359556453382,
+   "z": -226.08548144881507,
+   "y": 4.135904877019501,
+   "yMin": 3.8545599477887253,
+   "hw": 3.965288547798991,
+   "hd": 8.791117776883766,
+   "rot": -2.50915981683177,
+   "facing": 1,
+   "road": "lane27"
+  },
+  {
+   "id": 171,
+   "x": 411.0175682723351,
+   "z": 32.55041288494856,
+   "y": 3.1748949073697537,
+   "yMin": 3.1481933558017765,
+   "hw": 3.4806801504455507,
+   "hd": 9.956544501590542,
+   "rot": 1.6247266526672846,
+   "facing": -1,
+   "road": "lane2"
+  },
+  {
+   "id": 172,
+   "x": 444.1348837263288,
+   "z": -10.745920358106943,
+   "y": 3.0480276317990453,
+   "yMin": 2.918666228614396,
+   "hw": 4.417624481394887,
+   "hd": 9.182340466417372,
+   "rot": 0.004903859147409997,
+   "facing": -1,
+   "road": "east"
+  },
+  {
+   "id": 173,
+   "x": 266.9352663359116,
+   "z": -206.50847643114795,
+   "y": 4.310461528457743,
+   "yMin": 3.9985491838262734,
+   "hw": 5.090041134972125,
+   "hd": 9.879937679274008,
+   "rot": -0.5252499136546687,
+   "facing": -1,
+   "road": "lane125"
+  },
+  {
+   "id": 174,
+   "x": 123.69112140638146,
+   "z": -234.3518006279295,
+   "y": 4.319036928601111,
+   "yMin": 3.9549055761504093,
+   "hw": 3.56787883117795,
+   "hd": 10.295398638118058,
+   "rot": -2.8127995832337374,
+   "facing": 1,
+   "road": "lane27"
+  },
+  {
+   "id": 175,
+   "x": 445.17256480687087,
+   "z": 23.492542956823,
+   "y": 3.4605631347238752,
+   "yMin": 2.9960315180090547,
+   "hw": 3.503428640216589,
+   "hd": 13.143617944442667,
+   "rot": 0.1117954223841234,
+   "facing": 1,
+   "road": "east"
+  },
+  {
+   "id": 176,
+   "x": 460.7180582379626,
+   "z": -15.997275093223436,
+   "y": 3.2327595312358848,
+   "yMin": 3.1168141404727514,
+   "hw": 3.2068386003375053,
+   "hd": 13.423452272429131,
+   "rot": -0.09931055750590531,
+   "facing": -1,
+   "road": "east"
+  },
+  {
+   "id": 177,
+   "x": 462.69049818851505,
+   "z": 20.337552437560568,
+   "y": 3.33114489222404,
+   "yMin": 3.152625740221761,
+   "hw": 3.2814183454960584,
+   "hd": 10.083832024829462,
+   "rot": -0.08623496947237072,
+   "facing": 1,
+   "road": "east"
+  },
+  {
+   "id": 178,
+   "x": 379.88280816008603,
+   "z": 54.58240503242867,
+   "y": 3.4861529539274954,
+   "yMin": 3.334394257309192,
+   "hw": 4.075406970921904,
+   "hd": 9.508714336319827,
+   "rot": 1.5973127398067675,
+   "facing": 1,
+   "road": "lane2"
+  },
+  {
+   "id": 179,
+   "x": 260.36909749411865,
+   "z": 253.36803984539728,
+   "y": 2.5132346075854275,
+   "yMin": 2.4289225234943004,
+   "hw": 3.708802205044776,
+   "hd": 8.120990668307059,
+   "rot": 2.570824956613177,
+   "facing": -1,
+   "road": "lane42"
+  },
+  {
+   "id": 180,
+   "x": 343.3399968162316,
+   "z": -259.54651455824126,
+   "y": 3.806097397539041,
+   "yMin": 3.67515226130938,
+   "hw": 3.269262747839093,
+   "hd": 9.6792555693537,
+   "rot": -1.4983264220480723,
+   "facing": 1,
+   "road": "northeast"
+  },
+  {
+   "id": 181,
+   "x": 361.6126385495595,
+   "z": 242.73842854622072,
+   "y": 2.760422716067475,
+   "yMin": 2.5905666912802507,
+   "hw": 4.1572341594845055,
+   "hd": 13.140433417400345,
+   "rot": 0.568956939098794,
+   "facing": 1,
+   "road": "southeast"
+  },
+  {
+   "id": 182,
+   "x": 371.23296229161565,
+   "z": 248.0516912661274,
+   "y": 2.632622900387961,
+   "yMin": 2.56329261508933,
+   "hw": 3.3918134778738023,
+   "hd": 12.167793162516318,
+   "rot": 0.44860372752191835,
+   "facing": 1,
+   "road": "southeast"
   }
  ],
  "buildings": [
@@ -3238,9 +4204,9 @@
   {
    "id": "chapel",
    "tier": "faith",
-   "status": "construction",
+   "status": "done",
    "startedDay": 3,
-   "doneDay": null,
+   "doneDay": 6,
    "daysTotal": 3
   },
   {
@@ -3250,6 +4216,30 @@
    "startedDay": 3,
    "doneDay": 5,
    "daysTotal": 2
+  },
+  {
+   "id": "crier_stand",
+   "tier": "crier",
+   "status": "construction",
+   "startedDay": 6,
+   "doneDay": null,
+   "daysTotal": 1
+  },
+  {
+   "id": "wall2",
+   "tier": "walled",
+   "status": "construction",
+   "startedDay": 6,
+   "doneDay": null,
+   "daysTotal": 7
+  },
+  {
+   "id": "townhall",
+   "tier": "walled",
+   "status": "construction",
+   "startedDay": 6,
+   "doneDay": null,
+   "daysTotal": 5
   }
  ],
  "unlockedTiers": [
@@ -3258,34 +4248,58 @@
   "crafts",
   "guard",
   "market",
-  "faith"
+  "faith",
+  "crier",
+  "walled"
  ],
  "pendingConstruction": [
   {
-   "building": "chapel",
+   "building": "crier_stand",
    "daysLeft": 1,
-   "daysTotal": 3
+   "daysTotal": 1
+  },
+  {
+   "building": "wall2",
+   "daysLeft": 7,
+   "daysTotal": 7
+  },
+  {
+   "building": "townhall",
+   "daysLeft": 5,
+   "daysTotal": 5
   }
  ],
- "weather": "clear",
+ "weather": "fog",
  "events": [
   {
    "type": "weather",
-   "weather": "clear",
+   "weather": "fog",
    "season": "autumn"
   },
   {
    "type": "construction",
-   "building": "chapel",
-   "label": "the Chapel",
-   "progress": 0.6666666666666667
+   "building": "crier_stand",
+   "label": "the Crier's Stand",
+   "progress": 0
   },
   {
-   "type": "spotlight",
-   "villager": 19,
-   "name": "coolcoolmm",
-   "job": "beggar",
-   "activity": "raises a mug to every passer-by"
+   "type": "construction",
+   "building": "wall2",
+   "label": "the Second Wall",
+   "progress": 0
+  },
+  {
+   "type": "construction",
+   "building": "townhall",
+   "label": "the Town Hall",
+   "progress": 0
+  },
+  {
+   "type": "milestone",
+   "value": 250
+  },
+  {
+   "type": "harvest"
   }
  ],
  "names": {
@@ -3386,7 +4400,7 @@
    "author": "UC2C3QaTaPxrVuffUFhfZb8Q",
    "day": 3,
    "job": "fletcher",
-   "requestDay": 5
+   "requestDay": 6
   },
   "17": {
    "name": "AMERICANCITIZEN69",
@@ -3400,9 +4414,8 @@
    "name": "adrielsoto8952",
    "author": "UCDNlSEHd8eHBmb3NefBrNSA",
    "day": 3,
-   "job": "apprentice",
-   "wants": "noble",
-   "requestDay": 3
+   "job": "merchant",
+   "requestDay": 6
   },
   "19": {
    "name": "coolcoolmm",
@@ -3479,7 +4492,7 @@
    "author": "UCf-u6jKYOt9lQb9yI6IXhjw",
    "day": 4,
    "job": "guard",
-   "requestDay": 5
+   "requestDay": 6
   },
   "32": {
    "name": "Frosti9797",
@@ -3490,8 +4503,7 @@
    "name": "Henry",
    "author": "UCgVVJp4kssex2xJfjpPQejw",
    "day": 4,
-   "job": "apprentice",
-   "wants": "carpenter",
+   "job": "carpenter",
    "requestDay": 4
   },
   "34": {
@@ -3503,8 +4515,8 @@
    "name": "Sandball",
    "author": "UCJnz-6Mwp7CTPMtADrSMiqQ",
    "day": 4,
-   "job": "farmer",
-   "requestDay": 4
+   "job": "guard",
+   "requestDay": 6
   },
   "36": {
    "name": "Sopita",
@@ -3557,6 +4569,157 @@
    "name": "kristingrundler1052",
    "author": "UCYiCl_4g3uYYgDV0AYnYIBA",
    "day": 5
+  },
+  "46": {
+   "name": "Grawlixtist",
+   "author": "UCbrCi5UlulY-pQB02iGPGHg",
+   "day": 6,
+   "job": "brewer",
+   "requestDay": 6
+  },
+  "47": {
+   "name": "Ghost",
+   "author": "UCgK7t_gXgzpFZXD3y5gAIKA",
+   "day": 6
+  },
+  "48": {
+   "name": "ARDAKKAWAAAAAGH",
+   "author": "UC83JJ5ZQbHeTRkwAx5lgQdA",
+   "day": 6
+  },
+  "49": {
+   "name": "Spookysaururex",
+   "author": "UCq7uSCL_Qn8NHWQZs4fAGfw",
+   "day": 6
+  },
+  "50": {
+   "name": "Vex_scout_team",
+   "author": "UCo2GAM-NsVItWH5Fm9OOBtg",
+   "day": 6,
+   "job": "guard",
+   "requestDay": 6
+  },
+  "51": {
+   "name": "markmoger6570",
+   "author": "UCCWnmhErowDWJeWvb-4-81g",
+   "day": 6
+  },
+  "52": {
+   "name": "TheGodlyBraydenV3",
+   "author": "UCSHnVA5ehaZa60noKgbn8eg",
+   "day": 6,
+   "job": "farmer",
+   "requestDay": 6
+  },
+  "53": {
+   "name": "noeluss",
+   "author": "UCF2h95P0iIUlGnlbwBQYTqA",
+   "day": 6
+  },
+  "54": {
+   "name": "IamtheOriginalStarwal…",
+   "author": "UC8nJmR-vszJWLYd7FXniNhA",
+   "day": 6
+  },
+  "55": {
+   "name": "DevDeStefano",
+   "author": "UCNnuIvtpAPTL0ZL7lW1mlNA",
+   "day": 6
+  },
+  "56": {
+   "name": "justa_salmon",
+   "author": "UCbGl5QzHcRqA2ObRvRAFPVw",
+   "day": 6,
+   "job": "apprentice",
+   "wants": "bard",
+   "requestDay": 6
+  },
+  "57": {
+   "name": "Minutebuildsforyou",
+   "author": "UCa2PEAqWZSU_2k4F_-vPTMA",
+   "day": 6,
+   "job": "blacksmith",
+   "requestDay": 6
+  },
+  "58": {
+   "name": "connorlowe3286",
+   "author": "UCEDhLXycK38BV9nNH9ZTc0w",
+   "day": 6,
+   "job": "farmer",
+   "requestDay": 6
+  },
+  "59": {
+   "name": "RealSilvee",
+   "author": "UC9mdE6zsF7-2EKxXoeIt6bw",
+   "day": 6
+  },
+  "60": {
+   "name": "gh0styfr13nd",
+   "author": "UCtAVuer4PW_gocC1ke_YWZA",
+   "day": 6,
+   "job": "jester",
+   "requestDay": 6
+  },
+  "61": {
+   "name": "micahmcdowell3394",
+   "author": "UC6qbGK4NIxbhK26Evcw2RqA",
+   "day": 6
+  },
+  "62": {
+   "name": "ElijahBateman",
+   "author": "UCE0mLoBPgAb-GZe-IMwJiqg",
+   "day": 6
+  },
+  "63": {
+   "name": "AgentMelonGrey",
+   "author": "UC3GVLgr1oU5mAO5ygQEanKA",
+   "day": 6
+  },
+  "64": {
+   "name": "DingusFluffleberry",
+   "author": "UCefsg6IoJmPsp2T8AhEo1Sw",
+   "day": 6
+  },
+  "65": {
+   "name": "MarshallBurrell",
+   "author": "UCtEABa6GTZtr9exxtIhfuoQ",
+   "day": 6,
+   "job": "merchant",
+   "requestDay": 6
+  },
+  "66": {
+   "name": "Smol-Kokushibo",
+   "author": "UCcN_7wJ3eHmZn2YSg0j1BYg",
+   "day": 6,
+   "job": "baker",
+   "requestDay": 6
+  },
+  "67": {
+   "name": "the-orb-supporter",
+   "author": "UCgntdT-JT8-lDgRu_frmtGw",
+   "day": 6
+  },
+  "68": {
+   "name": "BoostedDude34",
+   "author": "UCBqDr-R8IkllrZ4mqG-zpuw",
+   "day": 6,
+   "job": "carpenter",
+   "requestDay": 6
+  },
+  "69": {
+   "name": "justiceCyne",
+   "author": "UCQM2YaXRR4jL6WLLMGPewAg",
+   "day": 6
+  },
+  "70": {
+   "name": "JoaoHenrique",
+   "author": "UCiYm59E9oy6a4qPon3lM1SA",
+   "day": 6
+  },
+  "71": {
+   "name": "lizarazu89",
+   "author": "UCzW3K-tHq1YW1ybTeE6D4QQ",
+   "day": 6
   }
  },
  "nameQueue": [],
@@ -3606,9 +4769,35 @@
   "UCRYOrW1Ks_JPJAaZ_KHUQAA",
   "UC3Kg1q6aMTAcmd2d-4nk6Lw",
   "UC0B7ctFqWmcVT686QHy9LvA",
-  "UCYiCl_4g3uYYgDV0AYnYIBA"
+  "UCYiCl_4g3uYYgDV0AYnYIBA",
+  "UCbrCi5UlulY-pQB02iGPGHg",
+  "UCgK7t_gXgzpFZXD3y5gAIKA",
+  "UC83JJ5ZQbHeTRkwAx5lgQdA",
+  "UCq7uSCL_Qn8NHWQZs4fAGfw",
+  "UCo2GAM-NsVItWH5Fm9OOBtg",
+  "UCCWnmhErowDWJeWvb-4-81g",
+  "UCSHnVA5ehaZa60noKgbn8eg",
+  "UCF2h95P0iIUlGnlbwBQYTqA",
+  "UC8nJmR-vszJWLYd7FXniNhA",
+  "UCNnuIvtpAPTL0ZL7lW1mlNA",
+  "UCbGl5QzHcRqA2ObRvRAFPVw",
+  "UCa2PEAqWZSU_2k4F_-vPTMA",
+  "UCEDhLXycK38BV9nNH9ZTc0w",
+  "UC9mdE6zsF7-2EKxXoeIt6bw",
+  "UCtAVuer4PW_gocC1ke_YWZA",
+  "UC6qbGK4NIxbhK26Evcw2RqA",
+  "UCE0mLoBPgAb-GZe-IMwJiqg",
+  "UC3GVLgr1oU5mAO5ygQEanKA",
+  "UCefsg6IoJmPsp2T8AhEo1Sw",
+  "UCtEABa6GTZtr9exxtIhfuoQ",
+  "UCcN_7wJ3eHmZn2YSg0j1BYg",
+  "UCgntdT-JT8-lDgRu_frmtGw",
+  "UCBqDr-R8IkllrZ4mqG-zpuw",
+  "UCQM2YaXRR4jL6WLLMGPewAg",
+  "UCiYm59E9oy6a4qPon3lM1SA",
+  "UCzW3K-tHq1YW1ybTeE6D4QQ"
  ],
- "commentsSeen": "2026-10-19T22:30:38Z",
+ "commentsSeen": "2026-10-21T09:47:40Z",
  "villagers": [
   {
    "id": 0,
@@ -3721,7 +4910,7 @@
   {
    "id": 18,
    "name": "adrielsoto8952",
-   "job": "apprentice",
+   "job": "merchant",
    "house": 18
   },
   {
@@ -3811,7 +5000,7 @@
   {
    "id": 33,
    "name": "Henry",
-   "job": "apprentice",
+   "job": "carpenter",
    "house": 33
   },
   {
@@ -3823,7 +5012,7 @@
   {
    "id": 35,
    "name": "Sandball",
-   "job": "farmer",
+   "job": "guard",
    "house": 35
   },
   {
@@ -3888,157 +5077,157 @@
   },
   {
    "id": 46,
-   "name": null,
-   "job": "baker",
+   "name": "Grawlixtist",
+   "job": "brewer",
    "house": 46
   },
   {
    "id": 47,
-   "name": null,
+   "name": "Ghost",
    "job": "farmer",
    "house": 47
   },
   {
    "id": 48,
-   "name": null,
+   "name": "ARDAKKAWAAAAAGH",
    "job": "peasant",
    "house": 48
   },
   {
    "id": 49,
-   "name": null,
+   "name": "Spookysaururex",
    "job": "merchant",
    "house": 49
   },
   {
    "id": 50,
-   "name": null,
-   "job": "innkeeper",
+   "name": "Vex_scout_team",
+   "job": "guard",
    "house": 50
   },
   {
    "id": 51,
-   "name": null,
+   "name": "markmoger6570",
    "job": "farmer",
    "house": 51
   },
   {
    "id": 52,
-   "name": null,
-   "job": "peasant",
+   "name": "TheGodlyBraydenV3",
+   "job": "farmer",
    "house": 52
   },
   {
    "id": 53,
-   "name": null,
+   "name": "noeluss",
    "job": "farmer",
    "house": 53
   },
   {
    "id": 54,
-   "name": null,
+   "name": "IamtheOriginalStarwal…",
    "job": "farmer",
    "house": 54
   },
   {
    "id": 55,
-   "name": null,
+   "name": "DevDeStefano",
    "job": "farmer",
    "house": 55
   },
   {
    "id": 56,
-   "name": null,
-   "job": "woodcutter",
+   "name": "justa_salmon",
+   "job": "apprentice",
    "house": 56
   },
   {
    "id": 57,
-   "name": null,
-   "job": "peasant",
+   "name": "Minutebuildsforyou",
+   "job": "blacksmith",
    "house": 57
   },
   {
    "id": 58,
-   "name": null,
-   "job": "guard",
+   "name": "connorlowe3286",
+   "job": "farmer",
    "house": 58
   },
   {
    "id": 59,
-   "name": null,
+   "name": "RealSilvee",
    "job": "peasant",
    "house": 59
   },
   {
    "id": 60,
-   "name": null,
-   "job": "peasant",
+   "name": "gh0styfr13nd",
+   "job": "jester",
    "house": 60
   },
   {
    "id": 61,
-   "name": null,
+   "name": "micahmcdowell3394",
    "job": "farmer",
    "house": 61
   },
   {
    "id": 62,
-   "name": null,
+   "name": "ElijahBateman",
    "job": "peasant",
    "house": 62
   },
   {
    "id": 63,
-   "name": null,
+   "name": "AgentMelonGrey",
    "job": "woodcutter",
    "house": 63
   },
   {
    "id": 64,
-   "name": null,
+   "name": "DingusFluffleberry",
    "job": "peasant",
    "house": 64
   },
   {
    "id": 65,
-   "name": null,
-   "job": "fisherman",
+   "name": "MarshallBurrell",
+   "job": "merchant",
    "house": 65
   },
   {
    "id": 66,
-   "name": null,
-   "job": "farmer",
+   "name": "Smol-Kokushibo",
+   "job": "baker",
    "house": 66
   },
   {
    "id": 67,
-   "name": null,
+   "name": "the-orb-supporter",
    "job": "woodcutter",
    "house": 67
   },
   {
    "id": 68,
-   "name": null,
-   "job": "peasant",
+   "name": "BoostedDude34",
+   "job": "carpenter",
    "house": 68
   },
   {
    "id": 69,
-   "name": null,
+   "name": "justiceCyne",
    "job": "farmer",
    "house": 69
   },
   {
    "id": 70,
-   "name": null,
+   "name": "JoaoHenrique",
    "job": "farmer",
    "house": 70
   },
   {
    "id": 71,
-   "name": null,
+   "name": "lizarazu89",
    "job": "baker",
    "house": 71
   },
@@ -4657,7 +5846,7 @@
   {
    "id": 174,
    "name": null,
-   "job": "guard",
+   "job": "crier",
    "house": 136
   },
   {
@@ -4707,6 +5896,554 @@
    "name": null,
    "job": "fisherman",
    "house": 140
+  },
+  {
+   "id": 183,
+   "name": null,
+   "job": "guard",
+   "house": 141
+  },
+  {
+   "id": 184,
+   "name": null,
+   "job": "farmer",
+   "house": 141
+  },
+  {
+   "id": 185,
+   "name": null,
+   "job": "woodcutter",
+   "house": 142
+  },
+  {
+   "id": 186,
+   "name": null,
+   "job": "woodcutter",
+   "house": 142
+  },
+  {
+   "id": 187,
+   "name": null,
+   "job": "farmer",
+   "house": 143
+  },
+  {
+   "id": 188,
+   "name": null,
+   "job": "farmer",
+   "house": 143
+  },
+  {
+   "id": 189,
+   "name": null,
+   "job": "peasant",
+   "house": 144
+  },
+  {
+   "id": 190,
+   "name": null,
+   "job": "farmer",
+   "house": 144
+  },
+  {
+   "id": 191,
+   "name": null,
+   "job": "guard",
+   "house": 145
+  },
+  {
+   "id": 192,
+   "name": null,
+   "job": "fisherman",
+   "house": 145
+  },
+  {
+   "id": 193,
+   "name": null,
+   "job": "farmer",
+   "house": 146
+  },
+  {
+   "id": 194,
+   "name": null,
+   "job": "peasant",
+   "house": 146
+  },
+  {
+   "id": 195,
+   "name": null,
+   "job": "peasant",
+   "house": 147
+  },
+  {
+   "id": 196,
+   "name": null,
+   "job": "guard",
+   "house": 147
+  },
+  {
+   "id": 197,
+   "name": null,
+   "job": "fisherman",
+   "house": 148
+  },
+  {
+   "id": 198,
+   "name": null,
+   "job": "fisherman",
+   "house": 148
+  },
+  {
+   "id": 199,
+   "name": null,
+   "job": "woodcutter",
+   "house": 149
+  },
+  {
+   "id": 200,
+   "name": null,
+   "job": "farmer",
+   "house": 149
+  },
+  {
+   "id": 201,
+   "name": null,
+   "job": "woodcutter",
+   "house": 150
+  },
+  {
+   "id": 202,
+   "name": null,
+   "job": "woodcutter",
+   "house": 150
+  },
+  {
+   "id": 203,
+   "name": null,
+   "job": "stonemason",
+   "house": 151
+  },
+  {
+   "id": 204,
+   "name": null,
+   "job": "farmer",
+   "house": 151
+  },
+  {
+   "id": 205,
+   "name": null,
+   "job": "woodcutter",
+   "house": 152
+  },
+  {
+   "id": 206,
+   "name": null,
+   "job": "peasant",
+   "house": 152
+  },
+  {
+   "id": 207,
+   "name": null,
+   "job": "woodcutter",
+   "house": 153
+  },
+  {
+   "id": 208,
+   "name": null,
+   "job": "fisherman",
+   "house": 153
+  },
+  {
+   "id": 209,
+   "name": null,
+   "job": "baker",
+   "house": 154
+  },
+  {
+   "id": 210,
+   "name": null,
+   "job": "farmer",
+   "house": 154
+  },
+  {
+   "id": 211,
+   "name": null,
+   "job": "blacksmith",
+   "house": 155
+  },
+  {
+   "id": 212,
+   "name": null,
+   "job": "baker",
+   "house": 155
+  },
+  {
+   "id": 213,
+   "name": null,
+   "job": "fisherman",
+   "house": 156
+  },
+  {
+   "id": 214,
+   "name": null,
+   "job": "woodcutter",
+   "house": 156
+  },
+  {
+   "id": 215,
+   "name": null,
+   "job": "baker",
+   "house": 157
+  },
+  {
+   "id": 216,
+   "name": null,
+   "job": "peasant",
+   "house": 157
+  },
+  {
+   "id": 217,
+   "name": null,
+   "job": "woodcutter",
+   "house": 158
+  },
+  {
+   "id": 218,
+   "name": null,
+   "job": "farmer",
+   "house": 158
+  },
+  {
+   "id": 219,
+   "name": null,
+   "job": "baker",
+   "house": 159
+  },
+  {
+   "id": 220,
+   "name": null,
+   "job": "peasant",
+   "house": 159
+  },
+  {
+   "id": 221,
+   "name": null,
+   "job": "blacksmith",
+   "house": 160
+  },
+  {
+   "id": 222,
+   "name": null,
+   "job": "guard",
+   "house": 160
+  },
+  {
+   "id": 223,
+   "name": null,
+   "job": "woodcutter",
+   "house": 161
+  },
+  {
+   "id": 224,
+   "name": null,
+   "job": "peasant",
+   "house": 161
+  },
+  {
+   "id": 225,
+   "name": null,
+   "job": "baker",
+   "house": 162
+  },
+  {
+   "id": 226,
+   "name": null,
+   "job": "farmer",
+   "house": 162
+  },
+  {
+   "id": 227,
+   "name": null,
+   "job": "stonemason",
+   "house": 163
+  },
+  {
+   "id": 228,
+   "name": null,
+   "job": "woodcutter",
+   "house": 163
+  },
+  {
+   "id": 229,
+   "name": null,
+   "job": "peasant",
+   "house": 164
+  },
+  {
+   "id": 230,
+   "name": null,
+   "job": "stonemason",
+   "house": 164
+  },
+  {
+   "id": 231,
+   "name": null,
+   "job": "stonemason",
+   "house": 165
+  },
+  {
+   "id": 232,
+   "name": null,
+   "job": "baker",
+   "house": 165
+  },
+  {
+   "id": 233,
+   "name": null,
+   "job": "peasant",
+   "house": 166
+  },
+  {
+   "id": 234,
+   "name": null,
+   "job": "stonemason",
+   "house": 166
+  },
+  {
+   "id": 235,
+   "name": null,
+   "job": "fisherman",
+   "house": 167
+  },
+  {
+   "id": 236,
+   "name": null,
+   "job": "peasant",
+   "house": 167
+  },
+  {
+   "id": 237,
+   "name": null,
+   "job": "baker",
+   "house": 168
+  },
+  {
+   "id": 238,
+   "name": null,
+   "job": "peasant",
+   "house": 168
+  },
+  {
+   "id": 239,
+   "name": null,
+   "job": "farmer",
+   "house": 169
+  },
+  {
+   "id": 240,
+   "name": null,
+   "job": "blacksmith",
+   "house": 169
+  },
+  {
+   "id": 241,
+   "name": null,
+   "job": "peasant",
+   "house": 170
+  },
+  {
+   "id": 242,
+   "name": null,
+   "job": "fisherman",
+   "house": 170
+  },
+  {
+   "id": 243,
+   "name": null,
+   "job": "woodcutter",
+   "house": 171
+  },
+  {
+   "id": 244,
+   "name": null,
+   "job": "merchant",
+   "house": 171
+  },
+  {
+   "id": 245,
+   "name": null,
+   "job": "farmer",
+   "house": 172
+  },
+  {
+   "id": 246,
+   "name": null,
+   "job": "peasant",
+   "house": 172
+  },
+  {
+   "id": 247,
+   "name": null,
+   "job": "farmer",
+   "house": 173
+  },
+  {
+   "id": 248,
+   "name": null,
+   "job": "peasant",
+   "house": 173
+  },
+  {
+   "id": 249,
+   "name": null,
+   "job": "reeve",
+   "house": 174
+  },
+  {
+   "id": 250,
+   "name": null,
+   "job": "carpenter",
+   "house": 174
+  },
+  {
+   "id": 251,
+   "name": null,
+   "job": "woodcutter",
+   "house": 175
+  },
+  {
+   "id": 252,
+   "name": null,
+   "job": "fisherman",
+   "house": 175
+  },
+  {
+   "id": 253,
+   "name": null,
+   "job": "farmer",
+   "house": 176
+  },
+  {
+   "id": 254,
+   "name": null,
+   "job": "guard",
+   "house": 176
+  },
+  {
+   "id": 255,
+   "name": null,
+   "job": "stonemason",
+   "house": 177
+  },
+  {
+   "id": 256,
+   "name": null,
+   "job": "peasant",
+   "house": 177
+  },
+  {
+   "id": 257,
+   "name": null,
+   "job": "guard",
+   "house": 178
+  },
+  {
+   "id": 258,
+   "name": null,
+   "job": "farmer",
+   "house": 178
+  },
+  {
+   "id": 259,
+   "name": null,
+   "job": "woodcutter",
+   "house": 179
+  },
+  {
+   "id": 260,
+   "name": null,
+   "job": "carpenter",
+   "house": 179
+  },
+  {
+   "id": 261,
+   "name": null,
+   "job": "baker",
+   "house": 180
+  },
+  {
+   "id": 262,
+   "name": null,
+   "job": "farmer",
+   "house": 180
+  },
+  {
+   "id": 263,
+   "name": null,
+   "job": "fisherman",
+   "house": 181
+  },
+  {
+   "id": 264,
+   "name": null,
+   "job": "peasant",
+   "house": 181
+  },
+  {
+   "id": 265,
+   "name": null,
+   "job": "fisherman",
+   "house": 182
+  },
+  {
+   "id": 266,
+   "name": null,
+   "job": "baker",
+   "house": 182
   }
- ]
+ ],
+ "storyLog": {
+  "merchants": 6
+ },
+ "story": {
+  "id": "merchants",
+  "cast": [],
+  "from": "the Northern Marches",
+  "goods": "silk",
+  "wagons": 3
+ },
+ "featured": [
+  {
+   "id": 57,
+   "name": "Minutebuildsforyou",
+   "job": "blacksmith",
+   "today": true,
+   "with": {
+    "id": 66,
+    "name": "Smol-Kokushibo",
+    "job": "baker",
+    "today": true
+   },
+   "pair": "visit"
+  },
+  {
+   "id": 68,
+   "name": "BoostedDude34",
+   "job": "carpenter",
+   "today": true,
+   "with": {
+    "id": 58,
+    "name": "connorlowe3286",
+    "job": "farmer",
+    "today": true
+   },
+   "pair": "visit"
+  }
+ ],
+ "lastShown": {
+  "57": 6,
+  "58": 6,
+  "66": 6,
+  "68": 6
+ }
 }
