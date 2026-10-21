@@ -20,7 +20,13 @@
   "uploadedAt": "2026-10-20T12:34:23.017Z"
  },
  "2026-10-21_en": {
-  "youtube": "J0CTjhZA4Yc",
-  "uploadedAt": "2026-10-21T12:45:15.273Z"
+  "replaced": [
+   {
+    "youtube": "J0CTjhZA4Yc",
+    "uploadedAt": "2026-10-21T12:45:15.273Z"
+   }
+  ],
+  "youtube": "FtbcqR75UUc",
+  "uploadedAt": "2026-10-21T16:17:27.291Z"
  }
 }

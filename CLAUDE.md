@@ -90,7 +90,9 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   requests, never a job the previous video showed (`diff.avoidJobs`), one per job. Saves without
   `featured` use the old rule to know what the previous video showed.
 - `npm run render -- --day 2026-10-20` renders a saved day again with today's code (read only,
-  `output/<day>_<lang>_again.mp4`). Replacing a published video is the owner's call.
+  `output/<day>_<lang>_again.mp4`). Replacing a published video is the owner's call:
+  `node scripts/republish-day.js <day>` uploads the re-render (old id kept under `replaced` in
+  `state/published.json`; the old video is left as it is). Day 2026-10-21 was replaced (FtbcqR75UUc).
 - Everyday shots (`ambient.js`, `everyday.js`, owner 2026-10-20): when the update has room, guards
   (odd days, and in winter: patrolling the castle wall walk or sparring in the courtyard), else one of
   farmers hoeing in the field nearest the castle, a shepherd with the flock on the grass beyond the fields,
