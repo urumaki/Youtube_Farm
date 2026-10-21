@@ -415,3 +415,18 @@ test('scenes: the same scene does not come back within three days', async () => 
   }
   assert.ok(last.tavern !== undefined, 'the tavern was shown');
 });
+
+test('the Second Wall never stands on a house: planned round the town, houses in its way move, new ones keep off it', async () => {
+  const { wallBlockers } = await import('../src/sim/wall.js');
+  const { obbOverlap } = await import('../src/sim/geometry.js');
+  const { world } = await import('../src/sim/world.js');
+  const { state: s, diffs } = run([60, 140, 240, 270, 330, 420]);
+  checkInvariants(s);
+  assert.ok(s.wall2?.pts?.length >= 3, 'the route is planned when the wall begins');
+  const w = world(s.seed);
+  const wall = wallBlockers(w, s.wall2.pts);
+  for (const p of s.plots) assert.ok(!wall.some((b) => obbOverlap(b, p)), `plot ${p.id} is on the wall`);
+  // both ends on the river bank
+  for (const [x, z] of [s.wall2.pts[0], s.wall2.pts.at(-1)]) assert.ok(w.river.dist(x, z) < 16, 'the wall ends at the water');
+  assert.ok(diffs.every((d) => Array.isArray(d.housesMoved)));
+});

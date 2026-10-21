@@ -8,6 +8,8 @@ import { dailyEvents } from './events.js';
 import { pickStory } from './stories.js';
 import { pickFeatured, shownJobs, markShown } from './featured.js';
 import { planScenes, tavernToday, staleJob } from './scenes.js';
+import { planWall2, wallBlockers } from './wall.js';
+import { obbOverlap } from './geometry.js';
 
 export const SCHEMA_VERSION = 1;
 export const ABANDON_DAYS = 7;
@@ -38,6 +40,7 @@ export function genesis({ seed = DEFAULT_SEED, date = '1970-01-01' } = {}) {
     story: null,      // today's story event
     storyArc: null,   // a story to continue on a later day: { id, day, step?, data? }
     sceneLog: {},     // scene key -> last day shown (src/sim/scenes.js)
+    wall2: null,      // the Second Wall's route, planned when it begins (src/sim/wall.js)
   };
 }
 
@@ -94,7 +97,7 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   const diff = {
     date, day, from: prev.subscriberCount, to: target, delta: target - prev.subscriberCount,
     added: [], removed: [], housesBuilt: [], housesRebuilt: [], housesReoccupied: [],
-    housesAbandoned: [], housesRuined: [], unlocked: [], buildingsStarted: [], buildingsCompleted: [],
+    housesAbandoned: [], housesRuined: [], housesMoved: [], unlocked: [], buildingsStarted: [], buildingsCompleted: [],
     events: [], weather: null, named: [],
   };
 
@@ -155,6 +158,9 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
       else diff.buildingsCompleted.push(b);
     }
   }
+
+  // The Second Wall's route is planned round the houses standing when it begins (src/sim/wall.js)
+  ensureWall2(s, w, diff);
 
   // 4. Daily life: weather + at least one event, always.
   const { weather, events } = dailyEvents(s, diff);
@@ -302,7 +308,7 @@ function findHome(s, w, id, day, diff, getScan, setScan, byId) {
     }
   }
   // d) a new house on the next free plot
-  const plot = w.plots[s.plots.length];
+  const plot = nextFreePlot(s, w);
   if (!plot) {
     // Every plot is used: squeeze into the least crowded house (never crash the daily run).
     return s.houses.reduce((a, b) => (b.occupants.length / b.capacity < a.occupants.length / a.capacity ? b : a));
@@ -314,6 +320,44 @@ function findHome(s, w, id, day, diff, getScan, setScan, byId) {
   byId.set(h.id, h);
   diff.housesBuilt.push(h.id);
   return h;
+}
+
+/**
+ * The next plot for a new house in the order the town grows, never one on the Second Wall's route.
+ * `s.nextPlot` is where to look next (plots before it are used or lie on the wall).
+ */
+function nextFreePlot(s, w) {
+  let i = s.nextPlot ?? s.plots.length;
+  const wall = s.wall2 ? blockersOf(w, s.wall2) : [];
+  while (w.plots[i] && wall.some((b) => obbOverlap(b, w.plots[i]))) i++;
+  s.nextPlot = i + 1;
+  const p = w.plots[i];
+  if (!p) return null;
+  const { id, x, z, y, yMin, hw, hd, rot, facing, road } = p;
+  return { id, x, z, y, yMin, hw, hd, rot, facing, road };
+}
+
+const BLOCKERS = new WeakMap();
+function blockersOf(w, wall2) {
+  if (!BLOCKERS.has(wall2)) BLOCKERS.set(wall2, wallBlockers(w, wall2.pts));
+  return BLOCKERS.get(wall2);
+}
+
+/**
+ * Once the Second Wall is begun: plan its route round today's houses, and move any house still in its way
+ * to the next free plot (diff.housesMoved). Also used for saves from before the route was planned.
+ */
+export function ensureWall2(s, w = world(s.seed), diff = null) {
+  if (s.wall2 || !s.buildings.some((b) => b.id === 'wall2')) return;
+  s.wall2 = planWall2(w, s);
+  const wall = blockersOf(w, s.wall2);
+  for (const [k, p] of s.plots.entries()) {
+    if (!wall.some((b) => obbOverlap(b, p))) continue;
+    const to = nextFreePlot(s, w);
+    if (!to) break;
+    s.plots[k] = to;
+    for (const h of s.houses) if (h.plot === p.id) { h.plot = to.id; diff?.housesMoved?.push({ house: h.id, from: p.id, to: to.id }); }
+  }
 }
 
 export function nextGoal(population, unlocked = []) {

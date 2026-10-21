@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { migrate, saveDay, writeAtomic, STATE_DIR } from '../src/sim/state.js';
-import { planDay } from '../src/sim/simulate.js';
+import { planDay, ensureWall2 } from '../src/sim/simulate.js';
 import { tavernScene } from '../src/sim/tiers.js';
 import { pickVariant, sceneKey } from '../src/sim/scenes.js';
 
@@ -37,6 +37,10 @@ if (!prev.sceneLog) {
     s.sceneLog[sceneKey(f.job, v)] = prev.day;
   }
 }
+// the Second Wall's route round the houses (saves from before it was planned; houses in its way move)
+diff.housesMoved ??= [];
+ensureWall2(s, undefined, diff);
+if (diff.housesMoved.length) console.log(`  houses moved off the Second Wall: ${diff.housesMoved.map((m) => m.house).join(', ')}`);
 const before = { story: diff.story?.id ?? null, featured: (diff.featured || []).map((f) => f.name + (f.with ? ` + ${f.with.name}` : '')) };
 planDay(s, prev, diff);
 console.log(`[replan] ${date} (+${diff.delta} subscribers)`);

@@ -102,7 +102,8 @@ const JOB_SCENES = {
   farmer: { period: 1.35, hit: 0.7, raise: -2.5, down: -0.75, bend: 0.32, fx: 'dirt', sound: 'hoe', tool: 'hoe', props: 'field', both: true },
   peasant: { period: 1.5, hit: 0.7, raise: -2.2, down: -0.8, bend: 0.3, fx: 'dirt', sound: 'hoe', tool: 'spade', props: 'garden', both: true },
   blacksmith: { period: 0.8, hit: 0.72, raise: -2.6, down: -1.05, bend: 0.12, fx: 'sparks', sound: 'anvil', tool: 'hammer', props: 'anvil', left: -1.0 },
-  woodcutter: { period: 1.45, hit: 0.72, raise: -2.8, down: -0.9, bend: 0.25, fx: 'chips', sound: 'chop', tool: 'axe', props: 'stump', both: true },
+  // owner 2026-10-21: the woodcutter swings with the arms only, the body stays still
+  woodcutter: { period: 1.45, hit: 0.72, raise: -2.8, down: -0.9, bend: 0, fx: 'chips', sound: 'chop', tool: 'axe', props: 'stump', both: true },
   stonemason: { period: 0.55, hit: 0.75, raise: -1.75, down: -1.15, bend: 0.2, fx: 'dust', sound: 'chisel', tool: 'mallet', props: 'block', left: -1.05 },
   carpenter: { period: 0.6, hit: 0.75, raise: -1.9, down: -1.0, bend: 0.2, fx: 'chips', sound: 'chop', tool: 'hammer', props: 'bench', left: -0.9 },
   // the baker works inside the bakehouse (bakery.js), which builds the oven around the mouth; the peel is
@@ -136,7 +137,7 @@ Object.assign(JOB_SCENES, {
   'peasant:sow': { period: 1.3, hit: 0.3, raise: -1.5, down: -0.35, bend: 0.05, fx: 'seeds', sound: 'none', tool: null, props: 'garden', smooth: true, left: -0.55, pouch: true },
   'blacksmith:quench': { period: 2.2, hit: 0.55, raise: -1.3, down: -0.5, bend: 0.2, fx: 'steam', sound: 'none', tool: 'tongs', props: 'quench', smooth: true, left: -0.4 },
   'blacksmith:bellows': { period: 1.4, hit: 0.5, raise: -1.6, down: -0.8, bend: 0.15, fx: 'embers', sound: 'none', tool: null, props: 'bellows', smooth: true, both: true },
-  'woodcutter:fell': { period: 1.5, hit: 0.62, raise: -1.4, down: -1.4, bend: 0.05, fx: 'chips', sound: 'chop', tool: 'axe', props: 'tree', sweep: true, both: true },
+  'woodcutter:fell': { period: 1.5, hit: 0.7, raise: -2.7, down: -1.3, bend: 0, fx: 'chips', sound: 'chop', tool: 'axe', props: 'tree', both: true },
   'stonemason:stack': { period: 2.4, hit: 0.5, raise: -1.45, down: -0.75, bend: 0.45, fx: 'dust', sound: 'none', tool: 'stone', props: 'wall', smooth: true, both: true },
   'carpenter:saw': { period: 0.7, hit: 0.5, raise: -1.2, down: -0.95, bend: 0.3, fx: 'sawdust', sound: 'none', tool: 'saw', props: 'trestle', push: true, left: -1.0 },
   'baker:knead': { period: 1.0, hit: 0.5, raise: -1.3, down: -1.0, bend: 0.3, fx: 'flour', sound: 'none', tool: null, props: 'dough', push: true, both: true },

@@ -5,6 +5,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { heightAt, fbm, CASTLE, RIVER_HALF_WIDTH } from '../../sim/world.js';
 import { rand01 } from '../../sim/prng.js';
 import { SpatialHash, obbAabb, pointInObb, grow } from '../../sim/geometry.js';
+import { planWall2, wallLayout } from '../../sim/wall.js';
 
 function clean(g) {
   const q = g.index ? g.toNonIndexed() : g;
@@ -49,7 +50,12 @@ export function buildNature(w, state, M, { season = 'summer' } = {}) {
   for (const p of w.plots) block.insert(obbAabb(grow(p, 2)), grow(p, 2));
   for (const l of Object.values(w.lots)) if (!l.virtual) block.insert(obbAabb(grow(l, 6)), grow(l, 6));
   for (const f of w.fields) block.insert(obbAabb(grow(f, 3)), grow(f, 3));
-  for (const s of w.wall2.segments) block.insert(obbAabb(grow(s, 5)), grow(s, 5));
+  // no trees on the Second Wall's route (planned round the houses, src/sim/wall.js)
+  if (state.wall2 || state.buildings.some((b) => b.id === 'wall2')) {
+    const { pieces, towers, gates } = wallLayout(w, (state.wall2 || planWall2(w, state)).pts);
+    for (const s of pieces) block.insert(obbAabb(grow(s, 5)), grow(s, 5));
+    for (const [x, z] of [...towers, ...gates.map((g) => [g.x, g.z])]) { const b = { x, z, hw: 10, hd: 10, rot: 0 }; block.insert(obbAabb(b), b); }
+  }
   const blocked = (x, z) => {
     for (const b of block.query([x, z, x, z])) if (pointInObb(b, x, z)) return true;
     return false;

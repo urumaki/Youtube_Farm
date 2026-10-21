@@ -1,5 +1,6 @@
 // Terrain (chunked rectilinear grid, finer near the castle and town), overlay map for roads/plazas, water.
 import * as THREE from 'three';
+import { planWall2, wallLayout } from '../../sim/wall.js';
 import { heightAt, fbm, WATER_LEVEL, CASTLE, RIVER_HALF_WIDTH } from '../../sim/world.js';
 import { rng } from '../../sim/prng.js';
 import { detailTexture } from './textures.js';
@@ -146,6 +147,19 @@ export function buildOverlay(w, state, scale = 0.76) {
     reach.set(p.road, Math.max(reach.get(p.road) || 0, best + 14));
   }
   reach.set('approach', 1e9);
+  // the roads through the Second Wall's gates lead out to them (src/sim/wall.js)
+  const gates = state.wall2 || state.buildings.some((b) => b.id === 'wall2') ? wallLayout(w, (state.wall2 || planWall2(w, state)).pts).gates : [];
+  const gateTracks = new Set();
+  for (const g of gates) {
+    for (const rd of w.roads) {
+      let acc = 0;
+      for (let i = 1; i < rd.pts.length; i++) {
+        acc += Math.hypot(rd.pts[i][0] - rd.pts[i - 1][0], rd.pts[i][1] - rd.pts[i - 1][1]);
+        if (Math.hypot(rd.pts[i][0] - g.x, rd.pts[i][1] - g.z) < 8) { reach.set(rd.id, Math.max(reach.get(rd.id) || 0, acc + 16)); break; }
+      }
+    }
+    for (const t of w.tracks) if (t.pts.some(([x, z]) => Math.hypot(x - g.x, z - g.z) < 8)) gateTracks.add(t.id);
+  }
   // a lane that is in use keeps its parent street drawn at least up to the junction
   for (let k = 0; k < 3; k++) for (const rd of w.roads) {
     if (reach.has(rd.id) && rd.parent) reach.set(rd.parent, Math.max(reach.get(rd.parent) || 0, (rd.branchS || 0) + 8));
@@ -158,7 +172,7 @@ export function buildOverlay(w, state, scale = 0.76) {
   };
   const roads = w.roads.filter((rd) => reach.has(rd.id)).map((rd) => ({ ...rd, pts: clipRoad(rd, reach.get(rd.id)) }));
   // side streets also connect to the main road: extend them back to their start
-  const tracks = w.tracks.filter((t) => t.id === 'ring' || (t.id === 'mill' && built.has('windmill')) || (t.id === 'quarry' && built.has('quarry')) || (t.id === 'saw' && (built.has('sawmill') || built.has('dock'))));
+  const tracks = w.tracks.filter((t) => t.id === 'ring' || gateTracks.has(t.id) || (t.id === 'mill' && built.has('windmill')) || (t.id === 'quarry' && built.has('quarry')) || (t.id === 'saw' && (built.has('sawmill') || built.has('dock'))));
   const island = [[CASTLE.half, 0], [CASTLE.moatOuter + 2, 0]];
 
   // soft verges, then the dirt, then wheel ruts

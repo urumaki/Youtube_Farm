@@ -30,7 +30,9 @@
     "featured": { "type": "array" },
     "lastShown": { "type": "object" },
     "sceneLog": { "type": "object" },
-    "scenes": { "type": ["object", "null"] }
+    "scenes": { "type": ["object", "null"] },
+    "wall2": { "type": ["object", "null"] },
+    "nextPlot": { "type": "integer", "minimum": 0 }
   },
   "$defs": {
     "villager": {
