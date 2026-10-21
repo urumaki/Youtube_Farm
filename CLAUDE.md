@@ -75,6 +75,9 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (`feast.js`) / rides home; archery heats / final; flood rises / recedes ("the wall held"); quarrel / peace.
   Test a step with `--story merchants:camp`. `node scripts/replan-day.js <day> [--save]` plans a saved day
   again with the current rules (used for 2026-10-21, whose short the owner took down).
+- Second Wall (owner 2026-10-21: never over houses): where a road runs along the wall line, the gate towers
+  would stand on house plots; `buildWall2` in `buildings.js` leaves out gates whose towers touch any plot
+  and wall pieces lying on a road. `w.wall2` itself must not change (it decides where plots go).
 - Who is shown at work (`src/sim/featured.js`, owner 2026-10-20): picked by the simulation and saved as
   `state.featured`: villagers named today first (the narrator welcomes only jobs on screen), then granted
   requests, never a job the previous video showed (`diff.avoidJobs`), one per job. Saves without

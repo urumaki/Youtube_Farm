@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { Builder, boxGeo, cylGeo, gableGeo, pyramidGeo, merlonLine, merlonRing } from './kit.js';
 import { heightAt, WATER_LEVEL, CASTLE } from '../../sim/world.js';
 import { rand01 } from '../../sim/prng.js';
+import { obbOverlap } from '../../sim/geometry.js';
 import { awningTexture, ROYAL } from './textures.js';
 
 const STALL_COLORS = [['#9b1b30', '#f3ead2'], ['#1d2f6f', '#f3ead2'], ['#2f6b3a', '#efe2b8'], ['#c27a1d', '#f6ecd0'], ['#5b2a86', '#efe6d2'], ['#9b1b30', '#e3b23c']];
@@ -344,7 +345,11 @@ BUILD.district_east = BUILD.district_north = BUILD.district_south = BUILD.distri
 // ------------------------------------------------------------------ the second wall
 function buildWall2(w, b) {
   const H = 9;
+  // a piece of wall lying across a road (where the road bends along the wall line) is left out too
+  const onRoad = (s) => Array.from({ length: 11 }, (_, i) => i / 5 - 1)
+    .some((k) => w.pathIndex.edgeDist(s.x + Math.cos(s.rot) * s.hw * k, s.z + Math.sin(s.rot) * s.hw * k) < 0);
   for (const s of w.wall2.segments) {
+    if (onRoad(s)) continue;
     const y = Math.max(heightAt(w, s.x, s.z), 1.6);
     const len = s.hw * 2 + 0.6;
     b.add('stone', boxGeo(len, H + 3, 3, 4), s.x, y - 3 + (H + 3) / 2, s.z, -s.rot);
@@ -360,11 +365,17 @@ function buildWall2(w, b) {
     b.add('stone', cylGeo(4, 4.4, H + 9, 16), x, y - 3 + (H + 9) / 2, z);
     merlonRing(b, 'stone', x, y + H + 6, z, 4, 10, [1.1, 1.3, 0.6]);
   }
+  // A gate where a road crosses the wall: two towers and an arch. Where a road runs along the wall line
+  // instead, its houses stand where the towers would: no gate there (owner 2026-10-21: the wall never
+  // rises over houses), the wall just leaves the road open. The plots stay as they are (w.wall2 also
+  // decides where plots go, so it must not change).
+  const onPlot = (x, z) => w.plots.some((p) => Math.abs(p.x - x) < 30 && Math.abs(p.z - z) < 30 && obbOverlap(p, { x, z, hw: 3.5, hd: 3.5, rot: 0 }));
   for (const g of w.wall2.gates) {
     const y = Math.max(heightAt(w, g.x, g.z), 1.6);
     const c = Math.cos(g.rot), s = Math.sin(g.rot);
-    for (const k of [-1, 1]) {
-      const x = g.x + c * k * 7, z = g.z + s * k * 7;
+    const sides = [-1, 1].map((k) => [g.x + c * k * 7, g.z + s * k * 7]);
+    if (sides.some(([x, z]) => onPlot(x, z))) continue;
+    for (const [x, z] of sides) {
       b.add('stone', boxGeo(5, H + 7, 5, 4), x, y - 3 + (H + 7) / 2, z, -g.rot);
       b.add('slate', pyramidGeo(5.6, 5.6, 4), x, y + H + 4, z, -g.rot);
     }
