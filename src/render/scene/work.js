@@ -102,8 +102,8 @@ const JOB_SCENES = {
   farmer: { period: 1.35, hit: 0.7, raise: -2.5, down: -0.75, bend: 0.32, fx: 'dirt', sound: 'hoe', tool: 'hoe', props: 'field', both: true },
   peasant: { period: 1.5, hit: 0.7, raise: -2.2, down: -0.8, bend: 0.3, fx: 'dirt', sound: 'hoe', tool: 'spade', props: 'garden', both: true },
   blacksmith: { period: 0.8, hit: 0.72, raise: -2.6, down: -1.05, bend: 0.12, fx: 'sparks', sound: 'anvil', tool: 'hammer', props: 'anvil', left: -1.0 },
-  // owner 2026-10-21: the woodcutter swings with the arms only, the body stays still
-  woodcutter: { period: 1.45, hit: 0.72, raise: -2.8, down: -0.9, bend: 0, fx: 'chips', sound: 'chop', tool: 'axe', props: 'stump', both: true },
+  // owner 2026-10-21: only the woodcutter's axe arm moves; the body and the other arm stay still
+  woodcutter: { period: 1.45, hit: 0.72, raise: -2.8, down: -0.9, bend: 0, fx: 'chips', sound: 'chop', tool: 'axe', props: 'stump', left: -0.1, still: true },
   stonemason: { period: 0.55, hit: 0.75, raise: -1.75, down: -1.15, bend: 0.2, fx: 'dust', sound: 'chisel', tool: 'mallet', props: 'block', left: -1.05 },
   carpenter: { period: 0.6, hit: 0.75, raise: -1.9, down: -1.0, bend: 0.2, fx: 'chips', sound: 'chop', tool: 'hammer', props: 'bench', left: -0.9 },
   // the baker works inside the bakehouse (bakery.js), which builds the oven around the mouth; the peel is
@@ -137,7 +137,7 @@ Object.assign(JOB_SCENES, {
   'peasant:sow': { period: 1.3, hit: 0.3, raise: -1.5, down: -0.35, bend: 0.05, fx: 'seeds', sound: 'none', tool: null, props: 'garden', smooth: true, left: -0.55, pouch: true },
   'blacksmith:quench': { period: 2.2, hit: 0.55, raise: -1.3, down: -0.5, bend: 0.2, fx: 'steam', sound: 'none', tool: 'tongs', props: 'quench', smooth: true, left: -0.4 },
   'blacksmith:bellows': { period: 1.4, hit: 0.5, raise: -1.6, down: -0.8, bend: 0.15, fx: 'embers', sound: 'none', tool: null, props: 'bellows', smooth: true, both: true },
-  'woodcutter:fell': { period: 1.5, hit: 0.7, raise: -2.7, down: -1.3, bend: 0, fx: 'chips', sound: 'chop', tool: 'axe', props: 'tree', both: true },
+  'woodcutter:fell': { period: 1.5, hit: 0.7, raise: -2.7, down: -1.3, bend: 0, fx: 'chips', sound: 'chop', tool: 'axe', props: 'tree', left: -0.1, still: true },
   'stonemason:stack': { period: 2.4, hit: 0.5, raise: -1.45, down: -0.75, bend: 0.45, fx: 'dust', sound: 'none', tool: 'stone', props: 'wall', smooth: true, both: true },
   'carpenter:saw': { period: 0.7, hit: 0.5, raise: -1.2, down: -0.95, bend: 0.3, fx: 'sawdust', sound: 'none', tool: 'saw', props: 'trestle', push: true, left: -1.0 },
   'baker:knead': { period: 1.0, hit: 0.5, raise: -1.3, down: -1.0, bend: 0.3, fx: 'flour', sound: 'none', tool: null, props: 'dough', push: true, both: true },
@@ -146,7 +146,7 @@ Object.assign(JOB_SCENES, {
   'fletcher:shoot': { period: 2.6, hit: 0.62, raise: -1.5, down: -1.5, bend: 0, fx: null, sound: 'straw', tool: null, props: 'butts', archer: true },
   // the bard plays the lute sitting on a stool by the house (stool and lute: props 'stool', cfg.lute)
   bard: { period: 0.5, raise: -0.8, down: -0.6, bend: -0.05, sound: 'none', tool: null, props: 'stool', lute: true, seated: true, focusH: 0.95, labelH: 2.0, turn: 0.35 },
-  // the woodcutter loads logs from a pile onto a handcart
+  // the woodcutter loads logs from a pile onto a handcart (no longer picked, src/sim/scenes.js; old saves)
   'woodcutter:cart': { period: 2.3, hit: 0.5, raise: -1.45, down: -0.7, bend: 0.45, fx: null, sound: 'none', tool: 'logs', props: 'logcart', smooth: true, both: true, carry: true },
   'beggar:collapsed': { period: 3.8, raise: 0, down: 0, bend: 0, sound: 'none', tool: null, props: 'asleep', sleep: true, home: 2.4, homeTurn: Math.PI / 2, focusH: 0.45, labelH: 1.15, radius: 5 },
   'beggar:hat': { period: 3.4, raise: -1.5, down: -0.35, bend: 0.28, sound: 'none', tool: 'tankard', props: 'begging', smooth: true, left: -0.15, sway: true },
@@ -733,7 +733,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
       P.r.g.position.x = 0.3;
       P.r.g.rotation.set(a, 0, 0);
       if (cfg.both) { P.l.g.rotation.x = a * 0.95; P.l.g.rotation.z = 0.28; P.r.g.rotation.z = -0.28; } // hands meet on the handle
-      else if (cfg.left !== undefined) P.l.g.rotation.x = cfg.left + (cfg.look ? 0 : 0.05 * Math.sin(t * 3));
+      else if (cfg.left !== undefined) P.l.g.rotation.x = cfg.left + (cfg.look || cfg.still ? 0 : 0.05 * Math.sin(t * 3));
       if (cfg.wave) { P.r.g.rotation.z = 0.35; }
       const swing = (a - cfg.raise) / ((down - cfg.raise) || 1); // 0 raised .. 1 down
       P.body.rotation.x = cfg.bend * THREE.MathUtils.clamp(swing, 0, 1);

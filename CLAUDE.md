@@ -79,12 +79,15 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - Second Wall (owner 2026-10-21: never over houses, may leave houses outside, must reach the river): its
   route is planned on the day it begins (`src/sim/wall.js`, saved as `state.wall2.pts`): a zigzag line on
   rays from the town centre, chosen to miss houses, lots and fields, from the west bank round the north and
-  east to the south bank (the river closes the rest), a tower at every corner, gates where roads cross
-  (roads are drawn up to the gates, `terrain.js`). Houses still in its way move to the next free plot
-  (`ensureWall2`, `diff.housesMoved`); new houses skip plots on it (`nextFreePlot`, `state.nextPlot`).
+  east to the south bank (the river closes the rest), a tower at every corner, gates where roads cross,
+  square to the road (owner 2026-10-21; the wall turns into the gate towers; roads are drawn up to the
+  gates, `terrain.js`). Houses in its way move to the next free plot, checked every day so a change to
+  `wallLayout` moves them too (`ensureWall2`, `diff.housesMoved`); new houses skip plots on it
+  (`nextFreePlot`, `state.nextPlot`).
   It goes up in stretches from the gate nearest the market, over low foundations along the whole route.
   `w.wall2` (the old ellipse) still only shapes the plot list, so plot ids and positions stay stable.
-- Woodcutter (owner 2026-10-21): only the arms swing (no bending or body twist); felling is an overhead chop.
+- Woodcutter (owner 2026-10-21): only the arm holding the axe moves (one-handed overhead chop, the body
+  and the other arm stay still); the handcart scene is no longer picked.
 - Who is shown at work (`src/sim/featured.js`, owner 2026-10-20): picked by the simulation and saved as
   `state.featured`: villagers named today first (the narrator welcomes only jobs on screen), then granted
   requests, never a job the previous video showed (`diff.avoidJobs`), one per job. Saves without

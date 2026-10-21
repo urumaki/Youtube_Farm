@@ -144,8 +144,9 @@ function segIntersect(a, b, c, d) {
 
 /**
  * The pieces of the wall along a route: { pieces: [obb], towers: [[x, z]], gates: [{ x, z, rot }] }.
- * A gate where a road or track crosses it, a tower at each corner (none right next to a gate), nothing
- * over the water.
+ * A gate where a road or track crosses it, square to the road (owner 2026-10-21: rot is the line through
+ * its two towers, across the road), a tower at each corner (none right next to a gate), nothing over the
+ * water. The wall runs into the gate towers, so where a road crosses at a slant it turns there.
  */
 export function wallLayout(w, route) {
   const pieces = [], towers = [], gates = [];
@@ -158,22 +159,30 @@ export function wallLayout(w, route) {
     const cross = [];
     for (const sg of pathSegs(w).query([Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1])])) {
       const t = segIntersect(a, b, [sg.ax, sg.az], [sg.bx, sg.bz]);
-      if (t !== null && !cross.some((c) => Math.abs(c - t * L) < 2 * GATE_HALF + 6)) cross.push(t * L);
+      if (t !== null && !cross.some((c) => Math.abs(c.d - t * L) < 2 * GATE_HALF + 6)) cross.push({ d: t * L, road: Math.atan2(sg.bz - sg.az, sg.bx - sg.ax) });
     }
-    cross.sort((x, y) => x - y);
-    for (const d of cross) gates.push({ x: a[0] + dir[0] * d, z: a[1] + dir[1] * d, rot });
-    // the stretches between the gates, in pieces, none on the water
-    let from = 0;
+    cross.sort((x, y) => x.d - y.d);
+    // the stretches between the gates (from tower to tower), in pieces, none on the water
+    let from = a;
     const spans = [];
-    for (const d of cross) { spans.push([from, d - GATE_HALF]); from = d + GATE_HALF; }
-    spans.push([from, L]);
-    for (const [s0, s1] of spans) {
-      const len = s1 - s0;
+    for (const { d, road } of cross) {
+      // across the road, turned the way of the wall (the first tower is the one nearer a)
+      let g = road + Math.PI / 2;
+      g -= Math.round((g - rot) / Math.PI) * Math.PI;
+      const gate = { x: a[0] + dir[0] * d, z: a[1] + dir[1] * d, rot: g };
+      gates.push(gate);
+      const [t0, t1] = [-1, 1].map((k) => [gate.x + Math.cos(g) * k * 7, gate.z + Math.sin(g) * k * 7]);
+      spans.push([from, t0]);
+      from = t1;
+    }
+    spans.push([from, b]);
+    for (const [p, q] of spans) {
+      const len = Math.hypot(q[0] - p[0], q[1] - p[1]);
       if (len < 1) continue;
       const k = Math.ceil(len / PIECE);
       for (let j = 0; j < k; j++) {
-        const u0 = s0 + (len * j) / k, u1 = s0 + (len * (j + 1)) / k;
-        const p0 = [a[0] + dir[0] * u0, a[1] + dir[1] * u0], p1 = [a[0] + dir[0] * u1, a[1] + dir[1] * u1];
+        const p0 = [p[0] + ((q[0] - p[0]) * j) / k, p[1] + ((q[1] - p[1]) * j) / k];
+        const p1 = [p[0] + ((q[0] - p[0]) * (j + 1)) / k, p[1] + ((q[1] - p[1]) * (j + 1)) / k];
         const mid = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2];
         if (w.river.dist(mid[0], mid[1]) < BANK - 2) continue;
         pieces.push(segmentObb(p0[0], p0[1], p1[0], p1[1], 2));

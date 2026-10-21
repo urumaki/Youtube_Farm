@@ -345,11 +345,12 @@ function blockersOf(w, wall2) {
 
 /**
  * Once the Second Wall is begun: plan its route round today's houses, and move any house still in its way
- * to the next free plot (diff.housesMoved). Also used for saves from before the route was planned.
+ * to the next free plot (diff.housesMoved). Also used for saves from before the route was planned, and
+ * every day after, so a house the wall's towers or gates come to stand on (a change to wallLayout) moves too.
  */
 export function ensureWall2(s, w = world(s.seed), diff = null) {
-  if (s.wall2 || !s.buildings.some((b) => b.id === 'wall2')) return;
-  s.wall2 = planWall2(w, s);
+  if (!s.buildings.some((b) => b.id === 'wall2')) return;
+  s.wall2 ??= planWall2(w, s);
   const wall = blockersOf(w, s.wall2);
   for (const [k, p] of s.plots.entries()) {
     if (!wall.some((b) => obbOverlap(b, p))) continue;

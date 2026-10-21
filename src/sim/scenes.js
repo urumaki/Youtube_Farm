@@ -11,10 +11,11 @@ export const SCENE_GAP = 3;
 // Owner (2026-10-20): a job is not always shown the same way. Each job has a few scenes, one picked per
 // villager and day (the first is the job's usual scene; the others are 'job:variant' in work.js): guards
 // on the castle walls, sparring in the courtyard or at the straw dummy; farmers hoeing, sowing or reaping...
+// The woodcutter's handcart scene is no longer picked (owner 2026-10-21: only the arm with the axe moves).
 const FIGHTER_SCENES = ['walls', 'sparring', 'dummy'];
 export const VARIANTS = {
   guard: [...FIGHTER_SCENES, 'night'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
-  farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell', 'cart'], stonemason: ['block', 'stack'],
+  farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
   blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw'],
   baker: ['oven', 'knead'], fisherman: ['rod', 'net', 'boat'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
   innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
