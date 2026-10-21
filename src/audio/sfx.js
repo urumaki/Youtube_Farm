@@ -420,6 +420,7 @@ const SCENES = {
   sparring: [['chatter', 0.12]],
   boat: [['water', 0.65], ['oars', 0.15]],
   nightwatch: [['breeze', 0.45], ['fire', 0.06]],
+  change: [['breeze', 0.4], ['chatter', 0.1]],
   pasture: [['breeze', 0.4], ['baa', 0.45]],
   laundry: [['water', 0.55], ['chatter', 0.25]],
 };
@@ -458,7 +459,7 @@ const WORK_BEDS = { blacksmith: [['fire', 0.25]], toolsmith: [['fire', 0.25]], b
 function sceneFor(cue) {
   if (cue.kind === 'house') return cue.rebuilt ? 'rebuilt' : 'house';
   if (cue.kind === 'loss') return 'loss';
-  if (cue.kind === 'villager') return { walls: 'patrol', sparring: 'sparring', boat: 'boat', night: 'nightwatch' }[cue.variant] ?? null; // work: synced strikes below
+  if (cue.kind === 'villager') return { walls: 'patrol', wall2: 'patrol', sparring: 'sparring', boat: 'boat', night: 'nightwatch', wallnight: 'nightwatch', wall2night: 'nightwatch', change: 'change', wall2change: 'change' }[cue.variant] ?? null; // work: synced strikes below
   if (cue.kind === 'caravan') return 'caravan';
   if (cue.kind === 'tavern') return 'tavern';
   if (cue.kind === 'ambient') return SCENES[cue.id] ? cue.id : null; // the fields: hoe strikes below

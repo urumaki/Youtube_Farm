@@ -12,18 +12,27 @@ export const SCENE_GAP = 3;
 // villager and day (the first is the job's usual scene; the others are 'job:variant' in work.js): guards
 // on the castle walls, sparring in the courtyard or at the straw dummy; farmers hoeing, sowing or reaping...
 // The woodcutter's handcart scene is no longer picked (owner 2026-10-21: only the arm with the axe moves).
+// Guards up on the walls (owner 2026-10-21, src/render/scene/wallwatch.js): the day watch, the night watch
+// and the changing of the guard, on the castle walls ('walls', 'wallnight', 'change') or on the Second Wall
+// once it is finished ('wall2', 'wall2night', 'wall2change').
 const FIGHTER_SCENES = ['walls', 'sparring', 'dummy'];
 export const VARIANTS = {
-  guard: [...FIGHTER_SCENES, 'night'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
+  guard: [...FIGHTER_SCENES, 'night', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
   farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
   blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw'],
   baker: ['oven', 'knead'], fisherman: ['rod', 'net', 'boat'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
   innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
 };
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
-export const AWAY_VARIANTS = new Set(['walls', 'sparring', 'boat', 'night']);
+export const AWAY_VARIANTS = new Set(['walls', 'sparring', 'boat', 'night', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change']);
+// scenes at dusk (the light changes for the shot)
+export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
+// scenes that need a building finished
+const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2' };
+/** False for a scene whose place is not built yet (the Second Wall's wall walk). */
+export const sceneReady = (state, variant) => !NEEDS[variant] || !!state?.buildings?.some((b) => b.id === NEEDS[variant] && b.status === 'done');
 // the guards' everyday shots are the same scenes as a guard's own walls and sparring shots
-const AMBIENT_KEY = { patrol: 'guard:walls', sparring: 'guard:sparring' };
+const AMBIENT_KEY = { patrol: 'guard:walls', sparring: 'guard:sparring', change: 'guard:change' };
 const FIGHTERS = ['guard', 'knight', 'warrior'];
 
 export const sceneKey = (job, variant) => (variant ? `${job}:${variant}` : job);
@@ -50,8 +59,8 @@ export function tavernToday(state) {
  * The scene for a villager of this job today (null: the job's only scene), not one already used today and,
  * when there is a choice, not one shown in the last days (`isRecent(variant)`).
  */
-export function pickVariant(job, seed, day, id, used = new Set(), { croft = false, isRecent = () => false } = {}) {
-  const opts = VARIANTS[job]?.filter((v) => !(croft && AWAY_VARIANTS.has(v)));
+export function pickVariant(job, seed, day, id, used = new Set(), { croft = false, isRecent = () => false, ready = () => true } = {}) {
+  const opts = VARIANTS[job]?.filter((v) => !(croft && AWAY_VARIANTS.has(v)) && ready(v));
   if (!opts?.length) return null;
   const k = Math.floor(rand01(seed, 'variant', day, id) * opts.length);
   const order = opts.map((_, i) => opts[(k + i) % opts.length]);
@@ -72,11 +81,11 @@ export function planScenes(state, { featured, tavern, avoidJobs = [], buildingSh
   for (const f of shots) {
     const n = state.names[f.id];
     const job = f.job === 'apprentice' && n?.wants ? n.wants : f.job;
-    const v = pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)) });
+    const v = pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), ready: (x) => sceneReady(state, x) });
     if (v) used.add(v);
     variants[f.id] = v;
   }
-  // an everyday shot when there is room: guards on the walls or sparring (odd days), else farmers in the
+  // an everyday shot when there is room: guards on the walls, sparring or changing the guard (odd days), else farmers in the
   // field, a shepherd with the flock or washing day at the river; never a job already seen yesterday or
   // today, never a scene shown in the last days
   let ambient = null;
@@ -85,8 +94,9 @@ export function planScenes(state, { featured, tavern, avoidJobs = [], buildingSh
     const seen = new Set([...avoidJobs, ...featuredPeople(shots).map((p) => p.job), ...shots.map((f) => state.names[f.id]?.wants).filter(Boolean)]);
     const fresh = (id) => !recentScene(state, ambientKey(id));
     const guardsOk = state.unlockedTiers.includes('guard') && !FIGHTERS.some((j) => seen.has(j));
-    const first = rand01(state.seed, 'ambient', day) < 0.5 ? 'patrol' : 'sparring';
-    const guards = (guardsOk ? [first, first === 'patrol' ? 'sparring' : 'patrol'] : []).filter(fresh);
+    const GUARDS = ['patrol', 'sparring', 'change'];
+    const k = Math.floor(rand01(state.seed, 'ambient', day) * GUARDS.length);
+    const guards = (guardsOk ? GUARDS.map((_, i) => GUARDS[(k + i) % GUARDS.length]) : []).filter(fresh);
     const country = [!winter && !seen.has('farmer') && !seen.has('peasant') && 'fields', !winter && !seen.has('peasant') && 'pasture', !seen.has('peasant') && 'laundry']
       .filter((id) => id && fresh(id));
     const life = country[Math.floor(rand01(state.seed, 'country', day) * country.length)];

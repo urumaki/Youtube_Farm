@@ -17,7 +17,8 @@ import { buildWorkScene, sceneOf } from './work.js';
 import { buildCaravan } from './caravan.js';
 import { buildTavernInterior } from './tavern.js';
 import { buildStory } from './stories/index.js';
-import { buildPatrol, buildFields } from './ambient.js';
+import { buildFields } from './ambient.js';
+import { buildWallWatch } from './wallwatch.js';
 import { buildPasture, buildLaundry } from './everyday.js';
 import { buildSparring, buildDummyDrill } from './drills.js';
 import { buildBoat, buildNightWatch } from './away.js';
@@ -99,13 +100,16 @@ async function setup(data) {
   const interiors = []; // villagers working inside a building (the baker's bakehouse), lit while the camera is in
   const ambientScene = (id, hero) => {
     const a = { w, M, seed: state.seed, hero, lang: data.lang };
-    return id === 'patrol' ? buildPatrol({ castle, M, hero, lang: data.lang })
+    const watch = (o) => buildWallWatch({ castle, w, state, M, seed: state.seed, hero, lang: data.lang, ...o });
+    return id === 'patrol' ? watch({ mode: 'day' }) : id === 'change' ? watch({ mode: 'change' })
       : id === 'sparring' ? buildSparring(a) : id === 'pasture' ? buildPasture(a) : id === 'laundry' ? buildLaundry(a) : buildFields(a);
   };
   const awayScene = (variant, hero, home) => {
     const ground = (x, z) => heightAt(w, x, z);
-    return variant === 'walls' ? buildPatrol({ castle, M, hero, lang: data.lang, tag: false })
-      : variant === 'sparring' ? buildSparring({ M, seed: state.seed, hero, lang: data.lang, tag: false })
+    // guards on the castle walls or the Second Wall: by day, at night, the changing of the guard
+    const WATCH = { walls: ['castle', 'day'], wallnight: ['castle', 'night'], change: ['castle', 'change'], wall2: ['wall2', 'day'], wall2night: ['wall2', 'night'], wall2change: ['wall2', 'change'] };
+    if (WATCH[variant]) return buildWallWatch({ where: WATCH[variant][0], mode: WATCH[variant][1], castle, w, state, M, seed: state.seed, hero, lang: data.lang, tag: false });
+    return variant === 'sparring' ? buildSparring({ M, seed: state.seed, hero, lang: data.lang, tag: false })
         : variant === 'boat' ? buildBoat({ w, M, hero, home, heightAt: ground })
           : buildNightWatch({ w, M, hero, home, heightAt: ground });
   };
@@ -253,8 +257,10 @@ function applyFrame(ctx, t) {
   for (const ws of ctx.works || []) ws.update(t);
   const ct = ctx.caravan && plan.targets.find((x) => x.kind === 'caravan');
   if (ct) ctx.caravan.update(t, ct.t0, ct.t1);
+  let quiet = false; // a guard scene on the castle walls is on: no other guards walking through it
   for (const { st, tg } of ctx.stories || []) {
     st.update(t, tg.t0, tg.t1);
+    if (st.quietCastle && t >= tg.t0 - 0.1 && t <= tg.t1 + 0.1) quiet = true;
     if (st.bannerAt) tg.banner = st.bannerAt(t, tg.t0, tg.t1); // a title that changes (the New Year countdown)
   }
   const ev = evaluate(plan, t);
@@ -285,6 +291,7 @@ function applyFrame(ctx, t) {
   }
   water.userData.uniforms.time.value = t;
   life.update(t, { night, camera, wind: [1, 0.35], viewportH: renderer.domElement.height });
+  life.hideGuards(quiet || !!ctx.galleryQuiet);
   houses.updateLod(camera);
   nature.updateLod(camera);
   env.composer.render();
@@ -317,6 +324,7 @@ async function galleryShot(i, t, turn = 0.25) {
   for (const ws of [...ctx.works, ...ctx.interiors.map((x) => x.ws)]) { ws.group.visible = false; if (ws.room) ws.room.visible = false; }
   ctx.gallery.forEach((g, k) => { g.ws.group.visible = k === i; if (g.ws.room) g.ws.room.visible = k === i; if (g.visit) g.visit.group.visible = k === i; });
   const g = ctx.gallery[i];
+  ctx.galleryQuiet = false;
   applyFrame(ctx, 10);
   for (const { st } of ctx.stories) st.group.visible = false;
   g.ws.update(t, !!g.ws.room);
@@ -324,6 +332,7 @@ async function galleryShot(i, t, turn = 0.25) {
   if (g.visit) g.visit.group.visible = true;
   if (g.st) {
     g.st.group.visible = true;
+    ctx.galleryQuiet = !!g.st.quietCastle; // shot() below applies the frame again
     const c = g.st.cam(Math.min(1, t / 3));
     return shot(c.pos.toArray(), c.look.toArray(), 10, g.st.phase);
   }

@@ -86,6 +86,13 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (`nextFreePlot`, `state.nextPlot`).
   It goes up in stretches from the gate nearest the market, over low foundations along the whole route.
   `w.wall2` (the old ellipse) still only shapes the plot list, so plot ids and positions stay stable.
+- Guards on the walls (owner 2026-10-21, `wallwatch.js`): day watch (walks, stops, looks out), night watch
+  by a brazier at dusk, changing of the guard (march up, salute, the old guard leaves), on the castle walls
+  (guard variants `walls`, `wallnight`, `change`) and on the Second Wall once finished (`wall2`,
+  `wall2night`, `wall2change`; `sceneReady` in `scenes.js`). About 40% of the guards up there carry a bow
+  and quiver instead of the spear. The everyday guard shots are patrol, sparring or the changing of the
+  guard. The castle's background guards (`life.js`) are hidden during these shots. Test with
+  `--real --gallery "guard:change,guard:wall2night"` (the Second Wall ones need a state where it is done).
 - Woodcutter (owner 2026-10-21): only the arm holding the axe moves (one-handed overhead chop, the body
   and the other arm stay still); the handcart scene is no longer picked.
 - Who is shown at work (`src/sim/featured.js`, owner 2026-10-20): picked by the simulation and saved as

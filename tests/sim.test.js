@@ -416,6 +416,18 @@ test('scenes: the same scene does not come back within three days', async () => 
   assert.ok(last.tavern !== undefined, 'the tavern was shown');
 });
 
+test('guards on the Second Wall only once it is finished', async () => {
+  const { pickVariant, sceneReady } = await import('../src/sim/scenes.js');
+  const building = { buildings: [{ id: 'wall2', status: 'construction' }] }, done = { buildings: [{ id: 'wall2', status: 'done' }] };
+  const picks = (state) => new Set(Array.from({ length: 200 }, (_, id) => pickVariant('guard', SEED, 9, id, new Set(), { ready: (v) => sceneReady(state, v) })));
+  const early = picks(building), later = picks(done);
+  for (const v of ['wall2', 'wall2night', 'wall2change']) {
+    assert.ok(!early.has(v), `${v} before the wall is finished`);
+    assert.ok(later.has(v), `${v} once it is finished`);
+  }
+  for (const v of ['walls', 'wallnight', 'change']) assert.ok(early.has(v), `${v} on the castle walls`);
+});
+
 test('the Second Wall never stands on a house: planned round the town, houses in its way move, new ones keep off it', async () => {
   const { wallBlockers } = await import('../src/sim/wall.js');
   const { obbOverlap } = await import('../src/sim/geometry.js');

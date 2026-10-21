@@ -52,6 +52,7 @@ const T = {
     ambient: {
       patrol: ['Up on the walls, the guards keep watch.', 'The castle guards walk their rounds.'],
       sparring: ['In the castle yard, the guards train with sword and shield.', 'Clang! The guards practise in the courtyard.'],
+      change: ['On the walls, the changing of the guard.', 'A new guard takes the post up on the walls.'],
       fields: ['Out in the fields, the farmers work the soil.', 'In the fields, the hoes never rest.'],
       pasture: ['Out on the meadow, the shepherd watches over the flock.', 'The sheep graze in peace beyond the fields.'],
       laundry: ['It is washing day down by the river.', 'Down at the river, the linen is scrubbed and hung to dry.'],
@@ -139,6 +140,7 @@ T.it = {
   ambient: {
     patrol: ['Sulle mura, le guardie fanno la ronda.'],
     sparring: ['Nel cortile del castello, le guardie si allenano con spada e scudo.'],
+    change: ['Sulle mura, il cambio della guardia.'],
     fields: ['Nei campi, i contadini lavorano la terra.'],
     pasture: ['Sul prato, il pastore veglia sul gregge.'],
     laundry: ['Giorno di bucato giù al fiume.'],

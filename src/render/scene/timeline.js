@@ -7,7 +7,7 @@ import { NIGHT_STORIES, storyCue } from './stories/index.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
 import { BAKEHOUSE_VARIANTS } from './bakery.js';
-import { VARIANTS, AWAY_VARIANTS, pickVariant } from '../../sim/scenes.js';
+import { VARIANTS, AWAY_VARIANTS, NIGHT_VARIANTS, pickVariant, sceneReady } from '../../sim/scenes.js';
 
 export const DURATION = 30;
 // the wide shot with the goal and the end credits is short (3.5 s) so the daily update keeps the time
@@ -85,14 +85,14 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const apprentice = n.job === 'apprentice' && n.wants;
     const sceneJob = apprentice ? n.wants : n.job;
     // a host with a guest stays at home (the castle scenes have no croft to walk into)
-    const variant = scenes && n.id in scenes.variants ? scenes.variants[n.id] : pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g });
+    const variant = scenes && n.id in scenes.variants ? scenes.variants[n.id] : pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g, ready: (v) => sceneReady(state, v) });
     if (variant) usedVariants.add(variant);
     const castleShot = AWAY_VARIANTS.has(variant);
     const indoor = indoorScene(sceneJob, variant);
     targets.push({
       kind: 'villager', id: n.id, job: n.job, sceneJob, variant, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
       // a hard cut into each villager (a flight down into a croft only shows roofs and grass)
-      label: { title: n.name, sub: jobSub(n) }, work: null, weight: g ? 1.45 : 1.1, cut: castleShot || indoor, cutIn: true, interior: indoor, phase: variant === 'night' ? 1 : undefined,
+      label: { title: n.name, sub: jobSub(n) }, work: null, weight: g ? 1.45 : 1.1, cut: castleShot || indoor, cutIn: true, interior: indoor, phase: NIGHT_VARIANTS.has(variant) ? 1 : undefined,
       camStyle: castleShot || indoor ? null : CAM_STYLES[(camFrom + crofts++) % CAM_STYLES.length],
       ...(g ? { pair: f.pair, guest: { id: g.id, name: g.name, job: g.job }, label2: { title: g.name, sub: jobSub(g) }, labelPos2: new THREE.Vector3() } : {}),
     });

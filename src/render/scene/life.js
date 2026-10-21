@@ -360,6 +360,8 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
     walkers: walkers.length,
     guards: guardCount,
     smokeSources: sources,
+    /** The castle's walking guards off (a wall watch shot has its own guards up there). */
+    hideGuards(off) { gBody.visible = gHead.visible = gSpear.visible = !off; },
     /** Where villager `id` walks at time t (null if they have no walker). dir is smoothed over ~12 m. */
     walkerOf(id) {
       const wk = walkers.find((x) => x.villager === id);
