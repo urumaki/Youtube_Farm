@@ -2,7 +2,7 @@
 // banners and flags, torches, birds, boats, windmill sails, rain/snow. All a pure function of time t.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { heightAt, CASTLE, polyline } from '../../sim/world.js';
+import { heightAt, CASTLE, polyline, WATER_LEVEL } from '../../sim/world.js';
 import { rand01 } from '../../sim/prng.js';
 import { JOBS } from '../../sim/tiers.js';
 import { softSprite, ROYAL } from './textures.js';
@@ -11,6 +11,101 @@ import { cylGeo, boxGeo } from './kit.js';
 const WALK = 1.25; // m/s
 const SPACING = 3.2; // m between walkers in one lane loop
 const LANE = 1.5; // offset from the path centre line
+
+// one material for every hull: planks coloured per vertex, seen from inside too (the deck is open)
+let hullMat = null;
+
+/**
+ * A wooden ship (a cog) or, without a sail, a small boat; the bow at +z, the deck at y = 0.
+ * The hull is lofted from U-shaped cross sections: pointed at the bow, fuller at the stern, the sheer
+ * rising toward both ends and the keel curving up into the stem and stern posts.
+ * float: how far the deck stands above the water.
+ */
+function ship(M, len, sail) {
+  hullMat ??= new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, side: THREE.DoubleSide });
+  const g = new THREE.Group();
+  const big = sail && len >= 10;
+  const W = len * (sail ? 0.15 : 0.17), D = len * 0.12, H0 = len * 0.035, RISE = len * (big ? 0.05 : 0.035);
+  const N = 20, K = 12;
+  const width = (u) => W * Math.pow(Math.max(0, 1 - Math.abs(u) ** 2.2), u > 0 ? 0.8 : 0.45);
+  const top = (u) => H0 + RISE * u * u;
+  const keel = (u) => { const e = Math.abs(u) ** 3; return -D * (1 - e) + top(u) * e; };
+  const plank = [new THREE.Color('#5b412c'), new THREE.Color('#654933')], wale = new THREE.Color('#2f2219'), rail = new THREE.Color('#8a6a48'), tar = new THREE.Color('#1f1a17');
+  const pos = [], col = [], idx = [];
+  for (let i = 0; i <= N; i++) {
+    const u = (i / N) * 2 - 1, z = (u * len) / 2, w = width(u) + 0.02, yt = top(u), yk = keel(u);
+    for (let j = 0; j <= K; j++) {
+      const a = -Math.PI / 2 + (Math.PI * j) / K, c = Math.cos(a);
+      const f = Math.pow(c, 0.55); // 0 at the gunwale, 1 at the keel: a full, round section
+      const y = yt - (yt - yk) * f;
+      pos.push(w * Math.sin(a), y, z);
+      // the top strake lighter, a dark wale below it, tarred planks under the waterline
+      const depth = (yt - y) / Math.max(0.01, yt - yk);
+      col.push(...(depth < 0.08 ? rail : depth < 0.16 ? wale : y < -D * 0.45 ? tar : plank[Math.floor(depth * 9) % 2]).toArray());
+    }
+  }
+  for (let i = 0; i < N; i++) for (let j = 0; j < K; j++) {
+    const a = i * (K + 1) + j, b = a + K + 1;
+    idx.push(a, b, a + 1, b, b + 1, a + 1);
+  }
+  const hull = new THREE.BufferGeometry();
+  hull.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  hull.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  hull.setIndex(idx);
+  hull.computeVertexNormals();
+  g.add(new THREE.Mesh(hull, hullMat));
+  // the deck: planks across the hull a little below the gunwale
+  const deckY = H0 - len * 0.025, dpos = [], didx = [];
+  for (let i = 0; i <= N; i++) {
+    const u = (i / N) * 2 - 1, w = width(u) * 0.96 * Math.max(0, Math.min(1, (deckY - keel(u)) / (top(u) - keel(u)) * 1.3));
+    dpos.push(-w, deckY, (u * len) / 2, w, deckY, (u * len) / 2);
+    if (i < N) didx.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
+  }
+  const deck = new THREE.BufferGeometry();
+  deck.setAttribute('position', new THREE.Float32BufferAttribute(dpos, 3));
+  deck.setIndex(didx);
+  deck.computeVertexNormals();
+  g.add(new THREE.Mesh(deck, M.wood));
+  const add = (geo, m) => { const o = new THREE.Mesh(geo, m); g.add(o); return o; };
+  // stem and stern posts, the rudder hung on the stern post
+  add(boxGeo(0.12 + len * 0.008, top(1) - keel(0.92) + len * 0.03, 0.2).translate(0, (top(1) + keel(0.92)) / 2 + len * 0.015, len / 2 - 0.05), M.woodDark);
+  add(boxGeo(0.12 + len * 0.008, top(-1) - keel(-0.92), 0.2).translate(0, (top(-1) + keel(-0.92)) / 2, -len / 2 + 0.05), M.woodDark);
+  if (sail) {
+    add(boxGeo(0.1, D * 0.9, len * 0.07).translate(0, -D * 0.2, -len / 2 - len * 0.035), M.woodDark); // rudder
+    // castles fore and aft with a rail of posts; the aft one higher, as on a cog
+    const castle = (u, l, h) => {
+      const z = (u * len) / 2, w = width(u) * 1.02, y = top(u);
+      add(boxGeo(w * 2, h + (y - deckY), l).translate(0, (y + h + deckY) / 2, z), M.wood); // planked all round
+      add(boxGeo(w * 2 + 0.1, 0.1, l + 0.1).translate(0, y + h, z), M.woodDark);
+      for (const s of [-1, 1]) {
+        add(boxGeo(0.08, 0.5, l).translate(s * (w - 0.04), y + h + 0.3, z), M.woodDark);
+        for (let k = 0; k <= 3; k++) add(boxGeo(0.1, 0.55, 0.1).translate(s * (w - 0.04), y + h + 0.27, z - l / 2 + (k * l) / 3), M.woodDark);
+      }
+      add(boxGeo(w * 2, 0.5, 0.08).translate(0, y + h + 0.3, z + (u > 0 ? -l / 2 : l / 2)), M.woodDark);
+    };
+    if (big) { castle(-0.78, len * 0.2, len * 0.09); castle(0.8, len * 0.13, len * 0.06); }
+    // one mast amidships, a yard with a square sail full of wind, a bowsprit
+    const mh = len * (big ? 1.0 : 0.85);
+    add(cylGeo(0.1 + len * 0.006, 0.14 + len * 0.008, mh, 8).translate(0, deckY + mh / 2, len * 0.05), M.woodDark);
+    add(cylGeo(0.3 + len * 0.01, 0.25 + len * 0.01, 0.5, 8).translate(0, deckY + mh, len * 0.05), M.wood); // the top
+    const sw = len * 0.55, sh = mh * 0.55, sy = deckY + mh * 0.38;
+    add(cylGeo(0.07, 0.07, sw * 1.12, 6).rotateZ(Math.PI / 2).translate(0, sy + sh, len * 0.05), M.woodDark);
+    const cloth = new THREE.PlaneGeometry(sw, sh, 8, 6);
+    const cp = cloth.attributes.position;
+    for (let v = 0; v < cp.count; v++) {
+      const x = cp.getX(v) / (sw / 2), y = cp.getY(v) / (sh / 2);
+      cp.setZ(v, len * 0.05 * (1 - x * x) * (1 - 0.4 * (y + 1) * (y + 1) / 4) + len * 0.01); // bellied forward
+    }
+    cloth.computeVertexNormals();
+    add(cloth.translate(0, sy + sh / 2, len * 0.05 + 0.15), M.sail);
+    add(cylGeo(0.05, 0.08, len * 0.28, 6).rotateX(Math.PI / 2 - 0.35).translate(0, top(1) + len * 0.05, len / 2 + len * 0.1), M.woodDark);
+  } else {
+    // a rowing boat: two thwarts, oars shipped along the sides
+    for (const z of [-0.15, 0.2]) add(boxGeo(width(z * 2) * 1.9, 0.06, 0.28).translate(0, deckY + 0.12, z * len), M.woodDark);
+    for (const s of [-1, 1]) add(cylGeo(0.03, 0.03, len * 0.75, 6).rotateX(Math.PI / 2).translate(s * W * 0.7, deckY + 0.2, 0), M.wood);
+  }
+  return { g, float: D * 0.45 };
+}
 
 /** Closed loop: up the right lane, U-turn, back down the left lane. Returns arc-length sampler. */
 function laneLoop(pts, lane, w, yFn) {
@@ -290,22 +385,14 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
     updaters.push((t) => { sails.rotation.z = -t * 0.9; });
   }
   for (const b of buildings.boats) {
-    const g = new THREE.Group();
-    const hull = new THREE.Mesh(new THREE.CylinderGeometry(b.len * 0.18, b.len * 0.12, b.len, 10, 1, false, 0, Math.PI).rotateZ(Math.PI / 2).rotateX(Math.PI / 2), M.woodDark);
-    hull.scale.set(1, 0.55, 1);
-    g.add(hull);
-    if (b.sail) {
-      const mast = new THREE.Mesh(cylGeo(0.12, 0.15, b.len * 0.8, 6).translate(0, b.len * 0.4, 0), M.woodDark);
-      const sail = new THREE.Mesh(new THREE.PlaneGeometry(b.len * 0.45, b.len * 0.45).translate(0, b.len * 0.45, 0.2), M.sail);
-      sail.rotation.y = Math.PI / 2;
-      g.add(mast, sail);
-    }
-    g.position.copy(b.pos).setY(0.55);
-    g.rotation.y = -b.rot + Math.PI / 2;
+    const { g, float } = ship(M, b.len, b.sail);
+    const y0 = WATER_LEVEL + float;
+    g.position.copy(b.pos).setY(y0);
+    g.rotation.y = -b.rot + Math.PI; // the bow along the lot's length, as before
     g.traverse((o) => { o.castShadow = true; });
     group.add(g);
     const ph = b.pos.x * 0.1;
-    updaters.push((t) => { g.position.y = 0.55 + Math.sin(t * 1.3 + ph) * 0.08; g.rotation.z = Math.sin(t * 0.9 + ph) * 0.03; });
+    updaters.push((t) => { g.position.y = y0 + Math.sin(t * 1.3 + ph) * 0.06; g.rotation.z = Math.sin(t * 0.9 + ph) * 0.025; g.rotation.x = Math.sin(t * 0.7 + ph) * 0.01; });
   }
 
   // ------------------------------------------------ birds

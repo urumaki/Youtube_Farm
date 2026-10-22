@@ -127,6 +127,205 @@ export function buildBoat({ w, M, hero, home, heightAt }) {
   };
 }
 
+/** The bank of the river closest to home: where the water ends, the directions along it and to land. */
+function riverBank(w, home, heightAt) {
+  let bi = 0, bd = Infinity;
+  w.riverPts.forEach((p, i) => { const d = Math.hypot(p[0] - home.x, p[1] - home.z); if (d < bd) { bd = d; bi = i; } });
+  const i0 = Math.min(bi, w.riverPts.length - 2);
+  const p = w.riverPts[i0], q = w.riverPts[i0 + 1];
+  const along = new THREE.Vector3(q[0] - p[0], 0, q[1] - p[1]).normalize();
+  const toLand = new THREE.Vector3(-along.z, 0, along.x);
+  if (toLand.x * (home.x - p[0]) + toLand.z * (home.z - p[1]) < 0) toLand.negate();
+  const at = (d) => new THREE.Vector3(p[0] + toLand.x * d, 0, p[1] + toLand.z * d);
+  // the waterline, and the point inland where the ground reaches the jetty's deck
+  let edge = RIVER_HALF_WIDTH * 0.6;
+  while (edge < RIVER_HALF_WIDTH * 2.5 && heightAt(at(edge).x, at(edge).z) < WATER_LEVEL + 0.05) edge += 0.25;
+  const deckY = WATER_LEVEL + 0.55;
+  let land = edge;
+  while (land < edge + 6 && heightAt(at(land).x, at(land).z) < deckY - 0.1) land += 0.25;
+  return { along, toLand, at, edge, land, deckY };
+}
+
+/** A plank jetty from the bank out over the water; local +z points out over the river. */
+function jetty(M, length) {
+  const g = new THREE.Group();
+  const add = (geo, m) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; o.receiveShadow = true; g.add(o); return o; };
+  for (let i = 0; i < Math.round(length / 0.32); i++) add(boxGeo(1.5, 0.08, 0.28).translate(0, -0.04, 0.16 + i * 0.32), i % 3 ? M.wood : M.woodDark);
+  for (const s of [-1, 1]) add(boxGeo(0.1, 0.12, length).translate(s * 0.62, -0.14, length / 2), M.woodDark); // the stringers
+  for (let z = 0.4; z < length; z += 1.6) for (const s of [-1, 1]) add(cylGeo(0.09, 0.1, 2.6, 6).translate(s * 0.7, -1.25, z), M.woodDark); // posts
+  for (const s of [-1, 1]) add(cylGeo(0.09, 0.1, 3.1, 6).translate(s * 0.7, -1.1, length - 0.12), M.woodDark); // the end posts stand up a little
+  add(cylGeo(0.2, 0.16, 0.25, 10).translate(-0.45, 0.125, length - 1.3), M.wood); // the catch basket
+  return g;
+}
+
+/**
+ * The fisherman on a jetty at the river bank near their house (owner 2026-10-22: fishing is on the river):
+ * 'rod' casts a line, waits for a bite and pulls a fish out; 'net' throws a round net and hauls it in.
+ * @param home  {x, z} of the villager's house
+ */
+export function buildRiverbank({ w, M, hero, home, heightAt, mode = 'rod' }) {
+  const B = riverBank(w, home, heightAt);
+  const reach = B.land - B.edge + 2.6; // from the dry bank out to 2.6 m over the water
+  const base = B.at(B.land).setY(B.deckY);
+  const out = B.toLand.clone().negate();
+  const group = new THREE.Group();
+  group.visible = false;
+  const pier = jetty(M, reach + 0.4);
+  pier.position.copy(base).addScaledVector(B.toLand, 0.4);
+  pier.rotation.y = Math.atan2(out.x, out.z);
+  group.add(pier);
+  const P = rig(M, JOBS[hero.job]?.color || JOBS.fisherman.color);
+  P.root.position.set(0.15, 0, reach - 0.2);
+  pier.add(P.root);
+  const water = base.clone().addScaledVector(out, reach + (mode === 'net' ? 2.6 : 3.2)).addScaledVector(B.along, mode === 'net' ? 0.6 : 0.9);
+  water.y = WATER_LEVEL + 0.03;
+  pier.updateMatrixWorld(true);
+  const wl = pier.worldToLocal(water.clone());
+  P.root.rotation.y = Math.atan2(wl.x - P.root.position.x, wl.z - P.root.position.z);
+  const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#e9e4d6' }));
+  line.frustumCulled = false;
+  group.add(line);
+  const setLine = (a, b) => {
+    const lp = line.geometry.attributes.position;
+    lp.setXYZ(0, a.x, a.y, a.z); lp.setXYZ(1, b.x, b.y, b.z);
+    lp.needsUpdate = true;
+  };
+  const ripple = new THREE.Mesh(new THREE.RingGeometry(0.15, 0.2, 24).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#dfeaf0', transparent: true, depthWrite: false }));
+  ripple.position.copy(water);
+  group.add(ripple);
+  const fish = [0, 1].map(() => { const f = toolGeo('fish', M); f.visible = false; group.add(f); return f; });
+  const lerp = THREE.MathUtils.lerp;
+  let pose;
+  if (mode === 'rod') {
+    const rod = new THREE.Group();
+    rod.position.set(0.12, 0.5, 0.42);
+    P.body.add(rod);
+    rod.add(Object.assign(new THREE.Mesh(cylGeo(0.012, 0.03, 3, 6).translate(0, 1.5, 0), M.woodDark), { castShadow: true }));
+    const tip = new THREE.Object3D();
+    tip.position.y = 3;
+    rod.add(tip);
+    const float = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), M.clothRed);
+    group.add(float);
+    const CAST = 0.27, LAND = 0.38, BITE = 0.55, STRIKE = 0.68;
+    pose = (t, u) => {
+      // ready, the rod back over the shoulder, the cast, the wait, the bite, the strike
+      const r = u < 0.08 ? 0.6 : u < 0.2 ? lerp(0.6, -0.35, ease((u - 0.08) / 0.12)) : u < CAST ? lerp(-0.35, 1.0, ((u - 0.2) / 0.07) ** 2)
+        : u < STRIKE ? 1.0 : lerp(1.0, 0.15, ease(clamp01((u - STRIKE) / 0.1)));
+      const up = 1 - clamp01(r);
+      rod.rotation.set(r, 0, 0);
+      P.body.rotation.set(0.05 + 0.1 * clamp01(r), 0, 0);
+      P.r.g.rotation.set(-1.0 - 0.5 * up, 0, -0.3); P.l.g.rotation.set(-0.85 - 0.5 * up, 0, 0.3);
+      group.updateMatrixWorld(true);
+      const tipW = tip.getWorldPosition(tmp);
+      if (u < CAST) {
+        float.position.copy(tipW).setY(tipW.y - 0.5); // dangling from the tip
+      } else if (u < LAND) {
+        const k = (u - CAST) / (LAND - CAST);
+        float.position.copy(tipW).lerp(water, k).setY(lerp(tipW.y - 0.3, water.y, k) + 2.2 * k * (1 - k));
+      } else if (u < STRIKE) {
+        const dip = u > BITE ? 0.07 * Math.abs(Math.sin(t * 14)) : 0;
+        float.position.copy(water).setY(water.y + 0.02 * Math.sin(t * 2) - dip);
+      } else {
+        // the fish comes up out of the water and swings on the line
+        const k = ease(clamp01((u - STRIKE) / 0.16));
+        float.position.copy(water).lerp(tmp2.copy(tipW).setY(tipW.y - 0.9), k);
+        float.position.x += 0.15 * Math.sin(t * 5) * k;
+      }
+      fish[0].visible = u >= STRIKE;
+      fish[0].position.copy(float.position).setY(float.position.y - 0.05);
+      fish[0].rotation.set(0, 0, 0.35 * Math.sin(t * 18));
+      setLine(tipW, float.position);
+      const rr = (t * 0.8) % 1;
+      ripple.scale.setScalar(1 + 5 * rr);
+      ripple.material.opacity = u > LAND && u < STRIKE + 0.05 ? 0.6 * (1 - rr) : 0;
+    };
+  } else {
+    // a round casting net: a flat cone of mesh, the rope tied at its top
+    const net = new THREE.Mesh(new THREE.ConeGeometry(1, 0.6, 18, 3, true).translate(0, -0.3, 0),
+      new THREE.MeshBasicMaterial({ color: '#efe8d8', wireframe: true, transparent: true }));
+    group.add(net);
+    const bundle = toolGeo('net', M);
+    P.r.hand.add(bundle);
+    const THROW = 0.22, LAND = 0.36, HAUL = 0.56;
+    const handW = new THREE.Vector3();
+    pose = (t, u) => {
+      // wind up to the side, throw, let it sink, haul it in hand over hand
+      const twist = u < THROW - 0.08 ? lerp(0, 0.7, ease(u / (THROW - 0.08))) : u < THROW + 0.04 ? lerp(0.7, -0.45, ease((u - THROW + 0.08) / 0.12))
+        : u < HAUL ? lerp(-0.45, 0, ease(clamp01((u - THROW - 0.04) / 0.15))) : 0;
+      P.body.rotation.set(u > HAUL ? 0.25 : 0.1, twist, 0);
+      const swing = clamp01((u - THROW + 0.08) / 0.12);
+      if (u < THROW + 0.04) {
+        P.r.g.rotation.set(lerp(-0.6, -1.5, swing), 0, -0.5 + 0.4 * swing);
+        P.l.g.rotation.set(-0.7, 0, 0.4);
+      } else if (u < HAUL) {
+        P.r.g.rotation.set(-1.2, 0, -0.2); P.l.g.rotation.set(-1.0, 0, 0.2);
+      } else {
+        const s = Math.sin(t * 7);
+        P.r.g.rotation.set(-1.0 - 0.45 * s, 0, -0.15); P.l.g.rotation.set(-1.0 + 0.45 * s, 0, 0.15);
+      }
+      bundle.visible = u < THROW;
+      group.updateMatrixWorld(true);
+      P.r.hand.getWorldPosition(handW);
+      net.material.opacity = 0.9;
+      if (u < THROW) {
+        net.visible = false;
+      } else if (u < LAND) {
+        const k = (u - THROW) / (LAND - THROW);
+        net.visible = true;
+        net.position.copy(handW).lerp(water, k).setY(lerp(handW.y, water.y + 0.3, k) + 2.0 * k * (1 - k));
+        net.scale.set(lerp(0.2, 1.3, ease(k)), lerp(0.6, 0.25, k), lerp(0.2, 1.3, ease(k)));
+        net.rotation.y = k * 1.5;
+      } else if (u < HAUL) {
+        const k = (u - LAND) / (HAUL - LAND);
+        net.position.copy(water).setY(water.y + 0.3 - 0.25 * k);
+        net.scale.set(1.3, 0.25, 1.3);
+        net.material.opacity = 0.9 - 0.5 * k;
+      } else {
+        // pulled in: the net closes into a bag and comes up out of the water under the jetty's end
+        const k = ease(clamp01((u - HAUL) / 0.36));
+        const end = handW.clone().addScaledVector(out, 0.5).setY(handW.y - 0.25);
+        net.position.copy(water).lerp(end, k).setY(lerp(water.y + 0.05, end.y, k ** 2));
+        net.scale.set(lerp(1.3, 0.32, k), lerp(0.25, 1.1, k), lerp(1.3, 0.32, k));
+        net.material.opacity = lerp(0.4, 0.95, k);
+      }
+      fish.forEach((f, i) => {
+        f.visible = u > HAUL + 0.2;
+        f.position.copy(net.position).add(tmp2.set(0.08 * (i ? 1 : -1), -0.35 * net.scale.y - 0.15, 0));
+        f.rotation.set(0, i * 1.4, 0.4 * Math.sin(t * 16 + i * 2));
+      });
+      setLine(handW, net.visible ? net.position : handW);
+      const rr = (t * 0.8) % 1;
+      ripple.scale.setScalar(1.5 + 4 * rr);
+      ripple.material.opacity = u > LAND && u < HAUL + 0.1 ? 0.6 * (1 - rr) : 0;
+    };
+  }
+  const labelPos = new THREE.Vector3();
+  const stand = pier.localToWorld(new THREE.Vector3(0.15, 0, reach - 0.2));
+  const focus = stand.clone().lerp(water, 0.35).setY(B.deckY + 0.9);
+  // the camera low over the water, turned back toward the fisherman with the bank behind him (the bank
+  // itself has houses and roofs that would stand in front of a camera on land)
+  const side = mode === 'net' ? -1 : 1; // the float lies a little downstream, the camera is on the other side
+  const camBase = stand.clone().addScaledVector(out, 6.5).addScaledVector(B.along, -4.5 * side);
+  camBase.y = WATER_LEVEL + 1.7;
+  return {
+    group,
+    labelPos,
+    focus,
+    cam(u) {
+      const pos = camBase.clone().addScaledVector(B.along, 1.2 * side * ease(u)).addScaledVector(out, -0.8 * u);
+      return { pos, look: focus };
+    },
+    update(t, t0, t1) {
+      group.visible = t >= t0 - 0.1 && t <= t1 + 0.1;
+      if (!group.visible) return;
+      pose(t, clamp01((t - t0) / (t1 - t0)));
+      P.root.getWorldPosition(labelPos);
+      labelPos.y += 1.95;
+    },
+  };
+}
+
 /** The night watch: a guard walks a street near their house at dusk, a lantern held up, a spear. */
 export function buildNightWatch({ w, M, hero, home, heightAt }) {
   // the street closest to home

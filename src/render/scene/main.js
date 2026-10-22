@@ -21,7 +21,7 @@ import { buildFields } from './ambient.js';
 import { buildWallWatch } from './wallwatch.js';
 import { buildPasture, buildLaundry } from './everyday.js';
 import { buildSparring, buildDummyDrill } from './drills.js';
-import { buildBoat, buildNightWatch } from './away.js';
+import { buildBoat, buildRiverbank, buildNightWatch } from './away.js';
 import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
 import { heightAt } from '../../sim/world.js';
@@ -112,6 +112,7 @@ async function setup(data) {
     if (WATCH[variant]) return buildWallWatch({ where: WATCH[variant][0], mode: WATCH[variant][1], castle, w, state, M, seed: state.seed, hero, lang: data.lang, tag: false });
     return variant === 'sparring' ? buildSparring({ M, seed: state.seed, hero, lang: data.lang, tag: false })
         : variant === 'boat' ? buildBoat({ w, M, hero, home, heightAt: ground })
+          : variant === 'rod' || variant === 'net' ? buildRiverbank({ w, M, hero, home, heightAt: ground, mode: variant })
           : buildNightWatch({ w, M, hero, home, heightAt: ground });
   };
   // the work scene in a croft: the bakehouse for bakers, the straw dummy for fighters, else work.js

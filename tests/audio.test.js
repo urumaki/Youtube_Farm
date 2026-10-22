@@ -79,3 +79,23 @@ test('narration waits for its shot: anchors from the shot plan, soft so everythi
   assert.ok(Math.abs(starts[2] - 4.75) < 1e-9 && Math.abs(starts[5] - 18.45) < 1e-9, 'sentences start with their shots');
   assert.ok(starts.at(-1) + lengths.at(-1) <= 28.3 + 1e-9, 'still ends in time');
 });
+
+test('sentences follow the shots they talk about, so the narrator never waits over another shot', async () => {
+  const fs = await import('node:fs');
+  const { migrate } = await import('../src/sim/state.js');
+  const { sentenceAnchors } = await import('../src/audio/narration.js');
+  // day 2026-10-22: "64 job requests" waited for the third villager and left the raised house silent
+  const { state, diff } = JSON.parse(fs.readFileSync(new URL('../state/history/2026-10-22.json', import.meta.url)));
+  const cues = [
+    { kind: 'caravan', id: 'caravan', t0: 0, t1: 4.5 }, { kind: 'building', id: 'harbor', t0: 4.5, t1: 6.9 },
+    { kind: 'building', id: 'cathedral', t0: 6.9, t1: 9.4 }, { kind: 'house', raised: true, t0: 9.4, t1: 11.8 },
+    { kind: 'villager', job: 'stonemason', t0: 11.8, t1: 15.7 }, { kind: 'villager', job: 'fisherman', t0: 15.7, t1: 19.6 },
+    { kind: 'villager', job: 'knight', t0: 19.6, t1: 23.5 },
+  ];
+  const s = buildScript(migrate(state), diff, { lang: 'en', shots: cues });
+  const at = sentenceAnchors(s.sentences, cues).filter((x) => x !== null);
+  for (let i = 1; i < at.length; i++) assert.ok(at[i] >= at[i - 1], `in shot order: ${at.join(', ')}`);
+  assert.ok(s.sentences.some((x) => x.role === 'raised'), 'the raised house is talked about');
+  const h = s.sentences.find((x) => x.building === 'harbor'), c = s.sentences.find((x) => x.building === 'cathedral');
+  assert.ok(h && c && s.sentences.indexOf(h) < s.sentences.indexOf(c), 'each building over its own shot');
+});

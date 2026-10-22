@@ -22,8 +22,9 @@ export const PAIRS = [
   { id: 'fish', host: ['innkeeper', 'brewer', 'baker'], guest: ['fisherman'] }, // the catch of the day
   { id: 'logs', host: ['carpenter', 'baker', 'blacksmith', 'toolsmith'], guest: ['woodcutter'] }, // firewood and timber
 ];
-// any villager may drop by these workers (to buy bread, a drink, a fish... or just to chat)
-export const VISIT_HOSTS = ['farmer', 'peasant', 'blacksmith', 'toolsmith', 'woodcutter', 'stonemason', 'carpenter', 'baker', 'fisherman', 'miller', 'fletcher', 'innkeeper', 'brewer', 'crier', 'executioner'];
+// any villager may drop by these workers (to buy bread, a drink... or just to chat); not the fisherman, who
+// works out on the river (owner 2026-10-22)
+export const VISIT_HOSTS = ['farmer', 'peasant', 'blacksmith', 'toolsmith', 'woodcutter', 'stonemason', 'carpenter', 'baker', 'miller', 'fletcher', 'innkeeper', 'brewer', 'crier', 'executioner'];
 
 // what a visitor gets from the host when they just drop by (null: they only chat)
 const VISIT_ITEMS = { baker: 'loaf', innkeeper: 'tankard', brewer: 'tankard', fisherman: 'fish', farmer: 'sheaf', peasant: 'cabbage', miller: 'sack' };

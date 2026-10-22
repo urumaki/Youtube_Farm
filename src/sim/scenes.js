@@ -24,7 +24,8 @@ export const VARIANTS = {
   innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
 };
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
-export const AWAY_VARIANTS = new Set(['walls', 'sparring', 'boat', 'night', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change']);
+// the fisherman always fishes on the river (owner 2026-10-22): from a jetty with a rod or a net, or in a boat
+export const AWAY_VARIANTS = new Set(['walls', 'sparring', 'boat', 'rod', 'net', 'night', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change']);
 // scenes at dusk (the light changes for the shot)
 export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished

@@ -231,7 +231,8 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   const bname = (id) => (lang === 'it' ? BUILDING_IT[id] : BUILDINGS[id].label);
   const job = (j) => (lang === 'it' ? JOB_IT[j] : JOBS[j].label.toLowerCase());
   const S = []; // {text, role, priority} lower priority dropped first when too long
-  const add = (text, role, priority, about = null) => text && S.push({ text, role, priority, job: about }); // about: the job it names
+  // about: the job it names; building: the building it names (it waits for that building's shot)
+  const add = (text, role, priority, about = null, building = null) => text && S.push({ text, role, priority, job: about, building });
 
   add(pick(L.open)(diff), 'open', 9);
   const d = diff.delta;
@@ -283,9 +284,10 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   if (nb === 1) add(pick(L.houses1), 'houses', 5);
   else if (nb > 1) add(pick(L.houses)(nb.toLocaleString('en-US')), 'houses', 5);
   if (diff.housesRebuilt.length) add(pick(L.rebuilt)(diff.housesRebuilt.length), 'rebuilt', 5);
-  if (diff.housesRaised?.length) add(pick(L.raised)(diff.housesRaised.length), 'raised', 7);
-  for (const b of diff.buildingsStarted.slice(0, 2)) add(pick(L.unlocked)(bname(b)), 'unlocked', 8);
-  for (const b of diff.buildingsCompleted.slice(0, 2)) add(BUILDINGS[b].plural ? (lang === 'it' ? 'I campi sono pronti per la semina!' : 'The fields are ready to sow!') : pick(L.completed)(bname(b)), 'completed', 8);
+  // the raised house has its own shot: its sentence is kept, or the narrator is silent over it
+  if (diff.housesRaised?.length) add(pick(L.raised)(diff.housesRaised.length), 'raised', shots.some((c) => c.raised) ? 8 : 7);
+  for (const b of diff.buildingsStarted.slice(0, 2)) add(pick(L.unlocked)(bname(b)), 'unlocked', 8, null, b);
+  for (const b of diff.buildingsCompleted.slice(0, 2)) add(BUILDINGS[b].plural ? (lang === 'it' ? 'I campi sono pronti per la semina!' : 'The fields are ready to sow!') : pick(L.completed)(bname(b)), 'completed', 8, null, b);
   if (diff.housesAbandoned.length) add(pick(L.abandoned)(diff.housesAbandoned.length), 'abandoned', 7);
   if (diff.housesRuined.length) add(pick(L.ruined)(diff.housesRuined.length), 'ruined', 7);
   const milestone = diff.events.filter((e) => e.type === 'milestone').at(-1); // the biggest one passed today
@@ -311,13 +313,25 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   // the comment invitation comes with the named villagers (tavern), so the goal and the call to action keep the end
   const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'raised', 'requests', 'count', 'person', 'pair', 'ambient', 'tavern', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
+  // between equals, a sentence about a shot of its own stays (it fills that shot)
+  const own = new Set(shots.length ? S.filter((s, i) => sentenceAnchors(S, shots)[i] !== null && !(s.role in FIXED_AT)) : []);
   while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
-    const victim = [...S].sort((a, b) => a.priority - b.priority)[0];
+    const victim = [...S].sort((a, b) => a.priority - b.priority || own.has(a) - own.has(b))[0];
     if (victim.priority >= 9) break;
     S.splice(S.indexOf(victim), 1);
   }
+  // with the shot plan known, the sentences follow the shots they wait for: a sentence about a later shot
+  // spoken first leaves the narrator silent until that shot (day 2026-10-22: "64 job requests" waited for
+  // the third villager over the raised house). A sentence with no shot stays after the one before it.
+  if (shots.length) {
+    const at = sentenceAnchors(S, shots);
+    let key = 0;
+    const keyed = S.map((s, i) => ({ s, i, k: (key = at[i] ?? key) }));
+    keyed.sort((a, b) => a.k - b.k || a.i - b.i);
+    S.splice(0, S.length, ...keyed.map((x) => x.s));
+  }
   const text = S.map((s) => s.text).join(' ');
-  return { sentences: S.map(({ text, role, job: about }) => ({ text, role, ...(about ? { job: about } : {}) })), text, words: words(text) };
+  return { sentences: S.map(({ text, role, job: about, building }) => ({ text, role, ...(about ? { job: about } : {}), ...(building ? { building } : {}) })), text, words: words(text) };
 }
 
 // Which shot each kind of sentence talks about (see makePlan in src/render/scene/timeline.js).
@@ -341,9 +355,11 @@ export function sentenceAnchors(sentences, cues = []) {
     const match = SHOT_OF[s.role];
     // a sentence naming a job waits for that villager's shot (and for no other; a visiting villager is in
     // the host's shot); otherwise the next shot of its kind
-    const cue = match && (s.job && (s.role === 'person' || s.role === 'requests' || s.role === 'pair')
-      ? cues.find((c) => match(c) && (c.job === s.job || c.job2 === s.job) && !used.has(c))
-      : cues.find((c) => match(c) && !used.has(c)));
+    // a sentence naming a building waits for that building's shot, or for none
+    const cue = match && (s.building ? cues.find((c) => match(c) && c.id === s.building && !used.has(c))
+      : s.job && (s.role === 'person' || s.role === 'requests' || s.role === 'pair')
+        ? cues.find((c) => match(c) && (c.job === s.job || c.job2 === s.job) && !used.has(c))
+        : cues.find((c) => match(c) && !used.has(c)));
     if (!cue) return null;
     used.add(cue);
     return cue.t0 + 0.25;

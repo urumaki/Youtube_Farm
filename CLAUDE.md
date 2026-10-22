@@ -127,7 +127,12 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (Z sprites), or stands by a crate with a mug (`home`/`homeTurn` in `JOB_SCENES` place a scene by the house).
   Bards strum a lute on a stool (and one always plays in the tavern); woodcutters also load a handcart.
   Scenes away from the croft (`AWAY_VARIANTS`, own camera, hard cut): guards on the walls, sparring, or on
-  the night watch with a lantern at dusk; fishermen in a rowing boat on the river (`away.js`).
+  the night watch with a lantern at dusk; fishermen always on the river (owner 2026-10-22): in a rowing boat,
+  or on a plank jetty at the bank near their house casting a rod or throwing a round net and hauling it in
+  (`buildRiverbank` in `away.js`). The fisherman is never a visit host (`VISIT_HOSTS`): he is not at home.
+- Ships in the harbor and boats at the dock (owner 2026-10-22, `ship` in `life.js`): a lofted hull (pointed
+  bow, sheer rising to both ends, planks and a dark wale, tarred below the waterline), a deck, stem and stern
+  posts; ships get a rudder, a bellied square sail on a yard, a bowsprit and, when big, castles fore and aft.
 - Everybody gets a turn (owner 2026-10-20): `state.lastShown` records the day each named villager was
   last on screen; after today's names and requests, those never shown and those waiting longest come
   first. A shot can show two villagers together (`PAIRS` in `featured.js`, `visit.js`): the guest walks
@@ -154,7 +159,10 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   The voice follows the shots: `produceVideo` first sets the scene up once to get the shot plan
   (`sceneCues`), `sentenceAnchors` gives each sentence the start of the shot it talks about (goal at
   23.7 s, call to action at 27.1 s), and `schedule` in `tts/index.js` waits for those times but never
-  so long that the rest no longer fits. On caravan days there is no "+N villagers" sentence.
+  so long that the rest no longer fits. With the shot plan known, `buildScript` puts the sentences in the
+  order of the shots they wait for and keeps the ones with a shot of their own (day 7, 2026-10-22: the
+  narrator fell silent over the raised house while a sentence waited for a later villager); a sentence about
+  a building waits for that building's shot. On caravan days there is no "+N villagers" sentence.
 - `src/publish/` YouTube upload (resumable, OAuth); `state/published.json` prevents double uploads.
 - `.github/workflows/daily.yml` runs at 06:17 UTC (GitHub often starts it hours late);
   `voice-samples.yml` renders TTS samples on demand.
