@@ -140,6 +140,9 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - In-between goals (owner, 2026-10-20): tier at 175 (Town Crier + Crier's Stand) and 750 (Executioner,
   who chops cabbages, + Pillory). Their structures are virtual lots on the market square (`onPlaza`), so
   house plots never move. Only add tiers above the current population, or existing villagers change job.
+  Added 2026-10-22: 1250 Tailor + Tailor's Stall, 1500 Physician (moved from 2500) + Physician's Booth
+  (both on the market square, work scenes `sewing` and `remedies`). The Noble at 10,000 became the Tax
+  Collector (no noble titles as jobs; comments asking for lord, landlord, noble, duke or baron get it).
 - `src/audio/` narration templates (names are never read aloud), Kokoro TTS (`am_adam`), procedural
   music, camera-driven sound effects with strikes synced to the work animations (`sfx.js`).
   The voice follows the shots: `produceVideo` first sets the scene up once to get the shot plan

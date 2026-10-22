@@ -184,6 +184,29 @@ const BUILD = {
     out.flags.push([2.3, 2.2, -1.4, 0.8, 0.5]);
     out.focusH = 2.6;
   },
+  tailor_stall(b, lot, out) {
+    // a stall under a purple awning: bolts of cloth on the counter, a cloak on a dress form, cloth hanging
+    b.add('wood', boxGeo(3.0, 0.9, 1.2), 0, 0.45, 0.3);
+    for (const [x, z] of [[-1.5, -0.6], [1.5, -0.6], [-1.5, 1.0], [1.5, 1.0]]) b.add('woodDark', boxGeo(0.12, 2.6, 0.12), x, 1.3, z);
+    b.add('awning4', gableGeo(3.6, 2.2, 0.7), 0, 2.6, 0.2);
+    for (const [x, m] of [[-1.0, 'clothRed'], [-0.45, 'clothBlue'], [0.1, 'ivory'], [0.65, 'clothRed']]) b.add(m, cylGeo(0.17, 0.17, 0.9, 10).rotateX(Math.PI / 2), x, 1.07, 0.3);
+    b.add('woodDark', boxGeo(0.08, 1.2, 0.08), 2.3, 0.6, -0.4); // the dress form: a post, a body, a cloak
+    b.add('wood', cylGeo(0.22, 0.28, 0.7, 10), 2.3, 1.45, -0.4);
+    b.add('clothRed', cylGeo(0.3, 0.5, 1.1, 10, 1), 2.3, 1.15, -0.4);
+    for (const [x, m] of [[-1.0, 'clothBlue'], [0.2, 'ivory'], [1.0, 'clothRed']]) b.add(m, boxGeo(0.5, 0.9, 0.02), x, 1.95, -0.6);
+    out.focusH = 1.8;
+  },
+  physician_booth(b, lot, out) {
+    // a booth under a green awning: jars of remedies on the counter, herbs drying above, a bench for patients
+    b.add('wood', boxGeo(3.4, 0.9, 1.1), 0, 0.45, 0.3);
+    for (const [x, z] of [[-1.7, -0.6], [1.7, -0.6], [-1.7, 1.0], [1.7, 1.0]]) b.add('woodDark', boxGeo(0.12, 2.6, 0.12), x, 1.3, z);
+    b.add('awning2', gableGeo(4.0, 2.2, 0.7), 0, 2.6, 0.2);
+    for (let i = 0; i < 7; i++) b.add(i % 3 ? 'clay' : 'stoneDark', cylGeo(0.09, 0.11, 0.24 + (i % 2) * 0.1, 8), -1.3 + i * 0.4, 1.05, 0.2 + (i % 2) * 0.25);
+    b.add('woodDark', boxGeo(3.4, 0.06, 0.06), 0, 2.2, -0.55); // the pole the herbs dry on
+    for (let i = 0; i < 6; i++) b.add('greens', new THREE.ConeGeometry(0.12, 0.4, 6).rotateX(Math.PI), -1.4 + i * 0.56, 1.95, -0.55);
+    b.add('wood', boxGeo(1.8, 0.45, 0.4), 0.4, 0.22, -1.4); // the bench
+    out.focusH = 1.8;
+  },
   tavern(b, lot, out, ctx) {
     house(b, 0, 0, 13, 9, 7, { roof: 'thatch', wall: 'timber', roofH: 5 });
     windowsRow(b, -5, 5, 2.2, -4.56, 3, 'windowWarm'); windowsRow(b, -5, 5, 5.2, -4.56, 4, 'windowWarm');

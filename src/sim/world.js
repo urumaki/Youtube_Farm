@@ -190,6 +190,8 @@ function buildLots(w, r) {
   // square's paving (onPlaza)
   lots.crier_stand = { id: 'crier_stand', x: MARKET.x - 11, z: -13.8, hw: 1.6, hd: 1.6, rot: 0, virtual: true, onPlaza: 'market' };
   lots.pillory = { id: 'pillory', x: MARKET.x - 11, z: 14.2, hw: 2.6, hd: 1.7, rot: 0, virtual: true, onPlaza: 'market' };
+  lots.tailor_stall = { id: 'tailor_stall', x: MARKET.x + 11, z: -13.8, hw: 1.8, hd: 1.6, rot: 0, virtual: true, onPlaza: 'market' };
+  lots.physician_booth = { id: 'physician_booth', x: MARKET.x + 12, z: 14.2, hw: 2.2, hd: 1.6, rot: 0, virtual: true, onPlaza: 'market' };
   void r;
   return lots;
 }

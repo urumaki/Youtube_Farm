@@ -194,14 +194,14 @@ const BUILDING_IT = {
   windmill: 'il Mulino', wall2: 'la Seconda cinta', townhall: 'il Municipio', harbor: 'il Porto', cathedral: 'la Cattedrale',
   tournament: 'il Campo del torneo', district_east: 'il Quartiere Est', charter_stone: 'la Pietra della Carta', district_north: 'il Quartiere Nord',
   university: "l'Università", district_south: 'il Quartiere Sud', palace: 'il Palazzo Reale', district_far: 'il Quartiere Lontano',
-  lighthouse: 'il Faro', colossus: 'il Colosso degli Iscritti', crier_stand: 'il Palco del Banditore', pillory: 'la Gogna',
+  lighthouse: 'il Faro', colossus: 'il Colosso degli Iscritti', crier_stand: 'il Palco del Banditore', pillory: 'la Gogna', tailor_stall: 'la Bottega del Sarto', physician_booth: 'il Banco del Medico',
 };
 
 const JOB_IT = {
   peasant: 'contadino', farmer: 'agricoltore', woodcutter: 'taglialegna', fisherman: 'pescatore', blacksmith: 'fabbro', baker: 'fornaio',
   guard: 'guardia', stonemason: 'scalpellino', merchant: 'mercante', innkeeper: 'oste', priest: 'prete', miller: 'mugnaio',
   carpenter: 'carpentiere', reeve: 'balivo', sailor: 'marinaio', knight: 'cavaliere', bishop: 'vescovo', scholar: 'studioso',
-  mayor: 'sindaco', weaver: 'tessitore', physician: 'medico', apothecary: 'speziale', bard: 'bardo', noble: 'nobile',
+  mayor: 'sindaco', weaver: 'tessitore', physician: 'medico', apothecary: 'speziale', bard: 'bardo', taxcollector: 'esattore delle tasse', tailor: 'sarto',
   chronicler: 'cronista', admiral: 'ammiraglio', fletcher: 'arcaio', weirdo: 'stravagante del paese', beggar: 'mendicante',
   jester: 'giullare', warrior: 'guerriero', toolsmith: 'fabbro di attrezzi', brewer: 'birraio', apprentice: 'apprendista',
   crier: 'banditore', executioner: 'boia',
@@ -347,6 +347,6 @@ export function sentenceAnchors(sentences, cues = []) {
 }
 
 function goalIt(next) {
-  const b = { woodfolk: 'arriva il Taglialegna', crafts: 'arriva il Fabbro', guard: 'la Guardia sale sulle mura', market: 'apre il Mercato', crier: 'il Banditore suona la campana', justice: 'il Boia prende la scure', faith: 'suona la campana della Cappella', walled: 'sorge la Seconda cinta', harbor: 'apre il Porto', charter: 'si firma la Carta della città', north: 'nasce il Quartiere Nord', learned: "apre l'Università", royal: 'si costruisce il Palazzo Reale', maritime: 'si accende il Faro', legend: 'si innalza il Colosso' };
+  const b = { woodfolk: 'arriva il Taglialegna', crafts: 'arriva il Fabbro', guard: 'la Guardia sale sulle mura', market: 'apre il Mercato', crier: 'il Banditore suona la campana', justice: 'il Boia prende la scure', cloth: 'il Sarto apre bottega', healers: 'arriva il Medico', faith: 'suona la campana della Cappella', walled: 'sorge la Seconda cinta', harbor: 'apre il Porto', charter: 'si firma la Carta della città', north: 'nasce il Quartiere Nord', learned: "apre l'Università", royal: 'si costruisce il Palazzo Reale', maritime: 'si accende il Faro', legend: 'si innalza il Colosso' };
   return b[next.tier] || next.goal;
 }

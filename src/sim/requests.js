@@ -32,7 +32,9 @@ const KEYWORDS = [
   [/scholar|\bscribe|librar|studioso/, 'scholar'],
   [/doctor|healer|physician|medico|guaritore/, 'physician'],
   [/apothecar|alchemist|alchimista|speziale|farmacist|\bremed|rimedi/, 'apothecary'], // medieval only: no wizards (owner)
-  [/\blord\b|landlord|\bnoble|\bduke|\bbaron|nobile|signore/, 'noble'],
+  // no noble titles as jobs (owner): a lord or a landlord collects the taxes
+  [/tax\s*collector|\btax(man|es)?\b|esattore|gabellier|\btasse\b|\blord\b|landlord|\bnoble|\bduke|\bbaron|nobile|signore/, 'taxcollector'],
+  [/tailor|seamstress|dressmaker|\bsew|sarto|sarta|\bcucir/, 'tailor'],
   [/\bmayor|sindaco/, 'mayor'],
   [/executioner|headsman|\bboia\b|carnefice|giustiziere/, 'executioner'],
   [/town\s*crier|\bcrier\b|\bherald|banditore|araldo|messaggero/, 'crier'],

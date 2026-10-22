@@ -125,6 +125,10 @@ const JOB_SCENES = {
   // in-between goals: the town crier rings a hand bell by the notice board, the executioner (nobody gets
   // hurt in the kingdom) chops cabbages on the block
   crier: { period: 0.42, raise: -2.75, down: -2.2, bend: 0, sound: 'none', tool: 'handbell', props: 'notice', smooth: true, left: -1.3 },
+  // owner 2026-10-22: the tailor sews at a table, the physician grinds a remedy, the tax collector counts coins
+  tailor: { period: 0.9, raise: -1.55, down: -1.08, bend: 0.15, sound: 'none', tool: null, props: 'sewing', smooth: true, left: -1.05 },
+  physician: { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95 },
+  taxcollector: { period: 0.75, raise: -1.3, down: -1.05, bend: 0.12, sound: 'none', tool: null, props: 'ledger', smooth: true, left: -1.1 },
   executioner: { period: 1.6, hit: 0.72, raise: -2.8, down: -0.9, bend: 0.25, fx: 'leaves', sound: 'chop', tool: 'axe', props: 'chopblock', both: true, hood: true },
 };
 const DEFAULT_SCENE = { period: 2.4, hit: 0.5, raise: -2.6, down: -0.2, bend: 0, fx: null, sound: 'none', tool: null, props: 'market', wave: true };
@@ -487,6 +491,37 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       add(boxGeo(1.9, 0.06, 0.4).translate(-0.25, 0.69, 0.6), M.wood);
       add(boxGeo(0.4, 0.06, 0.3).translate(1.1, 0.03, 0.4), M.wood); // a sawn-off end on the ground
       return new THREE.Vector3(0.3, 0.7, 0.6);
+    }
+    case 'sewing': { // a table with a cloak being sewn, a bolt of cloth, shears and a spool
+      add(boxGeo(1.5, 0.08, 0.75).translate(0, 0.8, 0.62), M.wood);
+      for (const x of [-0.65, 0.65]) add(boxGeo(0.08, 0.8, 0.65).translate(x, 0.4, 0.62), M.woodDark);
+      add(boxGeo(1.1, 0.02, 0.6).translate(0.05, 0.85, 0.6), M.clothRed);
+      add(cylGeo(0.16, 0.16, 0.7, 10).rotateX(Math.PI / 2).translate(-0.55, 1.0, 0.6), M.clothBlue);
+      add(cylGeo(0.05, 0.05, 0.1, 8).translate(0.55, 0.9, 0.85), M.clothIvory);
+      add(boxGeo(0.22, 0.02, 0.05).rotateY(0.4).translate(0.45, 0.86, 0.4), M.iron);
+      return new THREE.Vector3(0, 0.9, 0.55);
+    }
+    case 'remedies': { // a table with a mortar and pestle, jars of remedies and a bundle of herbs
+      add(boxGeo(1.4, 0.08, 0.7).translate(0, 0.8, 0.62), M.wood);
+      for (const x of [-0.6, 0.6]) add(boxGeo(0.08, 0.8, 0.6).translate(x, 0.4, 0.62), M.woodDark);
+      add(cylGeo(0.16, 0.12, 0.16, 12).translate(0, 0.92, 0.55), M.stoneDark); // the mortar
+      const pestle = add(cylGeo(0.03, 0.04, 0.32, 8).translate(0, 0.12, 0).rotateX(-0.4), M.wood);
+      pestle.position.set(0, 0.92, 0.55);
+      anim.push((t, c) => { pestle.rotation.y = c * Math.PI * 2; }); // round and round in the mortar
+      for (let i = 0; i < 4; i++) add(cylGeo(0.07, 0.08, 0.2 + (i % 2) * 0.08, 8).translate(-0.5 + i * 0.12, 0.94, 0.8 - (i % 2) * 0.1), M.clay);
+      add(new THREE.ConeGeometry(0.1, 0.35, 6).rotateZ(Math.PI / 2).translate(0.45, 0.9, 0.75), M.greens);
+      return new THREE.Vector3(0, 0.95, 0.55);
+    }
+    case 'ledger': { // a table with the open tax book, a coin chest and stacks of coins
+      add(boxGeo(1.4, 0.08, 0.7).translate(0, 0.8, 0.62), M.wood);
+      for (const x of [-0.6, 0.6]) add(boxGeo(0.08, 0.8, 0.6).translate(x, 0.4, 0.62), M.woodDark);
+      add(boxGeo(0.5, 0.04, 0.36).translate(-0.35, 0.86, 0.6), M.clothIvory); // the open book
+      add(boxGeo(0.02, 0.05, 0.36).translate(-0.35, 0.87, 0.6), M.woodDark);
+      add(boxGeo(0.45, 0.3, 0.3).translate(0.45, 0.99, 0.75), M.woodDark); // the chest, lid open
+      add(boxGeo(0.45, 0.04, 0.3).rotateX(-1.1).translate(0.45, 1.25, 0.95), M.woodDark);
+      add(boxGeo(0.4, 0.05, 0.25).translate(0.45, 1.1, 0.75), M.gold);
+      for (const [x, n] of [[0.0, 5], [0.12, 3], [0.2, 7]]) add(cylGeo(0.04, 0.04, n * 0.012, 10).translate(x, 0.84 + n * 0.006, 0.45), M.gold);
+      return new THREE.Vector3(0.05, 0.9, 0.5);
     }
     case 'dough': { // a table with a lump of dough that squashes under the hands
       add(boxGeo(1.4, 0.08, 0.7).translate(0, 0.8, 0.62), M.wood);

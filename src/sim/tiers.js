@@ -27,7 +27,8 @@ export const JOBS = {
   physician: { label: 'Physician', color: '#4f7c82' },
   apothecary: { label: 'Apothecary', color: '#6b3fa0' },
   bard: { label: 'Bard', color: '#d1603d' },
-  noble: { label: 'Noble', color: '#5b2a86' },
+  taxcollector: { label: 'Tax Collector', color: '#5b2a86' }, // owner 2026-10-22: no noble titles as jobs
+  tailor: { label: 'Tailor', color: '#8e3b5e' },
   chronicler: { label: 'Chronicler', color: '#55443a' },
   admiral: { label: 'Admiral', color: '#0f3057' },
   crier: { label: 'Town Crier', color: '#c23b22' },
@@ -63,6 +64,8 @@ export const BUILDINGS = {
   cathedral: { label: 'the Cathedral', days: 21 },
   tournament: { label: 'the Tournament Ground', days: 5 },
   pillory: { label: 'the Pillory', days: 1 },
+  tailor_stall: { label: "the Tailor's Stall", days: 1 },
+  physician_booth: { label: "the Physician's Booth", days: 1 },
   district_east: { label: 'the East Ward', days: 3 },
   charter_stone: { label: 'the Charter Stone', days: 1 },
   district_north: { label: 'the North Ward', days: 3 },
@@ -89,9 +92,12 @@ export const TIERS = [
   { id: 'harbor', at: 500, title: 'Harbor Town', unique: ['bishop', 'knight', 'sailor'], pool: { sailor: 1.5, knight: 0.5 }, buildings: ['harbor', 'cathedral', 'tournament'], goal: 'the Harbor opens' },
   { id: 'justice', at: 750, title: 'Town of Law', unique: ['executioner'], pool: {}, buildings: ['pillory'], goal: 'the Executioner takes up the axe' },
   { id: 'charter', at: 1000, title: 'Chartered City', unique: ['mayor', 'scholar'], pool: { scholar: 0.6, weaver: 1.2 }, buildings: ['charter_stone', 'district_east'], goal: 'the Town Charter is signed' },
-  { id: 'north', at: 2500, title: 'Growing City', unique: ['physician', 'weaver'], pool: { physician: 0.5 }, buildings: ['district_north'], goal: 'the North Ward is founded' },
+  // more in-between goals (owner 2026-10-22)
+  { id: 'cloth', at: 1250, title: 'Town of Fine Cloth', unique: ['tailor'], pool: { tailor: 0.4 }, buildings: ['tailor_stall'], goal: 'the Tailor opens a stall' },
+  { id: 'healers', at: 1500, title: 'Town of Healers', unique: ['physician'], pool: { physician: 0.5 }, buildings: ['physician_booth'], goal: 'the Physician arrives' },
+  { id: 'north', at: 2500, title: 'Growing City', unique: ['weaver'], pool: {}, buildings: ['district_north'], goal: 'the North Ward is founded' },
   { id: 'learned', at: 5000, title: 'City of Learning', unique: ['apothecary', 'bard'], pool: { apothecary: 0.3, bard: 0.6 }, buildings: ['university', 'district_south'], goal: 'the University opens' },
-  { id: 'royal', at: 10000, title: 'Royal City', unique: ['noble', 'chronicler'], pool: { noble: 0.3, chronicler: 0.2 }, buildings: ['palace', 'district_far'], goal: 'the Royal Palace is commissioned' },
+  { id: 'royal', at: 10000, title: 'Royal City', unique: ['taxcollector', 'chronicler'], pool: { taxcollector: 0.3, chronicler: 0.2 }, buildings: ['palace', 'district_far'], goal: 'the Royal Palace is commissioned' },
   { id: 'maritime', at: 100000, title: 'Maritime Realm', unique: ['admiral'], pool: { admiral: 0.05 }, buildings: ['lighthouse'], goal: 'the Lighthouse is lit' },
   { id: 'legend', at: 1000000, title: 'Legendary Kingdom', unique: [], pool: {}, buildings: ['colossus'], goal: 'the Colossus is raised' },
 ];

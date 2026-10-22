@@ -84,6 +84,7 @@ const JOB_IT = {
   guard: 'Guardia', knight: 'Cavaliere', warrior: 'Guerriero', fletcher: 'Arcaio', farmer: 'Agricoltore', peasant: 'Contadino',
   woodcutter: 'Taglialegna', fisherman: 'Pescatore', blacksmith: 'Fabbro', baker: 'Fornaio', stonemason: 'Scalpellino',
   merchant: 'Mercante', innkeeper: 'Oste', priest: 'Prete', miller: 'Mugnaio', brewer: 'Birraio', apprentice: 'Apprendista',
+  tailor: 'Sarto', physician: 'Medico', taxcollector: 'Esattore',
 };
 
 /** A name tag for a cast member: the name when they have one, else their job. */
