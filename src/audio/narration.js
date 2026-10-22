@@ -199,6 +199,7 @@ const BUILDING_IT = {
   lighthouse: 'il Faro', colossus: 'il Colosso degli Iscritti', crier_stand: 'il Palco del Banditore', pillory: 'la Gogna', tailor_stall: 'la Bottega del Sarto', physician_booth: 'il Banco del Medico',
   potter_stall: 'la Bottega del Vasaio', cobbler_stall: 'il Banco del Calzolaio', cooperage: 'la Bottega del Bottaio', apiary: 'le Arnie',
   bell_foundry: 'la Fonderia di Campane', clock_tower: "la Torre dell'Orologio", stone_bridge: 'il Grande Ponte',
+  fletcher_workshop: "la Bottega dell'Arcaio",
 };
 
 const JOB_IT = {

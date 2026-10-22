@@ -2,7 +2,7 @@
 import { hash, rng } from './prng.js';
 import { cleanName, isOffensive, looksLikeCode } from './names.js';
 import { availableJobs } from './requests.js';
-import { TIERS, BUILDINGS, JOBS, jobFor, houseCapacity, tiersReached, mergedJob } from './tiers.js';
+import { TIERS, BUILDINGS, JOBS, COMMISSIONS, jobFor, houseCapacity, tiersReached, mergedJob } from './tiers.js';
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
 import { pickStory } from './stories.js';
@@ -157,17 +157,20 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   assignNames(s, commenters, blocked, diff);
 
   // 3. Unlocks (tiers never re-lock; history is never deleted).
+  const begin = (b, tier) => {
+    const days = BUILDINGS[b].days;
+    s.buildings.push({ id: b, tier, status: days > 0 ? 'construction' : 'done', startedDay: day, doneDay: days > 0 ? null : day, daysTotal: days });
+    if (days > 0) { s.pendingConstruction.push({ building: b, daysLeft: days, daysTotal: days }); diff.buildingsStarted.push(b); }
+    else diff.buildingsCompleted.push(b);
+  };
   for (const t of tiersReached(target)) {
     if (s.unlockedTiers.includes(t.id)) continue;
     s.unlockedTiers.push(t.id);
     diff.unlocked.push(t.id);
-    for (const b of t.buildings) {
-      const days = BUILDINGS[b].days;
-      s.buildings.push({ id: b, tier: t.id, status: days > 0 ? 'construction' : 'done', startedDay: day, doneDay: days > 0 ? null : day, daysTotal: days });
-      if (days > 0) { s.pendingConstruction.push({ building: b, daysLeft: days, daysTotal: days }); diff.buildingsStarted.push(b); }
-      else diff.buildingsCompleted.push(b);
-    }
+    for (const b of t.buildings) begin(b, t.id);
   }
+  // buildings the owner commissions with no goal (COMMISSIONS in tiers.js)
+  for (const b of COMMISSIONS) if (!s.buildings.some((x) => x.id === b)) begin(b, 'commission');
 
   // The Second Wall's route is planned round the houses standing when it begins (src/sim/wall.js)
   ensureWall2(s, w, diff);

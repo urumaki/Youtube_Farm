@@ -531,3 +531,20 @@ test('the University opens at 1000 below the castle; merchants, knights, scholar
     assert.ok(h.occupants.every((id) => id >= 1000), 'only newcomers after the University is begun');
   }
 });
+
+test("the Fletcher's Workshop (a commission) is begun on the next day, once, on free ground by a street", async () => {
+  const { DEFAULT_SEED } = await import('../src/sim/simulate.js');
+  const { obbOverlap, grow } = await import('../src/sim/geometry.js');
+  for (const seed of [SEED, DEFAULT_SEED]) {
+    const w = world(seed);
+    const lot = w.lots.fletcher_workshop;
+    assert.ok(lot, `no lot for seed ${seed}`);
+    for (const p of [...w.plots, ...w.finePlots, ...w.fields]) assert.equal(obbOverlap(lot, p), false, `on ${p.id ?? 'a field'}`);
+    for (const l of Object.values(w.lots)) if (l !== lot && (!l.virtual || l.hw > 0)) assert.equal(obbOverlap(grow(lot, 1), l), false, `on ${l.id}`);
+  }
+  const { state: s, diffs } = run([3, 4, 5]);
+  assert.ok(diffs[0].buildingsStarted.includes('fletcher_workshop'));
+  assert.ok(!diffs.slice(1).some((d) => d.buildingsStarted.includes('fletcher_workshop')));
+  assert.equal(s.buildings.filter((b) => b.id === 'fletcher_workshop').length, 1);
+  assert.equal(s.buildings.find((b) => b.id === 'fletcher_workshop').status, 'done');
+});

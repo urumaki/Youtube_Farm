@@ -88,6 +88,7 @@ export const BUILDINGS = {
   bell_foundry: { label: 'the Bell Foundry', days: 3 },
   clock_tower: { label: 'the Clock Tower', days: 10 },
   stone_bridge: { label: 'the Great Bridge', days: 30 },
+  fletcher_workshop: { label: "the Fletcher's Workshop", days: 2 },
   district_east: { label: 'the East Ward', days: 3 },
   charter_stone: { label: 'the Charter Stone', days: 1 },
   district_north: { label: 'the North Ward', days: 3 },
@@ -130,6 +131,12 @@ export const TIERS = [
   { id: 'maritime', at: 100000, title: 'Maritime Realm', unique: ['admiral'], pool: { admiral: 0.05 }, buildings: ['lighthouse'], goal: 'the Lighthouse is lit' },
   { id: 'bridge', at: 250000, title: 'Realm of the Great Bridge', unique: [], pool: {}, buildings: ['stone_bridge'], goal: 'the Great Bridge spans the river' },
   { id: 'legend', at: 1000000, title: 'Legendary Kingdom', unique: [], pool: {}, buildings: ['colossus'], goal: 'the Colossus is raised' },
+];
+
+// Buildings the owner commissions with no goal: begun on the next day the kingdom runs, whatever its size
+// (saved with tier 'commission'). No tier changes, so no villager changes job.
+export const COMMISSIONS = [
+  'fletcher_workshop', // owner 2026-10-23: the bows and arrows of the town (the Fletcher's job is still by request only)
 ];
 
 // villager index -> unique job, built once.

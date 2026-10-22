@@ -240,6 +240,52 @@ const BUILD = {
     out.smoke.push([0, 4.2, 0]);
     out.focusH = 3;
   },
+  fletcher_workshop(b, lot, out) {
+    // owner 2026-10-23: a timber workshop with a thatched roof, bows hanging on its front wall, and a lean-to
+    // over the bench where arrows are fletched; a barrel of arrows, staves drying in a rack, a straw butt
+    // with a target at the side, the sign with two crossed arrows (front, +z, faces the street)
+    house(b, -1.2, -1.8, 7.4, 5, 3.6, { roof: 'thatch', wall: 'timber', roofH: 2.6 });
+    windowsRow(b, -4, -2.4, 2.0, 0.76, 1, 'windowWarm');
+    b.add('woodDark', boxGeo(1.2, 2.2, 0.15), 1.2, 1.1, 0.76); // the door
+    for (const x of [-4.6, 2.2]) b.add('woodDark', boxGeo(0.18, 2.6, 0.18), x, 1.3, 3.1);
+    b.add('thatch', boxGeo(7.4, 0.14, 2.9).rotateX(-0.28), -1.2, 2.85, 1.85); // the lean-to
+    // bows on the wall beside the door: arcs of yew with a string across
+    for (const x of [-2.3, -1.6, -0.9]) { // x: the back of the bow; the arc's centre is 1.4 m to its right
+      b.add('woodDark', new THREE.TorusGeometry(1.4, 0.035, 4, 14, 1.15).rotateZ(Math.PI - 0.575), x + 1.4, 1.9, 0.84);
+      b.add('clothIvory', boxGeo(0.015, 1.52, 0.015), x + 0.225, 1.9, 0.86);
+    }
+    // the bench under the lean-to, arrows laid on it, a basket of feathers
+    b.add('wood', boxGeo(2.6, 0.1, 0.8), -2.0, 0.85, 1.9);
+    for (const x of [-3.1, -0.9]) b.add('woodDark', boxGeo(0.1, 0.85, 0.7), x, 0.42, 1.9);
+    for (let i = 0; i < 8; i++) {
+      b.add('wood', cylGeo(0.012, 0.012, 0.75, 5).rotateZ(Math.PI / 2), -2.0, 0.92, 1.62 + i * 0.07);
+      b.add(i % 2 ? 'clothRed' : 'clothIvory', boxGeo(0.12, 0.05, 0.01), -2.32, 0.94, 1.62 + i * 0.07);
+    }
+    b.add('hay', cylGeo(0.28, 0.22, 0.3, 10), -0.4, 1.05, 1.7);
+    for (let i = 0; i < 5; i++) b.add('clothIvory', boxGeo(0.04, 0.22, 0.01).rotateZ((i - 2) * 0.3), -0.4 + (i - 2) * 0.06, 1.28, 1.7);
+    // a barrel of finished arrows, feathers up, by the post
+    b.add('wood', cylGeo(0.36, 0.32, 0.9, 12), 1.6, 0.45, 2.8);
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * Math.PI * 2, r = 0.18;
+      b.add('wood', cylGeo(0.012, 0.012, 0.8, 5).rotateZ(Math.cos(a) * 0.12).rotateX(Math.sin(a) * 0.12), 1.6 + Math.cos(a) * r, 1.05, 2.8 + Math.sin(a) * r);
+      b.add(i % 3 ? 'clothIvory' : 'clothRed', boxGeo(0.05, 0.12, 0.05), 1.6 + Math.cos(a) * r * 1.3, 1.42, 2.8 + Math.sin(a) * r * 1.3);
+    }
+    // staves drying in a rack against the west wall
+    b.add('woodDark', boxGeo(0.12, 0.12, 3.2), -5.6, 1.6, -1.8);
+    for (let i = 0; i < 7; i++) b.add('wood', cylGeo(0.035, 0.03, 2.0, 5).rotateX(0.05).rotateZ(-0.2), -5.35, 1.0, -3.1 + i * 0.42);
+    // the straw butt with its target at the east end of the lot, facing along the street
+    b.add('hay', cylGeo(0.75, 0.75, 0.5, 18).rotateZ(Math.PI / 2), 5.0, 1.2, 2.2);
+    b.add('clothIvory', cylGeo(0.55, 0.55, 0.02, 18).rotateZ(Math.PI / 2), 4.74, 1.2, 2.2);
+    b.add('clothRed', cylGeo(0.36, 0.36, 0.02, 18).rotateZ(Math.PI / 2), 4.73, 1.2, 2.2);
+    b.add('gold', cylGeo(0.16, 0.16, 0.02, 14).rotateZ(Math.PI / 2), 4.72, 1.2, 2.2);
+    for (const z of [1.65, 2.75]) b.add('woodDark', boxGeo(0.08, 1.5, 0.08).rotateZ(-0.2), 5.3, 0.7, z);
+    // the sign: a board on an iron arm with two crossed arrows painted in red
+    b.add('iron', boxGeo(0.06, 0.06, 1.1), 2.35, 2.55, 3.65);
+    b.add('woodDark', boxGeo(0.06, 0.8, 0.9), 2.35, 2.05, 3.85);
+    for (const s of [-1, 1]) b.add('clothRed', boxGeo(0.02, 0.07, 0.75).rotateX(s * 0.7), 2.39, 2.05, 3.85);
+    out.lights.push([-4.4, 2.3, 3.0]);
+    out.focusH = 2.6;
+  },
   apiary(b, lot, out) {
     // straw skeps in a row on a long bench, a small shelter roof over them
     b.add('woodDark', boxGeo(4.0, 0.5, 0.8), 0, 0.25, 0);

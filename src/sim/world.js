@@ -121,7 +121,45 @@ function buildWorld(seed) {
   const bq = w.riverPts[Math.min(w.riverPts.length - 1, w.riverPts.indexOf(bp) + 1)];
   w.lots.stone_bridge = { id: 'stone_bridge', x: bp[0], z: bp[1], hw: 5, hd: RIVER_HALF_WIDTH + 9, rot: Math.atan2(bq[1] - bp[1], bq[0] - bp[0]), virtual: true, onWater: true };
   buildNobleQuarter(w, seed);
+  placeFletcherWorkshop(w);
   return w;
+}
+
+// The Fletcher's Workshop (owner 2026-10-23, a commission): the free ground nearest the market square that
+// fronts a street, found after every plot, street and lot is laid out, so nothing else moves. The lot's
+// front (+z) faces the street.
+function placeFletcherWorkshop(w) {
+  const hw = 6, hd = 5;
+  const taken = new SpatialHash(40);
+  const take = (b) => taken.insert(obbAabb(b), b);
+  for (const p of [...w.plots, ...w.finePlots]) take(grow(p, 1));
+  for (const s of w.pathIndex.segs) take(segmentObb(s.ax, s.az, s.bx, s.bz, s.hw + 1));
+  for (const l of Object.values(w.lots)) if (!l.virtual || l.hw > 0) take(grow(l, 2));
+  for (const f of w.fields) take(grow(f, 2));
+  const hits = (b) => [...taken.query(obbAabb(b))].some((o) => obbOverlap(b, o));
+  const spots = [];
+  for (let dx = -160; dx <= 160; dx += 4) for (let dz = -160; dz <= 160; dz += 4) spots.push([MARKET.x + dx, MARKET.z + dz, Math.hypot(dx, dz)]);
+  spots.sort((a, b) => a[2] - b[2]);
+  for (const [x, z] of spots) {
+    if (Math.hypot(x, z) < CASTLE.moatOuter + 18 || isWater(w, x, z)) continue;
+    let near = null, nd = Infinity;
+    for (const s of w.pathIndex.segs) {
+      const d = distToSegment(x, z, s.ax, s.az, s.bx, s.bz) - s.hw;
+      if (d < nd) { nd = d; near = s; }
+    }
+    if (!near || nd > hd + 8) continue;
+    let rot = Math.atan2(near.bz - near.az, near.bx - near.ax);
+    // turn the lot so the street is in front of it (local +z)
+    const mx = (near.ax + near.bx) / 2 - x, mz = (near.az + near.bz) / 2 - z;
+    if (-Math.sin(rot) * mx + Math.cos(rot) * mz < 0) rot += Math.PI;
+    let river = Infinity;
+    for (let i = 1; i < w.riverPts.length; i++) river = Math.min(river, distToSegment(x, z, ...w.riverPts[i - 1], ...w.riverPts[i]));
+    if (river < RIVER_HALF_WIDTH + 15) continue;
+    const lot = { id: 'fletcher_workshop', x, z, hw, hd, rot };
+    if (hits(lot)) continue;
+    w.lots.fletcher_workshop = lot;
+    return;
+  }
 }
 
 // The University and the Noble Quarter (owner 2026-10-22): the open ground between the castle and the river

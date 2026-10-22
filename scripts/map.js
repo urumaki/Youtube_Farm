@@ -63,7 +63,7 @@ const labels = [], small = [], far = [];
 for (const [id, l] of Object.entries(w.lots)) {
   if (!BUILDINGS[id] || id === 'fields' || id === 'wall2') continue;
   const st = status.get(id);
-  if (l.x < x0 || l.x > x1 || l.z < z0 || l.z > z1) { if (!st) far.push(`${BUILDINGS[id].label.replace(/^the /, '')} (${tierOf.get(id)?.at.toLocaleString('en-US') ?? '?'})`); continue; }
+  if (l.x < x0 || l.x > x1 || l.z < z0 || l.z > z1) { if (!st) far.push(`${BUILDINGS[id].label.replace(/^the /, '')} (${tierOf.get(id)?.at.toLocaleString('en-US') ?? 'commissioned'})`); continue; }
   const hw = Math.max(l.hw || 0, 3), hd = Math.max(l.hd || 0, 3);
   const b = { ...l, hw, hd };
   const name = BUILDINGS[id].label.replace(/^the /, '');
@@ -71,7 +71,7 @@ for (const [id, l] of Object.entries(w.lots)) {
   else if (st) svg.push(box(b, 'fill="#e89a3c" stroke="#9a5a12" stroke-width="2" opacity="0.9"'));
   else svg.push(box(b, 'fill="#5b8bd6" fill-opacity="0.18" stroke="#2c5aa8" stroke-width="2" stroke-dasharray="8 5"'));
   const t = tierOf.get(id);
-  const s = st ? name : `${name} (${t ? t.at.toLocaleString('en-US') : '?'})`, color = st === 'done' ? '#1f4a1b' : st ? '#7a4208' : '#1d4387';
+  const s = st ? name : `${name} (${t ? t.at.toLocaleString('en-US') : 'commissioned, next day'})`, color = st === 'done' ? '#1f4a1b' : st ? '#7a4208' : '#1d4387';
   // the small stalls on the squares get a number, listed in the key (their names would overlap)
   if (l.onPlaza || hw * S < 12) { small.push({ s, color }); svg.push(`<circle cx="${X(l.x)}" cy="${Z(l.z)}" r="11" fill="#fff" stroke="${color}" stroke-width="2"/>`); svg.push(text(l.x, l.z + 5 / S, String(small.length), 14, `font-weight="700" fill="${color}"`)); }
   else labels.push({ x: l.x, z: l.z - hd - 3, s, color });
