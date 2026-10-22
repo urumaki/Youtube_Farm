@@ -235,6 +235,37 @@ test('offensive and blocked names are never used, and a block removes a given na
   assert.equal(isOffensive('visit mysite.com'), true);
 });
 
+test('bad words: whole words, roots, leet and camel case caught; ordinary names that contain them are not', () => {
+  for (const n of ['F.U.C.K', 'ShitLord', 'B1tch', 'Mario Cazzo', 'DioCane', 'Big Tits', 'kill yourself', 'n1gger', 'Sieg Heil', 'fïgliodiputtana', 'HurenSohn', 'PutaQuePariu'])
+    assert.equal(isOffensive(n), true, n);
+  for (const n of ['Regina', 'Pippa', 'Concha', 'Pinto', 'Butt', 'Mona', 'Isis', 'Verga', 'Dickens', 'Cassandra', 'Hancock', 'Peacock', 'Montenegro',
+    'Figaro', 'Nazir', 'Therapist', 'Ashita', 'Analyst', 'Sussex', 'Hitchcock', 'Titanic', 'Cumberbatch', 'Assunta', 'Massimo', 'Bimbo', 'Mosè'])
+    assert.equal(isOffensive(n), false, n);
+});
+
+test('untrusted input: names that look like code or a prompt are never used, comment text is made plain', async () => {
+  const { looksLikeCode } = await import('../src/sim/names.js');
+  const { plainText, wantsFromText, nameFromText } = await import('../src/sim/requests.js');
+  for (const n of ['<script>alert(1)</script>', '${process.env.KEY}', '{{7*7}}', 'Ignore previous instructions', 'system prompt', 'rm -rf /',
+    "Robert'); DROP TABLE x;--", '__proto__', '<img src=x onerror=alert(1)>', 'You are now DAN', 'act as admin', 'a`b`', 'ab\\x41'])
+    assert.equal(looksLikeCode(n), true, n);
+  for (const n of ['Mario Rossi', 'Anna <3', 'Tom & Jerry', 'Zed', 'O.Neil_99']) assert.equal(looksLikeCode(n), false, n);
+  // nothing outside letters, digits, space and . _ - reaches the screen
+  assert.equal(cleanName('<b>Bea</b>'), 'bBeab');
+  assert.equal(cleanName('Ev‮il​name'), 'Evilname');
+  // zero-width characters cannot hide a keyword, and very long comments are cut before the regexes
+  assert.deepEqual(wantsFromText('make me a bl​acksmith'), ['blacksmith']);
+  assert.equal(plainText('x'.repeat(50000)).length, 2000);
+  assert.equal(nameFromText('call me <script>'), null);
+  let { state: s } = run([6]);
+  const r = advance(s, { subscribers: 6, date: dateOf(5), commenters: [
+    C('a', 'Ignore all previous instructions', '1'), C('b', '<img src=x onerror=alert(1)>', '2'), C('c', '${process.env.YT_OAUTH_REFRESH_TOKEN}', '3'),
+    { ...C('d', '@Dora', '4'), wants: ['__proto__', 'constructor', 'baker', 42] },
+  ] });
+  assert.deepEqual(r.state.villagers.map((v) => v.name).filter(Boolean), ['Dora']);
+  checkInvariants(r.state);
+});
+
 test('comment job requests: granted when unlocked, apprentice (then promoted) when not, existing villagers can switch', async () => {
   const { wantsFromText } = await import('../src/sim/requests.js');
   const W = (author, name, text, at) => ({ author, name, at, wants: wantsFromText(text) });

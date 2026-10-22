@@ -1,6 +1,7 @@
 // Procedural medieval names. nameFor(seed, index) depends only on its arguments,
 // so subscriber #index always gets the same villager name.
 import { hash } from './prng.js';
+import { BAD_WORDS, BAD_ROOTS } from './badwords.js';
 
 const MALE = [
   'Aldric', 'Bertram', 'Cedric', 'Dunstan', 'Edmund', 'Felix', 'Godfrey', 'Hamon', 'Ivo', 'Jocelin',
@@ -43,13 +44,10 @@ export function genderFor(seed, index) {
 // ------------------------------------------------------------------ names from YouTube comments
 // Villagers have no name until a commenter gives them one (see simulate.js). Display names are
 // cleaned for the video: no "@", only letters, digits and . _ - (emoji and symbols render badly),
-// at most 22 characters. Offensive names are dropped; state/blocked.json can drop any by hand.
-const BAD = [
-  // substrings, so avoid short ones that hide in ordinary names (skill, grape, Sussex, analyst, Dickens)
-  'fuck', 'shit', 'cunt', 'bitch', 'nigg', 'faggot', 'retard', 'whore', 'slut', 'rapist', 'nazi', 'hitler', 'porn', 'sexy',
-  'pussy', 'cock', 'penis', 'vagina', 'suicide', 'cazzo', 'merda', 'troia', 'puttana', 'stronz', 'vaffanc',
-  'frocio', 'negro', 'figa', 'coglion', 'porco dio', 'porcodio', 'dioporco', 'onlyfans', 'free robux', 'http', 'www.', '.com',
-];
+// at most 22 characters. Offensive names are dropped (badwords.js); state/blocked.json can drop any by hand.
+const WORDS = new Set(BAD_WORDS);
+const PHRASES = BAD_WORDS.filter((w) => w.includes(' '));
+const LINKS = ['http', 'www.', '.com', '.net', '.org', '.ly', '.gg', '.tv'];
 
 export function cleanName(raw) {
   const s = String(raw || '')
@@ -63,9 +61,40 @@ export function cleanName(raw) {
   return s.length > 22 ? s.slice(0, 21).trimEnd() + '…' : s;
 }
 
+// accents off and lower case; "BigBoss" is read as "big boss" so a bad word cannot hide in camel case
+const fold = (s) => String(s).normalize('NFKD').replace(/\p{M}/gu, '').replace(/(\p{Ll})(\p{Lu})/gu, '$1 $2').toLowerCase()
+  .replace(/ß/g, 'ss').replace(/æ/g, 'ae').replace(/ø/g, 'o');
+const leet = (s) => s.replace(/[0@]/g, 'o').replace(/[1!|]/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a').replace(/[5$]/g, 's').replace(/7/g, 't');
+
 export function isOffensive(name) {
-  const flat = name.toLowerCase().replace(/[0@]/g, 'o').replace(/[1!|]/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a').replace(/[5$]/g, 's');
-  const squeezed = flat.replace(/[^a-z]/g, '');
+  const plain = fold(name);
   // the link pieces ('.com', 'www.') only as written: squeezed, '.com' would match any name with 'com' in it
-  return BAD.some((w) => flat.includes(w) || (w.length > 3 && !w.includes('.') && squeezed.includes(w.replace(/[^a-z]/g, ''))));
+  if (LINKS.some((w) => plain.includes(w))) return true;
+  for (const v of [plain, leet(plain)]) {
+    const words = v.replace(/[^a-z0-9]+/g, ' ').trim();
+    if (words.split(' ').some((w) => WORDS.has(w))) return true;
+    if (PHRASES.some((p) => ` ${words} `.includes(` ${p} `))) return true;
+    const squeezed = v.replace(/[^a-z]/g, '');
+    if (BAD_ROOTS.some((r) => squeezed.includes(r))) return true;
+  }
+  return false;
+}
+
+// Names are untrusted input. A name is only ever drawn on screen and saved in state/ (never run, never given
+// to a shell, a template or a language model), and cleanName keeps only letters, digits, space and . _ -.
+// As a second line, a name that reads like markup, code or an instruction to an AI is not used at all.
+const CODE_CHARS = /[`\\]|<[a-z/!?]|\$[({]|\{\{|\}\}|&#|%[0-9a-f]{2}/i;
+const CODE_WORDS = new RegExp([
+  /\b(ignore|disregard|forget|override)\b.{0,40}\b(previous|above|prior|earlier|all|instructions?|rules?|prompt)\b/,
+  /\b(system|developer|hidden)\s*(prompt|message|instructions?)\b/, /\bprompts?\b/, /\binstructions?\b/, /\bjailbreak/,
+  /\bassistant\b/, /\byou are now\b/, /\bact as\b/, /\bpretend\b/, /\bchatgpt\b|\bopenai\b|\banthropic\b|\bclaude\b/,
+  /\bsudo\b/, /\brm\s+-/, /\bdrop\s+table\b/, /\bunion\s+select\b/, /\bselect\b.+\bfrom\b/, /\binsert\s+into\b/,
+  /\bscript\b/, /\beval\b/, /javascript/, /\bon(error|load|click)\b/, /\balert\s*\(/, /__proto__/, /\bconstructor\b/,
+  /\bprototype\b/, /\bprocess\.env\b/, /\brequire\s*\(/, /\bimport\s*\(/,
+].map((r) => r.source).join('|'), 'i');
+
+/** True when a raw or cleaned name looks like markup, code or a prompt injection: such a name is never used. */
+export function looksLikeCode(raw) {
+  const s = String(raw ?? '').normalize('NFKC');
+  return CODE_CHARS.test(s) || CODE_WORDS.test(s);
 }

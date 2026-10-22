@@ -1,9 +1,13 @@
 // Commenters for villager names: public comment threads on the channel's videos (YouTube Data API v3,
 // commentThreads.list with the same API key as the subscriber count). Never throws.
 import { DEFAULT_HANDLE } from './youtube.js';
-import { wantsFromText, nameFromText, complainsFromText } from '../sim/requests.js';
+import { wantsFromText, nameFromText, complainsFromText, plainText } from '../sim/requests.js';
 
 const API = 'https://www.googleapis.com/youtube/v3';
+// Everything in a comment is untrusted: the author id and time are checked for their shape, the display name
+// is cut short here and cleaned in names.js, the text only goes through plainText() and the keyword regexes.
+const AUTHOR_RE = /^[A-Za-z0-9_-]{1,64}$/;
+const TIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/;
 
 async function getJson(url, fetchImpl) {
   const res = await fetchImpl(url, { signal: AbortSignal.timeout(20000) });
@@ -36,14 +40,15 @@ export async function fetchCommenters({ apiKey, handle = DEFAULT_HANDLE, channel
         const c = th.snippet?.topLevelComment?.snippet;
         if (!c) continue;
         const at = c.publishedAt;
+        if (typeof at !== 'string' || !TIME_RE.test(at)) continue;
         if (since && at <= since) { older = true; continue; }
         const author = c.authorChannelId?.value;
-        if (!author || author === channelId) continue;
+        if (typeof author !== 'string' || !AUTHOR_RE.test(author) || author === channelId) continue;
         // the text is only scanned for a job request and a chosen name here, and never kept
-        const text = c.textOriginal ?? c.textDisplay;
+        const text = plainText(c.textOriginal ?? c.textDisplay);
         const call = nameFromText(text);
         const complains = complainsFromText(text);
-        out.push({ author, name: c.authorDisplayName, at, wants: wantsFromText(text), ...(call ? { call } : {}), ...(complains ? { complains } : {}) });
+        out.push({ author, name: String(c.authorDisplayName ?? '').slice(0, 100), at, wants: wantsFromText(text), ...(call ? { call } : {}), ...(complains ? { complains } : {}) });
       }
       pageToken = body.nextPageToken;
       if (older || !pageToken) break;

@@ -52,3 +52,15 @@ test('commenters: new top-level authors since the last run, oldest first, channe
   assert.deepEqual(r.map((c) => c.name), ['@Al', '@Bea']);
   assert.deepEqual(await fetchCommenters({ apiKey: '', log: { log() {} } }), []);
 });
+
+test('commenters: author ids and times of the wrong shape are skipped, display names cut short', async () => {
+  const { fetchCommenters } = await import('../src/fetch/comments.js');
+  const th = (author, name, at, text = '') => ({ snippet: { topLevelComment: { snippet: { authorChannelId: { value: author }, authorDisplayName: name, publishedAt: at, textOriginal: text } } } });
+  const items = [th('UC"; rm -rf', '@X', '2026-10-17T10:00:00Z'), th('UCok', '@Y', '2026-10-17; DROP'), th({ $ne: 1 }, '@Z', '2026-10-17T10:00:00Z'),
+    th('UCgood', 'N'.repeat(5000), '2026-10-17T11:00:00Z', 'make me a bl​acksmith')];
+  const fetchImpl = async (url) => new Response(JSON.stringify(String(url).includes('/channels') ? { items: [{ id: 'UCown' }] } : { items }));
+  const r = await fetchCommenters({ apiKey: 'k', fetchImpl, log: { log() {} } });
+  assert.deepEqual(r.map((c) => c.author), ['UCgood']);
+  assert.equal(r[0].name.length, 100);
+  assert.deepEqual(r[0].wants, ['blacksmith']);
+});

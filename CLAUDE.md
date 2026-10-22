@@ -37,6 +37,12 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Villagers are nameless until someone comments on a channel video: `src/fetch/comments.js` reads public
   comments (same API key), `assignNames` in `src/sim/simulate.js` gives one villager per commenter.
   `state/blocked.json` removes names. Comment text is never stored (see `PRIVACY.md`).
+  Untrusted input (owner 2026-10-23): comment text goes only through `plainText` (2000 chars, no control or
+  zero-width characters) and fixed regexes; author ids and times are checked for their shape (`comments.js`);
+  a name is cleaned to letters, digits, space and . _ - and dropped if it reads like code or a prompt
+  (`looksLikeCode`) or is offensive. Bad words: `src/sim/badwords.js`, generated from the LDNOOBW lists
+  (CC BY 4.0, six languages) minus real names and harmless words; whole words, phrases and long roots.
+  Nothing from a comment is ever run, given to a shell, or sent to a language model.
 - `src/render/scene/` Three.js scene rendered frame by frame in headless Chromium (`capture.js`).
   Shot plan in `timeline.js`. Days with named villagers (owner's choice, 2026-10-19): the video opens on the
   caravan of today's named villagers with name tags (`caravan.js`, no castle hook; the counter shows over it

@@ -1,6 +1,6 @@
 // Deterministic daily simulation step: (previous state, subscriber count, date) -> (new state, diff).
 import { hash, rng } from './prng.js';
-import { cleanName, isOffensive } from './names.js';
+import { cleanName, isOffensive, looksLikeCode } from './names.js';
 import { availableJobs } from './requests.js';
 import { TIERS, BUILDINGS, JOBS, jobFor, houseCapacity, tiersReached, mergedJob } from './tiers.js';
 import { world } from './world.js';
@@ -222,7 +222,8 @@ function assignNames(s, commenters, blocked, diff) {
   diff.renamed = [];
   diff.complaints = [];
   diff.newCommenters = 0; // people commenting for the first time (no story on busy days, stories.js)
-  const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
+  // names are untrusted: cleaned to letters, digits and . _ -, never one that reads like code or an instruction
+  const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !looksLikeCode(raw) && !looksLikeCode(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
   const avail = availableJobs(s.subscriberCount);
   const villagerOf = (author) => Object.keys(s.names).find((id) => s.names[id].author === author);
   // a request sets the job if the kingdom has it, otherwise the villager is an apprentice until it does
@@ -238,7 +239,7 @@ function assignNames(s, commenters, blocked, diff) {
   for (const c of [...commenters].sort((a, b) => String(a.at).localeCompare(String(b.at)))) {
     if (c.at && (!s.commentsSeen || c.at > s.commentsSeen)) s.commentsSeen = c.at;
     if (!c.author || blockedAuthors.has(c.author)) continue;
-    const wants = c.wants || [];
+    const wants = (Array.isArray(c.wants) ? c.wants : []).filter((j) => typeof j === 'string' && Object.hasOwn(JOBS, j));
     const call = c.call ? valid(c.call) : null; // "call me Violet"
     if (known.has(c.author)) {
       // someone who already has a villager asks for a (new) job or a new name

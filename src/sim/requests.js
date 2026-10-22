@@ -53,9 +53,18 @@ const KEYWORDS = [
 // "maybe later, when there are proper guards" is a wish for the kingdom, not a job request
 const WISH = /\b(when|once|until|till|if|after)\s+(there|we|they|you|the kingdom|it)\b[^.!?,]*$|\bquando\s+ci\s+sar[àa]nno?\b[^.!?,]*$/;
 
+// Comment text is untrusted input. It is never run, never passed to a shell, a template or a language model:
+// only the fixed regexes in this file read it, and then it is dropped. plainText() makes it safe to scan: a
+// bounded length (no slow regex on a 10,000-character comment) and no control or format characters (zero-width
+// spaces, bidi overrides) that could hide a word from the keywords or flip how a name is shown.
+const MAX_TEXT = 2000;
+export function plainText(raw) {
+  return String(raw ?? '').slice(0, MAX_TEXT * 2).normalize('NFKC').replace(/[\p{Cf}\p{Co}\p{Cs}]+/gu, '').replace(/\p{Cc}+/gu, ' ').slice(0, MAX_TEXT);
+}
+
 /** Requested jobs in the order they appear in the comment (no duplicates). */
 export function wantsFromText(text) {
-  const t = String(text || '').toLowerCase();
+  const t = plainText(text).toLowerCase();
   const hits = [];
   for (const [re, job] of KEYWORDS) {
     const g = new RegExp(re.source, 'g');
@@ -96,7 +105,7 @@ const COMPLAINT_RE = new RegExp([
 
 /** True when the comment says the commenter could not find themselves in the video. */
 export function complainsFromText(text) {
-  return COMPLAINT_RE.test(String(text || '').replace(/[’‘]/g, "'"));
+  return COMPLAINT_RE.test(plainText(text).replace(/[’‘]/g, "'"));
 }
 
 // "call me Violet", "a carpenter named henry", "can I be a villager called sopita?", "chiamami Pino".
@@ -107,7 +116,7 @@ const NOT_NAMES = new Set(['a', 'an', 'the', 'me', 'it', 'one', 'him', 'her', 'p
 
 /** A name the commenter asked for, or null. */
 export function nameFromText(text) {
-  const m = NAME_RE.exec(String(text || ''));
+  const m = NAME_RE.exec(plainText(text));
   if (!m || NOT_NAMES.has(m[1].toLowerCase())) return null;
   return m[1].charAt(0).toUpperCase() + m[1].slice(1);
 }
