@@ -92,7 +92,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   new plots (outside the walls) only when every house inside has 3 storeys. `houseFloors` gives a house's
   storeys for the simulation and the renderer. The video shows one raised house: the scaffold goes up and
   the new top storey rises under its roof (`buildAnimatedHouse(..., { raised })`; the top storey is its own
-  layer, `top`, in `houseKit.js`), with the narrator line `raised`.
+  layer, `top`, in `houseKit.js`), with the narrator line `raised`. No gardens behind the houses (owner
+  2026-10-22): no vegetable beds, sheds, carts or wattle fences; only a woodpile and barrels beside them.
 - Guards on the walls (owner 2026-10-21, `wallwatch.js`): day watch (walks, stops, looks out), night watch
   by a brazier at dusk, changing of the guard (march up, salute, the old guard leaves), on the castle walls
   (guard variants `walls`, `wallnight`, `change`) and on the Second Wall once finished (`wall2`,

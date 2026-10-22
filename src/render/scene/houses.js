@@ -1,5 +1,5 @@
 // Villager houses: detailed procedural variants (timber-framed, stone, thatched cottage) shared by
-// instancing, chunked with a simplified far LOD; yards with crofts, sheds, woodpiles and wattle fences;
+// instancing, chunked with a simplified far LOD; woodpiles and barrels beside them (no gardens);
 // abandoned and ruin states; individually animated houses for today's construction.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
@@ -134,7 +134,7 @@ export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 300 
     }
     if (v.chimneyTop && !damaged) chimneys.push(new THREE.Vector3(...v.chimneyTop).applyMatrix4(sh.matrix));
     // the crofts of villagers named by commenters are kept clear for their work scenes (work.js)
-    if (!h.occupants.some((id) => state.names?.[id])) addYard(ch.near, sh, h, seed, props, HM, damaged);
+    if (!h.occupants.some((id) => state.names?.[id])) addYard(ch.near, sh, h, seed, props, HM);
     ch.far.push('far', { geo: unit.far, mat: farMat, shadow: false }, local(sh, 0, 0, 0, sh.W, v.height * 0.85, sh.D), roofC.clone().lerp(wall, 0.3));
   }
 
@@ -159,25 +159,18 @@ export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 300 
   };
 }
 
-/** Croft behind the house: vegetable bed, shed, woodpile, barrels, cart, wattle fence. */
-function addYard(batch, sh, h, seed, props, HM, damaged) {
+/**
+ * Beside the house: a woodpile and barrels. No gardens behind the houses (owner 2026-10-22: no vegetable
+ * beds, sheds, carts or wattle fences in the crofts).
+ */
+function addYard(batch, sh, h, seed, props, HM) {
   const back = sh.D / 2; // local z of the back wall (front is -D/2)
-  const croft = 2 * sh.plot.hd - sh.D - 1.2; // depth of land behind the house
   const r = (k) => rand01(seed, 'yard', h.plot, k);
   const put = (name, x, z, ry = 0, s = 1) => {
     for (const { mat, geo } of props.get(name)) batch.push(`prop|${name}|${mat}`, { geo, mat: HM[mat] }, local(sh, x, 0, z, s, s, s, ry));
   };
   if (r(0) < 0.75) put('woodpile', sh.W / 2 + 0.7, back - 1.6, Math.PI / 2, 0.9);
   if (r(1) < 0.6) put('barrels', -sh.W / 2 + 0.3, -sh.D / 2 - 0.9, 0);
-  if (croft < 3.5 || damaged) return;
-  if (r(2) < 0.85) put('veg', (r(3) - 0.5) * (sh.W - 3.4), back + 2 + Math.min(croft - 3.2, 2.5), 0);
-  if (croft > 8 && r(4) < 0.6) put('shed', (r(5) < 0.5 ? -1 : 1) * (sh.W / 2 - 1.4), back + croft - 1.6, Math.PI);
-  if (r(6) < 0.2) put('cart', sh.W / 2 - 1.2, back + 1.4, r(7) * 3);
-  // wattle fence around the croft (2 m panels)
-  const fw = Math.min(2 * sh.plot.hw - 0.6, sh.W + 2.4);
-  const z1 = back + croft - 0.3;
-  for (let x = -fw / 2 + 1; x <= fw / 2 - 1 + 0.01; x += 2) put('wattle', x, z1, 0);
-  for (let z = back + 1; z <= z1 - 1 + 0.01; z += 2) { put('wattle', -fw / 2, z, Math.PI / 2); put('wattle', fw / 2, z, Math.PI / 2); }
 }
 
 function ruinGeo() {
