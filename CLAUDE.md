@@ -166,7 +166,19 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Also added 2026-10-22, each with a work scene: 850 Potter + Potter's Stall, 1750 Cobbler + Cobbler's
   Stall (market square), 2000 Cooper + Cooperage (East Ward square), 3000 Beekeeper + Beehives (corner of
   a field west of the castle), 4000 Bell Founder + Bell Foundry (North Ward square), 7500 Clockmaker +
-  Clock Tower (South Ward square), 250,000 the Great Bridge across the river south of town. The beehives
+  Clock Tower (South Ward square), 250,000 the Great Bridge across the river south of town.
+- University and Noble Quarter (owner 2026-10-22): the open ground below the castle (between it and the
+  river) is kept for them. The University is the 1000 goal (moved from 5000, which is now the South Ward)
+  with its scholars (work scene `desk`: writing in a book at a sloped desk): a quadrangle with a cloister,
+  a chapel with a spire and a gatehouse on the lane from the avenue. The Noble Quarter: an avenue from the
+  castle approach southwards with cross streets (`buildNobleQuarter` in `world.js`, laid out after the
+  plots so plot ids never move; `w.finePlots`, ids from 100000). From the day the University is begun,
+  newcomers who are merchants, knights, scholars, physicians, the mayor, reeve, bishop and the like live
+  there (`FINE_JOBS` in `simulate.js`, `s.nextFine`), 8 to a house, and nobody else does. Their houses
+  (`arch: 'fine'` in `houseKit.js`): a stone ground floor with a carved doorway, timber-framed upper floors
+  oversailing the street, an oriel window, two chimneys and two dormers, three storeys. The river closes the
+  town where the Second Wall does not run, so `insideWall2(..., w)` counts that ground as inside (paved
+  streets, taller houses). Check views with `node scripts/viewer.js` (`window.__controls` moves the camera). The beehives
   and the bridge are virtual lots added after the plots (`world.js`), so plots never move. Jobs only by
   request: Rat Catcher, Chimney Sweep, Falconer, Cook.
 - `src/audio/` narration templates (names are never read aloud), Kokoro TTS (`am_adam`), procedural

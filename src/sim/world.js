@@ -120,7 +120,101 @@ function buildWorld(seed) {
   const bp = w.riverPts.reduce((b, p) => (Math.abs(p[0] - 150) < Math.abs(b[0] - 150) ? p : b));
   const bq = w.riverPts[Math.min(w.riverPts.length - 1, w.riverPts.indexOf(bp) + 1)];
   w.lots.stone_bridge = { id: 'stone_bridge', x: bp[0], z: bp[1], hw: 5, hd: RIVER_HALF_WIDTH + 9, rot: Math.atan2(bq[1] - bp[1], bq[0] - bp[0]), virtual: true, onWater: true };
+  buildNobleQuarter(w, seed);
   return w;
+}
+
+// The University and the Noble Quarter (owner 2026-10-22): the open ground between the castle and the river
+// is kept for them. Laid out after the plots, so the plot list never changes: the University moves here from
+// its first lot in the east (the streets there already steer round that ground), the quarter's streets
+// leave the castle approach, and its wide plots (`w.finePlots`, ids from FINE_ID) take the finer houses.
+export const FINE_ID = 100000;
+const NOBLE_STREETS = [
+  { id: 'noble_avenue', kind: 'main', width: 7, parent: 'approach', pts: [[74, 1], [74, 40], [78, 80], [84, 120], [88, 160], [92, 200], [94, 232]] },
+  { id: 'noble_east1', parent: 'noble_avenue', pts: [[80, 94], [115, 96], [158, 104]] },
+  { id: 'noble_east2', parent: 'noble_avenue', pts: [[88, 160], [150, 162], [228, 170]] },
+  { id: 'noble_east3', parent: 'noble_avenue', pts: [[93, 214], [150, 215], [210, 219]] },
+  { id: 'noble_west', parent: 'noble_avenue', pts: [[92, 200], [40, 203], [-40, 206]] },
+];
+function buildNobleQuarter(w, seed) {
+  // the ground already taken: plots, streets and tracks, lots (other seeds lay their streets out elsewhere)
+  const taken = new SpatialHash(40);
+  const take = (b) => taken.insert(obbAabb(b), b);
+  for (const p of w.plots) take(grow(p, 1));
+  for (const s of w.pathIndex.segs) take(segmentObb(s.ax, s.az, s.bx, s.bz, s.hw + 1));
+  for (const l of Object.values(w.lots)) if (!l.virtual && l.id !== 'university') take(grow(l, 3));
+  const hits = (b) => [...taken.query(obbAabb(b))].some((o) => obbOverlap(b, o));
+  // the University on the free ground nearest its place below the castle (if there is none it stays east)
+  let uni = null;
+  for (let dx = -60; dx <= 60; dx += 10) for (let dz = -40; dz <= 40; dz += 10) {
+    const c = { id: 'university', x: 5 + dx, z: 150 + dz, hw: 32, hd: 24, rot: 0 };
+    if (uni && Math.hypot(dx, dz) >= uni.d) continue;
+    if (hits(grow(c, 4)) || obbCorners(c).some(([x, z]) => w.river.dist(x, z) < RIVER_HALF_WIDTH + 12 || Math.hypot(x, z) < CASTLE.moatOuter + 15)) continue;
+    uni = { ...c, d: Math.hypot(dx, dz) };
+  }
+  const streets = [...NOBLE_STREETS];
+  if (uni) {
+    delete uni.d;
+    w.lots.university = uni;
+    // the lane from the avenue to the University gate (no houses on it)
+    streets.push({ id: 'scholars_lane', parent: 'noble_avenue', pts: [[null, uni.z], [uni.x + uni.hw + 2, uni.z]], noPlots: true, toGate: true });
+  }
+  for (const st of streets) {
+    const parent = w.roads.find((rd) => rd.id === st.parent);
+    if (!parent) continue;
+    if (st.toGate) st.pts[0][0] = parent.pts.reduce((b, p) => (Math.abs(p[1] - uni.z) < Math.abs(b[1] - uni.z) ? p : b))[0];
+    // a street stops short of any street, plot or lot in its way
+    const pts = [];
+    for (const p of catmull(st.pts, 6)) {
+      if (Math.hypot(p[0] - st.pts[0][0], p[1] - st.pts[0][1]) > 12 && (w.pathIndex.edgeDist(p[0], p[1]) < (st.width || ROAD_WIDTH.street) / 2 + 2 || hits({ x: p[0], z: p[1], hw: 3, hd: 3, rot: 0 }))) break;
+      pts.push(p);
+    }
+    if (pts.length < 3) continue;
+    const pl = polyline(parent.pts);
+    let branchS = 0, bd = Infinity;
+    for (let sv = 0; sv <= pl.total; sv += 1) {
+      const [x, z] = pl.at(sv), d = Math.hypot(x - pts[0][0], z - pts[0][1]);
+      if (d < bd) { bd = d; branchS = sv; }
+    }
+    if (bd > 4) continue; // its junction was cut off the parent street
+    w.roads.push({ id: st.id, kind: st.kind || 'street', pts, width: st.width || ROAD_WIDTH.street, parent: st.parent, depth: (parent.depth || 0) + 1, base: (parent.base || 0) + branchS, branchS, joined: null, noble: true, noPlots: st.noPlots });
+  }
+  w.allPaths = [...w.roads, ...w.tracks];
+  w.pathIndex = buildPathIndex(w.allPaths);
+
+  const blockers = new SpatialHash(40);
+  const add = (b) => blockers.insert(obbAabb(b), b);
+  for (const s of w.pathIndex.segs) add(segmentObb(s.ax, s.az, s.bx, s.bz, s.hw + 1.5));
+  for (const l of Object.values(w.lots)) if (!l.virtual) add(grow(l, 4));
+  for (const p of w.plots) add(grow(p, 1));
+  for (const f of w.fields) add(grow(f, 2));
+  w.finePlots = [];
+  for (const road of w.roads.filter((rd) => rd.noble && !rd.noPlots)) {
+    const r = rng(seed, 'fineplots', road.id);
+    const pl = polyline(road.pts);
+    for (const side of [-1, 1]) {
+      let s = r.float(4, 8) + (road.parent === 'noble_avenue' ? 9 : 0); // clear of the avenue's own plots
+      while (s < pl.total - 8) {
+        const width = r.float(13, 16.5), depth = r.float(24, 30);
+        const [px, pz, ang] = pl.at(s + width / 2);
+        const off = road.width / 2 + 2.5 + depth / 2;
+        const c = { x: px - Math.sin(ang) * off * side, z: pz + Math.cos(ang) * off * side, hw: width / 2, hd: depth / 2, rot: ang, facing: side, road: road.id };
+        s += width + r.float(2, 4);
+        if (Math.hypot(c.x, c.z) < CASTLE.moatOuter + 20) continue;
+        const corners = obbCorners(c);
+        if (corners.some(([x, z]) => w.river.dist(x, z) < RIVER_HALF_WIDTH + 8)) continue;
+        const hs = corners.map(([x, z]) => heightAt(w, x, z)), hc = heightAt(w, c.x, c.z);
+        if (Math.max(...hs, hc) - Math.min(...hs, hc) > 2.6 || Math.min(...hs) < 1.2) continue;
+        if ([...blockers.query(obbAabb(c))].some((b) => obbOverlap(c, b))) continue;
+        c.id = FINE_ID + w.finePlots.length;
+        c.y = hc;
+        c.yMin = Math.min(...hs, hc);
+        c.fine = true;
+        add(grow(c, 0.6));
+        w.finePlots.push(c);
+      }
+    }
+  }
 }
 
 function buildPathIndex(paths) {

@@ -293,27 +293,51 @@ function assignNames(s, commenters, blocked, diff) {
   }
 }
 
+// The Noble Quarter (owner 2026-10-22): once the University is begun, these newcomers live in the finer
+// houses on the wide plots below the castle (world.js finePlots), and nobody else does.
+const FINE_JOBS = new Set(['merchant', 'knight', 'scholar', 'physician', 'mayor', 'reeve', 'bishop', 'taxcollector', 'chronicler', 'admiral']);
+const FINE_CAPACITY = 8; // three storeys
+
 function findHome(s, w, id, day, diff, getScan, setScan, byId) {
+  const reopen = (h) => {
+    if (h.status === 'ruin') {
+      h.capacity = Math.max(h.capacity, h.fine ? FINE_CAPACITY : houseCapacity(id + 1));
+      h.rebuiltDay = day;
+      diff.housesRebuilt.push(h.id);
+    } else diff.housesReoccupied.push(h.id);
+    h.status = 'occupied';
+    delete h.abandonedDay;
+    delete h.ruinDay;
+    return h;
+  };
+  const newHouse = (plot, capacity) => {
+    const { x, z, y, yMin, hw, hd, rot, facing, road, fine } = plot;
+    s.plots.push({ id: plot.id, x, z, y, yMin, hw, hd, rot, facing, road, ...(fine ? { fine } : {}) });
+    const h = { id: s.houses.length, plot: plot.id, capacity, status: 'occupied', builtDay: day, occupants: [], ...(fine ? { fine } : {}) };
+    s.houses.push(h);
+    byId.set(h.id, h);
+    diff.housesBuilt.push(h.id);
+    return h;
+  };
+  if (FINE_JOBS.has(mergedJob(s.names[id]?.job ?? jobFor(s.seed, id))) && s.buildings.some((b) => b.id === 'university')) {
+    const h = s.houses.find((h) => h.fine && h.status === 'occupied' && h.occupants.length < h.capacity)
+      || s.houses.find((h) => h.fine && h.status !== 'occupied');
+    if (h) return h.status === 'occupied' ? h : reopen(h);
+    const plot = nextFinePlot(s, w);
+    if (plot) return newHouse(plot, FINE_CAPACITY);
+  }
   // a) a lived-in house with a free bed
   for (let i = getScan(); i < s.houses.length; i++) {
     const h = s.houses[i];
-    if (h.status === 'occupied' && h.occupants.length < h.capacity) { setScan(i); return h; }
+    if (h.status === 'occupied' && h.occupants.length < h.capacity && !h.fine) { setScan(i); return h; }
   }
   setScan(s.houses.length);
   // b) an abandoned house is re-occupied, c) then ruins are rebuilt, before any new plot.
   for (const status of ['abandoned', 'ruin']) {
-    const h = s.houses.find((h) => h.status === status);
+    const h = s.houses.find((h) => h.status === status && !h.fine);
     if (h) {
-      if (status === 'ruin') {
-        h.capacity = Math.max(h.capacity, houseCapacity(id + 1));
-        h.rebuiltDay = day;
-        diff.housesRebuilt.push(h.id);
-      } else diff.housesReoccupied.push(h.id);
-      h.status = 'occupied';
-      delete h.abandonedDay;
-      delete h.ruinDay;
       setScan(Math.min(getScan(), s.houses.indexOf(h)));
-      return h;
+      return reopen(h);
     }
   }
   // d) once the Second Wall is begun, a house inside it gets another storey before any new plot is used
@@ -326,13 +350,15 @@ function findHome(s, w, id, day, diff, getScan, setScan, byId) {
     // Every plot is used: squeeze into the least crowded house (never crash the daily run).
     return s.houses.reduce((a, b) => (b.occupants.length / b.capacity < a.occupants.length / a.capacity ? b : a));
   }
-  const { x, z, y, yMin, hw, hd, rot, facing, road } = plot;
-  s.plots.push({ id: plot.id, x, z, y, yMin, hw, hd, rot, facing, road });
-  const h = { id: s.houses.length, plot: plot.id, capacity: houseCapacity(id + 1), status: 'occupied', builtDay: day, occupants: [] };
-  s.houses.push(h);
-  byId.set(h.id, h);
-  diff.housesBuilt.push(h.id);
-  return h;
+  return newHouse(plot, houseCapacity(id + 1));
+}
+
+/** The next wide plot of the Noble Quarter (s.nextFine), or null once all are used. */
+function nextFinePlot(s, w) {
+  const i = s.nextFine ?? 0;
+  if (!w.finePlots[i]) return null;
+  s.nextFine = i + 1;
+  return w.finePlots[i];
 }
 
 const MAX_FLOORS = 3;
@@ -352,7 +378,7 @@ function raiseHouse(s, day, diff) {
     if (f >= bestF) continue;
     const p = plots.get(h.plot);
     if (!p) continue;
-    if (!inside.has(p.id)) inside.set(p.id, insideWall2(s.wall2.pts, p.x, p.z));
+    if (!inside.has(p.id)) inside.set(p.id, insideWall2(s.wall2.pts, p.x, p.z, undefined, world(s.seed)));
     if (!inside.get(p.id)) continue;
     best = h; bestF = f;
   }

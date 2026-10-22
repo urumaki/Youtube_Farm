@@ -26,12 +26,13 @@ export function houseShape(seed, house, plot, w) {
   if (built === 1 && h % 5 < 2) arch = floors > 1 ? 'timber' : 'cottage'; // a raised cottage is rebuilt timber-framed
   else if (built === 1 && h % 5 === 2) arch = 'stone';
   else if (built >= 2 && h % 7 < 2) arch = 'stone';
-  const W = Math.max(5, Math.min(q05(2 * plot.hw - 1.0), cap >= 4 ? 9 : 8));
-  const D = Math.max(5, Math.min(q05(Math.min(2 * plot.hd - 6, cap >= 4 ? 8.5 : 7)), 8.5));
+  if (plot.fine) arch = 'fine'; // the Noble Quarter's town houses (owner 2026-10-22)
+  const W = plot.fine ? Math.min(q05(2 * plot.hw - 2.5), 12) : Math.max(5, Math.min(q05(2 * plot.hw - 1.0), cap >= 4 ? 9 : 8));
+  const D = plot.fine ? 10 : Math.max(5, Math.min(q05(Math.min(2 * plot.hd - 6, cap >= 4 ? 8.5 : 7)), 8.5));
   const side = plot.facing || 1;
   const c = Math.cos(plot.rot), s = Math.sin(plot.rot);
   const nx = -s, nz = c;
-  const lz = -side * (plot.hd - D / 2 - 1.0); // front of the house on the street, croft behind
+  const lz = -side * (plot.hd - D / 2 - (plot.fine ? 2.5 : 1.0)); // front of the house on the street, croft behind
   const hx = plot.x + nx * lz, hz = plot.z + nz * lz;
   let hmin = Infinity, hmax = -Infinity;
   for (const [u, v] of [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, 0]]) {

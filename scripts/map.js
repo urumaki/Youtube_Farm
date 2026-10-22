@@ -42,8 +42,10 @@ for (const r of w.roads) svg.push(line(r.pts, `stroke="#a89a86" stroke-width="${
 // plots: built houses dark (taller ones darker), free plots of the plan as faint outlines
 const used = new Set(state.plots.map((p) => p.id));
 for (const p of w.plots) if (!used.has(p.id) && p.x > x0 && p.x < x1 && p.z > z0 && p.z < z1) svg.push(box(p, 'fill="none" stroke="#9aa07a" stroke-width="0.8"'));
+// the Noble Quarter's wide plots (finer houses), still free
+for (const p of w.finePlots) if (!used.has(p.id)) svg.push(box(p, 'fill="#9b6fc4" fill-opacity="0.12" stroke="#7a4fa8" stroke-width="1.2"'));
 const floors = new Map(state.houses.map((h) => [h.plot, h.floors || 1]));
-for (const p of state.plots) svg.push(box(p, `fill="${['#c98b5a', '#a8653a', '#7e4524'][(floors.get(p.id) || 1) - 1]}" stroke="#5a3a20" stroke-width="0.6"`));
+for (const p of state.plots) svg.push(box(p, `fill="${p.fine ? '#7a4fa8' : ['#c98b5a', '#a8653a', '#7e4524'][(floors.get(p.id) || 1) - 1]}" stroke="#5a3a20" stroke-width="0.6"`));
 // the castle
 svg.push(`<circle cx="${X(0)}" cy="${Z(0)}" r="${CASTLE.moatOuter * S}" fill="#7fa8c9"/>`);
 svg.push(box({ x: 0, z: 0, hw: CASTLE.half, hd: CASTLE.half }, 'fill="#8d8d8d" stroke="#444" stroke-width="2"'));
@@ -81,7 +83,7 @@ svg.push(`<rect x="${kx - 20}" y="${ky - 40}" width="520" height="${small.length
 svg.push(`<text x="${kx}" y="${ky - 10}" font-size="22" font-weight="700">Small buildings</text>`);
 small.forEach(({ s, color, far: f }, i) => svg.push(`<text x="${kx}" y="${ky + 22 + i * 28}" font-size="19" fill="${color}">${f ? '-' : `${i + 1}.`} ${s.replace(/&/g, '&amp;')}</text>`));
 // legend
-const legend = [['#5f9e5a', 'Standing'], ['#e89a3c', 'Going up'], ['#5b8bd6', 'To come (subscribers needed)'], ['#c98b5a', 'House, 1 storey'], ['#7e4524', 'House, 3 storeys'], ['#e2c46a', 'Field'], ['#4a4a4a', 'Second Wall'], ['#d64545', 'Gate']];
+const legend = [['#5f9e5a', 'Standing'], ['#e89a3c', 'Going up'], ['#5b8bd6', 'To come (subscribers needed)'], ['#c98b5a', 'House, 1 storey'], ['#7e4524', 'House, 3 storeys'], ['#9b6fc4', 'Noble Quarter plot (finer houses)'], ['#e2c46a', 'Field'], ['#4a4a4a', 'Second Wall'], ['#d64545', 'Gate']];
 svg.push(`<rect x="20" y="20" width="420" height="${legend.length * 34 + 60}" fill="#fff" opacity="0.88" rx="10"/>`);
 svg.push(`<text x="40" y="58" font-size="26" font-weight="700">Subscriber Kingdom, day ${state.day} (${state.subscriberCount} villagers)</text>`);
 legend.forEach(([c, s], i) => svg.push(`<rect x="40" y="${78 + i * 34}" width="28" height="22" fill="${c}"/><text x="80" y="${96 + i * 34}" font-size="20">${s}</text>`));

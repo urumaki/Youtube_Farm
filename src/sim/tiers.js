@@ -114,7 +114,8 @@ export const TIERS = [
   { id: 'harbor', at: 500, title: 'Harbor Town', unique: ['bishop', 'knight', 'fisherman'], pool: { sailor: 1.5, knight: 0.5 }, buildings: ['harbor', 'cathedral', 'tournament'], goal: 'the Harbor opens' },
   { id: 'justice', at: 750, title: 'Town of Law', unique: ['executioner'], pool: {}, buildings: ['pillory'], goal: 'the Executioner takes up the axe' },
   { id: 'pottery', at: 850, title: 'Town of Potters', unique: ['potter'], pool: { potter: 0.4 }, buildings: ['potter_stall'], goal: 'the Potter sets up the wheel' },
-  { id: 'charter', at: 1000, title: 'Chartered City', unique: ['mayor', 'scholar'], pool: { scholar: 0.6, weaver: 1.2 }, buildings: ['charter_stone', 'district_east'], goal: 'the Town Charter is signed' },
+  // the University below the castle with its scholars, and the Noble Quarter round it (owner 2026-10-22, moved from 5000)
+  { id: 'charter', at: 1000, title: 'University Town', unique: ['mayor', 'scholar'], pool: { scholar: 0.6, weaver: 1.2 }, buildings: ['university', 'charter_stone', 'district_east'], goal: 'the University opens' },
   // more in-between goals (owner 2026-10-22)
   { id: 'cloth', at: 1250, title: 'Town of Fine Cloth', unique: ['tailor'], pool: { tailor: 0.4 }, buildings: ['tailor_stall'], goal: 'the Tailor opens a stall' },
   { id: 'healers', at: 1500, title: 'Town of Healers', unique: ['physician'], pool: { physician: 0.5 }, buildings: ['physician_booth'], goal: 'the Physician arrives' },
@@ -123,7 +124,7 @@ export const TIERS = [
   { id: 'north', at: 2500, title: 'Growing City', unique: ['weaver'], pool: {}, buildings: ['district_north'], goal: 'the North Ward is founded' },
   { id: 'honey', at: 3000, title: 'Town of Honey', unique: ['beekeeper'], pool: { beekeeper: 0.3 }, buildings: ['apiary'], goal: 'the first beehives arrive' },
   { id: 'bells', at: 4000, title: 'Town of Bells', unique: ['bellfounder'], pool: { bellfounder: 0.2 }, buildings: ['bell_foundry'], goal: 'the Bell Foundry casts its first bell' },
-  { id: 'learned', at: 5000, title: 'City of Learning', unique: ['apothecary', 'bard'], pool: { apothecary: 0.3, bard: 0.6 }, buildings: ['university', 'district_south'], goal: 'the University opens' },
+  { id: 'learned', at: 5000, title: 'City of Song', unique: ['apothecary', 'bard'], pool: { apothecary: 0.3, bard: 0.6 }, buildings: ['district_south'], goal: 'the South Ward is founded' },
   { id: 'clock', at: 7500, title: 'Town of the Clock', unique: ['clockmaker'], pool: { clockmaker: 0.2 }, buildings: ['clock_tower'], goal: 'the Clock Tower strikes the hour' },
   { id: 'royal', at: 10000, title: 'Royal City', unique: ['taxcollector', 'chronicler'], pool: { taxcollector: 0.3, chronicler: 0.2 }, buildings: ['palace', 'district_far'], goal: 'the Royal Palace is commissioned' },
   { id: 'maritime', at: 100000, title: 'Maritime Realm', unique: ['admiral'], pool: { admiral: 0.05 }, buildings: ['lighthouse'], goal: 'the Lighthouse is lit' },

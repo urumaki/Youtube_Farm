@@ -128,6 +128,8 @@ const JOB_SCENES = {
   // owner 2026-10-22: the tailor sews at a table, the physician grinds a remedy, the tax collector counts coins
   tailor: { period: 0.9, raise: -1.55, down: -1.08, bend: 0.15, sound: 'none', tool: null, props: 'sewing', smooth: true, left: -1.05 },
   physician: { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95 },
+  // the University's scholars (owner 2026-10-22): writing in a book at a sloped desk
+  scholar: { period: 1.2, raise: -1.3, down: -1.08, bend: 0.18, sound: 'none', tool: null, props: 'desk', smooth: true, left: -1.05 },
   taxcollector: { period: 0.75, raise: -1.3, down: -1.05, bend: 0.12, sound: 'none', tool: null, props: 'ledger', smooth: true, left: -1.1 },
   // goals added 2026-10-22: the potter at the wheel (the pot grows), the cobbler and the cooper hammering,
   // the beekeeper puffing smoke over the hives, the bell founder striking a new bell, the clockmaker at a
@@ -533,6 +535,22 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       for (let i = 0; i < 4; i++) add(cylGeo(0.07, 0.08, 0.2 + (i % 2) * 0.08, 8).translate(-0.5 + i * 0.12, 0.94, 0.8 - (i % 2) * 0.1), M.clay);
       add(new THREE.ConeGeometry(0.1, 0.35, 6).rotateZ(Math.PI / 2).translate(0.45, 0.9, 0.75), M.greens);
       return new THREE.Vector3(0, 0.95, 0.55);
+    }
+    case 'desk': { // a sloped writing desk with an open book and a quill moving along the line, ink, books, a candle
+      add(boxGeo(1.3, 0.08, 0.7).translate(0, 0.8, 0.62), M.wood);
+      for (const x of [-0.55, 0.55]) add(boxGeo(0.08, 0.8, 0.6).translate(x, 0.4, 0.62), M.woodDark);
+      add(boxGeo(0.8, 0.06, 0.5).rotateX(-0.25).translate(-0.05, 0.92, 0.6), M.woodDark); // the sloped top
+      add(boxGeo(0.66, 0.03, 0.42).rotateX(-0.25).translate(-0.05, 0.96, 0.6), M.clothIvory); // the open book
+      add(boxGeo(0.02, 0.04, 0.42).rotateX(-0.25).translate(-0.05, 0.97, 0.6), M.woodDark);
+      const quill = add(new THREE.ConeGeometry(0.025, 0.3, 5).rotateX(-0.9).translate(0, 0.1, 0.05), M.clothIvory);
+      quill.position.set(-0.2, 0.98, 0.55);
+      anim.push((t, c) => { quill.position.x = -0.25 + 0.22 * c; quill.rotation.z = Math.sin(c * Math.PI * 8) * 0.12; });
+      add(cylGeo(0.05, 0.06, 0.08, 8).translate(0.42, 0.88, 0.45), M.iron); // the inkpot
+      for (let i = 0; i < 3; i++) add(boxGeo(0.34 - i * 0.03, 0.08, 0.25).rotateY(i * 0.25).translate(0.45, 0.88 + i * 0.08, 0.8), [M.clothRed, M.clothBlue, M.woodDark][i]);
+      add(cylGeo(0.035, 0.035, 0.18, 8).translate(-0.5, 0.93, 0.85), M.clothIvory); // the candle
+      add(new THREE.SphereGeometry(0.025, 6, 4).scale(1, 1.6, 1).translate(-0.5, 1.05, 0.85), M.lamp);
+      add(cylGeo(0.05, 0.05, 0.4, 8).rotateZ(Math.PI / 2).translate(-0.3, 0.87, 0.95), M.clothIvory); // a scroll
+      return new THREE.Vector3(-0.1, 0.98, 0.55);
     }
     case 'ledger': { // a table with the open tax book, a coin chest and stacks of coins
       add(boxGeo(1.4, 0.08, 0.7).translate(0, 0.8, 0.62), M.wood);

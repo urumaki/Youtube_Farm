@@ -408,13 +408,57 @@ const BUILD = {
     }
     out.focusH = 5;
   },
+  // below the castle (owner 2026-10-22): a quadrangle of two-storey ranges round a lawn and a cloister,
+  // tall windows between buttresses, the chapel with its spire on the west, the gatehouse on the east (on the
+  // lane from the avenue), a stair tower at the corner
   university(b, lot, out) {
-    for (const [x, z, w, d] of [[0, -18, 50, 9], [0, 18, 50, 9], [-22, 0, 9, 27], [22, 0, 9, 27]]) {
-      b.add('stone', boxGeo(w, 11, d), x, 5.5, z);
-      b.add('slate', gableGeo(w > d ? w + 1 : d + 1, w > d ? d + 1 : w + 1, 4.5), x, 11, z, w > d ? 0 : Math.PI / 2);
+    const H = 10;
+    for (const [x, z, w, d] of [[0, -18, 53, 9], [0, 18, 53, 9], [-22, 0, 9, 27], [22, 0, 9, 27]]) {
+      b.add('stone', boxGeo(w, H, d), x, H / 2, z);
+      b.add('stoneDark', boxGeo(w + 0.5, 0.6, d + 0.5), x, 0.3, z);
+      b.add('stoneDark', boxGeo(w + 0.3, 0.35, d + 0.3), x, H * 0.48, z);
+      b.add('slate', gableGeo(w > d ? w + 1 : d + 1, w > d ? d + 1 : w + 1, 5), x, H, z, w > d ? 0 : Math.PI / 2);
     }
-    windowsRow(b, -20, 20, 6, -13.45, 9);
-    tower(b, 22, -18, 4, 24, 9);
+    // outer faces: two rows of tall windows, buttresses between them
+    for (const [z, ry, x0, x1, n] of [[-22.6, 0, -24, 24, 10], [22.6, 0, -24, 24, 10], [26.6, Math.PI / 2, -10, 10, 3], [-26.6, Math.PI / 2, -10, 10, 4]]) {
+      for (const y of [2.6, 7.3]) windowsRow(b, x0, x1, y, z, n, 'window', ry, [1.1, 2.2]);
+      const c = Math.cos(ry), s = Math.sin(ry);
+      for (let i = 0; i <= n; i++) {
+        const lx = x0 - (x1 - x0) / (2 * (n - 1)) + ((x1 - x0) * i) / (n - 1), lz = z + Math.sign(z) * 0.4;
+        if (Math.abs(lx) > 26) continue;
+        b.add('stoneDark', boxGeo(0.9, H - 1, 0.9), lx * c + lz * s, (H - 1) / 2, -lx * s + lz * c, ry);
+      }
+    }
+    // the cloister: a lean-to arcade along the inner faces of the long ranges
+    for (const sz of [-1, 1]) {
+      for (let x = -16; x <= 16; x += 2.9) b.add('stone', cylGeo(0.22, 0.25, 3.2, 8), x, 1.6, sz * 11.2);
+      b.add('slate', boxGeo(35, 0.25, 2.8), 0, 3.6, sz * 12.3, 0, sz * 0.3);
+    }
+    // the lawn, paths crossing it and the well in the middle
+    b.add('greens', boxGeo(34, 0.12, 20), 0, 0.06, 0);
+    b.add('cobble', boxGeo(34, 0.16, 2), 0, 0.08, 0);
+    b.add('cobble', boxGeo(2, 0.16, 20), 0, 0.08, 0);
+    b.add('stone', cylGeo(1.3, 1.4, 1, 14), 0, 0.5, 0);
+    b.add('woodDark', boxGeo(0.2, 2.6, 0.2), -1.1, 1.3, 0); b.add('woodDark', boxGeo(0.2, 2.6, 0.2), 1.1, 1.3, 0);
+    b.add('slate', gableGeo(3, 2, 1), 0, 2.6, 0);
+    // the chapel on the west range: taller, with a great window over the lawn and a spire on its ridge
+    b.add('stone', boxGeo(12, 15, 15), -22, 7.5, 0);
+    b.add('slate', gableGeo(15.6, 12.6, 6.5), -22, 15, 0, Math.PI / 2);
+    b.add('stained', boxGeo(0.2, 6.5, 3.4), -15.95, 8.5, 0);
+    b.add('stone', boxGeo(2.6, 4, 2.6), -22, 21.5, 0);
+    b.add('slate', pyramidGeo(3.2, 3.2, 8), -22, 23.5, 0);
+    b.add('gold', boxGeo(0.25, 1.8, 0.25), -22, 32, 0);
+    // the gatehouse on the lane: an arch with its doors, turrets on the corners, a flag
+    b.add('stone', boxGeo(9, 15, 12), 25, 7.5, 0);
+    b.add('woodDark', boxGeo(0.3, 6, 4.2), 29.6, 3, 0);
+    b.add('stoneDark', boxGeo(0.6, 1, 5.6), 29.7, 6.4, 0);
+    windowsRow(b, -2.5, 2.5, 10.5, 29.6, 2, 'window', Math.PI / 2, [1.1, 2.2]);
+    for (const sz of [-1, 1]) tower(b, 29, sz * 6.2, 1.7, 18, 5);
+    b.add('slate', pyramidGeo(9.4, 12.4, 4.5), 25, 15, 0);
+    b.add('woodDark', cylGeo(0.1, 0.12, 5, 6), 25, 21.5, 0);
+    out.flags.push([25, 23.4, 0, 2.6, 1.7, 'flag']);
+    // the stair tower at the north-east corner
+    tower(b, 26.5, -22.5, 3.2, 20, 8);
     out.focusH = 14;
   },
   palace(b, lot, out) {

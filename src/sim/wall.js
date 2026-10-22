@@ -121,7 +121,7 @@ function findRoute(w, state) {
  * on rays from the town centre, so a point is inside when it is nearer the centre than the wall on its own
  * ray; on the river side, where there is no wall, inside the first plan's ellipse.
  */
-export function insideWall2(pts, x, z, margin = 0.03) {
+export function insideWall2(pts, x, z, margin = 0.03, w = null) {
   const polar = ([px, pz]) => {
     const u = (px - C.x) / C.rx, v = (pz - C.z) / C.rz;
     return [Math.atan2(v, u), Math.hypot(u, v)];
@@ -135,7 +135,11 @@ export function insideWall2(pts, x, z, margin = 0.03) {
     if (span === 0 || off / span < 0 || off / span > 1) continue;
     return r < r0 + (r1 - r0) * (off / span) - margin;
   }
-  return r < 1;
+  // where the river closes the town (no wall on these rays): inside up to the water
+  if (!w) return r < 1;
+  const L = Math.hypot(x - C.x, z - C.z);
+  for (let d = 0; d < L; d += 3) if (w.river.dist(C.x + ((x - C.x) * d) / L, C.z + ((z - C.z) * d) / L) < RIVER_HALF_WIDTH) return false;
+  return w.river.dist(x, z) >= RIVER_HALF_WIDTH;
 }
 
 function toBank(w, from, to) {

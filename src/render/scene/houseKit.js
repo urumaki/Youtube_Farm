@@ -121,19 +121,21 @@ function roof(P, { W, D, y, pitch, mat, thatch, damaged, front, zc = 0 }) {
 
 /**
  * Build one variant.
- * spec: { arch: 'timber'|'stone'|'cottage', W, D, floors, chimney, dormer, damaged, seed }
+ * spec: { arch: 'timber'|'stone'|'cottage'|'fine', W, D, floors, chimney, dormer, damaged, seed }
+ * 'fine': a Noble Quarter town house (owner 2026-10-22): a taller stone ground floor with a carved doorway,
+ * timber-framed upper floors oversailing the street, an oriel window, two chimneys, two dormers.
  */
 export function buildHouseVariant(spec) {
   const { arch, W, D, floors, chimney, dormer, damaged } = spec;
   const r = rng(spec.seed || 1, 'hv', arch, W, D, floors);
   const P = new Parts();
-  const timber = arch === 'timber';
+  const timber = arch === 'timber', fine = arch === 'fine';
   const wallMat = arch === 'stone' ? 'stone' : 'plaster';
-  const groundH = arch === 'cottage' ? 2.7 : FLOOR_H;
+  const groundH = arch === 'cottage' ? 2.7 : fine ? FLOOR_H + 0.5 : FLOOR_H;
   // foundation course
   P.box('foundation', 'stoneDark', W + 0.3, 0.45, D + 0.3, 0, 0.22, 0);
   let y = 0.45;
-  const jetty = timber && floors > 1 ? 0.45 : 0;
+  const jetty = (timber || fine) && floors > 1 ? 0.45 : 0;
   const levels = [];
   for (let f = 0; f < floors; f++) {
     const H = f === 0 ? groundH : FLOOR_H;
@@ -146,27 +148,49 @@ export function buildHouseVariant(spec) {
     const layer = f === 0 ? 'walls' : f === floors - 1 ? 'top' : 'upper'; // the top storey on its own (a storey added later rises)
     const zf = -D / 2 - j, zb = D / 2, Wf = W + (f > 0 && jetty ? 0.25 : 0);
     const depth = zb - zf;
+    const lTimber = fine ? f > 0 : timber, lMat = fine ? (f > 0 ? 'plaster' : 'stone') : wallMat;
+    const oriel = fine && f === 1; // the oriel window in the middle of the first floor
     // openings on the front
-    const nWin = Math.max(1, Math.round((Wf - (f === 0 ? 1.4 : 0)) / 2.0));
+    const nWin = Math.max(1, Math.round((Wf - (f === 0 ? 1.4 : 0)) / (fine ? 2.4 : 2.0)));
     const openings = [];
-    const doorX = f === 0 ? (r.chance(0.5) ? -1 : 1) * Math.min(Wf / 2 - 0.9, Wf * 0.22) : null;
-    if (doorX !== null) openings.push({ x: doorX, y: 1.05, w: 1.1, h: 2.1 });
-    const winY = f === 0 ? 1.55 : 1.45;
+    const doorX = f === 0 ? (fine ? 0 : (r.chance(0.5) ? -1 : 1) * Math.min(Wf / 2 - 0.9, Wf * 0.22)) : null;
+    if (doorX !== null) openings.push({ x: doorX, y: 1.05, w: fine ? 1.6 : 1.1, h: fine ? 2.5 : 2.1 });
+    if (oriel) openings.push({ x: 0, y: 1.5, w: 2.0, h: 2.2 });
+    const winY = f === 0 ? (fine ? 1.75 : 1.55) : 1.45;
     for (let i = 0; i < nWin; i++) {
       const x = -Wf / 2 + ((i + 0.5) * Wf) / nWin;
-      if (doorX !== null && Math.abs(x - doorX) < 1.3) continue;
-      openings.push({ x, y: winY, w: f === 0 ? 0.9 : 1.0, h: f === 0 ? 1.0 : 1.1, win: true });
+      if (doorX !== null && Math.abs(x - doorX) < (fine ? 1.8 : 1.3)) continue;
+      if (oriel && Math.abs(x) < 1.8) continue;
+      openings.push({ x, y: winY, w: fine ? 1.1 : f === 0 ? 0.9 : 1.0, h: fine ? 1.35 : f === 0 ? 1.0 : 1.1, win: true });
     }
     const putFront = (g, x = 0, yy = 0, z = 0, rz = 0) => g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(x, (yy || y0 + H / 2), zf - z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, Math.PI, rz)), new THREE.Vector3(1, 1, 1)));
     const putBack = (g, x = 0, yy = 0, z = 0, rz = 0) => g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(x, (yy || y0 + H / 2), zb + z), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, rz)), new THREE.Vector3(1, 1, 1)));
     const putSide = (sx) => (g, x = 0, yy = 0, z = 0, rz = 0) => g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(sx * (Wf / 2 + z), (yy || y0 + H / 2), (zf + zb) / 2 + x * sx), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, sx * Math.PI / 2, rz)), new THREE.Vector3(1, 1, 1)));
-    wall(P, layer, { L: Wf, H, y0, timber, wallMat, openings, put: wrapY(putFront, y0, H) });
-    wall(P, layer, { L: Wf, H, y0, timber, wallMat, openings: [{ x: 0, y: winY, w: 1, h: 1 }], put: wrapY(putBack, y0, H) });
-    for (const sx of [-1, 1]) wall(P, layer, { L: depth, H, y0, timber, wallMat, openings: [{ x: 0, y: winY, w: 1, h: 1 }], put: wrapY(putSide(sx), y0, H) });
-    for (const o of openings) if (o.win) windowAt(P, layer, wrapY(putFront, y0, H), o.x, y0 + o.y, o.w, o.h, arch !== 'stone' || f > 0, damaged);
+    wall(P, layer, { L: Wf, H, y0, timber: lTimber, wallMat: lMat, openings, put: wrapY(putFront, y0, H) });
+    wall(P, layer, { L: Wf, H, y0, timber: lTimber, wallMat: lMat, openings: [{ x: 0, y: winY, w: 1, h: 1 }], put: wrapY(putBack, y0, H) });
+    for (const sx of [-1, 1]) wall(P, layer, { L: depth, H, y0, timber: lTimber, wallMat: lMat, openings: [{ x: 0, y: winY, w: 1, h: 1 }], put: wrapY(putSide(sx), y0, H) });
+    for (const o of openings) if (o.win) windowAt(P, layer, wrapY(putFront, y0, H), o.x, y0 + o.y, o.w, o.h, (arch !== 'stone' && !fine) || f > 0, damaged);
+    if (oriel) {
+      // a bay on a stone corbel, glazed on three sides, under its own little roof
+      P.box(layer, 'stoneDark', 1.6, 0.5, 0.6, 0, y0 + 0.1, zf - 0.3, 0, 0, 0, 1);
+      P.box(layer, 'plaster', 2.1, 2.2, 0.8, 0, y0 + 1.45, zf - 0.4);
+      P.box(layer, 'glass', 1.6, 1.4, 0.05, 0, y0 + 1.55, zf - 0.83);
+      for (const s of [-1, 1]) P.box(layer, 'glass', 0.05, 1.3, 0.45, s * 1.07, y0 + 1.55, zf - 0.4);
+      for (const x of [-0.8, 0, 0.8]) P.box(layer, 'woodDark', 0.1, 1.5, 0.08, x, y0 + 1.55, zf - 0.86);
+      P.box(layer, 'roofTile', 2.4, 0.12, 1.05, 0, y0 + 2.7, zf - 0.45, 0, -0.45);
+    }
+    if (fine && f === 0) {
+      // the carved doorway: stone jambs and a lintel with a carved panel, two steps, a string course above
+      for (const s of [-1, 1]) P.box(layer, 'stoneDark', 0.35, 2.75, 0.3, s * 0.98, 1.38, zf - 0.1, 0, 0, 0, 1);
+      P.box(layer, 'stoneDark', 2.4, 0.4, 0.34, 0, 2.9, zf - 0.12, 0, 0, 0, 1);
+      P.box(layer, 'stone', 0.9, 0.5, 0.1, 0, 3.35, zf - 0.08, 0, 0, 0, 1);
+      P.box(layer, 'stoneDark', 2.4, 0.16, 0.9, 0, 0.08, zf - 0.45);
+      P.box(layer, 'stoneDark', Wf + 0.1, 0.18, 0.2, 0, H - 0.09, zf - 0.08);
+    }
     windowAt(P, layer, wrapY(putBack, y0, H), 0, y0 + winY, 0.9, 1.0, false, damaged);
     if (depth > 4.5) for (const sx of [-1, 1]) windowAt(P, layer, wrapY(putSide(sx), y0, H), 0, y0 + winY, 0.8, 0.9, false, damaged);
-    if (doorX !== null) {
+    if (doorX !== null && fine) door(P, layer, wrapY(putFront, 0, 0), doorX, 1.5, 2.5, damaged);
+    else if (doorX !== null) {
       door(P, layer, wrapY(putFront, 0, 0), doorX, 1.05, 2.05, damaged);
       // door hood
       P.box('details', 'woodDark', 1.6, 0.1, 0.8, doorX, 2.55, zf - 0.45, 0, -0.35);
@@ -178,7 +202,7 @@ export function buildHouseVariant(spec) {
       P.box(layer, 'woodDark', Wf + 0.1, 0.24, 0.24, 0, y0 + 0.12, zf + 0.1);
       for (let x = -Wf / 2 + 0.25; x <= Wf / 2 - 0.2; x += 0.55) P.box(layer, 'woodDark', 0.16, 0.16, j + 0.2, x, y0 - 0.08, zf + j / 2 + 0.05);
     }
-    if (arch === 'stone') {
+    if (arch === 'stone' || (fine && f === 0)) {
       // quoins
       for (let k = 0; k < Math.floor(H / 0.5); k++) for (const sx of [-1, 1]) for (const zz of [zf, zb]) {
         const long = k % 2 === 0;
@@ -186,20 +210,20 @@ export function buildHouseVariant(spec) {
       }
     }
   });
-  if (timber && floors > 1) P.box('top', 'woodDark', W + 0.35, 0.22, D + 0.5, 0, eaves + 0.05, -0.2);
+  if ((timber || fine) && floors > 1) P.box('top', 'woodDark', W + 0.35, 0.22, D + 0.5, 0, eaves + 0.05, -0.2);
   // roof
-  const pitch = arch === 'cottage' ? 0.85 : arch === 'stone' ? 0.72 : 0.92;
+  const pitch = arch === 'cottage' ? 0.85 : arch === 'stone' ? 0.72 : fine ? 1.0 : 0.92;
   const roofMat = arch === 'cottage' ? 'thatch' : arch === 'stone' ? 'slate' : 'roofTile';
-  const rise = roof(P, { W, D: D + jetty, y: eaves + 0.1, pitch, mat: roofMat, thatch: arch === 'cottage', damaged, front: timber ? 'plaster' : wallMat, zc: -jetty / 2 });
-  if (dormer && !damaged) {
+  const rise = roof(P, { W, D: D + jetty, y: eaves + 0.1, pitch, mat: roofMat, thatch: arch === 'cottage', damaged, front: timber || fine ? 'plaster' : wallMat, zc: -jetty / 2 });
+  if ((dormer || fine) && !damaged) for (const dx of fine ? [-W / 4, W / 4] : [0]) {
     const dw = Math.min(1.8, W * 0.3), dy = eaves + rise * 0.3;
-    P.box('roof', wallMat, dw, 1.3, 1.2, 0, dy + 0.65, -D / 4);
-    P.box('roof', 'glass', dw * 0.55, 0.8, 0.05, 0, dy + 0.7, -D / 4 - 0.62);
-    for (const s of [-1, 1]) P.box('roof', roofMat, dw / 2 + 0.35, 0.1, 1.5, s * dw / 4, dy + 1.45, -D / 4, 0, 0, s * -0.6);
+    P.box('roof', fine ? 'plaster' : wallMat, dw, 1.3, 1.2, dx, dy + 0.65, -D / 4);
+    P.box('roof', 'glass', dw * 0.55, 0.8, 0.05, dx, dy + 0.7, -D / 4 - 0.62);
+    for (const s of [-1, 1]) P.box('roof', roofMat, dw / 2 + 0.35, 0.1, 1.5, dx + s * dw / 4, dy + 1.45, -D / 4, 0, 0, s * -0.6);
   }
   let chimneyTop = null;
-  if (chimney) {
-    const cx = (r.chance(0.5) ? -1 : 1) * (W / 2 - 0.55), top = eaves + rise + 1.0;
+  if (chimney || fine) for (const side of fine ? [-1, 1] : [r.chance(0.5) ? -1 : 1]) {
+    const cx = side * (W / 2 - 0.55), top = eaves + rise + 1.0;
     chimneyTop = [cx, top + 0.7, 0.4];
     P.box('details', 'stone', 0.75, top - 0.4, 0.75, cx, (top + 0.4) / 2, 0.4, 0, 0, 0, 1);
     P.box('details', 'stoneDark', 0.95, 0.14, 0.95, cx, top + 0.07, 0.4);

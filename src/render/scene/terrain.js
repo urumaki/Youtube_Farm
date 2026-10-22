@@ -151,6 +151,7 @@ export function buildOverlay(w, state, scale = 0.76) {
     reach.set(p.road, Math.max(reach.get(p.road) || 0, best + 14));
   }
   reach.set('approach', 1e9);
+  if (built.has('university')) reach.set('scholars_lane', 1e9); // the lane to the University gate
   // the roads through the Second Wall's gates lead out to them (src/sim/wall.js)
   const gates = state.wall2 || state.buildings.some((b) => b.id === 'wall2') ? wallLayout(w, (state.wall2 || planWall2(w, state)).pts).gates : [];
   const gateTracks = new Set();
@@ -252,7 +253,7 @@ function pavedMask(w, state, roads, tracks, island, cw, ch, P, sx) {
   const ctx = c.getContext('2d');
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cw, ch);
   if (state.wall2) {
-    const inside = ([x, z]) => insideWall2(state.wall2.pts, x, z, 0.01);
+    const inside = ([x, z]) => insideWall2(state.wall2.pts, x, z, 0.01, w);
     const draw = (run, width) => {
       if (run.length < 2) return;
       ctx.beginPath();

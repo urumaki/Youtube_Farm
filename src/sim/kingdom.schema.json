@@ -32,7 +32,8 @@
     "sceneLog": { "type": "object" },
     "scenes": { "type": ["object", "null"] },
     "wall2": { "type": ["object", "null"] },
-    "nextPlot": { "type": "integer", "minimum": 0 }
+    "nextPlot": { "type": "integer", "minimum": 0 },
+    "nextFine": { "type": "integer", "minimum": 0 }
   },
   "$defs": {
     "villager": {
@@ -45,13 +46,13 @@
         "id": { "type": "integer" }, "plot": { "type": "integer" }, "capacity": { "type": "integer", "minimum": 1 },
         "status": { "enum": ["occupied", "abandoned", "ruin"] }, "builtDay": { "type": "integer" },
         "abandonedDay": { "type": "integer" }, "ruinDay": { "type": "integer" }, "rebuiltDay": { "type": "integer" },
-        "floors": { "type": "integer", "minimum": 1, "maximum": 3 }, "cap0": { "type": "integer", "minimum": 1 }, "raisedDay": { "type": "integer" },
+        "floors": { "type": "integer", "minimum": 1, "maximum": 3 }, "cap0": { "type": "integer", "minimum": 1 }, "raisedDay": { "type": "integer" }, "fine": { "type": "boolean" },
         "occupants": { "type": "array", "items": { "type": "integer" } }
       }
     },
     "plot": {
       "type": "object", "required": ["id", "x", "z", "y", "hw", "hd", "rot"],
-      "properties": { "id": { "type": "integer" }, "x": { "type": "number" }, "z": { "type": "number" }, "y": { "type": "number" }, "hw": { "type": "number" }, "hd": { "type": "number" }, "rot": { "type": "number" } }
+      "properties": { "id": { "type": "integer" }, "x": { "type": "number" }, "z": { "type": "number" }, "y": { "type": "number" }, "hw": { "type": "number" }, "hd": { "type": "number" }, "rot": { "type": "number" }, "fine": { "type": "boolean" } }
     },
     "building": {
       "type": "object", "required": ["id", "tier", "status", "startedDay"],

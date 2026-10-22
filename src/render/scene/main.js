@@ -365,6 +365,7 @@ function startViewer(ctx) {
   controls.minDistance = 15;
   controls.maxDistance = 2600;
   controls.enableDamping = true;
+  window.__controls = controls; // for debugging views from the console
   const slider = document.getElementById('time');
   const start = performance.now();
   const loop = () => {

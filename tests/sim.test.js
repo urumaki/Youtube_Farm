@@ -8,6 +8,7 @@ import { TIERS, jobFor, houseCapacity } from '../src/sim/tiers.js';
 import { cleanName, isOffensive } from '../src/sim/names.js';
 import { migrate, writeAtomic, saveDay, baseStateFor } from '../src/sim/state.js';
 import { validate } from '../src/sim/validate.js';
+import { world } from '../src/sim/world.js';
 
 const SCHEMA = JSON.parse(fs.readFileSync(new URL('../src/sim/kingdom.schema.json', import.meta.url)));
 const SEED = 777;
@@ -432,7 +433,7 @@ test('inside the Second Wall houses get another storey before new plots are used
   const plots = new Map(s.plots.map((p) => [p.id, p]));
   for (const id of diff.housesRaised) {
     const h = s.houses[id], p = plots.get(h.plot);
-    assert.ok(insideWall2(s.wall2.pts, p.x, p.z), `house ${id} is inside the walls`);
+    assert.ok(insideWall2(s.wall2.pts, p.x, p.z, undefined, world(s.seed)), `house ${id} is inside the walls (or between the wall and the river)`);
     assert.ok(houseFloors(s.seed, h) <= 3 && h.capacity === h.cap0 + 2 * (h.floors - houseFloors(s.seed, { plot: h.plot, capacity: h.cap0 })));
   }
 });
@@ -475,4 +476,27 @@ test('the Second Wall keeps off the fields and buildings and runs down to the ri
   ensureWall2(s, w, { housesMoved: [] });
   assert.ok(!crossesFields(w, s.wall2.pts), 'the new route keeps off fields and building lots');
   for (const [x, z] of [s.wall2.pts[0], s.wall2.pts.at(-1)]) assert.ok(w.river.dist(x, z) <= RIVER_HALF_WIDTH + 1.01, 'each end on the river bank');
+});
+
+test('the University opens at 1000 below the castle; merchants, knights, scholars... live in the Noble Quarter', async () => {
+  const { DEFAULT_SEED } = await import('../src/sim/simulate.js');
+  const { obstacles, CASTLE, MARKET } = await import('../src/sim/world.js');
+  const { obbOverlap } = await import('../src/sim/geometry.js');
+  const w = world(DEFAULT_SEED);
+  const uni = w.lots.university;
+  assert.ok(uni.z > CASTLE.moatOuter && uni.x < MARKET.x, 'the University stands below the castle');
+  assert.ok(w.finePlots.length >= 20, `${w.finePlots.length} wide plots`);
+  const others = [...w.plots, ...obstacles(w).filter((o) => !['road', 'wall2'].includes(o.kind)).map((o) => o.box)]; // wall2: the first plan, never built
+  for (const p of w.finePlots) assert.ok(!others.some((o) => obbOverlap(p, o)), `noble plot ${p.id} overlaps`);
+  const { state: s, diffs } = run([300, 700, 990, 1100, 1300, 1500], DEFAULT_SEED);
+  checkInvariants(s);
+  assert.ok(diffs[3].buildingsStarted.includes('university'), 'the University is begun at 1000');
+  const fine = s.houses.filter((h) => h.fine);
+  assert.ok(fine.length > 0, 'fine houses are built');
+  const rich = new Set(['merchant', 'knight', 'scholar', 'physician', 'mayor', 'reeve', 'bishop', 'taxcollector', 'chronicler', 'admiral']);
+  for (const h of fine) {
+    assert.ok(h.plot >= 100000 && s.plots.find((p) => p.id === h.plot).fine);
+    for (const id of h.occupants) assert.ok(rich.has(s.villagers[id].job), `${s.villagers[id].job} in a fine house`);
+    assert.ok(h.occupants.every((id) => id >= 1000), 'only newcomers after the University is begun');
+  }
 });
