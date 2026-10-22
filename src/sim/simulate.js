@@ -187,13 +187,12 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
 
 /**
  * The parts of the video the simulation picks (and remembers for the next days): at most one story event
- * with its own scene (not when many new people commented), the named villagers shown at work (not yesterday's jobs again;
+ * with its own scene, the named villagers shown at work (not yesterday's jobs again;
  * those never shown first) and the scenes (none shown again within three days). Also used to plan a saved
  * day again (scripts/replan-day.js): `s` must then hold yesterday's storyLog, storyArc, lastShown and sceneLog.
  */
 export function planDay(s, prev, diff) {
-  // (saves from before diff.newCommenters: the villagers named that day)
-  diff.story = pickStory(s, { newCommenters: diff.newCommenters ?? diff.named.length });
+  diff.story = pickStory(s);
   s.story = diff.story;
   if (diff.story?.id === 'storm') { // the storm brings the rain to the whole video
     s.weather = diff.weather = 'rain';

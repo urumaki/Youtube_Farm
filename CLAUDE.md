@@ -67,9 +67,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   villains or victims; nobody gets hurt. Test one with `npm run render -- --real --subs N --story bandits`.
 - Owner rules 2026-10-21: (1) a commenter who writes they could not find themselves in the last short
   ("can't see myself", "my name wasn't there", "non mi vedo"; `complainsFromText` in `requests.js`) gets
-  `complainDay` and comes first in the next video (`featured.js`). (2) No story event when 15 or more people
-  commented for the first time since the previous video (`BUSY_DAY` in `stories.js`, `diff.newCommenters`):
-  the time goes to the newcomers' names. (3) No scene
+  `complainDay` and comes first in the next video (`featured.js`). (2) Dropped 2026-10-22 (owner): there was no
+  story event on days with 15 or more new commenters; now a story can happen on any day. (3) No scene
   again within 3 days (`src/sim/scenes.js`, `state.sceneLog`): the simulation now picks the tavern yes/no,
   each villager's scene variant and the everyday shot, and saves them as `diff.scenes` (the renderer uses
   them; older saves still pick in `timeline.js`). (4) Stories over several quiet days (`steps`, one a day,

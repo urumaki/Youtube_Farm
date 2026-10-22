@@ -346,8 +346,8 @@ test('every named villager gets a turn on screen, two at a time when they work t
   assert.equal(seen.size, jobs.length, `shown: ${[...seen]}`);
 });
 
-test('story events: none when many new people commented, multi-day stories go on step by step on the next quiet days', async () => {
-  const { STORIES, BUSY_DAY } = await import('../src/sim/stories.js');
+test('story events: also on busy days; multi-day stories go on step by step', async () => {
+  const { STORIES } = await import('../src/sim/stories.js');
   let s = genesis({ seed: SEED, date: '2026-09-30' });
   const d = new Date('2026-10-01T00:00:00Z');
   const seen = [];
@@ -356,14 +356,13 @@ test('story events: none when many new people commented, multi-day stories go on
     const date = d.toISOString().slice(0, 10);
     d.setUTCDate(d.getUTCDate() + 1);
     const busy = i % 4 === 2;
-    subs += busy ? BUSY_DAY + 5 : 3;
-    const n = i === 0 ? 4 : busy ? BUSY_DAY : 1;
+    subs += busy ? 20 : 3;
+    const n = i === 0 ? 4 : busy ? 15 : 1;
     const commenters = Array.from({ length: n }, (_, k) => ({ author: `a${i}-${k}`, name: `N${i}x${k}`, at: `${date}T00:${String(k).padStart(2, '0')}:00Z` }));
     const r = advance(s, { subscribers: subs, date, commenters });
     s = r.state;
     assert.equal(r.diff.newCommenters, n);
-    if (busy) assert.equal(r.diff.story, null, `no story on a day with ${n} new commenters`);
-    if (r.diff.story) seen.push(r.diff.story);
+    if (r.diff.story) seen.push({ ...r.diff.story, busy });
   }
   // every multi-day story that starts goes through its steps in order
   const open = {};
@@ -376,6 +375,7 @@ test('story events: none when many new people commented, multi-day stories go on
     open[st.id] = k + 1 < steps.length ? st.step : undefined;
   }
   assert.ok(seen.some((st) => st.step && st.step !== STORIES[st.id].steps[0]), 'some story went on to a later step');
+  assert.ok(seen.some((st) => st.busy), 'a story also on a day with 15 new commenters (owner 2026-10-22)');
 });
 
 test('comments saying they cannot find themselves are spotted, and that villager is shown first in the next video', async () => {
