@@ -161,6 +161,9 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Added 2026-10-22: 1250 Tailor + Tailor's Stall, 1500 Physician (moved from 2500) + Physician's Booth
   (both on the market square, work scenes `sewing` and `remedies`). The Noble at 10,000 became the Tax
   Collector (no noble titles as jobs; comments asking for lord, landlord, noble, duke or baron get it).
+  Jobs folded together (owner 2026-10-22, `MERGED` in `tiers.js`): Warrior into Guard, Sailor into
+  Fisherman, Toolsmith into Blacksmith, Town Weirdo into Jester. The tier weights are unchanged (so no other
+  villager changes job); `jobFor`, `migrate` (names, requests waiting) and the comment keywords map them.
   Also added 2026-10-22, each with a work scene: 850 Potter + Potter's Stall, 1750 Cobbler + Cobbler's
   Stall (market square), 2000 Cooper + Cooperage (East Ward square), 3000 Beekeeper + Beehives (corner of
   a field west of the castle), 4000 Bell Founder + Bell Foundry (North Ward square), 7500 Clockmaker +

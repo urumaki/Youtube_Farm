@@ -2,7 +2,7 @@
 import { hash, rng } from './prng.js';
 import { cleanName, isOffensive } from './names.js';
 import { availableJobs } from './requests.js';
-import { TIERS, BUILDINGS, JOBS, jobFor, houseCapacity, tiersReached } from './tiers.js';
+import { TIERS, BUILDINGS, JOBS, jobFor, houseCapacity, tiersReached, mergedJob } from './tiers.js';
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
 import { pickStory } from './stories.js';
@@ -57,7 +57,7 @@ export function withNameFields(s) {
 
 /** A villager is nameless (null) until a commenter's name is assigned to them. */
 export function villagerFor(seed, id, house, names = {}) {
-  return { id, name: names[id]?.name ?? null, job: names[id]?.job ?? jobFor(seed, id), house };
+  return { id, name: names[id]?.name ?? null, job: mergedJob(names[id]?.job ?? jobFor(seed, id)), house };
 }
 
 /** Rebuild the villager list from house occupancy (used for compact history snapshots). */

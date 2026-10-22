@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { SCHEMA_VERSION, genesis, advance, deriveVillagers, withNameFields, DEFAULT_SEED } from './simulate.js';
 import { validate } from './validate.js';
+import { mergedJob } from './tiers.js';
 
 export const STATE_DIR = path.resolve('state');
 const SCHEMA = JSON.parse(fs.readFileSync(new URL('./kingdom.schema.json', import.meta.url), 'utf8'));
@@ -28,7 +29,11 @@ export function migrate(raw) {
     v = s.schemaVersion;
   }
   withNameFields(s);
+  // jobs folded into another (MERGED in tiers.js): named villagers, waiting requests and stored villagers
+  for (const n of Object.values(s.names || {})) { n.job &&= mergedJob(n.job); n.wants &&= mergedJob(n.wants); }
+  for (const q of s.nameQueue || []) if (Array.isArray(q.wants)) q.wants = [...new Set(q.wants.map(mergedJob))];
   if (!Array.isArray(s.villagers)) s.villagers = deriveVillagers(s); // compact snapshots
+  else for (const v of s.villagers) if (v) v.job = mergedJob(v.job);
   const errors = validate(SCHEMA, s);
   if (errors.length) throw new Error('invalid state: ' + errors.slice(0, 5).join('; '));
   return s;

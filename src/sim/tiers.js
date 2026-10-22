@@ -3,6 +3,11 @@
 // `pool` jobs can be drawn by any later villager, weighted.
 import { hash } from './prng.js';
 
+// Jobs folded into another (owner 2026-10-22: the same work under two names). The tiers keep their old
+// weights, so every other villager keeps their job; jobFor, the saves (migrate) and the comments map these.
+export const MERGED = { warrior: 'guard', sailor: 'fisherman', toolsmith: 'blacksmith', weirdo: 'jester' };
+export const mergedJob = (job) => MERGED[job] || job;
+
 export const JOBS = {
   peasant: { label: 'Peasant', color: '#8a7a5c' },
   farmer: { label: 'Farmer', color: '#6f8f3a' },
@@ -106,7 +111,7 @@ export const TIERS = [
   // existing villagers would change job.
   { id: 'crier', at: 175, title: 'Busy Town', unique: ['crier'], pool: {}, buildings: ['crier_stand'], goal: 'the Town Crier rings the bell' },
   { id: 'walled', at: 250, title: 'Walled Town', unique: ['reeve', 'carpenter'], pool: { carpenter: 1.2, guard: 1 }, buildings: ['wall2', 'townhall'], goal: 'the Second Wall rises' },
-  { id: 'harbor', at: 500, title: 'Harbor Town', unique: ['bishop', 'knight', 'sailor'], pool: { sailor: 1.5, knight: 0.5 }, buildings: ['harbor', 'cathedral', 'tournament'], goal: 'the Harbor opens' },
+  { id: 'harbor', at: 500, title: 'Harbor Town', unique: ['bishop', 'knight', 'fisherman'], pool: { sailor: 1.5, knight: 0.5 }, buildings: ['harbor', 'cathedral', 'tournament'], goal: 'the Harbor opens' },
   { id: 'justice', at: 750, title: 'Town of Law', unique: ['executioner'], pool: {}, buildings: ['pillory'], goal: 'the Executioner takes up the axe' },
   { id: 'pottery', at: 850, title: 'Town of Potters', unique: ['potter'], pool: { potter: 0.4 }, buildings: ['potter_stall'], goal: 'the Potter sets up the wheel' },
   { id: 'charter', at: 1000, title: 'Chartered City', unique: ['mayor', 'scholar'], pool: { scholar: 0.6, weaver: 1.2 }, buildings: ['charter_stone', 'district_east'], goal: 'the Town Charter is signed' },
@@ -140,7 +145,7 @@ export function nextTier(population) {
 
 /** Job for villager #index (0-based). Depends only on seed and index. */
 export function jobFor(seed, index) {
-  if (UNIQUE.has(index)) return UNIQUE.get(index);
+  if (UNIQUE.has(index)) return mergedJob(UNIQUE.get(index));
   const pool = new Map();
   for (const t of tiersReached(index + 1)) {
     for (const [job, w] of Object.entries(t.pool)) pool.set(job, (pool.get(job) || 0) + w);
@@ -150,7 +155,7 @@ export function jobFor(seed, index) {
   let r = (hash(seed, 'job', index) / 4294967296) * total;
   for (const [job, w] of pool) {
     r -= w;
-    if (r < 0) return job;
+    if (r < 0) return mergedJob(job);
   }
   return 'peasant';
 }

@@ -246,7 +246,7 @@ test('comment job requests: granted when unlocked, apprentice (then promoted) wh
   assert.equal(job('Pilot'), 'innkeeper');
   assert.equal(job('Sir'), 'apprentice');
   assert.equal(job('Balint'), 'fletcher', 'second choice when the first is locked');
-  assert.equal(job('Weird'), 'weirdo');
+  assert.equal(job('Weird'), 'jester', 'the weirdo is folded into the jester');
   assert.deepEqual(r.diff.requests.map((q) => q.granted), [true, false, true, true]);
   checkInvariants(r.state);
   // an existing villager asks for another job later
@@ -262,10 +262,10 @@ test('comment job requests: granted when unlocked, apprentice (then promoted) wh
 
 test('comments can choose a name; real comments map to the right jobs; wishes are not requests', async () => {
   const { wantsFromText, nameFromText } = await import('../src/sim/requests.js');
-  assert.deepEqual(wantsFromText('I SHAL BE MAKING FARMING TOOLS!'), ['toolsmith']);
+  assert.deepEqual(wantsFromText('I SHAL BE MAKING FARMING TOOLS!'), ['blacksmith']);
   assert.deepEqual(wantsFromText('Yowza i think these people need mead and bread'), ['brewer', 'baker']);
   assert.deepEqual(wantsFromText('maybe later on when there are proper guards'), []);
-  assert.equal(wantsFromText('Make me a warrior i am sir coolum now')[0], 'warrior');
+  assert.equal(wantsFromText('Make me a warrior i am sir coolum now')[0], 'guard');
   assert.equal(nameFromText('Can I be a villager called sopita?'), 'Sopita');
   assert.equal(nameFromText('could I be a carpenter named henry'), 'Henry');
   assert.equal(nameFromText('Well damn. Please name one Violet.'), 'Violet');

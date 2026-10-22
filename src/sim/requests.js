@@ -1,18 +1,18 @@
 // Job requests from comments ("can I work at the tavern?"). The comment text is read once for these
 // keywords and then discarded; only the resulting job ids are kept. A job the kingdom has not unlocked
 // yet makes the villager an apprentice, promoted when the tier is reached.
-import { TIERS, JOBS, tiersReached } from './tiers.js';
+import { TIERS, JOBS, MERGED, tiersReached } from './tiers.js';
 
 // [regex, job] — matched anywhere in the comment (English and Italian); order of appearance in the
 // comment decides preference, so "commander, or else a fletcher" tries the commander first
 const KEYWORDS = [
-  [/tool\s*smith|\btools?\b|attrezz|utensil/, 'toolsmith'],
+  [/tool\s*smith|\btools?\b|attrezz|utensil/, 'blacksmith'], // jobs folded together: MERGED in tiers.js
   [/black\s*smith|\bsmith\b|\bforge\b|\banvil|fabbro/, 'blacksmith'],
   [/\bbrew|\bmead\b|\bale\b|\bbeer|\bbirr|idromele/, 'brewer'],
   [/tavern|\binn\b|innkeeper|bar\s*keep|bartender|taverna|\boste\b/, 'innkeeper'],
-  [/warrior|\bfighter|\bsword|\bwarlord|guerrier|combattent|spadaccin/, 'warrior'],
+  [/warrior|\bfighter|\bsword|\bwarlord|guerrier|combattent|spadaccin/, 'guard'],
   [/\bbeggar|\bdrunk|\bdrink|sit all day|mendicant|ubriac/, 'beggar'],
-  [/weirdo|\bweird\b|\bfool\b|crazy|lunatic|\bscemo|\bmatto/, 'weirdo'],
+  [/weirdo|\bweird\b|\bfool\b|crazy|lunatic|\bscemo|\bmatto/, 'jester'],
   [/jester|\bclown|juggl|giullare|buffone/, 'jester'],
   [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b|frecce|arciere/, 'fletcher'],
   [/\bknight|\bsir\b|cavaliere|commander|general|\barmy|captain/, 'knight'],
@@ -27,7 +27,7 @@ const KEYWORDS = [
   [/wood\s*cutter|lumber|\baxe\b|\bwood\b|taglialegna|boscaiolo/, 'woodcutter'],
   [/\bfarm(?!ing tools?)|\bcrops?\b|contadin|agricolt/, 'farmer'],
   [/merchant|\btrader|\bshop|mercante|negozi/, 'merchant'],
-  [/\bsailor|\bpirate|marinaio|pirata/, 'sailor'],
+  [/\bsailor|\bpirate|marinaio|pirata/, 'fisherman'],
   [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
   [/scholar|\bscribe|librar|studioso/, 'scholar'],
   [/doctor|healer|physician|medico|guaritore/, 'physician'],
@@ -70,7 +70,7 @@ export function wantsFromText(text) {
 
 /** Jobs a villager can take today: everything unlocked by the reached tiers, plus the request-only ones. */
 export function availableJobs(population) {
-  const out = new Set(Object.entries(JOBS).filter(([id, j]) => j.requestOnly && id !== 'apprentice').map(([id]) => id));
+  const out = new Set(Object.entries(JOBS).filter(([id, j]) => j.requestOnly && id !== 'apprentice' && !MERGED[id]).map(([id]) => id));
   for (const t of tiersReached(Math.max(1, population))) {
     t.unique.forEach((j) => out.add(j));
     Object.keys(t.pool).forEach((j) => out.add(j));
