@@ -129,7 +129,11 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Scenes away from the croft (`AWAY_VARIANTS`, own camera, hard cut): guards on the walls, sparring, or on
   the night watch with a lantern at dusk; fishermen always on the river (owner 2026-10-22): in a rowing boat,
   or on a plank jetty at the bank near their house casting a rod or throwing a round net and hauling it in
-  (`buildRiverbank` in `away.js`). The fisherman is never a visit host (`VISIT_HOSTS`): he is not at home.
+  (`buildRiverbank` in `away.js`). The fisherman is never a visit host (`VISIT_HOSTS`): he is not at home;
+  a guest planned on older saved days stands on the jetty with him and cheers at the catch.
+- Paved streets (owner 2026-10-22): every street, lane and track inside the Second Wall is cobbled, the
+  roads outside stay dirt. `buildOverlay` (`terrain.js`) draws a mask of the paved stretches and the terrain
+  shader puts a tiled cobble texture there in world space (the overlay is about a pixel a metre).
 - Ships in the harbor and boats at the dock (owner 2026-10-22, `ship` in `life.js`): a lofted hull (pointed
   bow, sheer rising to both ends, planks and a dark wale, tarred below the waterline), a deck, stem and stern
   posts; ships get a rudder, a bellied square sail on a yard, a bowsprit and, when big, castles fore and aft.

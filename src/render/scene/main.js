@@ -57,6 +57,7 @@ async function setup(data) {
 
   const terrain = buildTerrain(w, { season });
   terrain.userData.uniforms.overlayMap.value = buildOverlay(w, state);
+  terrain.userData.uniforms.pavedMap.value = terrain.userData.uniforms.overlayMap.value.userData.paved;
   terrain.userData.uniforms.snow.value = diff.weather === 'snow' ? 0.85 : 0;
   scene.add(terrain);
   const water = buildWater(w);
@@ -105,14 +106,14 @@ async function setup(data) {
     return id === 'patrol' ? watch({ mode: 'day' }) : id === 'change' ? watch({ mode: 'change' })
       : id === 'sparring' ? buildSparring(a) : id === 'pasture' ? buildPasture(a) : id === 'laundry' ? buildLaundry(a) : buildFields(a);
   };
-  const awayScene = (variant, hero, home) => {
+  const awayScene = (variant, hero, home, guest = null) => {
     const ground = (x, z) => heightAt(w, x, z);
     // guards on the castle walls or the Second Wall: by day, at night, the changing of the guard
     const WATCH = { walls: ['castle', 'day'], wallnight: ['castle', 'night'], change: ['castle', 'change'], wall2: ['wall2', 'day'], wall2night: ['wall2', 'night'], wall2change: ['wall2', 'change'] };
     if (WATCH[variant]) return buildWallWatch({ where: WATCH[variant][0], mode: WATCH[variant][1], castle, w, state, M, seed: state.seed, hero, lang: data.lang, tag: false });
     return variant === 'sparring' ? buildSparring({ M, seed: state.seed, hero, lang: data.lang, tag: false })
         : variant === 'boat' ? buildBoat({ w, M, hero, home, heightAt: ground })
-          : variant === 'rod' || variant === 'net' ? buildRiverbank({ w, M, hero, home, heightAt: ground, mode: variant })
+          : variant === 'rod' || variant === 'net' ? buildRiverbank({ w, M, hero, home, heightAt: ground, mode: variant, guest })
           : buildNightWatch({ w, M, hero, home, heightAt: ground });
   };
   // the work scene in a croft: the bakehouse for bakers, the straw dummy for fighters, else work.js
@@ -134,7 +135,9 @@ async function setup(data) {
       // away from the croft, with the big name label: a guard on the castle walls, sparring in the courtyard
       // or on the night watch; a fisherman out in a boat
       const hero = { id: tg.id, name: tg.label.title, job: tg.sceneJob };
-      const st = awayScene(tg.variant, hero, houses.shapes.get(state.villagers[tg.id].house));
+      const st = awayScene(tg.variant, hero, houses.shapes.get(state.villagers[tg.id].house), tg.guest);
+      // a guest the scene has no place for gets no name tag (only the river scenes take one)
+      if (tg.guest) { if (st.labelPos2) tg.labelPos2 = st.labelPos2; else tg.label2 = null; }
       st.setWindow?.(tg.t0, tg.t1);
       scene.add(st.group);
       tg.cam = st.cam;
@@ -215,7 +218,7 @@ async function setup(data) {
     ctx0.galleryAway = away;
     ctx0.gallery = data.gallery.map((g, i) => {
       if (AWAY_VARIANTS.has(g.variant) || g.job === 'ambient') { // scenes with their own camera, played over 3 s
-        const st = g.job === 'ambient' ? ambientScene(g.variant, { id: 9100 + i, name: 'Test', job: 'peasant' }) : awayScene(g.variant, { id: 9100 + i, name: 'Test', job: g.job }, sh);
+        const st = g.job === 'ambient' ? ambientScene(g.variant, { id: 9100 + i, name: 'Test', job: 'peasant' }) : awayScene(g.variant, { id: 9100 + i, name: 'Test', job: g.job }, sh, g.guest ? { job: g.guest } : null);
         st.setWindow?.(0, 3);
         scene.add(st.group);
         return { ws: { group: st.group, update: (t) => st.update(t, 0, 3) }, st, focus: st.focus };

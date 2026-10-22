@@ -1,9 +1,9 @@
 // Terrain (chunked rectilinear grid, finer near the castle and town), overlay map for roads/plazas, water.
 import * as THREE from 'three';
-import { planWall2, wallLayout } from '../../sim/wall.js';
+import { planWall2, wallLayout, insideWall2 } from '../../sim/wall.js';
 import { heightAt, fbm, WATER_LEVEL, CASTLE, RIVER_HALF_WIDTH } from '../../sim/world.js';
 import { rng } from '../../sim/prng.js';
-import { detailTexture } from './textures.js';
+import { detailTexture, cobbleTexture } from './textures.js';
 
 export const OVERLAY_RECT = { x0: -460, z0: -1010, w: 3120, h: 1540 };
 
@@ -60,6 +60,8 @@ export function buildTerrain(w, { season = 'summer' } = {}) {
   const mat = new THREE.MeshLambertMaterial({ vertexColors: true });
   const uniforms = {
     overlayMap: { value: null }, overlayRect: { value: new THREE.Vector4(OVERLAY_RECT.x0, OVERLAY_RECT.z0, OVERLAY_RECT.w, OVERLAY_RECT.h) },
+    // paved streets: a mask from buildOverlay, the stones from a tiled texture in world space
+    pavedMap: { value: null }, cobbleMap: { value: cobbleTexture(w.seed) },
     detailMap: { value: detail }, snow: { value: season === 'winter' ? 0 : 0 },
   };
   mat.onBeforeCompile = (sh) => {
@@ -68,7 +70,7 @@ export function buildTerrain(w, { season = 'summer' } = {}) {
       .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;')
       .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWPos = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = sh.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nuniform sampler2D overlayMap;\nuniform sampler2D detailMap;\nuniform vec4 overlayRect;\nuniform float snow;')
+      .replace('#include <common>', '#include <common>\nvarying vec3 vWPos;\nuniform sampler2D overlayMap;\nuniform sampler2D pavedMap;\nuniform sampler2D cobbleMap;\nuniform sampler2D detailMap;\nuniform vec4 overlayRect;\nuniform float snow;')
       .replace('#include <color_fragment>', `#include <color_fragment>
         float d1 = texture2D(detailMap, vWPos.xz / 5.0).r;
         float d2 = texture2D(detailMap, vWPos.xz / 41.0).r;
@@ -78,6 +80,8 @@ export function buildTerrain(w, { season = 'summer' } = {}) {
         if (ouv.x > 0.0 && ouv.x < 1.0 && ouv.y > 0.0 && ouv.y < 1.0) {
           vec4 ov = texture2D(overlayMap, ouv);
           diffuseColor.rgb = mix(diffuseColor.rgb, ov.rgb * (0.82 + 0.36 * d1), ov.a);
+          float pv = smoothstep(0.3, 0.7, texture2D(pavedMap, ouv).r);
+          if (pv > 0.0) diffuseColor.rgb = mix(diffuseColor.rgb, texture2D(cobbleMap, vWPos.xz / 4.5).rgb * (0.85 + 0.3 * d2), pv);
         }
         diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.9, 0.92, 0.97) * (0.9 + 0.1 * d1), snow * smoothstep(0.3, 0.6, d2 + 0.25));`);
   };
@@ -234,6 +238,46 @@ export function buildOverlay(w, state, scale = 0.76) {
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
   t.anisotropy = 8;
+  t.flipY = false;
+  t.userData.paved = pavedMask(w, state, roads, tracks, island, c.width, c.height, P, sx);
+  return t;
+}
+
+// Paved streets (owner 2026-10-22): cobbles on every street and lane inside the Second Wall, the castle
+// approach included; the roads outside stay dirt. A mask for the terrain shader, which draws the stones
+// (the overlay has about one pixel a metre, too coarse for single stones).
+function pavedMask(w, state, roads, tracks, island, cw, ch, P, sx) {
+  const c = document.createElement('canvas');
+  c.width = cw; c.height = ch;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cw, ch);
+  if (state.wall2) {
+    const inside = ([x, z]) => insideWall2(state.wall2.pts, x, z, 0.01);
+    const draw = (run, width) => {
+      if (run.length < 2) return;
+      ctx.beginPath();
+      run.forEach((p, i) => { const [x, y] = P(p[0], p[1]); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+      ctx.lineWidth = width * sx; ctx.strokeStyle = '#fff'; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.stroke();
+    };
+    // walk each street a metre at a time and pave the stretches inside the walls
+    const pave = (pts, width) => {
+      let run = [];
+      for (let i = 1; i < pts.length; i++) {
+        const [x0, z0] = pts[i - 1], [x1, z1] = pts[i], n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, z1 - z0)));
+        for (let k = i === 1 ? 0 : 1; k <= n; k++) {
+          const p = [x0 + ((x1 - x0) * k) / n, z0 + ((z1 - z0) * k) / n];
+          if (inside(p)) run.push(p);
+          else { draw(run, width); run = []; }
+        }
+      }
+      draw(run, width);
+    };
+    for (const rd of roads) pave(rd.pts, rd.width);
+    for (const t of tracks) pave(t.pts, t.width);
+    pave(island, 6);
+  }
+  const t = new THREE.CanvasTexture(c);
   t.flipY = false;
   return t;
 }

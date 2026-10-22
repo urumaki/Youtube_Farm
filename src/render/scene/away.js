@@ -163,7 +163,7 @@ function jetty(M, length) {
  * 'rod' casts a line, waits for a bite and pulls a fish out; 'net' throws a round net and hauls it in.
  * @param home  {x, z} of the villager's house
  */
-export function buildRiverbank({ w, M, hero, home, heightAt, mode = 'rod' }) {
+export function buildRiverbank({ w, M, hero, home, heightAt, mode = 'rod', guest = null }) {
   const B = riverBank(w, home, heightAt);
   const reach = B.land - B.edge + 2.6; // from the dry bank out to 2.6 m over the water
   const base = B.at(B.land).setY(B.deckY);
@@ -177,6 +177,10 @@ export function buildRiverbank({ w, M, hero, home, heightAt, mode = 'rod' }) {
   const P = rig(M, JOBS[hero.job]?.color || JOBS.fisherman.color);
   P.root.position.set(0.15, 0, reach - 0.2);
   pier.add(P.root);
+  // a villager visiting the fisherman (saved days planned before the fishing moved to the river) stands
+  // on the jetty behind him, watching, and cheers at the catch
+  const G = guest ? rig(M, JOBS[guest.job]?.color || '#7a6a55') : null;
+  if (G) { G.root.position.set(mode === 'rod' ? -0.6 : 0.55, 0, reach - (mode === 'rod' ? 0.75 : 1.1)); G.root.rotation.y = mode === 'rod' ? 0.3 : -0.3; pier.add(G.root); }
   const water = base.clone().addScaledVector(out, reach + (mode === 'net' ? 2.6 : 3.2)).addScaledVector(B.along, mode === 'net' ? 0.6 : 0.9);
   water.y = WATER_LEVEL + 0.03;
   pier.updateMatrixWorld(true);
@@ -300,17 +304,21 @@ export function buildRiverbank({ w, M, hero, home, heightAt, mode = 'rod' }) {
       ripple.material.opacity = u > LAND && u < HAUL + 0.1 ? 0.6 * (1 - rr) : 0;
     };
   }
-  const labelPos = new THREE.Vector3();
+  const labelPos = new THREE.Vector3(), labelPos2 = new THREE.Vector3();
+  const CATCH = mode === 'rod' ? 0.7 : 0.8;
   const stand = pier.localToWorld(new THREE.Vector3(0.15, 0, reach - 0.2));
   const focus = stand.clone().lerp(water, 0.35).setY(B.deckY + 0.9);
+  // with a guest, frame the two of them: the focus moves toward the guest, the camera steps back
+  if (G) focus.lerp(G.root.getWorldPosition(new THREE.Vector3()).setY(B.deckY + 0.9), 0.55);
   // the camera low over the water, turned back toward the fisherman with the bank behind him (the bank
   // itself has houses and roofs that would stand in front of a camera on land)
   const side = mode === 'net' ? -1 : 1; // the float lies a little downstream, the camera is on the other side
-  const camBase = stand.clone().addScaledVector(out, 6.5).addScaledVector(B.along, -4.5 * side);
+  const camBase = stand.clone().addScaledVector(out, G ? 8 : 6.5).addScaledVector(B.along, -4.5 * side);
   camBase.y = WATER_LEVEL + 1.7;
   return {
     group,
     labelPos,
+    labelPos2: G ? labelPos2 : null,
     focus,
     cam(u) {
       const pos = camBase.clone().addScaledVector(B.along, 1.2 * side * ease(u)).addScaledVector(out, -0.8 * u);
@@ -319,9 +327,17 @@ export function buildRiverbank({ w, M, hero, home, heightAt, mode = 'rod' }) {
     update(t, t0, t1) {
       group.visible = t >= t0 - 0.1 && t <= t1 + 0.1;
       if (!group.visible) return;
-      pose(t, clamp01((t - t0) / (t1 - t0)));
+      const u = clamp01((t - t0) / (t1 - t0));
+      pose(t, u);
       P.root.getWorldPosition(labelPos);
       labelPos.y += 1.95;
+      if (G) {
+        const cheer = u > CATCH ? 0.5 + 0.5 * Math.sin(t * 9) : 0;
+        G.r.g.rotation.set(u > CATCH ? -2.6 - 0.3 * cheer : -0.1, 0, u > CATCH ? -0.2 : -0.1);
+        G.l.g.rotation.set(-0.1, 0, 0.1);
+        G.root.getWorldPosition(labelPos2);
+        labelPos2.y += 2.15;
+      }
     },
   };
 }
