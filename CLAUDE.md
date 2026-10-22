@@ -22,6 +22,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   only) instead of a fresh two-day test kingdom: needed to test anything that exists only later (tavern).
 - `npm run daily -- --dry-run --subs 80` — simulate the next real day without saving.
 - `node scripts/verify-video.js output/x.mp4` — format checks.
+- `node scripts/map.js` — map of the town from above (`output/map.png`): houses by storeys, free plots,
+  fields, the Second Wall with gates, buildings standing / going up / still to come with their goal.
 - `npm run auth:youtube -- --save` — one-time OAuth refresh token (owner runs it on their PC).
 
 ## Owner's Windows PC (local renders)
@@ -84,6 +86,9 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   gates, `terrain.js`). Houses in its way move to the next free plot, checked every day so a change to
   `wallLayout` moves them too (`ensureWall2`, `diff.housesMoved`); new houses skip plots on it
   (`nextFreePlot`, `state.nextPlot`).
+  Never over a field or a building lot either (owner 2026-10-22: it crossed two wheat fields and then the
+  quarry): the route may go far out (up to 2x the first plan) round them, and a saved route that crosses one
+  is planned again once (`crossesFields`, `ensureWall2`).
   It goes up in stretches from the gate nearest the market, over low foundations along the whole route.
   `w.wall2` (the old ellipse) still only shapes the plot list, so plot ids and positions stay stable.
 - Taller houses (owner 2026-10-22): once the Second Wall is begun, a newcomer with no free bed first makes
@@ -103,6 +108,10 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   `--real --gallery "guard:change,guard:wall2night"` (the Second Wall ones need a state where it is done).
 - Woodcutter (owner 2026-10-21): only the arm holding the axe moves (one-handed overhead chop, the body
   and the other arm stay still); the handcart scene is no longer picked.
+- Wheat fields (owner 2026-10-22, `buildWheat` in `ambient.js`, everyday shot `wheat`): many farmers in one
+  field. July to November the harvest (three reapers with scythes at the edge of the ripe wheat, two
+  binding sheaves, one loading a cart, stooks), March to June hoeing and sowing in the young green wheat.
+  Test with `--gallery ambient:wheat` (add `--date 2026-04-15` for spring).
 - Who is shown at work (`src/sim/featured.js`, owner 2026-10-20): picked by the simulation and saved as
   `state.featured`: villagers named today first (the narrator welcomes only jobs on screen), then granted
   requests, never a job the previous video showed (`diff.avoidJobs`), one per job. Saves without

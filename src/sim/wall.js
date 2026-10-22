@@ -14,7 +14,7 @@ const BANK = RIVER_HALF_WIDTH + 1; // the wall ends here, at the water's edge
 // the route is found on rays from the town centre (an ellipse like the first plan, scaled per ray)
 const C = { x: 150, z: 0, rx: 255, rz: 205 };
 const STEPS = 60; // corners to choose from (one per ray)
-const SCALES = Array.from({ length: 17 }, (_, i) => 0.8 + i * 0.05); // 0.8 .. 1.6
+const SCALES = Array.from({ length: 25 }, (_, i) => 0.8 + i * 0.05); // 0.8 .. 2.0 (far out round the quarry)
 
 const rayPoint = (k, r) => {
   const a = (k / STEPS) * Math.PI * 2;
@@ -36,8 +36,8 @@ export function planWall2(w, state) {
 function findRoute(w, state) {
   const avoid = [
     ...state.plots.map((p) => ({ b: grow(p, 3), cost: 60 })),
-    ...Object.values(w.lots).filter((l) => !l.virtual && l.hw > 0).map((l) => ({ b: grow(l, 4), cost: 80 })),
-    ...w.fields.map((f) => ({ b: grow(f, 2), cost: 25 })),
+    ...Object.values(w.lots).filter((l) => !l.virtual && l.hw > 0).map((l) => ({ b: grow(l, 4), cost: 1000 })), // never over a building
+    ...w.fields.map((f) => ({ b: grow(f, 2), cost: 250 })), // never over the crops (owner 2026-10-22)
     { b: { x: 0, z: 0, hw: CASTLE.moatOuter + 6, hd: CASTLE.moatOuter + 6, rot: 0 }, cost: 500 },
   ];
   const grid = new SpatialHash(40);
@@ -45,8 +45,11 @@ function findRoute(w, state) {
   const near = (box) => grid.query(obbAabb(box));
   const wet = (p) => w.river.dist(p[0], p[1]) < BANK;
   // per ray: where it meets the river (the wall then follows the water there)
-  const river = Array.from({ length: STEPS }, (_, k) => SCALES.find((r) => wet(rayPoint(k, r))) ?? null);
-  const cands = Array.from({ length: STEPS }, (_, k) => (river[k] !== null ? [river[k]] : SCALES));
+  // (looked for within the first plan's reach: the far scales are only for going round things)
+  const river = Array.from({ length: STEPS }, (_, k) => SCALES.find((r) => r <= 1.6 + 1e-9 && wet(rayPoint(k, r))) ?? null);
+  // a ray that meets the river may also end a little further out on the water, so the last stretch can
+  // come down to the bank round a building standing by it (the quarry)
+  const cands = Array.from({ length: STEPS }, (_, k) => (river[k] !== null ? SCALES.filter((r) => r >= river[k] && r <= river[k] + 0.16 && wet(rayPoint(k, r))) : SCALES));
   const edgeCost = (p, q) => {
     if (wet(p) && wet(q)) return 0;
     const box = segmentObb(p[0], p[1], q[0], q[1], 2);
@@ -214,6 +217,13 @@ export function wallLayout(w, route) {
     if (i > 0 && !gates.some((g) => Math.hypot(g.x - a[0], g.z - a[1]) < GATE_HALF + 6) && w.river.dist(a[0], a[1]) > BANK + 2) towers.push([a[0], a[1]]);
   }
   return { pieces, towers, gates };
+}
+
+/** True when a piece of the wall stands on a field or a building lot. */
+export function crossesFields(w, route) {
+  const { pieces } = wallLayout(w, route);
+  const lots = Object.values(w.lots).filter((l) => !l.virtual && l.hw > 0 && l.id !== 'fields');
+  return [...w.fields, ...lots].some((f) => pieces.some((p) => obbOverlap(p, f)));
 }
 
 /** Boxes a house plot must keep clear of (pieces, towers and gate towers, with room round them). */

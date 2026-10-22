@@ -787,7 +787,8 @@ function arrowGroup(M) {
  * @param anchor  world point (ground) where the worker stands
  * @param face    yaw the worker faces (radians, world)
  */
-export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id, color = null }) {
+// bare: no props of its own (a scene that builds the place itself, like the wheat fields in ambient.js)
+export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id, color = null, bare = false }) {
   const cfg = sceneOf(job, variant);
   const group = new THREE.Group();
   group.position.copy(anchor);
@@ -800,6 +801,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
   const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; propsG.add(m); return m; };
   const anim = [];
   const impact = buildProps(cfg.props, M, add, anim, propsG);
+  propsG.visible = !bare;
   const tool = cfg.tool ? toolGeo(cfg.tool, M) : null;
   if (tool) P.r.hand.add(tool);
   if (cfg.pouch) { const pouch = toolGeo('sack', M); pouch.scale.setScalar(0.5); P.l.hand.add(pouch); }

@@ -128,10 +128,10 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     ambient = id && makeAmbient(id);
   }
   function makeAmbient(id) {
-    const jobs = id === 'fields' ? ['farmer', 'peasant'] : id === 'pasture' || id === 'laundry' ? ['peasant', 'farmer'] : ['guard', 'knight', 'warrior'];
+    const jobs = id === 'fields' || id === 'wheat' ? ['farmer', 'peasant'] : id === 'pasture' || id === 'laundry' ? ['peasant', 'farmer'] : ['guard', 'knight', 'warrior'];
     const hero = named.find((n) => jobs.includes(n.job) && !atWork.includes(n) && !keepers.includes(n)) || null;
     return { kind: 'ambient', id, pos: castle.keep.clone(), radius: 8, front: 0, label: null, labels: [], weight: 1.1, cut: true,
-      hero: hero && { id: hero.id, name: hero.name, job: hero.job }, sceneJob: id === 'fields' ? 'farmer' : null };
+      hero: hero && { id: hero.id, name: hero.name, job: hero.job }, sceneJob: id === 'fields' || id === 'wheat' ? 'farmer' : null };
   }
   if (ambient) targets.push(ambient);
   if (tavern) {

@@ -461,3 +461,16 @@ test('the Second Wall never stands on a house: planned round the town, houses in
   for (const [x, z] of [s.wall2.pts[0], s.wall2.pts.at(-1)]) assert.ok(w.river.dist(x, z) < 16, 'the wall ends at the water');
   assert.ok(diffs.every((d) => Array.isArray(d.housesMoved)));
 });
+
+test('the Second Wall keeps off the fields and buildings and runs down to the river at both ends', async () => {
+  const { world, RIVER_HALF_WIDTH } = await import('../src/sim/world.js');
+  const { crossesFields } = await import('../src/sim/wall.js');
+  const { ensureWall2 } = await import('../src/sim/simulate.js');
+  // day 2026-10-22 was planned over two wheat fields (owner): the route is planned again, once
+  const { state: raw } = JSON.parse(fs.readFileSync(new URL('../state/history/2026-10-22.json', import.meta.url)));
+  const s = migrate(raw), w = world(s.seed);
+  assert.ok(crossesFields(w, s.wall2.pts), 'the saved route crossed the fields');
+  ensureWall2(s, w, { housesMoved: [] });
+  assert.ok(!crossesFields(w, s.wall2.pts), 'the new route keeps off fields and building lots');
+  for (const [x, z] of [s.wall2.pts[0], s.wall2.pts.at(-1)]) assert.ok(w.river.dist(x, z) <= RIVER_HALF_WIDTH + 1.01, 'each end on the river bank');
+});

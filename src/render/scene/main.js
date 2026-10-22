@@ -17,7 +17,7 @@ import { buildWorkScene, sceneOf } from './work.js';
 import { buildCaravan } from './caravan.js';
 import { buildTavernInterior } from './tavern.js';
 import { buildStory } from './stories/index.js';
-import { buildFields } from './ambient.js';
+import { buildFields, buildWheat } from './ambient.js';
 import { buildWallWatch } from './wallwatch.js';
 import { buildPasture, buildLaundry } from './everyday.js';
 import { buildSparring, buildDummyDrill } from './drills.js';
@@ -104,7 +104,8 @@ async function setup(data) {
     const a = { w, M, seed: state.seed, hero, lang: data.lang };
     const watch = (o) => buildWallWatch({ castle, w, state, M, seed: state.seed, hero, lang: data.lang, ...o });
     return id === 'patrol' ? watch({ mode: 'day' }) : id === 'change' ? watch({ mode: 'change' })
-      : id === 'sparring' ? buildSparring(a) : id === 'pasture' ? buildPasture(a) : id === 'laundry' ? buildLaundry(a) : buildFields(a);
+      : id === 'sparring' ? buildSparring(a) : id === 'pasture' ? buildPasture(a) : id === 'laundry' ? buildLaundry(a)
+        : id === 'wheat' ? buildWheat({ ...a, month: Number(state.date.slice(5, 7)) }) : buildFields(a);
   };
   const awayScene = (variant, hero, home, guest = null) => {
     const ground = (x, z) => heightAt(w, x, z);

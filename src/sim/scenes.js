@@ -98,7 +98,8 @@ export function planScenes(state, { featured, tavern, avoidJobs = [], buildingSh
     const GUARDS = ['patrol', 'sparring', 'change'];
     const k = Math.floor(rand01(state.seed, 'ambient', day) * GUARDS.length);
     const guards = (guardsOk ? GUARDS.map((_, i) => GUARDS[(k + i) % GUARDS.length]) : []).filter(fresh);
-    const country = [!winter && !seen.has('farmer') && !seen.has('peasant') && 'fields', !winter && !seen.has('peasant') && 'pasture', !seen.has('peasant') && 'laundry']
+    // many farmers together in a wheat field (owner 2026-10-22): the harvest, or hoeing and sowing in spring
+    const country = [!winter && !seen.has('farmer') && !seen.has('peasant') && 'fields', !winter && !seen.has('farmer') && !seen.has('peasant') && 'wheat', !winter && !seen.has('peasant') && 'pasture', !seen.has('peasant') && 'laundry']
       .filter((id) => id && fresh(id));
     const life = country[Math.floor(rand01(state.seed, 'country', day) * country.length)];
     ambient = guards.length && (day % 2 === 1 || !life) ? guards[0] : life || null;

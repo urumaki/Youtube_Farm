@@ -8,7 +8,7 @@ import { dailyEvents } from './events.js';
 import { pickStory } from './stories.js';
 import { pickFeatured, shownJobs, markShown } from './featured.js';
 import { planScenes, tavernToday, staleJob } from './scenes.js';
-import { planWall2, wallBlockers, insideWall2 } from './wall.js';
+import { planWall2, wallBlockers, insideWall2, crossesFields } from './wall.js';
 import { obbOverlap } from './geometry.js';
 
 export const SCHEMA_VERSION = 1;
@@ -395,6 +395,8 @@ function blockersOf(w, wall2) {
 export function ensureWall2(s, w = world(s.seed), diff = null) {
   if (!s.buildings.some((b) => b.id === 'wall2')) return;
   s.wall2 ??= planWall2(w, s);
+  // routes planned before the wall kept off the fields (owner 2026-10-22) are planned again, once
+  if (crossesFields(w, s.wall2.pts)) s.wall2 = planWall2(w, s);
   const wall = blockersOf(w, s.wall2);
   for (const [k, p] of s.plots.entries()) {
     if (!wall.some((b) => obbOverlap(b, p))) continue;
