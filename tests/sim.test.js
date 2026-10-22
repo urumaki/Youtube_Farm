@@ -230,6 +230,8 @@ test('offensive and blocked names are never used, and a block removes a given na
   checkInvariants(r.state);
   assert.equal(cleanName('@Mario Rossi'), 'Mario Rossi');
   assert.equal(isOffensive('skill_gamer'), false);
+  assert.equal(isOffensive('georgebranscom892'), false, 'a name with "com" in it is not a link');
+  assert.equal(isOffensive('visit mysite.com'), true);
 });
 
 test('comment job requests: granted when unlocked, apprentice (then promoted) when not, existing villagers can switch', async () => {

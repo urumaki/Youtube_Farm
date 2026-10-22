@@ -6487,7 +6487,15 @@
    "requestDay": 7
   }
  },
- "nameQueue": [],
+ "nameQueue": [
+  {
+   "name": "georgebranscom892",
+   "author": "UCts-GEA2D23EQ5Id5EXL8MQ",
+   "wants": [
+    "farmer"
+   ]
+  }
+ ],
  "namedAuthors": [
   "UCsPI_Wrw0Xi8lRlzg3wxo9g",
   "UCOzwPX3pist3AuPQDeyqttQ",

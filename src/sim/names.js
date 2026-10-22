@@ -66,5 +66,6 @@ export function cleanName(raw) {
 export function isOffensive(name) {
   const flat = name.toLowerCase().replace(/[0@]/g, 'o').replace(/[1!|]/g, 'i').replace(/3/g, 'e').replace(/4/g, 'a').replace(/[5$]/g, 's');
   const squeezed = flat.replace(/[^a-z]/g, '');
-  return BAD.some((w) => flat.includes(w) || (w.length > 3 && squeezed.includes(w.replace(/[^a-z]/g, ''))));
+  // the link pieces ('.com', 'www.') only as written: squeezed, '.com' would match any name with 'com' in it
+  return BAD.some((w) => flat.includes(w) || (w.length > 3 && !w.includes('.') && squeezed.includes(w.replace(/[^a-z]/g, ''))));
 }
