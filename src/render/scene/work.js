@@ -129,6 +129,22 @@ const JOB_SCENES = {
   tailor: { period: 0.9, raise: -1.55, down: -1.08, bend: 0.15, sound: 'none', tool: null, props: 'sewing', smooth: true, left: -1.05 },
   physician: { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95 },
   taxcollector: { period: 0.75, raise: -1.3, down: -1.05, bend: 0.12, sound: 'none', tool: null, props: 'ledger', smooth: true, left: -1.1 },
+  // goals added 2026-10-22: the potter at the wheel (the pot grows), the cobbler and the cooper hammering,
+  // the beekeeper puffing smoke over the hives, the bell founder striking a new bell, the clockmaker at a
+  // bench of turning gears
+  potter: { period: 1.6, raise: -1.05, down: -0.9, bend: 0.3, sound: 'none', tool: null, props: 'wheel', smooth: true, both: true },
+  cobbler: { period: 0.5, hit: 0.75, raise: -1.75, down: -1.0, bend: 0.25, fx: 'dust', sound: 'chisel', tool: 'hammer', props: 'last', left: -1.0 },
+  cooper: { period: 0.75, hit: 0.72, raise: -2.3, down: -1.0, bend: 0.15, fx: 'chips', sound: 'chop', tool: 'mallet', props: 'barrel', left: -0.9 },
+  beekeeper: { period: 2.0, hit: 0.5, raise: -1.4, down: -1.0, bend: 0.1, fx: 'steam', sound: 'none', tool: 'smoker', props: 'hives', smooth: true, left: -0.5 },
+  bellfounder: { period: 1.6, hit: 0.72, raise: -2.2, down: -1.2, bend: 0.1, fx: null, sound: 'anvil', tool: 'mallet', props: 'bell', left: -0.4 },
+  clockmaker: { period: 1.1, raise: -1.3, down: -1.08, bend: 0.2, sound: 'none', tool: 'tongs', props: 'gears', smooth: true, left: -1.1 },
+  // jobs only asked for in the comments: the rat catcher swings a sack at the rats (and misses), the chimney
+  // sweep pushes a brush down a chimney (soot flies), the falconer's falcon flies off the glove and back,
+  // the cook stirs a pot over the fire
+  ratcatcher: { period: 1.3, hit: 0.65, raise: -2.4, down: -0.6, bend: 0.35, fx: 'dirt', sound: 'hoe', tool: 'sack', props: 'rats', both: true },
+  chimneysweep: { period: 1.2, hit: 0.5, raise: -2.75, down: -2.35, bend: 0, fx: 'soot', sound: 'none', tool: 'brush', props: 'chimney', push: true, left: -0.35 },
+  falconer: { period: 4.0, raise: -0.15, down: -0.15, bend: 0, sound: 'none', tool: null, props: 'falcon', smooth: true, left: -1.45, still: true },
+  cook: { period: 2.0, hit: 0.5, raise: -1.2, down: -1.2, bend: 0.15, fx: 'steam', sound: 'none', tool: 'paddle', props: 'cauldron', stir: true, both: true },
   executioner: { period: 1.6, hit: 0.72, raise: -2.8, down: -0.9, bend: 0.25, fx: 'leaves', sound: 'chop', tool: 'axe', props: 'chopblock', both: true, hood: true },
 };
 const DEFAULT_SCENE = { period: 2.4, hit: 0.5, raise: -2.6, down: -0.2, bend: 0, fx: null, sound: 'none', tool: null, props: 'market', wave: true };
@@ -279,6 +295,12 @@ export function toolGeo(kind, M) {
   } else if (kind === 'basket') {
     add(cylGeo(0.24, 0.18, 0.24, 10).translate(-0.28, -0.05, 0.25), M.wood);
     for (let i = 0; i < 3; i++) add(new THREE.SphereGeometry(0.06, 6, 5).scale(3, 0.8, 0.6).translate(-0.33 + i * 0.05, 0.1, 0.22 + i * 0.03), M.iron);
+  } else if (kind === 'smoker') { // a small tin can with a spout, smoke comes out of it
+    add(cylGeo(0.08, 0.08, 0.2, 10).rotateX(Math.PI / 2).translate(0, -0.05, 0.12), iron);
+    add(new THREE.ConeGeometry(0.06, 0.12, 8).rotateX(Math.PI / 2).translate(0, -0.05, 0.28), iron);
+  } else if (kind === 'brush') { // the sweep's brush: a long pole on from the raised arms, a round bristle head at the end
+    add(cylGeo(0.02, 0.02, 2.2, 6).translate(0, -1.1, 0.02), wood);
+    add(new THREE.SphereGeometry(0.2, 10, 8).scale(1, 0.6, 1).translate(0, -2.25, 0.02), M.gear);
   } else if (kind === 'bow') {
     add(new THREE.TorusGeometry(0.5, 0.018, 5, 18, Math.PI * 0.8).rotateZ(Math.PI * 0.1).rotateY(Math.PI / 2).translate(0, 0.3, 0.05), M.woodDark);
   }
@@ -569,6 +591,130 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       for (let i = 0; i < 2; i++) add(new THREE.TorusGeometry(0.7 - i * 0.05, 0.02, 4, 18).rotateX(Math.PI / 2).translate(0, 0.25 + i * 0.5, 1.05), M.iron);
       return new THREE.Vector3(0, 0.92, 1.05);
     }
+    case 'wheel': { // a potter's wheel turning; the pot on it grows taller through the shot
+      add(boxGeo(0.7, 0.62, 0.7).translate(0, 0.31, 0.62), M.woodDark);
+      const wheel = add(cylGeo(0.36, 0.36, 0.06, 18).translate(0, 0.65, 0), M.wood);
+      wheel.position.z = 0.62;
+      const pot = add(new THREE.SphereGeometry(0.17, 14, 10).scale(1, 1.3, 1).translate(0, 0.2, 0), M.clay);
+      pot.position.set(0, 0.68, 0.62);
+      for (let i = 0; i < 3; i++) add(new THREE.SphereGeometry(0.13, 12, 8).scale(1, 1.4, 1).translate(-1.0 + i * 0.3, 0.18, 1.1), M.clay); // finished pots
+      anim.push((t) => {
+        wheel.rotation.y = pot.rotation.y = t * 7;
+        pot.scale.y = 0.45 + 0.55 * Math.min(1, (t % 6) / 4);
+      });
+      return new THREE.Vector3(0, 0.92, 0.62);
+    }
+    case 'last': { // a low bench with a shoe on an iron last
+      add(boxGeo(1.2, 0.45, 0.5).translate(0.2, 0.22, 0.65), M.wood);
+      add(cylGeo(0.05, 0.06, 0.3, 8).translate(0, 0.6, 0.65), M.iron);
+      add(boxGeo(0.14, 0.12, 0.34).translate(0, 0.8, 0.65), M.woodDark); // the shoe
+      for (const x of [0.5, 0.72]) add(boxGeo(0.14, 0.12, 0.32).translate(x, 0.51, 0.62), M.woodDark); // a finished pair
+      return new THREE.Vector3(0, 0.86, 0.65);
+    }
+    case 'barrel': { // a barrel standing on end; the hoop is hammered down round its top
+      add(cylGeo(0.36, 0.33, 0.9, 16).translate(0, 0.45, 0.75), M.wood);
+      for (const y of [0.15, 0.75]) add(new THREE.TorusGeometry(0.36, 0.02, 4, 18).rotateX(Math.PI / 2).translate(0, y, 0.75), M.iron);
+      for (let i = 0; i < 3; i++) add(cylGeo(0.36, 0.36, 0.9, 14).rotateZ(Math.PI / 2).translate(1.2, 0.36 + i * 0.0, 0.2 + i * 0.75), M.wood); // finished barrels
+      return new THREE.Vector3(0, 0.9, 0.75);
+    }
+    case 'hives': { // straw skeps on a bench, bees circling them
+      add(boxGeo(2.0, 0.5, 0.6).translate(0, 0.25, 0.9), M.woodDark);
+      const bees = [];
+      for (const x of [-0.65, 0, 0.65]) {
+        add(new THREE.SphereGeometry(0.3, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 1.3, 1).translate(x, 0.5, 0.9), M.hay);
+        for (let k = 0; k < 4; k++) bees.push({ m: add(new THREE.SphereGeometry(0.03, 6, 4), M.iron), x, k });
+      }
+      anim.push((t) => {
+        for (const b of bees) {
+          const a = t * (2.5 + b.k * 0.4) + b.k * 1.6 + b.x * 3;
+          b.m.position.set(b.x + Math.cos(a) * (0.35 + 0.1 * b.k), 0.75 + 0.15 * Math.sin(a * 1.7), 0.9 + Math.sin(a) * (0.35 + 0.1 * b.k));
+        }
+      });
+      return new THREE.Vector3(0, 0.95, 0.8);
+    }
+    case 'bell': { // a new bronze bell hanging from a timber frame; it swings a little when struck
+      for (const x of [-0.9, 0.9]) add(boxGeo(0.16, 2.3, 0.16).translate(x, 1.15, 0.9), M.woodDark);
+      add(boxGeo(2.0, 0.16, 0.18).translate(0, 2.3, 0.9), M.woodDark);
+      const bell = new THREE.Group();
+      bell.position.set(0, 2.22, 0.9);
+      holder.add(bell);
+      for (const [geo, m] of [[cylGeo(0.28, 0.55, 0.85, 18, 1).translate(0, -0.55, 0), M.gold], [cylGeo(0.06, 0.06, 0.12, 8).translate(0, -0.06, 0), M.iron]]) {
+        const o = new THREE.Mesh(geo, m); o.castShadow = true; bell.add(o);
+      }
+      anim.push((t, c, swing) => { bell.rotation.x = 0.08 * swing * Math.sin(t * 9); });
+      return new THREE.Vector3(0, 1.45, 0.4);
+    }
+    case 'gears': { // a bench with brass gears turning and a clock face waiting for its hands
+      add(boxGeo(1.4, 0.08, 0.7).translate(0, 0.8, 0.62), M.wood);
+      for (const x of [-0.6, 0.6]) add(boxGeo(0.08, 0.8, 0.6).translate(x, 0.4, 0.62), M.woodDark);
+      const gears = [[-0.35, 0.16, 1], [-0.1, 0.1, -1.6], [0.32, 0.13, 1.2]].map(([x, r, k]) => {
+        const g = add(cylGeo(r, r, 0.03, 12), M.gold);
+        g.position.set(x, 0.86, 0.6);
+        return { g, k };
+      });
+      add(cylGeo(0.22, 0.22, 0.03, 20).rotateX(Math.PI / 2).translate(0.35, 1.08, 0.9), M.clothIvory);
+      anim.push((t) => { for (const { g, k } of gears) g.rotation.y = t * k; });
+      return new THREE.Vector3(0, 0.9, 0.55);
+    }
+    case 'rats': { // rats running round in front of the rat catcher, never caught
+      const rats = [0, 1, 2].map(() => {
+        const r = new THREE.Group();
+        r.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6).scale(1, 0.8, 1.8), M.stoneDark), { castShadow: true }));
+        r.add(new THREE.Mesh(cylGeo(0.008, 0.004, 0.2, 4).rotateX(Math.PI / 2).translate(0, 0, -0.2), M.stoneDark));
+        holder.add(r);
+        return r;
+      });
+      anim.push((t) => rats.forEach((r, i) => {
+        const a = t * 2.2 + i * 2.1;
+        r.position.set(Math.cos(a) * 0.7, 0.06, 1.0 + Math.sin(a) * 0.5);
+        r.rotation.y = -a; // running round the circle
+      }));
+      add(cylGeo(0.3, 0.35, 0.5, 10).translate(1.2, 0.25, 0.4), M.wood); // a barrel they live under
+      return new THREE.Vector3(0, 0.1, 1.0);
+    }
+    case 'chimney': { // a tall chimney stack at the croft's corner, the brush pushed into its top
+      // under the brush head halfway through the push (the right arm at -2.55, the pole 2.25 m on from the hand)
+      add(boxGeo(0.8, 3.4, 0.8).translate(0.3, 1.7, 1.65), M.stone);
+      add(boxGeo(0.95, 0.15, 0.95).translate(0.3, 3.45, 1.65), M.stoneDark);
+      return new THREE.Vector3(0.3, 3.6, 1.65);
+    }
+    case 'falcon': { // a perch; the falcon flies off the glove, circles high and comes back
+      add(boxGeo(0.1, 1.5, 0.1).translate(1.0, 0.75, 0.4), M.woodDark);
+      add(boxGeo(0.5, 0.06, 0.06).translate(1.0, 1.5, 0.4), M.woodDark);
+      const bird = new THREE.Group();
+      holder.add(bird);
+      bird.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6).scale(0.8, 0.9, 1.6), M.wood), { castShadow: true }));
+      const wings = [-1, 1].map((s) => {
+        const wg = new THREE.Group();
+        wg.add(new THREE.Mesh(boxGeo(0.4, 0.02, 0.18).translate(s * 0.2, 0, 0), M.woodDark));
+        bird.add(wg);
+        return { wg, s };
+      });
+      const glove = new THREE.Vector3(-0.3, 1.43, 0.66), C0 = new THREE.Vector3(0, 3.4, 3.0);
+      const loop = (a) => new THREE.Vector3(C0.x + Math.sin(a) * 2.6, C0.y + 0.4 * Math.sin(a * 2), C0.z - Math.cos(a) * 2.6);
+      anim.push((t, c) => {
+        const u = c - Math.floor(c);
+        let flap = 0;
+        if (u < 0.2) bird.position.copy(glove);
+        else if (u < 0.3) { bird.position.copy(glove).lerp(loop(0), (u - 0.2) / 0.1); flap = 1; }
+        else if (u < 0.85) { bird.position.copy(loop(((u - 0.3) / 0.55) * Math.PI * 2)); flap = 1; }
+        else { bird.position.copy(loop(Math.PI * 2)).lerp(glove, (u - 0.85) / 0.15); flap = 1; }
+        bird.rotation.y = u < 0.2 ? 0 : -((u - 0.3) / 0.55) * Math.PI * 2;
+        for (const { wg, s } of wings) wg.rotation.z = s * (flap ? 0.6 * Math.sin(t * 18) : -0.9); // folded on the glove
+      });
+      return new THREE.Vector3(-0.3, 1.5, 0.66);
+    }
+    case 'cauldron': { // a pot on a tripod over a fire, the stew steaming
+      for (let k = 0; k < 3; k++) {
+        const a = (k / 3) * Math.PI * 2;
+        add(cylGeo(0.025, 0.025, 1.1, 5).translate(0, 0.55, 0).rotateZ(Math.cos(a) * 0.3).rotateX(Math.sin(a) * 0.3).translate(Math.cos(a) * 0.45, 0, 1.05 + Math.sin(a) * 0.45), M.iron);
+      }
+      add(cylGeo(0.5, 0.38, 0.5, 16).translate(0, 0.62, 1.05), M.iron);
+      add(cylGeo(0.47, 0.47, 0.02, 16).translate(0, 0.85, 1.05), M.clay);
+      for (let i = 0; i < 4; i++) add(cylGeo(0.05, 0.06, 0.6, 6).rotateZ(Math.PI / 2).rotateY(i * 0.8).translate(0, 0.08, 1.05), M.woodDark);
+      add(new THREE.ConeGeometry(0.25, 0.35, 8).translate(0, 0.25, 1.05), new THREE.MeshBasicMaterial({ color: '#ff9a3c' }));
+      return new THREE.Vector3(0, 0.88, 1.05);
+    }
     case 'none':
       return new THREE.Vector3(0, 1.2, 0.4);
     default: { // a little stall with goods
@@ -594,6 +740,7 @@ const FX = {
   steam: { n: 22, color: '#e9edf0', size: 0.3, add: false, speed: [0.05, 0.3], up: [0.5, 1.0], life: 1.6, g: -0.2, bias: 0 },
   flour: { n: 22, color: '#f1ede2', size: 0.09, add: false, speed: [0.3, 1.0], up: [0.4, 1.2], life: 1.0, g: 1.5 },
   sawdust: { n: 20, color: '#e2c48e', size: 0.05, add: false, speed: [0.1, 0.5], up: [-0.2, 0.3], life: 0.7 },
+  soot: { n: 26, color: '#2a2a2c', size: 0.12, add: false, speed: [0.3, 1.0], up: [0.8, 1.8], life: 1.1 },
   ale: { n: 14, color: '#c98a2b', size: 0.05, add: false, speed: [0, 0.05], up: [-0.6, -0.2], life: 0.35, bias: 0 },
 };
 

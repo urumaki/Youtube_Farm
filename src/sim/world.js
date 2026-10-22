@@ -110,6 +110,16 @@ function buildWorld(seed) {
   w.wall2 = buildWall2(w);
   w.fields = buildFields(w, r);
   w.plots = buildPlots(w, seed);
+  // added after the plots, so the plot list never changes (virtual lots, houses do not see them): the
+  // beehives in a corner of a field west of the castle, the Great Bridge across the river south of town
+  const f = w.fields[2] || w.fields[0];
+  if (f) {
+    const c = Math.cos(f.rot), s = Math.sin(f.rot);
+    w.lots.apiary = { id: 'apiary', x: f.x - c * (f.hw - 3) + s * (f.hd - 2.5), z: f.z - s * (f.hw - 3) - c * (f.hd - 2.5), hw: 2.5, hd: 2, rot: f.rot, virtual: true };
+  }
+  const bp = w.riverPts.reduce((b, p) => (Math.abs(p[0] - 150) < Math.abs(b[0] - 150) ? p : b));
+  const bq = w.riverPts[Math.min(w.riverPts.length - 1, w.riverPts.indexOf(bp) + 1)];
+  w.lots.stone_bridge = { id: 'stone_bridge', x: bp[0], z: bp[1], hw: 5, hd: RIVER_HALF_WIDTH + 9, rot: Math.atan2(bq[1] - bp[1], bq[0] - bp[0]), virtual: true, onWater: true };
   return w;
 }
 
@@ -192,6 +202,12 @@ function buildLots(w, r) {
   lots.pillory = { id: 'pillory', x: MARKET.x - 11, z: 14.2, hw: 2.6, hd: 1.7, rot: 0, virtual: true, onPlaza: 'market' };
   lots.tailor_stall = { id: 'tailor_stall', x: MARKET.x + 11, z: -13.8, hw: 1.8, hd: 1.6, rot: 0, virtual: true, onPlaza: 'market' };
   lots.physician_booth = { id: 'physician_booth', x: MARKET.x + 12, z: 14.2, hw: 2.2, hd: 1.6, rot: 0, virtual: true, onPlaza: 'market' };
+  // workshops on the ward squares (built after their ward): beside the fountain, clear of the banner poles
+  lots.cooperage = { id: 'cooperage', x: lots.district_east.x, z: lots.district_east.z - 12, hw: 3.6, hd: 2.4, rot: 0, virtual: true, onPlaza: 'district_east' };
+  lots.bell_foundry = { id: 'bell_foundry', x: lots.district_north.x, z: lots.district_north.z - 11.5, hw: 3.6, hd: 2.6, rot: 0, virtual: true, onPlaza: 'district_north' };
+  lots.clock_tower = { id: 'clock_tower', x: lots.district_south.x, z: lots.district_south.z - 11, hw: 3, hd: 3, rot: 0, virtual: true, onPlaza: 'district_south' };
+  lots.potter_stall = { id: 'potter_stall', x: MARKET.x - 18, z: -13.8, hw: 1.6, hd: 1.6, rot: 0, virtual: true, onPlaza: 'market' };
+  lots.cobbler_stall = { id: 'cobbler_stall', x: MARKET.x + 18, z: 14.2, hw: 1.6, hd: 1.6, rot: 0, virtual: true, onPlaza: 'market' };
   void r;
   return lots;
 }

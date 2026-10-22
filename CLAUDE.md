@@ -143,6 +143,12 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Added 2026-10-22: 1250 Tailor + Tailor's Stall, 1500 Physician (moved from 2500) + Physician's Booth
   (both on the market square, work scenes `sewing` and `remedies`). The Noble at 10,000 became the Tax
   Collector (no noble titles as jobs; comments asking for lord, landlord, noble, duke or baron get it).
+  Also added 2026-10-22, each with a work scene: 850 Potter + Potter's Stall, 1750 Cobbler + Cobbler's
+  Stall (market square), 2000 Cooper + Cooperage (East Ward square), 3000 Beekeeper + Beehives (corner of
+  a field west of the castle), 4000 Bell Founder + Bell Foundry (North Ward square), 7500 Clockmaker +
+  Clock Tower (South Ward square), 250,000 the Great Bridge across the river south of town. The beehives
+  and the bridge are virtual lots added after the plots (`world.js`), so plots never move. Jobs only by
+  request: Rat Catcher, Chimney Sweep, Falconer, Cook.
 - `src/audio/` narration templates (names are never read aloud), Kokoro TTS (`am_adam`), procedural
   music, camera-driven sound effects with strikes synced to the work animations (`sfx.js`).
   The voice follows the shots: `produceVideo` first sets the scene up once to get the shot plan

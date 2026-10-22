@@ -36,8 +36,8 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   for (const id of [...diff.buildingsStarted, ...diff.buildingsCompleted]) {
     const it = buildings.items[id];
     if (!it || targets.some((t) => t.id === id) || targets.length >= maxBuildings) continue;
-    const SMALL = ['crier_stand', 'pillory', 'tailor_stall', 'physician_booth'];
-    const big = ['cathedral', 'palace', 'tournament', 'harbor', 'wall2', 'university', 'colossus', 'townhall'].includes(id);
+    const SMALL = ['crier_stand', 'pillory', 'tailor_stall', 'physician_booth', 'potter_stall', 'cobbler_stall', 'apiary'];
+    const big = ['cathedral', 'palace', 'tournament', 'harbor', 'wall2', 'university', 'colossus', 'townhall', 'stone_bridge'].includes(id);
     targets.push({
       kind: 'building', id, pos: it.focus.clone(), radius: big ? 70 : SMALL.includes(id) ? 13 : 30, front: (it.lot?.rot ?? 0) + Math.PI / 2,
       label: { title: BUILDINGS[id].label.replace(/^the /, 'The '), sub: diff.buildingsCompleted.includes(id) ? 'Completed!' : 'Construction begins' },

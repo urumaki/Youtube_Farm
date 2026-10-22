@@ -207,6 +207,90 @@ const BUILD = {
     b.add('wood', boxGeo(1.8, 0.45, 0.4), 0.4, 0.22, -1.4); // the bench
     out.focusH = 1.8;
   },
+  // goals added 2026-10-22
+  potter_stall(b, lot, out) {
+    // an orange awning over shelves of jugs and bowls, a wheel at the side
+    b.add('wood', boxGeo(2.6, 0.9, 1.0), 0, 0.45, 0.3);
+    for (const [x, z] of [[-1.3, -0.5], [1.3, -0.5], [-1.3, 0.9], [1.3, 0.9]]) b.add('woodDark', boxGeo(0.12, 2.5, 0.12), x, 1.25, z);
+    b.add('awning3', gableGeo(3.2, 2.0, 0.65), 0, 2.5, 0.2);
+    for (let i = 0; i < 5; i++) b.add('clay', new THREE.SphereGeometry(0.17, 10, 8).scale(1, 1.25 + (i % 2) * 0.4, 1), -1.0 + i * 0.5, 1.12, 0.3);
+    b.add('woodDark', boxGeo(2.4, 0.06, 0.4), 0, 1.7, -0.45);
+    for (let i = 0; i < 6; i++) b.add('clay', cylGeo(0.12, 0.08, 0.16, 10), -1.0 + i * 0.4, 1.81, -0.45);
+    b.add('wood', cylGeo(0.35, 0.35, 0.06, 16), 1.9, 0.62, 0.5); b.add('woodDark', boxGeo(0.5, 0.58, 0.5), 1.9, 0.29, 0.5);
+    out.focusH = 1.8;
+  },
+  cobbler_stall(b, lot, out) {
+    // a red awning over a counter of shoes and boots, a pair hanging from the front beam
+    b.add('wood', boxGeo(2.6, 0.9, 1.0), 0, 0.45, 0.3);
+    for (const [x, z] of [[-1.3, -0.5], [1.3, -0.5], [-1.3, 0.9], [1.3, 0.9]]) b.add('woodDark', boxGeo(0.12, 2.5, 0.12), x, 1.25, z);
+    b.add('awning0', gableGeo(3.2, 2.0, 0.65), 0, 2.5, 0.2);
+    for (let i = 0; i < 4; i++) for (const s of [-0.09, 0.09]) b.add('woodDark', boxGeo(0.14, 0.1 + (i % 2) * 0.22, 0.32), -0.9 + i * 0.6 + s, 0.95 + (i % 2) * 0.11, 0.3);
+    for (const s of [-0.12, 0.12]) b.add('woodDark', boxGeo(0.14, 0.4, 0.14), 0.5 + s, 1.95, -0.5);
+    out.focusH = 1.8;
+  },
+  cooperage(b, lot, out) {
+    // an open shed with barrels stacked under it, hoops on the wall, a half-made barrel in front
+    for (const [x, z] of [[-3.2, -2], [3.2, -2], [-3.2, 2], [3.2, 2]]) b.add('woodDark', boxGeo(0.25, 3.2, 0.25), x, 1.6, z);
+    b.add('wood', boxGeo(7.0, 3.2, 0.2), 0, 1.6, 2.1);
+    b.add('roofRed', gableGeo(7.6, 5.0, 1.6), 0, 3.2, 0);
+    for (let i = 0; i < 3; i++) b.add('wood', cylGeo(0.5, 0.5, 1.1, 14).rotateZ(Math.PI / 2), -2.2 + i * 1.05, 0.5, 1.2);
+    for (let i = 0; i < 2; i++) b.add('wood', cylGeo(0.5, 0.5, 1.1, 14).rotateZ(Math.PI / 2), -1.7 + i * 1.05, 1.4, 1.2);
+    for (let i = 0; i < 3; i++) b.add('iron', new THREE.TorusGeometry(0.5, 0.03, 4, 16), 1.6 + i * 0.5, 2.1, 1.95);
+    b.add('wood', cylGeo(0.45, 0.38, 1.0, 14), 1.5, 0.5, -1.0);
+    out.smoke.push([0, 4.2, 0]);
+    out.focusH = 3;
+  },
+  apiary(b, lot, out) {
+    // straw skeps in a row on a long bench, a small shelter roof over them
+    b.add('woodDark', boxGeo(4.0, 0.5, 0.8), 0, 0.25, 0);
+    for (let i = 0; i < 5; i++) b.add('thatch', new THREE.SphereGeometry(0.38, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 1.3, 1), -1.6 + i * 0.8, 0.5, 0);
+    for (const x of [-1.9, 1.9]) b.add('woodDark', boxGeo(0.12, 1.9, 0.12), x, 0.95, -0.5);
+    b.add('thatch', boxGeo(4.4, 0.15, 1.6).rotateX(0.35), 0, 1.9, -0.1);
+    out.focusH = 1.2;
+  },
+  bell_foundry(b, lot, out) {
+    // a stone workshop with a tall furnace chimney, and a new bell hanging in a timber frame outside
+    house(b, 0, 0.6, 6.4, 3.8, 3.4, { roof: 'slate', wall: 'stone' });
+    b.add('stone', boxGeo(1.2, 7.5, 1.2), 2.4, 3.75, 1.3);
+    out.smoke.push([2.4, 7.8, 1.3, 'dark']);
+    for (const x of [-1.6, 1.6]) b.add('woodDark', boxGeo(0.25, 3.6, 0.25), x, 1.8, -2.2);
+    b.add('woodDark', boxGeo(3.6, 0.25, 0.3), 0, 3.6, -2.2);
+    b.add('gold', cylGeo(0.5, 1.0, 1.5, 20, 1), 0, 2.6, -2.2);
+    out.focusH = 3;
+  },
+  clock_tower(b, lot, out) {
+    // a tall square stone tower with a clock face on each side and a slate spire
+    const H = 17;
+    b.add('stone', boxGeo(5, H, 5), 0, H / 2, 0);
+    b.add('stoneDark', boxGeo(5.6, 0.6, 5.6), 0, H + 0.3, 0);
+    b.add('slate', pyramidGeo(5.8, 5.8, 6), 0, H + 0.6, 0);
+    for (let k = 0; k < 4; k++) {
+      const ry = (k * Math.PI) / 2, dx = Math.sin(ry) * 2.53, dz = -Math.cos(ry) * 2.53;
+      b.add('ivory', cylGeo(1.5, 1.5, 0.06, 24).rotateX(Math.PI / 2), dx, H - 3, dz, ry);
+      b.add('gold', new THREE.TorusGeometry(1.5, 0.08, 6, 24), dx, H - 3, dz, ry);
+      b.add('iron', boxGeo(0.12, 1.1, 0.04).translate(0, 0.5, 0).rotateZ(-0.5), dx * 1.02, H - 3, dz * 1.02, ry); // the hands at ten past ten
+      b.add('iron', boxGeo(0.14, 0.8, 0.04).translate(0, 0.38, 0).rotateZ(0.9), dx * 1.02, H - 3, dz * 1.02, ry);
+    }
+    b.add('woodDark', boxGeo(1.4, 2.4, 0.2), 0, 1.2, -2.55);
+    out.flags.push([0, H + 7.2, 0, 1.4, 0.9]);
+    out.focusH = 12;
+  },
+  stone_bridge(b, lot) {
+    // a stone bridge across the river: piers with cutwaters in the water, the deck between the banks,
+    // parapets and a small gate tower at each end (local z across the river, x along it)
+    const L = lot.hd * 2, W = lot.hw * 2;
+    b.add('stone', boxGeo(W, 1.2, L, 4), 0, 0.6, 0);
+    for (const x of [-W / 2 + 0.3, W / 2 - 0.3]) b.add('stone', boxGeo(0.6, 1.1, L, 4), x, 1.75, 0);
+    for (const z of [-6.5, 6.5]) {
+      b.add('stone', boxGeo(W + 0.6, 9, 2.6, 4), 0, -4.5, z);
+      for (const s of [-1, 1]) b.add('stone', boxGeo(1.9, 9, 1.9).rotateY(Math.PI / 4), s * (W / 2 + 0.3), -4.5, z);
+    }
+    for (const z of [-L / 2 + 2, L / 2 - 2]) {
+      for (const x of [-W / 2 - 0.4, W / 2 + 0.4]) b.add('stone', boxGeo(1.6, 6, 1.6), x, 3, z);
+      b.add('stone', boxGeo(W + 2.4, 1.4, 1.6), 0, 5.5, z);
+      b.add('slate', pyramidGeo(W + 2.6, 2.0, 1.2), 0, 6.2, z);
+    }
+  },
   tavern(b, lot, out, ctx) {
     house(b, 0, 0, 13, 9, 7, { roof: 'thatch', wall: 'timber', roofH: 5 });
     windowsRow(b, -5, 5, 2.2, -4.56, 3, 'windowWarm'); windowsRow(b, -5, 5, 5.2, -4.56, 4, 'windowWarm');
