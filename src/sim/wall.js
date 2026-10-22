@@ -113,6 +113,28 @@ function findRoute(w, state) {
   return { day: state.day, pts: straight.map(([x, z]) => [Math.round(x * 10) / 10, Math.round(z * 10) / 10]) };
 }
 
+/**
+ * True when (x, z) lies inside the Second Wall (its route, closed by the river). The route's corners stand
+ * on rays from the town centre, so a point is inside when it is nearer the centre than the wall on its own
+ * ray; on the river side, where there is no wall, inside the first plan's ellipse.
+ */
+export function insideWall2(pts, x, z, margin = 0.03) {
+  const polar = ([px, pz]) => {
+    const u = (px - C.x) / C.rx, v = (pz - C.z) / C.rz;
+    return [Math.atan2(v, u), Math.hypot(u, v)];
+  };
+  const [a, r] = polar([x, z]);
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [a0, r0] = polar(pts[i]), [a1, r1] = polar(pts[i + 1]);
+    let span = a1 - a0, off = a - a0;
+    span -= Math.round(span / (2 * Math.PI)) * 2 * Math.PI;
+    off -= Math.round(off / (2 * Math.PI)) * 2 * Math.PI;
+    if (span === 0 || off / span < 0 || off / span > 1) continue;
+    return r < r0 + (r1 - r0) * (off / span) - margin;
+  }
+  return r < 1;
+}
+
 function toBank(w, from, to) {
   const L = Math.hypot(to[0] - from[0], to[1] - from[1]);
   for (let d = 0; d <= L; d += 0.5) {

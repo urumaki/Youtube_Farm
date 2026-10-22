@@ -51,7 +51,7 @@ export function summarizeDiff(diff) {
   const pick = (k) => (Array.isArray(diff[k]) ? diff[k].length : diff[k]);
   return {
     date: diff.date, day: diff.day, from: diff.from, to: diff.to, delta: diff.delta,
-    added: pick('added'), removed: pick('removed'), housesBuilt: pick('housesBuilt'), housesRebuilt: pick('housesRebuilt'),
+    added: pick('added'), removed: pick('removed'), housesBuilt: pick('housesBuilt'), housesRebuilt: pick('housesRebuilt'), housesRaised: pick('housesRaised'),
     housesReoccupied: pick('housesReoccupied'), housesAbandoned: pick('housesAbandoned'), housesRuined: pick('housesRuined'),
     unlocked: diff.unlocked, buildingsStarted: diff.buildingsStarted, buildingsCompleted: diff.buildingsCompleted,
     weather: diff.weather, events: diff.events.map((e) => e.type + (e.name ? `:${e.name}` : '')), next: diff.next,

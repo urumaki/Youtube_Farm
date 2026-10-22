@@ -143,7 +143,7 @@ export function buildHouseVariant(spec) {
   }
   const eaves = y;
   levels.forEach(({ y: y0, H, j }, f) => {
-    const layer = f === 0 ? 'walls' : 'upper';
+    const layer = f === 0 ? 'walls' : f === floors - 1 ? 'top' : 'upper'; // the top storey on its own (a storey added later rises)
     const zf = -D / 2 - j, zb = D / 2, Wf = W + (f > 0 && jetty ? 0.25 : 0);
     const depth = zb - zf;
     // openings on the front
@@ -186,7 +186,7 @@ export function buildHouseVariant(spec) {
       }
     }
   });
-  if (timber && floors > 1) P.box('upper', 'woodDark', W + 0.35, 0.22, D + 0.5, 0, eaves + 0.05, -0.2);
+  if (timber && floors > 1) P.box('top', 'woodDark', W + 0.35, 0.22, D + 0.5, 0, eaves + 0.05, -0.2);
   // roof
   const pitch = arch === 'cottage' ? 0.85 : arch === 'stone' ? 0.72 : 0.92;
   const roofMat = arch === 'cottage' ? 'thatch' : arch === 'stone' ? 'slate' : 'roofTile';
@@ -206,7 +206,7 @@ export function buildHouseVariant(spec) {
     P.add('details', 'clay', cylGeo(0.13, 0.15, 0.45, 8), cx + 0.15, top + 0.36, 0.4);
     if (r.chance(0.5)) P.add('details', 'clay', cylGeo(0.12, 0.14, 0.38, 8), cx - 0.17, top + 0.33, 0.4);
   }
-  return { parts: P.merged(), eaves, rise, height: eaves + rise, chimneyTop, jetty };
+  return { parts: P.merged(), eaves, rise, height: eaves + rise, chimneyTop, jetty, topBase: levels.at(-1).y };
 }
 
 function wrapY(put, y0, H) {

@@ -4,7 +4,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { heightAt } from '../../sim/world.js';
-import { houseStyle } from '../../sim/simulate.js';
+import { houseStyle, houseFloors } from '../../sim/simulate.js';
 import { hash, rand01 } from '../../sim/prng.js';
 import { gableGeo, boxGeo, cylGeo } from './kit.js';
 import { buildHouseVariant, propGeos } from './houseKit.js';
@@ -18,13 +18,14 @@ const q05 = (v) => Math.round(v * 2) / 2;
 export function houseShape(seed, house, plot, w) {
   const st = houseStyle(seed, plot.id);
   const h = hash(seed, 'arch', plot.id);
-  const cap = house.capacity;
+  const cap = house.cap0 ?? house.capacity; // as built: storeys added later keep the footprint
   // small early houses vary too: some get a second storey, some are stone or thatched cottages
-  const floors = cap >= 8 ? 3 : cap >= 4 ? 2 : cap === 2 ? (h % 3 === 0 ? 1 : 2) : (h >>> 4) % 3 === 0 ? 2 : 1;
+  const built = houseFloors(seed, { plot: house.plot, capacity: cap });
+  const floors = houseFloors(seed, house);
   let arch = 'timber';
-  if (floors === 1 && h % 5 < 2) arch = 'cottage';
-  else if (floors === 1 && h % 5 === 2) arch = 'stone';
-  else if (floors >= 2 && h % 7 < 2) arch = 'stone';
+  if (built === 1 && h % 5 < 2) arch = floors > 1 ? 'timber' : 'cottage'; // a raised cottage is rebuilt timber-framed
+  else if (built === 1 && h % 5 === 2) arch = 'stone';
+  else if (built >= 2 && h % 7 < 2) arch = 'stone';
   const W = Math.max(5, Math.min(q05(2 * plot.hw - 1.0), cap >= 4 ? 9 : 8));
   const D = Math.max(5, Math.min(q05(Math.min(2 * plot.hd - 6, cap >= 4 ? 8.5 : 7)), 8.5));
   const side = plot.facing || 1;
@@ -209,8 +210,11 @@ function farGeo() {
   return g;
 }
 
-/** A single house built layer by layer so construction (0..1) can be animated. */
-export function buildAnimatedHouse(sh, h, seed, M, housesCtx) {
+/**
+ * A single house built layer by layer so construction (0..1) can be animated. `raised`: a lived-in house
+ * getting another storey (the new top floor rises under its roof, which goes up with it).
+ */
+export function buildAnimatedHouse(sh, h, seed, M, housesCtx, { raised = false } = {}) {
   const HM = housesCtx.HM;
   const v = variant(sh, false, seed);
   const g = new THREE.Group();
@@ -263,12 +267,24 @@ export function buildAnimatedHouse(sh, h, seed, M, housesCtx) {
   };
   return {
     group: g, top, mid, chimneyTop, shape: sh,
+    raised,
     /** p: 0 = bare plot · foundation · ground-floor walls · upper floors · roof · details · 1 finished */
     set(p) {
+      if (raised) {
+        // the house stands; the scaffold goes up, the new storey rises and lifts the roof with it
+        const k = Math.min(1, Math.max(0, (p - 0.12) / 0.7));
+        grow(layers.top, 0.12, 0.82, p, v.topBase);
+        if (layers.roof) layers.roof.position.y = -(v.eaves - v.topBase) * (1 - k);
+        scaffold.visible = p > 0.02 && p < 0.96;
+        scaffold.scale.y = Math.max(0.01, Math.min(1, (p - 0.02) / 0.12));
+        return;
+      }
       plinth.visible = p > 0.01;
       grow(layers.foundation, 0.01, 0.1, p);
       grow(layers.walls, 0.1, 0.38, p);
-      grow(layers.upper, 0.36, 0.56, p, 3.45);
+      const three = !!layers.upper;
+      grow(layers.upper, 0.36, 0.46, p, 3.45);
+      grow(layers.top, three ? 0.46 : 0.36, 0.56, p, v.topBase);
       grow(layers.roof, 0.56, 0.8, p, v.eaves);
       grow(layers.details, 0.8, 0.9, p);
       scaffold.visible = p > 0.06 && p < 0.96;

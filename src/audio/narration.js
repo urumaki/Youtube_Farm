@@ -78,6 +78,7 @@ const T = {
     houses1: ['A new house rises along the road.', 'Builders finished a fresh new home.'],
     houses: [(n) => `${n} new houses rise along the roads.`, (n) => `Builders raised ${n} new homes.`],
     rebuilt: [(n) => `${n === 1 ? 'An old ruin was' : `${n} old ruins were`} rebuilt.`],
+    raised: [(n) => `Inside the walls, ${n === 1 ? 'a house grows' : `${n} houses grow`} a new storey.`, () => 'No room left? The town builds upward!'],
     abandoned: [(n) => `${n === 1 ? 'One house stands' : `${n} houses stand`} empty now.`],
     ruined: [(n) => `${n === 1 ? 'An abandoned house has' : `${n} abandoned houses have`} fallen into ruin.`],
     unlocked: [(b) => `The kingdom has grown enough for ${b}!`, (b) => `Hear ye! Work begins on ${b}!`],
@@ -165,6 +166,7 @@ T.it = {
   houses1: ['Una nuova casa sorge lungo la strada.'],
   houses: [(n) => `${n} nuove case sorgono lungo le strade.`],
   rebuilt: [(n) => `${n === 1 ? 'Una rovina è stata ricostruita' : `${n} rovine sono state ricostruite`}.`],
+  raised: [(n) => `Dentro le mura, ${n === 1 ? 'una casa si alza' : `${n} case si alzano`} di un piano.`],
   abandoned: [(n) => `${n === 1 ? 'Una casa ora è vuota' : `${n} case ora sono vuote`}.`],
   ruined: [(n) => `${n === 1 ? 'Una casa abbandonata è crollata' : `${n} case abbandonate sono crollate`}.`],
   unlocked: [(b) => `Il regno è abbastanza grande per ${b}!`],
@@ -277,6 +279,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   if (nb === 1) add(pick(L.houses1), 'houses', 5);
   else if (nb > 1) add(pick(L.houses)(nb.toLocaleString('en-US')), 'houses', 5);
   if (diff.housesRebuilt.length) add(pick(L.rebuilt)(diff.housesRebuilt.length), 'rebuilt', 5);
+  if (diff.housesRaised?.length) add(pick(L.raised)(diff.housesRaised.length), 'raised', 7);
   for (const b of diff.buildingsStarted.slice(0, 2)) add(pick(L.unlocked)(bname(b)), 'unlocked', 8);
   for (const b of diff.buildingsCompleted.slice(0, 2)) add(BUILDINGS[b].plural ? (lang === 'it' ? 'I campi sono pronti per la semina!' : 'The fields are ready to sow!') : pick(L.completed)(bname(b)), 'completed', 8);
   if (diff.housesAbandoned.length) add(pick(L.abandoned)(diff.housesAbandoned.length), 'abandoned', 7);
@@ -302,7 +305,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
   // same order as the shots: caravan, new buildings, villagers at work, then the rest
   // the comment invitation comes with the named villagers (tavern), so the goal and the call to action keep the end
-  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'requests', 'count', 'person', 'pair', 'ambient', 'tavern', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
+  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'raised', 'requests', 'count', 'person', 'pair', 'ambient', 'tavern', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
     const victim = [...S].sort((a, b) => a.priority - b.priority)[0];
@@ -317,7 +320,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
 const SHOT_OF = {
   story: (c) => c.kind === 'event', completed: (c) => c.kind === 'building', unlocked: (c) => c.kind === 'building',
   requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', pair: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', comment: (c) => c.kind === 'tavern', ambient: (c) => c.kind === 'ambient',
-  houses: (c) => c.kind === 'house', rebuilt: (c) => c.kind === 'house', abandoned: (c) => c.kind === 'loss', ruined: (c) => c.kind === 'loss',
+  houses: (c) => c.kind === 'house' && !c.raised, rebuilt: (c) => c.kind === 'house' && !c.raised, raised: (c) => c.kind === 'house' && c.raised, abandoned: (c) => c.kind === 'loss', ruined: (c) => c.kind === 'loss',
 };
 // fixed parts of the video: the wide shot with the goal (23.5 s) and the call to action (27 s)
 const FIXED_AT = { goal: 23.7, cta: 27.1 };

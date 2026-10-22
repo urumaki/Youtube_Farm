@@ -45,6 +45,16 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
       weight: people ? 0.9 : 1, // "a few seconds" each when the caravan and the workers share the video
     });
   }
+  // houses inside the Second Wall that got another storey today (owner 2026-10-22): one shot of the new
+  // storey going up under its roof
+  const raised = (diff.housesRaised || []).filter((id) => animated.get(id)?.raised);
+  if (raised.length) {
+    const id = raised[0], a = animated.get(id), n = diff.housesRaised.length;
+    targets.push({
+      kind: 'house', id, raised: true, pos: a.mid.clone(), labelPos: a.top.clone(), radius: 22, front: a.shape.rot + (a.shape.side > 0 ? -Math.PI / 2 : Math.PI / 2),
+      label: { title: 'Building upward', sub: n === 1 ? 'A house gets a new storey' : `${n} houses get a new storey` }, extra: 0, weight: people ? 0.9 : 1,
+    });
+  }
   // 2) the caravan of villagers named today, then a few named villagers at work
   const today = diff.named || [];
   if (today.length) targets.unshift({ kind: 'caravan', id: 'caravan', pos: new THREE.Vector3(), radius: 14, front: 0, label: null, labels: [], weight: 2.8, count: today.length });
@@ -133,7 +143,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     });
   }
   // 3) new or rebuilt houses fill the rest (a spread of them), only on days without named villagers
-  const fresh = [...diff.housesBuilt, ...diff.housesRebuilt].filter((id) => animated.has(id));
+  const fresh = [...diff.housesBuilt, ...diff.housesRebuilt].filter((id) => animated.has(id) && !animated.get(id).raised);
   const houseIdx = people ? [] : pickSpread(fresh.length, Math.min(Math.max(0, maxTargets - targets.length), fresh.length));
   for (const i of houseIdx) {
     const id = fresh[i];

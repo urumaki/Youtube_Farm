@@ -8,7 +8,7 @@ import { dailyEvents } from './events.js';
 import { pickStory } from './stories.js';
 import { pickFeatured, shownJobs, markShown } from './featured.js';
 import { planScenes, tavernToday, staleJob } from './scenes.js';
-import { planWall2, wallBlockers } from './wall.js';
+import { planWall2, wallBlockers, insideWall2 } from './wall.js';
 import { obbOverlap } from './geometry.js';
 
 export const SCHEMA_VERSION = 1;
@@ -81,6 +81,16 @@ export function houseStyle(seed, plotId) {
 }
 
 /**
+ * How many storeys a house has: what it was built with (by its size, as it always looked), or more once
+ * floors were added (`floors`, raiseHouse).
+ */
+export function houseFloors(seed, house) {
+  if (house.floors) return house.floors;
+  const cap = house.cap0 ?? house.capacity, h = hash(seed, 'arch', house.plot);
+  return cap >= 8 ? 3 : cap >= 4 ? 2 : cap === 2 ? (h % 3 === 0 ? 1 : 2) : (h >>> 4) % 3 === 0 ? 2 : 1;
+}
+
+/**
  * Advance one day. Never mutates `prev`.
  * @param {object} prev  previous state
  * @param {{subscribers:number, date:string, source?:string}} input
@@ -97,7 +107,7 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   const diff = {
     date, day, from: prev.subscriberCount, to: target, delta: target - prev.subscriberCount,
     added: [], removed: [], housesBuilt: [], housesRebuilt: [], housesReoccupied: [],
-    housesAbandoned: [], housesRuined: [], housesMoved: [], unlocked: [], buildingsStarted: [], buildingsCompleted: [],
+    housesAbandoned: [], housesRuined: [], housesMoved: [], housesRaised: [], unlocked: [], buildingsStarted: [], buildingsCompleted: [],
     events: [], weather: null, named: [],
   };
 
@@ -307,7 +317,11 @@ function findHome(s, w, id, day, diff, getScan, setScan, byId) {
       return h;
     }
   }
-  // d) a new house on the next free plot
+  // d) once the Second Wall is begun, a house inside it gets another storey before any new plot is used
+  // (owner 2026-10-22: the town grows upward inside the walls before it spreads beyond them)
+  const up = raiseHouse(s, day, diff);
+  if (up) { setScan(Math.min(getScan(), s.houses.indexOf(up))); return up; }
+  // e) a new house on the next free plot
   const plot = nextFreePlot(s, w);
   if (!plot) {
     // Every plot is used: squeeze into the least crowded house (never crash the daily run).
@@ -320,6 +334,36 @@ function findHome(s, w, id, day, diff, getScan, setScan, byId) {
   byId.set(h.id, h);
   diff.housesBuilt.push(h.id);
   return h;
+}
+
+const MAX_FLOORS = 3;
+const FLOOR_ROOM = 2; // villagers a new storey makes room for
+const INSIDE = new WeakMap(); // per wall route: plot id -> inside the walls
+
+/** The lowest house inside the Second Wall gets one more storey (diff.housesRaised); null when none can. */
+function raiseHouse(s, day, diff) {
+  if (!s.wall2) return null;
+  if (!INSIDE.has(s.wall2)) INSIDE.set(s.wall2, new Map());
+  const inside = INSIDE.get(s.wall2);
+  const plots = new Map(s.plots.map((p) => [p.id, p]));
+  let best = null, bestF = MAX_FLOORS;
+  for (const h of s.houses) {
+    if (h.status !== 'occupied') continue;
+    const f = houseFloors(s.seed, h);
+    if (f >= bestF) continue;
+    const p = plots.get(h.plot);
+    if (!p) continue;
+    if (!inside.has(p.id)) inside.set(p.id, insideWall2(s.wall2.pts, p.x, p.z));
+    if (!inside.get(p.id)) continue;
+    best = h; bestF = f;
+  }
+  if (!best) return null;
+  best.cap0 ??= best.capacity;
+  best.floors = bestF + 1;
+  best.capacity += FLOOR_ROOM;
+  best.raisedDay = day;
+  if (!diff.housesRaised.includes(best.id)) diff.housesRaised.push(best.id);
+  return best;
 }
 
 /**

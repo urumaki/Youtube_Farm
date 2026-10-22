@@ -72,8 +72,8 @@ test('growth from 0 to 10,000 in steps keeps every invariant', () => {
     assert.equal(diff.added.length, Math.max(0, n - s.subscriberCount));
     s = state;
   });
-  // houses built later hold more villagers so the map stays readable
-  const caps = s.houses.map((h) => h.capacity);
+  // houses built later hold more villagers so the map stays readable (as built: storeys added later aside)
+  const caps = s.houses.map((h) => h.cap0 ?? h.capacity);
   assert.equal(caps[0], 1);
   assert.equal(caps.at(-1), houseCapacity(10000));
   assert.ok(s.houses.length < 2000, `10k villagers in ${s.houses.length} houses`);
@@ -414,6 +414,25 @@ test('scenes: the same scene does not come back within three days', async () => 
     }
   }
   assert.ok(last.tavern !== undefined, 'the tavern was shown');
+});
+
+test('inside the Second Wall houses get another storey before new plots are used', async () => {
+  const { houseFloors } = await import('../src/sim/simulate.js');
+  const { insideWall2 } = await import('../src/sim/wall.js');
+  const { state: s0 } = run([0, 120, 260, 300]);
+  assert.ok(s0.wall2, 'the Second Wall is begun');
+  const plots0 = s0.plots.length;
+  const { state: s, diff } = advance(s0, { subscribers: 420, date: dateOf(20) });
+  checkInvariants(s);
+  assert.ok(diff.housesRaised.length > 0, 'houses were raised');
+  assert.equal(diff.housesBuilt.length, 0, 'no new plot while a house inside can grow');
+  assert.equal(s.plots.length, plots0);
+  const plots = new Map(s.plots.map((p) => [p.id, p]));
+  for (const id of diff.housesRaised) {
+    const h = s.houses[id], p = plots.get(h.plot);
+    assert.ok(insideWall2(s.wall2.pts, p.x, p.z), `house ${id} is inside the walls`);
+    assert.ok(houseFloors(s.seed, h) <= 3 && h.capacity === h.cap0 + 2 * (h.floors - houseFloors(s.seed, { plot: h.plot, capacity: h.cap0 })));
+  }
 });
 
 test('guards on the Second Wall only once it is finished', async () => {

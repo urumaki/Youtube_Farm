@@ -45,6 +45,7 @@
         "id": { "type": "integer" }, "plot": { "type": "integer" }, "capacity": { "type": "integer", "minimum": 1 },
         "status": { "enum": ["occupied", "abandoned", "ruin"] }, "builtDay": { "type": "integer" },
         "abandonedDay": { "type": "integer" }, "ruinDay": { "type": "integer" }, "rebuiltDay": { "type": "integer" },
+        "floors": { "type": "integer", "minimum": 1, "maximum": 3 }, "cap0": { "type": "integer", "minimum": 1 }, "raisedDay": { "type": "integer" },
         "occupants": { "type": "array", "items": { "type": "integer" } }
       }
     },

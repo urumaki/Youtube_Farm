@@ -64,15 +64,16 @@ async function setup(data) {
   const castle = buildCastle(M);
   scene.add(castle.group);
 
-  // houses built or rebuilt today are animated individually in the video
-  const todays = viewer ? [] : [...diff.housesBuilt, ...diff.housesRebuilt].slice(0, 60);
+  // houses built or rebuilt today are animated individually in the video, and a few that got another storey
+  const raisedToday = (diff.housesRaised || []).filter((id) => !diff.housesBuilt.includes(id)).slice(0, 6);
+  const todays = viewer ? [] : [...diff.housesBuilt, ...diff.housesRebuilt].slice(0, 60).concat(raisedToday);
   const animatedIds = new Set(todays);
   const houses = buildHouses(state, w, M, { animatedIds });
   scene.add(houses.group);
   const animated = new Map();
   for (const id of todays) {
     const h = state.houses.find((x) => x.id === id);
-    const a = buildAnimatedHouse(houses.shapes.get(id), h, state.seed, M, houses);
+    const a = buildAnimatedHouse(houses.shapes.get(id), h, state.seed, M, houses, { raised: raisedToday.includes(id) });
     animated.set(id, a);
     scene.add(a.group);
   }
@@ -235,7 +236,7 @@ async function setup(data) {
     walkers: life.walkers, guards: life.guards, targets: plan?.targets.map((t) => `${t.kind}:${t.id ?? ''}`),
     // what each shot shows, for the sound effects track
     cues: plan?.targets.map((t, i) => ({
-      kind: t.kind, id: t.id ?? null, t0: t.t0, t1: t.t1, completed: t.completed ?? null, rebuilt: !!t.rebuilt, pan: i % 2 ? 0.25 : -0.25,
+      kind: t.kind, id: t.id ?? null, t0: t.t0, t1: t.t1, completed: t.completed ?? null, rebuilt: !!t.rebuilt, raised: !!t.raised, pan: i % 2 ? 0.25 : -0.25,
       hasChapel: state.buildings.some((b) => (b.id === 'chapel' || b.id === 'cathedral') && b.status === 'done'),
       job: t.sceneJob ?? t.job ?? null, variant: t.variant ?? null, job2: t.guest?.job ?? null, pair: t.pair ?? null, strikes: t.work ? t.work.strikeTimes(t.t0, t.t1) : [], strikeSound: t.work?.sound ?? null,
     })) ?? [],

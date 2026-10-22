@@ -86,6 +86,13 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (`nextFreePlot`, `state.nextPlot`).
   It goes up in stretches from the gate nearest the market, over low foundations along the whole route.
   `w.wall2` (the old ellipse) still only shapes the plot list, so plot ids and positions stay stable.
+- Taller houses (owner 2026-10-22): once the Second Wall is begun, a newcomer with no free bed first makes
+  the lowest house inside the walls one storey taller (`raiseHouse` in `simulate.js`, `insideWall2` in
+  `wall.js`; up to 3 storeys, +2 beds each; `h.floors`, `h.cap0` = capacity as built, `diff.housesRaised`);
+  new plots (outside the walls) only when every house inside has 3 storeys. `houseFloors` gives a house's
+  storeys for the simulation and the renderer. The video shows one raised house: the scaffold goes up and
+  the new top storey rises under its roof (`buildAnimatedHouse(..., { raised })`; the top storey is its own
+  layer, `top`, in `houseKit.js`), with the narrator line `raised`.
 - Guards on the walls (owner 2026-10-21, `wallwatch.js`): day watch (walks, stops, looks out), night watch
   by a brazier at dusk, changing of the guard (march up, salute, the old guard leaves), on the castle walls
   (guard variants `walls`, `wallnight`, `change`) and on the Second Wall once finished (`wall2`,
