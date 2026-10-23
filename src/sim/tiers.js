@@ -134,9 +134,8 @@ export const TIERS = [
   { id: 'bells', at: 4000, title: 'Town of Bells', unique: ['bellfounder'], pool: { bellfounder: 0.2 }, buildings: ['bell_foundry'], goal: 'the Bell Foundry casts its first bell' },
   { id: 'learned', at: 5000, title: 'City of Song', unique: ['apothecary', 'bard'], pool: { apothecary: 0.3, bard: 0.6 }, buildings: ['district_south'], goal: 'the South Ward is founded' },
   { id: 'clock', at: 7500, title: 'Town of the Clock', unique: ['clockmaker'], pool: { clockmaker: 0.2 }, buildings: ['clock_tower'], goal: 'the Clock Tower strikes the hour' },
-  { id: 'royal', at: 10000, title: 'Royal City', unique: ['taxcollector', 'chronicler'], pool: { taxcollector: 0.3, chronicler: 0.2 }, buildings: ['palace', 'district_far'], goal: 'the Royal Palace is commissioned' },
+  { id: 'royal', at: 10000, title: 'Royal City', unique: ['taxcollector', 'chronicler'], pool: { taxcollector: 0.3, chronicler: 0.2 }, buildings: ['palace', 'district_far', 'stone_bridge'], goal: 'the Royal Palace is commissioned' }, // the Great Bridge too (owner 2026-10-23, was 250,000)
   { id: 'maritime', at: 100000, title: 'Maritime Realm', unique: ['admiral'], pool: { admiral: 0.05 }, buildings: ['lighthouse'], goal: 'the Lighthouse is lit' },
-  { id: 'bridge', at: 250000, title: 'Realm of the Great Bridge', unique: [], pool: {}, buildings: ['stone_bridge'], goal: 'the Great Bridge spans the river' },
   { id: 'legend', at: 1000000, title: 'Legendary Kingdom', unique: [], pool: {}, buildings: ['colossus'], goal: 'the Colossus is raised' },
 ];
 

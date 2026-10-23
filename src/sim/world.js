@@ -117,12 +117,43 @@ function buildWorld(seed) {
     const c = Math.cos(f.rot), s = Math.sin(f.rot);
     w.lots.apiary = { id: 'apiary', x: f.x - c * (f.hw - 3) + s * (f.hd - 2.5), z: f.z - s * (f.hw - 3) - c * (f.hd - 2.5), hw: 2.5, hd: 2, rot: f.rot, virtual: true };
   }
-  const bp = w.riverPts.reduce((b, p) => (Math.abs(p[0] - 150) < Math.abs(b[0] - 150) ? p : b));
+  buildNobleQuarter(w, seed);
+  // the Great Bridge (owner 2026-10-23: moved west) crosses the river where the Noble Quarter's avenue ends, so a road
+  // can run on to it; without the avenue, south of town as before
+  const av = w.roads.find((r) => r.id === 'noble_avenue');
+  const end = av ? av.pts[av.pts.length - 1] : [150, 0];
+  const bp = w.riverPts.reduce((b, p) => (Math.hypot(p[0] - end[0], av ? p[1] - end[1] : 0) < Math.hypot(b[0] - end[0], av ? b[1] - end[1] : 0) ? p : b));
   const bq = w.riverPts[Math.min(w.riverPts.length - 1, w.riverPts.indexOf(bp) + 1)];
   w.lots.stone_bridge = { id: 'stone_bridge', x: bp[0], z: bp[1], hw: 5, hd: RIVER_HALF_WIDTH + 9, rot: Math.atan2(bq[1] - bp[1], bq[0] - bp[0]), virtual: true, onWater: true };
-  buildNobleQuarter(w, seed);
   placeFletcherWorkshop(w);
+  placePalace(w);
   return w;
+}
+
+// The Royal Palace (owner 2026-10-23) stands beside the University: the free ground nearest it, found after every
+// plot, street and lot is laid out (its first lot in the east stays reserved, so the streets there do not move).
+function placePalace(w) {
+  const uni = w.lots.university;
+  if (!uni) return;
+  const taken = new SpatialHash(40);
+  const take = (b) => taken.insert(obbAabb(b), b);
+  for (const p of [...w.plots, ...w.finePlots]) take(grow(p, 1));
+  for (const s of w.pathIndex.segs) take(segmentObb(s.ax, s.az, s.bx, s.bz, s.hw + 1));
+  for (const l of Object.values(w.lots)) if ((!l.virtual || l.hw > 0) && l.id !== 'palace') take(grow(l, 3));
+  for (const f of w.fields) take(grow(f, 2));
+  const hits = (b) => [...taken.query(obbAabb(b))].some((o) => obbOverlap(b, o));
+  const river = (x, z) => { let d = Infinity; for (let i = 1; i < w.riverPts.length; i++) d = Math.min(d, distToSegment(x, z, ...w.riverPts[i - 1], ...w.riverPts[i])); return d; };
+  let best = null;
+  for (let dx = -200; dx <= 200; dx += 4) for (let dz = -200; dz <= 200; dz += 4) for (const rot of [0, Math.PI / 2]) {
+    const d = Math.hypot(dx, dz);
+    if (best && d >= best.d) continue;
+    const c = { id: 'palace', x: uni.x + dx, z: uni.z + dz, hw: 36, hd: 21, rot, blocksRoads: true };
+    if (Math.hypot(c.x, c.z) < CASTLE.moatOuter + 45) continue;
+    if ([[c.x, c.z], ...obbCorners(c)].some(([x, z]) => river(x, z) < RIVER_HALF_WIDTH + 6)) continue;
+    if (hits(c)) continue;
+    best = { ...c, d };
+  }
+  if (best) { delete best.d; w.lots.palace = best; }
 }
 
 // The Fletcher's Workshop (owner 2026-10-23, a commission): the free ground nearest the market square that

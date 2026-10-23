@@ -178,7 +178,10 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Also added 2026-10-22, each with a work scene: 850 Potter + Potter's Stall, 1750 Cobbler + Cobbler's
   Stall (market square), 2000 Cooper + Cooperage (East Ward square), 3000 Beekeeper + Beehives (corner of
   a field west of the castle), 4000 Bell Founder + Bell Foundry (North Ward square), 7500 Clockmaker +
-  Clock Tower (South Ward square), 250,000 the Great Bridge across the river south of town.
+  Clock Tower (South Ward square). The Great Bridge (owner 2026-10-23: at 10,000 with the Royal Palace, was
+  250,000) crosses the river where the Noble Quarter's avenue ends, so a road can run on to it. The Royal Palace
+  stands on the free ground beside the University (`placePalace` in `world.js`, after the plots; its first lot in
+  the east stays reserved so the streets there do not move).
 - University and Noble Quarter (owner 2026-10-22): the open ground below the castle (between it and the
   river) is kept for them. The University is the 1000 goal (moved from 5000, which is now the South Ward)
   with its scholars (work scene `desk`: writing in a book at a sloped desk): a quadrangle with a cloister,

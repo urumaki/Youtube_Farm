@@ -6,7 +6,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { chromium } from 'playwright';
 import { world, CASTLE, RIVER_HALF_WIDTH } from '../src/sim/world.js';
-import { wallLayout } from '../src/sim/wall.js';
+import { obbOverlap } from '../src/sim/geometry.js';
+import { wallLayout, wallBlockers } from '../src/sim/wall.js';
 import { ensureWall2 } from '../src/sim/simulate.js';
 import { migrate, STATE_DIR } from '../src/sim/state.js';
 import { BUILDINGS, TIERS } from '../src/sim/tiers.js';
@@ -41,7 +42,10 @@ for (const t of w.tracks) svg.push(line(t.pts, `stroke="#b9a37a" stroke-width="$
 for (const r of w.roads) svg.push(line(r.pts, `stroke="#a89a86" stroke-width="${r.width * S}" stroke-linecap="round" stroke-linejoin="round"`));
 // plots: built houses dark (taller ones darker), free plots of the plan as faint outlines
 const used = new Set(state.plots.map((p) => p.id));
-for (const p of w.plots) if (!used.has(p.id) && p.x > x0 && p.x < x1 && p.z > z0 && p.z < z1) svg.push(box(p, 'fill="none" stroke="#9aa07a" stroke-width="0.8"'));
+// only the plots new houses can still take: not one passed over already, not one under the Second Wall
+const onWall = state.wall2 ? wallBlockers(w, state.wall2.pts) : [];
+const open = (p, i) => i >= (state.nextPlot ?? 0) && !onWall.some((b) => obbOverlap(b, p));
+for (const [i, p] of w.plots.entries()) if (!used.has(p.id) && open(p, i) && p.x > x0 && p.x < x1 && p.z > z0 && p.z < z1) svg.push(box(p, 'fill="none" stroke="#9aa07a" stroke-width="0.8"'));
 // the Noble Quarter's wide plots (finer houses), still free
 for (const p of w.finePlots) if (!used.has(p.id)) svg.push(box(p, 'fill="#9b6fc4" fill-opacity="0.12" stroke="#7a4fa8" stroke-width="1.2"'));
 const floors = new Map(state.houses.map((h) => [h.plot, h.floors || 1]));
