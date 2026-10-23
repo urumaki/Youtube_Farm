@@ -5,33 +5,44 @@ import { TIERS, JOBS, MERGED, tiersReached } from './tiers.js';
 
 // [regex, job] — matched anywhere in the comment (English and Italian); order of appearance in the
 // comment decides preference, so "commander, or else a fletcher" tries the commander first
+// (more words added 2026-10-23 from the comments of 2026-10-22: typos, weaponsmith, pub, harbour, herbalist...)
 const KEYWORDS = [
   [/tool\s*smith|\btools?\b|attrezz|utensil/, 'blacksmith'], // jobs folded together: MERGED in tiers.js
-  [/black\s*smith|\bsmith\b|\bforge\b|\banvil|fabbro/, 'blacksmith'],
+  [/black\s*smith|\bsmith\b|\bforge\b|\banvil|fabbro|weapon\s*(smith|maker)|armou?r(er|smith)|armaiol/, 'blacksmith'],
   [/\bbrew|\bmead\b|\bale\b|\bbeer|\bbirr|idromele/, 'brewer'],
-  [/tavern|\binn\b|innkeeper|bar\s*keep|bartender|taverna|\boste\b/, 'innkeeper'],
+  [/tavern|\binn\b|innkeeper|bar\s*keep|bartender|taverna|\boste\b|\bpub\b/, 'innkeeper'],
   [/warrior|\bfighter|\bsword|\bwarlord|guerrier|combattent|spadaccin/, 'guard'],
   [/\bbeggar|\bdrunk|\bdrink|sit all day|mendicant|ubriac/, 'beggar'],
-  [/weirdo|\bweird\b|\bfool\b|crazy|lunatic|\bscemo|\bmatto/, 'jester'],
+  [/weirdo|\bweird\b|\bfool\b|crazy|lunatic|\bscemo|\bmatto|\bidiot/, 'jester'],
   [/jester|\bclown|juggl|giullare|buffone/, 'jester'],
   [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b|frecce|arciere/, 'fletcher'],
-  [/\bknight|\bsir\b|cavaliere|commander|general|\barmy|captain/, 'knight'],
-  [/\bguard|watchman|soldier|guardia|soldato/, 'guard'],
+  [/\bknight|\bsir\b|cavaliere|commander|general|\barmy|captain|\bofficer|\bufficiale|lieutenant|\bcavalry/, 'knight'],
+  [/\bguard|watchman|soldier|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
   [/chapel|church|cathedral|cappella|chiesa/, 'stonemason'],
-  [/stone\s*mason|\bmason|\bstone|scalpellin|muratore/, 'stonemason'],
+  [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
   [/carpenter|\bbuilder|falegname|carpentiere/, 'carpenter'],
+  [/\bbishop|vescovo/, 'bishop'],
   [/\bpriest|\bmonk|\bfriar|prete|frate|monaco/, 'priest'],
   [/\bbaker|\bbread|\bbake|fornaio|\bpane\b/, 'baker'],
   [/\bmill(er)?\b|mugnaio|mulino/, 'miller'],
-  [/fisher|\bfish|pescator|\bpesca/, 'fisherman'],
+  [/fisher|\bfish|pescator|\bpesca|harbou?r|\bdocks?\b|\bporto\b/, 'fisherman'],
   [/wood\s*cutter|lumber|\baxe\b|\bwood\b|taglialegna|boscaiolo/, 'woodcutter'],
   [/\bfarm(?!ing tools?)|\bcrops?\b|contadin|agricolt/, 'farmer'],
-  [/merchant|\btrader|\bshop|mercante|negozi/, 'merchant'],
+  [/\bpeasant|bracciant|gardener|grounds?\s*keeper|groudnskeeper|giardinier/, 'peasant'],
+  [/merchant|\btrader|\bshop|mercante|negozi|head of trade|\btrade\b/, 'merchant'],
   [/\bsailor|\bpirate|marinaio|pirata/, 'fisherman'],
   [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
-  [/scholar|\bscribe|librar|studioso/, 'scholar'],
+  [/scholar|\bscribe|librar|studioso|scientist|scienziat|inventor/, 'scholar'],
   [/doctor|healer|physician|medico|guaritore/, 'physician'],
-  [/apothecar|alchemist|alchimista|speziale|farmacist|\bremed|rimedi/, 'apothecary'], // medieval only: no wizards (owner)
+  [/apothecar|alchemist|alchimista|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
+  // running the town is the reeve's job: the council, politics, the law
+  [/\breeve\b|council|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice|consiglier/, 'reeve'],
+  // new jobs asked for in the comments of 2026-10-22 (owner 2026-10-23, by request only)
+  [/hunter|\bhunt(ing)?\b|cacciator|\bcaccia\b/, 'hunter'],
+  [/butcher|macellai|\bmeat\b/, 'butcher'],
+  [/engineer|egineer|ingegner|\bsiege|trebuchet|catapult/, 'engineer'],
+  [/shep+h?[ae]rd|\bsheep|rancher|\bgoats?\b|\bbarn\b|livestock|raise animals|\bpastore|pecor|allevator/, 'shepherd'],
+  [/\btanner|leather\s*worker|tannery|concia|cuoio/, 'tanner'],
   // no noble titles as jobs (owner): a lord or a landlord collects the taxes
   [/tax\s*collector|\btax(man|es)?\b|esattore|gabellier|\btasse\b|\blord\b|landlord|\bnoble|\bduke|\bbaron|nobile|signore/, 'taxcollector'],
   [/tailor|seamstress|dressmaker|\bsew|sarto|sarta|\bcucir/, 'tailor'],
@@ -47,7 +58,7 @@ const KEYWORDS = [
   [/\bcook|\bchef\b|\bcuoc[oa]|\bkitchen|\bcucina\b/, 'cook'],
   [/\bmayor|sindaco/, 'mayor'],
   [/executioner|headsman|\bboia\b|carnefice|giustiziere/, 'executioner'],
-  [/town\s*crier|\bcrier\b|\bherald|banditore|araldo|messaggero/, 'crier'],
+  [/town\s*crier|\bcrier\b|\bherald|banditore|araldo|messaggero|messenger|courier|doomsayer/, 'crier'],
 ];
 
 // "maybe later, when there are proper guards" is a wish for the kingdom, not a job request
@@ -65,10 +76,14 @@ export function plainText(raw) {
 /** Requested jobs in the order they appear in the comment (no duplicates). */
 export function wantsFromText(text) {
   const t = plainText(text).toLowerCase();
+  // the name asked for is not a job: "call me Hunter, I want to bake" asks for the baker
+  const n = NAME_RE.exec(t);
+  const nameAt = n ? [n.index + n[0].length - n[1].length, n.index + n[0].length] : [-1, -1];
   const hits = [];
   for (const [re, job] of KEYWORDS) {
     const g = new RegExp(re.source, 'g');
     for (let m = g.exec(t); m; m = g.exec(t)) {
+      if (m.index >= nameAt[0] && m.index < nameAt[1]) continue;
       if (WISH.test(t.slice(Math.max(0, m.index - 60), m.index))) continue;
       hits.push([m.index, job]);
       break;

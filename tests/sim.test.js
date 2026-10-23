@@ -548,3 +548,20 @@ test("the Fletcher's Workshop (a commission) is begun on the next day, once, on 
   assert.equal(s.buildings.filter((b) => b.id === 'fletcher_workshop').length, 1);
   assert.equal(s.buildings.find((b) => b.id === 'fletcher_workshop').status, 'done');
 });
+
+test('comment words of 2026-10-22: typos and synonyms reach the jobs, the new jobs are asked for, a name is not a job', async () => {
+  const { wantsFromText } = await import('../src/sim/requests.js');
+  const cases = {
+    'i wanna be a gaurd': 'guard', 'THANK YOU FIR ADDINF ME AS A GAAurd': 'guard', 'I subscribed can i be a mercenary': 'guard',
+    'May i be the Bishop of this great kingdom': 'bishop', 'Can I be a weaponsmith?': 'blacksmith', 'Can I own my own pub': 'innkeeper',
+    'yo can i work on the harbour': 'fisherman', 'i want to be the herbalist': 'apothecary', 'I subbed can I be a messenger?': 'crier',
+    'May I be town idiot': 'jester', 'Can I be a military officer': 'knight', 'May I Be A Architect': 'stonemason', 'Subbed Can I be a politician': 'reeve',
+    'May I be a lawyer': 'reeve', 'Can i be the head of trade?': 'merchant', 'Can I be a scientist': 'scholar', 'can i be a groudnskeeper or gardener': 'peasant',
+    'can I be a Hunter?': 'hunter', 'can i be a butcher': 'butcher', 'I request to be an egineer': 'engineer', 'May I be a Shepard tending to sheep?': 'shepherd',
+    'Can I be a rancher? I like goats': 'shepherd', 'i want to be a tanner please': 'tanner', 'loyal military engineer': 'engineer',
+    'call me Hunter, I want to bake bread': 'baker',
+  };
+  for (const [text, job] of Object.entries(cases)) assert.equal(wantsFromText(text)[0], job, text);
+  const { JOBS } = await import('../src/sim/tiers.js');
+  for (const j of ['hunter', 'butcher', 'engineer', 'shepherd', 'tanner']) assert.ok(JOBS[j]?.requestOnly, j);
+});

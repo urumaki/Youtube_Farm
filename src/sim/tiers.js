@@ -57,6 +57,12 @@ export const JOBS = {
   chimneysweep: { label: 'Chimney Sweep', color: '#2b2b2e', requestOnly: true },
   falconer: { label: 'Falconer', color: '#6b5a2a', requestOnly: true },
   cook: { label: 'Cook', color: '#e6e0d0', requestOnly: true },
+  // asked for in the comments of 2026-10-22 (owner 2026-10-23), by request only
+  hunter: { label: 'Hunter', color: '#4f5e2e', requestOnly: true },
+  butcher: { label: 'Butcher', color: '#8e2f2a', requestOnly: true },
+  engineer: { label: 'Engineer', color: '#6d5a3a', requestOnly: true },
+  shepherd: { label: 'Shepherd', color: '#8a7b54', requestOnly: true },
+  tanner: { label: 'Tanner', color: '#7a4f2c', requestOnly: true },
 };
 
 export const BUILDINGS = {

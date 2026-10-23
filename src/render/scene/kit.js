@@ -131,3 +131,17 @@ export function merlonLine(b, key, x0, z0, x1, z1, y, spacing = 2.4, size = [1.3
     b.add(key, geo, x0 + (x1 - x0) * t, y + size[1] / 2, z0 + (z1 - z0) * t, ang);
   }
 }
+
+/** A sheep, facing +z; `head` nods down to graze. */
+export function sheep(M) {
+  const g = new THREE.Group();
+  const add = (geo, m, parent = g) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; parent.add(o); return o; };
+  add(new THREE.SphereGeometry(0.36, 12, 9).scale(0.85, 0.75, 1.15).translate(0, 0.62, 0), M.clothIvory);
+  const head = new THREE.Group();
+  head.position.set(0, 0.72, 0.38);
+  g.add(head);
+  add(boxGeo(0.17, 0.2, 0.3).translate(0, 0, 0.12), M.gear, head);
+  for (const x of [-0.11, 0.11]) add(boxGeo(0.12, 0.04, 0.07).translate(x, 0.05, 0.02), M.gear, head);
+  for (const [x, z] of [[-0.14, -0.22], [0.14, -0.22], [-0.14, 0.22], [0.14, 0.22]]) add(boxGeo(0.07, 0.36, 0.07).translate(x, 0.18, z), M.gear);
+  return { g, head };
+}

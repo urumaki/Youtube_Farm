@@ -17,6 +17,8 @@ const ACTIVITIES = {
   potter: 'throws a jug on the wheel, and it only wobbles a little', cobbler: 'mends the boots of the whole watch', cooper: 'hammers the last hoop onto a new barrel',
   beekeeper: 'brings in the first jar of honey', bellfounder: 'casts a bell that rings a little off-key', clockmaker: 'sets the town clock five minutes fast',
   ratcatcher: 'chases a rat around the square, and the rat wins', chimneysweep: 'comes down from a roof covered in soot', falconer: 'calls the falcon back to the glove', cook: 'stirs a stew that the whole street can smell',
+  hunter: 'practises on the straw deer and hits it twice', butcher: 'hangs a fresh string of sausages over the door', engineer: 'tests a little trebuchet that throws a turnip',
+  shepherd: 'counts the sheep and gets a different number each time', tanner: 'hangs a new hide to dry in the sun',
   chronicler: 'records today in the kingdom chronicle', admiral: 'charts a route to distant lands',
   fletcher: 'fletches a bundle of arrows', weirdo: 'dances alone in the square for no reason', beggar: 'raises a mug to every passer-by',
   jester: 'juggles for a crowd of children', warrior: 'trains with the sword until sunset', toolsmith: 'forges new hoes and sickles for the farmers',

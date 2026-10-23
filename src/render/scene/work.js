@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { rand01 } from '../../sim/prng.js';
 import { JOBS } from '../../sim/tiers.js';
-import { cylGeo, boxGeo } from './kit.js';
+import { cylGeo, boxGeo, sheep } from './kit.js';
 
 const ease = (x) => x * x * (3 - 2 * x);
 const flat = (g) => { const q = g.index ? g.toNonIndexed() : g; q.deleteAttribute('uv'); return q; };
@@ -148,6 +148,15 @@ const JOB_SCENES = {
   falconer: { period: 4.0, raise: -0.15, down: -0.15, bend: 0, sound: 'none', tool: null, props: 'falcon', smooth: true, left: -1.45, still: true },
   cook: { period: 2.0, hit: 0.5, raise: -1.2, down: -1.2, bend: 0.15, fx: 'steam', sound: 'none', tool: 'paddle', props: 'cauldron', stir: true, both: true },
   executioner: { period: 1.6, hit: 0.72, raise: -2.8, down: -0.9, bend: 0.25, fx: 'leaves', sound: 'chop', tool: 'axe', props: 'chopblock', both: true, hood: true },
+  // asked for in the comments of 2026-10-22 (owner 2026-10-23): the hunter practises with the bow on a straw
+  // deer (no animal is hurt), the butcher chops a ham under a rack of sausages, the engineer hammers at a
+  // model trebuchet that now and then throws a turnip, the shepherd leans on the crook watching the sheep
+  // graze, the tanner scrapes a hide over the beam beside the soaking tub
+  hunter: { period: 2.6, hit: 0.62, raise: -1.5, down: -1.5, bend: 0, fx: null, sound: 'straw', tool: null, props: 'deer', archer: true },
+  butcher: { period: 1.3, hit: 0.72, raise: -2.5, down: -0.95, bend: 0.2, fx: null, sound: 'chop', tool: 'cleaver', props: 'butchery', left: -0.9 },
+  engineer: { period: 0.7, hit: 0.75, raise: -1.9, down: -1.0, bend: 0.2, fx: 'chips', sound: 'chop', tool: 'mallet', props: 'trebuchet', left: -0.9 },
+  shepherd: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'crook', props: 'flock', left: -0.6, look: true },
+  tanner: { period: 1.1, hit: 0.5, raise: -1.25, down: -0.95, bend: 0.35, fx: null, sound: 'none', tool: null, props: 'hide', push: true, both: true },
 };
 const DEFAULT_SCENE = { period: 2.4, hit: 0.5, raise: -2.6, down: -0.2, bend: 0, fx: null, sound: 'none', tool: null, props: 'market', wave: true };
 // Other scenes of the same jobs, 'job:variant' (owner 2026-10-20: a job is not always shown the same way;
@@ -303,6 +312,14 @@ export function toolGeo(kind, M) {
   } else if (kind === 'brush') { // the sweep's brush: a long pole on from the raised arms, a round bristle head at the end
     add(cylGeo(0.02, 0.02, 2.2, 6).translate(0, -1.1, 0.02), wood);
     add(new THREE.SphereGeometry(0.2, 10, 8).scale(1, 0.6, 1).translate(0, -2.25, 0.02), M.gear);
+  } else if (kind === 'cleaver') { // a short handle and a wide square blade
+    striker(g, M, { beta: 0.3, len: 0.32, back: 0.05, head: (put, along, h, p, end) => {
+      put(along(boxGeo(0.025, 0.2, 0.26), p).translate(...end.clone().addScaledVector(p, 0.1).toArray()), iron);
+      return 0.2;
+    } });
+  } else if (kind === 'crook') { // the shepherd's staff with its hook at the top
+    add(cylGeo(0.025, 0.025, 1.9, 6).translate(0, 0.35, 0.08), wood);
+    add(new THREE.TorusGeometry(0.1, 0.022, 5, 10, Math.PI * 1.2).rotateY(Math.PI / 2).translate(0, 1.38, 0.18), wood);
   } else if (kind === 'bow') {
     add(new THREE.TorusGeometry(0.5, 0.018, 5, 18, Math.PI * 0.8).rotateZ(Math.PI * 0.1).rotateY(Math.PI / 2).translate(0, 0.3, 0.05), M.woodDark);
   }
@@ -732,6 +749,78 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       for (let i = 0; i < 4; i++) add(cylGeo(0.05, 0.06, 0.6, 6).rotateZ(Math.PI / 2).rotateY(i * 0.8).translate(0, 0.08, 1.05), M.woodDark);
       add(new THREE.ConeGeometry(0.25, 0.35, 8).translate(0, 0.25, 1.05), new THREE.MeshBasicMaterial({ color: '#ff9a3c' }));
       return new THREE.Vector3(0, 0.88, 1.05);
+    }
+    case 'deer': { // a straw deer for practice, side on a few metres away, a red mark on its flank
+      const d = new THREE.Vector3(-Math.cos(1.3), 0, Math.sin(1.3));
+      const c = new THREE.Vector3(-0.26, 1.0, 0.92).addScaledVector(d, 2.1);
+      const deer = new THREE.Group();
+      deer.position.copy(c);
+      deer.rotation.y = Math.atan2(d.x, d.z);
+      holder.add(deer);
+      const part = (geo, m) => deer.add(Object.assign(new THREE.Mesh(geo, m), { castShadow: true }));
+      part(cylGeo(0.24, 0.24, 1.0, 12).rotateZ(Math.PI / 2), M.hay);
+      part(cylGeo(0.09, 0.11, 0.55, 8).rotateZ(0.6).translate(-0.55, 0.32, 0), M.hay); // the head toward the archer's side
+      part(new THREE.SphereGeometry(0.13, 10, 8).scale(1.5, 0.9, 0.9).translate(-0.78, 0.58, 0), M.hay);
+      for (const s of [-1, 1]) {
+        part(cylGeo(0.015, 0.02, 0.35, 5).rotateX(s * 0.35).translate(-0.72, 0.82, s * 0.06), M.woodDark); // antlers
+        part(cylGeo(0.012, 0.012, 0.16, 5).rotateZ(-0.8).rotateX(s * 0.35).translate(-0.66, 0.92, s * 0.1), M.woodDark);
+      }
+      for (const [x, z] of [[-0.38, -0.12], [-0.38, 0.12], [0.38, -0.12], [0.38, 0.12]]) part(boxGeo(0.06, 0.8, 0.06).translate(x, -0.6, z), M.woodDark);
+      part(cylGeo(0.12, 0.12, 0.02, 14).rotateX(Math.PI / 2).translate(0, 0, -0.245), M.clothRed);
+      return c;
+    }
+    case 'butchery': { // a chopping block with a ham on it, a rack of sausages and a ham hanging behind
+      add(cylGeo(0.4, 0.46, 0.55, 12).translate(0, 0.27, 0.75), M.wood);
+      add(new THREE.SphereGeometry(0.2, 10, 8).scale(1.4, 0.8, 1).translate(0.05, 0.68, 0.75), M.clay);
+      for (const x of [-0.9, 0.9]) add(boxGeo(0.08, 2.0, 0.08).translate(x, 1.0, 1.6), M.woodDark);
+      add(boxGeo(1.9, 0.07, 0.07).translate(0, 1.95, 1.6), M.woodDark);
+      for (let k = 0; k < 5; k++) for (let i = 0; i < 3; i++) add(cylGeo(0.05, 0.05, 0.2, 8).translate(-0.6 + k * 0.3, 1.78 - i * 0.22, 1.6), M.clay);
+      add(new THREE.SphereGeometry(0.2, 10, 8).scale(0.9, 1.5, 0.9).translate(0.75, 1.45, 1.6), M.clay); // a ham on a hook
+      add(boxGeo(0.9, 0.75, 0.5).translate(-1.3, 0.37, 0.4), M.wood); // the meat box
+      return new THREE.Vector3(0, 0.82, 0.75);
+    }
+    case 'trebuchet': { // a model trebuchet on a trestle; the arm throws a turnip now and then
+      add(boxGeo(1.6, 0.08, 0.6).translate(0, 0.55, 0.8), M.wood);
+      for (const x of [-0.7, 0.7]) add(boxGeo(0.08, 0.55, 0.5).translate(x, 0.27, 0.8), M.woodDark);
+      for (const z of [-0.2, 0.2]) for (const s of [-1, 1]) add(boxGeo(0.05, 0.75, 0.05).rotateZ(s * 0.3).translate(s * 0.12, 0.92, 0.8 + z), M.woodDark); // the A-frames
+      const arm = new THREE.Group();
+      arm.position.set(0, 1.25, 0.8);
+      holder.add(arm);
+      arm.add(Object.assign(new THREE.Mesh(boxGeo(1.1, 0.04, 0.04).translate(0.25, 0, 0), M.woodDark), { castShadow: true }));
+      arm.add(Object.assign(new THREE.Mesh(boxGeo(0.14, 0.14, 0.14).translate(-0.3, -0.08, 0), M.stoneDark), { castShadow: true }));
+      const turnip = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 6), M.clothIvory);
+      holder.add(turnip);
+      anim.push((t) => {
+        const u = (t % 4.5) / 4.5;
+        arm.rotation.z = u < 0.08 ? -0.7 + (u / 0.08) * 2.2 : 1.5 - Math.min(1, (u - 0.08) / 0.5) * 2.2; // a fast throw, then wound back
+        turnip.visible = u < 0.45;
+        if (u < 0.08) turnip.position.set(0.25 + Math.cos(arm.rotation.z) * 0.8, 1.25 + Math.sin(arm.rotation.z) * 0.8, 0.8);
+        else { const k = (u - 0.08) / 0.37; turnip.position.set(-0.2 - k * 3.0, 2.0 + 2.2 * k - 4.5 * k * k, 0.8 + k * 2.0); }
+      });
+      return new THREE.Vector3(0, 0.6, 0.6);
+    }
+    case 'flock': { // sheep grazing in front of the shepherd
+      const flock = [[0.6, 1.8, 0.4], [-0.7, 2.3, -0.6], [0.1, 3.0, 2.4], [1.3, 2.7, 1.2]].map(([x, z, yaw], i) => {
+        const s = sheep(M);
+        s.g.position.set(x, 0, z);
+        s.g.rotation.y = yaw;
+        holder.add(s.g);
+        return { ...s, ph: i * 1.7 };
+      });
+      anim.push((t) => flock.forEach((s) => { s.head.rotation.x = 0.55 + 0.25 * Math.sin(t * 1.3 + s.ph); }));
+      return new THREE.Vector3(0, 1.2, 0.8);
+    }
+    case 'hide': { // the tanner's beam: a hide over a sloping log, a soaking tub and a hide drying on a frame
+      // the beam slopes down away from the tanner; the hide lies over its upper half
+      add(cylGeo(0.14, 0.16, 1.5, 10).rotateX(-1.0).translate(0, 0.45, 1.0), M.wood);
+      add(cylGeo(0.17, 0.19, 0.8, 10).translate(0, 0.35, 0).rotateX(-1.0).translate(0, 0.45, 1.0), M.soil);
+      add(boxGeo(0.5, 0.35, 0.08).translate(0, 0.17, 1.65), M.woodDark);
+      add(cylGeo(0.45, 0.4, 0.6, 14).translate(1.3, 0.3, 0.6), M.wood);
+      add(cylGeo(0.42, 0.42, 0.02, 14).translate(1.3, 0.56, 0.6), M.stoneDark);
+      for (const x of [1.2, 2.2]) add(boxGeo(0.07, 1.8, 0.07).translate(x, 0.9, 1.9), M.woodDark); // the drying frame, behind
+      for (const y of [0.35, 1.7]) add(boxGeo(1.1, 0.06, 0.06).translate(1.7, y, 1.9), M.woodDark);
+      add(boxGeo(0.85, 1.2, 0.02).translate(1.7, 1.02, 1.9), M.soil);
+      return new THREE.Vector3(0, 0.82, 0.5);
     }
     case 'none':
       return new THREE.Vector3(0, 1.2, 0.4);

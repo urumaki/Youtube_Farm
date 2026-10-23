@@ -209,6 +209,7 @@ const JOB_IT = {
   mayor: 'sindaco', weaver: 'tessitore', physician: 'medico', apothecary: 'speziale', bard: 'bardo', taxcollector: 'esattore delle tasse', tailor: 'sarto',
   potter: 'vasaio', cobbler: 'calzolaio', cooper: 'bottaio', beekeeper: 'apicoltore', bellfounder: 'fonditore di campane', clockmaker: 'orologiaio',
   ratcatcher: 'acchiappatopi', chimneysweep: 'spazzacamino', falconer: 'falconiere', cook: 'cuoco',
+  hunter: 'cacciatore', butcher: 'macellaio', engineer: 'ingegnere', shepherd: 'pastore', tanner: 'conciatore',
   chronicler: 'cronista', admiral: 'ammiraglio', fletcher: 'arcaio', weirdo: 'stravagante del paese', beggar: 'mendicante',
   jester: 'giullare', warrior: 'guerriero', toolsmith: 'fabbro di attrezzi', brewer: 'birraio', apprentice: 'apprendista',
   crier: 'banditore', executioner: 'boia',

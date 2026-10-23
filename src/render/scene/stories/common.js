@@ -86,7 +86,8 @@ const JOB_IT = {
   merchant: 'Mercante', innkeeper: 'Oste', priest: 'Prete', miller: 'Mugnaio', brewer: 'Birraio', apprentice: 'Apprendista',
   tailor: 'Sarto', physician: 'Medico', taxcollector: 'Esattore', potter: 'Vasaio', cobbler: 'Calzolaio', cooper: 'Bottaio',
   beekeeper: 'Apicoltore', bellfounder: 'Fonditore', clockmaker: 'Orologiaio', ratcatcher: 'Acchiappatopi', chimneysweep: 'Spazzacamino',
-  falconer: 'Falconiere', cook: 'Cuoco',
+  falconer: 'Falconiere', cook: 'Cuoco', hunter: 'Cacciatore', butcher: 'Macellaio', engineer: 'Ingegnere', shepherd: 'Pastore',
+  tanner: 'Conciatore',
 };
 
 /** A name tag for a cast member: the name when they have one, else their job. */
