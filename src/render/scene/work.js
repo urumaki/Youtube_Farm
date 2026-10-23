@@ -200,6 +200,8 @@ const JOB_SCENES = {
   ratcatcher: { period: 1.3, hit: 0.65, raise: -2.4, down: -0.6, bend: 0.35, fx: 'dirt', sound: 'hoe', tool: 'sack', props: 'rats', both: true },
   chimneysweep: { period: 1.2, hit: 0.5, raise: -2.75, down: -2.35, bend: 0, fx: 'soot', sound: 'none', tool: 'brush', props: 'chimney', push: true, left: -0.35 },
   falconer: { period: 4.0, raise: -0.15, down: -0.15, bend: 0, sound: 'none', tool: null, props: 'falcon', smooth: true, left: -1.45, still: true },
+  // owner 2026-10-23: in a meadow outside the walls, a wider shot, one flight of the falcon from the shot's start
+  'falconer:meadow': { period: 3.4, hit: 0.5, raise: -0.15, down: -0.15, bend: 0, sound: 'none', tool: null, props: 'falcon', smooth: true, left: -1.45, still: true, once: true, focusH: 1.8, radius: 8.5 },
   cook: { period: 2.0, hit: 0.5, raise: -1.2, down: -1.2, bend: 0.15, fx: 'steam', sound: 'none', tool: 'paddle', props: 'cauldron', stir: true, both: true },
   executioner: { period: 1.6, hit: 0.72, raise: -2.8, down: -0.9, bend: 0.25, fx: 'leaves', sound: 'chop', tool: 'axe', props: 'chopblock', both: true, hood: true },
   // asked for in the comments of 2026-10-22 (owner 2026-10-23): the hunter practises with the bow on a straw
@@ -805,29 +807,39 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       add(boxGeo(0.95, 0.15, 0.95).translate(0.3, 3.45, 1.65), M.stoneDark);
       return new THREE.Vector3(0.3, 3.6, 1.65);
     }
-    case 'falcon': { // a perch; the falcon flies off the glove, circles high and comes back
-      add(boxGeo(0.1, 1.5, 0.1).translate(1.0, 0.75, 0.4), M.woodDark);
-      add(boxGeo(0.5, 0.06, 0.06).translate(1.0, 1.5, 0.4), M.woodDark);
+    case 'falcon': { // a perch; the falcon flies off the glove, circles low in front of the falconer and comes back
+      // (owner 2026-10-23: always in the picture: a big bird, a small loop at head height, one flight per cycle)
+      add(boxGeo(0.1, 1.5, 0.1).translate(-1.0, 0.75, 0.4), M.woodDark);
+      add(boxGeo(0.5, 0.06, 0.06).translate(-1.0, 1.5, 0.4), M.woodDark);
       const bird = new THREE.Group();
       holder.add(bird);
-      bird.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 6).scale(0.8, 0.9, 1.6), M.wood), { castShadow: true }));
+      const plumage = new THREE.MeshStandardMaterial({ color: '#6b5440', roughness: 0.85 });
+      const part = (geo, m, parent = bird) => parent.add(Object.assign(new THREE.Mesh(geo, m), { castShadow: true }));
+      part(new THREE.SphereGeometry(0.11, 10, 8).scale(0.85, 0.9, 1.7), plumage);
+      part(new THREE.SphereGeometry(0.075, 8, 6).translate(0, 0.07, 0.17), plumage); // the head
+      part(new THREE.ConeGeometry(0.025, 0.06, 5).rotateX(Math.PI / 2).translate(0, 0.06, 0.25), M.gold); // the beak
+      part(new THREE.SphereGeometry(0.08, 8, 6).scale(1, 0.5, 0.8).translate(0, -0.03, 0.03), M.clothIvory); // pale breast
+      part(boxGeo(0.14, 0.02, 0.22).translate(0, 0, -0.25), plumage); // the tail
       const wings = [-1, 1].map((s) => {
         const wg = new THREE.Group();
-        wg.add(new THREE.Mesh(boxGeo(0.4, 0.02, 0.18).translate(s * 0.2, 0, 0), M.woodDark));
+        wg.position.set(s * 0.06, 0.03, 0.02);
+        part(boxGeo(0.5, 0.02, 0.22).translate(s * 0.25, 0, 0), plumage, wg);
+        part(boxGeo(0.22, 0.021, 0.12).translate(s * 0.5, 0, -0.05), M.woodDark, wg); // dark tips
         bird.add(wg);
         return { wg, s };
       });
-      const glove = new THREE.Vector3(-0.3, 1.43, 0.66), C0 = new THREE.Vector3(0, 3.4, 3.0);
-      const loop = (a) => new THREE.Vector3(C0.x + Math.sin(a) * 2.6, C0.y + 0.4 * Math.sin(a * 2), C0.z - Math.cos(a) * 2.6);
+      const glove = new THREE.Vector3(-0.3, 1.47, 0.66), C0 = new THREE.Vector3(0.1, 2.4, 1.95), R = 1.25;
+      const loop = (a) => new THREE.Vector3(C0.x - Math.sin(a) * R, C0.y + 0.35 * Math.sin(a), C0.z - Math.cos(a) * R);
+      const ahead = (a) => Math.atan2(-Math.cos(a), Math.sin(a)); // the way the loop goes, as a yaw
       anim.push((t, c) => {
         const u = c - Math.floor(c);
-        let flap = 0;
-        if (u < 0.2) bird.position.copy(glove);
-        else if (u < 0.3) { bird.position.copy(glove).lerp(loop(0), (u - 0.2) / 0.1); flap = 1; }
-        else if (u < 0.85) { bird.position.copy(loop(((u - 0.3) / 0.55) * Math.PI * 2)); flap = 1; }
-        else { bird.position.copy(loop(Math.PI * 2)).lerp(glove, (u - 0.85) / 0.15); flap = 1; }
-        bird.rotation.y = u < 0.2 ? 0 : -((u - 0.3) / 0.55) * Math.PI * 2;
-        for (const { wg, s } of wings) wg.rotation.z = s * (flap ? 0.6 * Math.sin(t * 18) : -0.9); // folded on the glove
+        let flap = 1, glide = 0;
+        if (u < 0.14) { bird.position.copy(glove); bird.rotation.y = 0; flap = 0; }
+        else if (u < 0.28) { const k = ease((u - 0.14) / 0.14); bird.position.copy(glove).lerp(loop(0), k); bird.rotation.y = ahead(0) * k; }
+        else if (u < 0.8) { const a = ((u - 0.28) / 0.52) * Math.PI * 2; bird.position.copy(loop(a)); bird.rotation.y = ahead(a); glide = Math.sin(a * 2) > 0.3 ? 1 : 0; }
+        else { const k = ease((u - 0.8) / 0.2); bird.position.copy(loop(Math.PI * 2)).lerp(glove, k); bird.rotation.y = ahead(0) * (1 - k); glide = 1; }
+        bird.rotation.z = u >= 0.28 && u < 0.8 ? 0.35 : 0; // banking into the turn
+        for (const { wg, s } of wings) wg.rotation.z = !flap ? s * -1.2 : glide ? s * 0.08 : s * 0.7 * Math.sin(t * 16); // folded on the glove
       });
       return new THREE.Vector3(-0.3, 1.5, 0.66);
     }

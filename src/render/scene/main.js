@@ -221,6 +221,18 @@ async function setup(data) {
       anchor.y = yFn(anchor.x, anchor.z);
       return { anchor, ax: 0, az: 1, floorAt: null };
     }
+    // the falconer in the same clearing, a few steps to one side, the falcon flying out over the grass
+    if (variant === 'meadow') {
+      const { ox, oz } = hunt, anchor = new THREE.Vector3(hunt.x - ox * 4 + oz * 4, 0, hunt.z - oz * 4 - ox * 4);
+      anchor.y = yFn(anchor.x, anchor.z);
+      // facing out over the grass, the falcon's loop in front of him (work.js); the camera side on, far enough back to
+      // keep the falconer and the whole loop in the picture
+      const mid = anchor.clone().add(new THREE.Vector3(ox * 1.25, 1.5, oz * 1.25)), side = new THREE.Vector3(oz, 0, -ox);
+      const from = mid.clone().addScaledVector(side, 8.6), to = mid.clone().addScaledVector(side, 7.8);
+      from.y = Math.max(from.y + 0.4, yFn(from.x, from.z) + 1.4); to.y = Math.max(to.y + 0.3, yFn(to.x, to.z) + 1.4);
+      const cam = (u) => ({ pos: from.clone().lerp(to, u * u * (3 - 2 * u)), look: mid });
+      return { anchor, ax: side.x, az: side.z, floorAt: null, face: Math.atan2(ox, oz), cam };
+    }
     if (variant === 'boar' || variant === 'stag') {
       const { ox, oz } = hunt, anchor = new THREE.Vector3(hunt.x - ox * 3, 0, hunt.z - oz * 3);
       anchor.y = yFn(anchor.x, anchor.z);

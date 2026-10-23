@@ -250,7 +250,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (`butcher:stall`; two stall scenes in one video never share a stall, `stallOf`); the hunter shoots at a boar or a stag in a
   clearing outside the Second Wall (`hunter:boar`/`stag`, `huntSpot` in `wall.js`: out from the wall's northernmost corner past
   every plot, lot, field and road; no trees there, `nature.js`); the arrow lands short and the animal bolts (`once`: one
-  shot per scene, from the shot's start); the shepherd at the gate of a sheep pen on the grass beyond the fields
+  shot per scene, from the shot's start); the falconer in the same clearing, his falcon flying a low loop in front of him and back to the glove, always in the
+  picture (`falconer:meadow`, own side camera, one flight from the shot's start); the shepherd at the gate of a sheep pen on the grass beyond the fields
   (`shepherd:pen`); the tanner with a long rack of hides drying behind him; the engineer checks a plan on a parchment in front
   of a building going up (`engineer:site`, only while something other than the wall is under construction). Every jester
   wears a jester's cap and every chimney sweep has a face black with soot, in every scene (`dress` in `work.js`, by the

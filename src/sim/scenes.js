@@ -31,7 +31,7 @@ export const VARIANTS = {
   // sweep inside a house, the hunter at the edge of a field outside the walls (a boar or a stag), the shepherd at a sheep
   // pen, the engineer in front of a building going up (src/render/scene/work.js, main.js)
   bard: ['square', 'inn'], jester: ['square'], cook: ['stall'], butcher: ['stall'], ratcatcher: ['alley'], chimneysweep: ['house'],
-  hunter: ['boar', 'stag'], shepherd: ['pen'], engineer: ['site'],
+  hunter: ['boar', 'stag'], shepherd: ['pen'], engineer: ['site'], falconer: ['meadow'],
 };
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
 // the fisherman always fishes on the river (owner 2026-10-22): from a jetty with a rod or a net, or in a boat
