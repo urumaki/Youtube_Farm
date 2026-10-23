@@ -722,7 +722,7 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     for (const s of ctx.sails) sails.push({ pos: s.at.clone().applyMatrix4(frame.m), len: s.len, rot: lot.rot });
     for (const bt of ctx.boats) boats.push({ pos: toWorld([bt.x, 0, bt.z]), rot: lot.rot + bt.r, len: bt.len, sail: bt.sail });
     const item = {
-      group: root, body, site: siteGroup, focus: toWorld([0, out.focusH, 0]), lot,
+      group: root, body, site: siteGroup, focus: toWorld([0, out.focusH, 0]), lot, base: frame.base, toWorld,
       setProgress(p) {
         body.scale.y = Math.max(0.02, Math.min(1, 0.1 + 0.9 * p));
         siteGroup.visible = p < 0.999;

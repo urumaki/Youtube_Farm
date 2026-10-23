@@ -88,7 +88,7 @@ export const BUILDINGS = {
   bell_foundry: { label: 'the Bell Foundry', days: 3 },
   clock_tower: { label: 'the Clock Tower', days: 10 },
   stone_bridge: { label: 'the Great Bridge', days: 30 },
-  fletcher_workshop: { label: "the Fletcher's Workshop", days: 2 },
+  fletcher_workshop: { label: "the Fletcher's Workshop", days: 1 },
   district_east: { label: 'the East Ward', days: 3 },
   charter_stone: { label: 'the Charter Stone', days: 1 },
   district_north: { label: 'the North Ward', days: 3 },

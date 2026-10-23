@@ -25,6 +25,7 @@ import { buildBoat, buildRiverbank, buildNightWatch } from './away.js';
 import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
 import { heightAt } from '../../sim/world.js';
+import { pointInObb, grow } from '../../sim/geometry.js';
 
 const FPS = 30;
 
@@ -117,6 +118,21 @@ async function setup(data) {
           : variant === 'rod' || variant === 'net' ? buildRiverbank({ w, M, hero, home, heightAt: ground, mode: variant, guest })
           : buildNightWatch({ w, M, hero, home, heightAt: ground });
   };
+  // where a villager works: the croft behind the house, facing away from it; the Fletcher works in the yard of
+  // the Fletcher's Workshop once it stands (owner 2026-10-23), with the street (and the camera) in front
+  const shop = state.buildings.some((b) => b.id === 'fletcher_workshop' && b.status === 'done') ? buildings.items.fletcher_workshop : null;
+  const workPlace = (job, sh) => {
+    if (job === 'fletcher' && shop) {
+      const { lot } = shop;
+      const floorAt = (x, z) => (pointInObb(grow(lot, 0.4), x, z) ? shop.base : yFn(x, z));
+      return { anchor: shop.toWorld([0.2, 0, 3.6]), ax: -Math.sin(lot.rot), az: Math.cos(lot.rot), floorAt };
+    }
+    const c = Math.cos(sh.rot), s = Math.sin(sh.rot);
+    const ax = -s * sh.side, az = c * sh.side; // from the house toward its croft
+    const anchor = new THREE.Vector3(sh.x + ax * (sh.D / 2 + 4.2), 0, sh.z + az * (sh.D / 2 + 4.2));
+    anchor.y = yFn(anchor.x, anchor.z);
+    return { anchor, ax, az, floorAt: null };
+  };
   // the work scene in a croft: the bakehouse for bakers, the straw dummy for fighters, else work.js
   const workScene = ({ job, variant, anchor, ax, az, away, id }) => {
     if (indoorScene(job, variant)) return buildBakehouse({ variant, anchor, away, M, seed: state.seed, id, heightAt: (x, z) => heightAt(w, x, z) });
@@ -148,11 +164,7 @@ async function setup(data) {
       stories.push({ st, tg });
     } else if (tg.kind === 'villager') {
       const v = state.villagers[tg.id];
-      const sh = houses.shapes.get(v.house);
-      const c = Math.cos(sh.rot), s = Math.sin(sh.rot);
-      const ax = -s * sh.side, az = c * sh.side; // from the house toward its croft
-      const anchor = new THREE.Vector3(sh.x + ax * (sh.D / 2 + 4.2), 0, sh.z + az * (sh.D / 2 + 4.2));
-      anchor.y = yFn(anchor.x, anchor.z);
+      const { anchor, ax, az, floorAt } = workPlace(tg.sceneJob || v.job, houses.shapes.get(v.house));
       tg.away = Math.atan2(az, ax);
       const ws = workScene({ job: tg.sceneJob || v.job, variant: tg.variant, anchor, ax, az, away: tg.away, id: tg.id });
       scene.add(ws.group);
@@ -163,7 +175,7 @@ async function setup(data) {
       if (ws.radius) tg.radius = ws.radius;
       if (tg.guest) {
         // a second named villager walks in: frame them both, a little wider
-        const visit = buildVisit({ host: ws, hostJob: tg.sceneJob || v.job, guest: tg.guest, pair: tg.pair, away: tg.away, M, yFn: ws.floorAt || yFn, t0: tg.t0, t1: tg.t1 });
+        const visit = buildVisit({ host: ws, hostJob: tg.sceneJob || v.job, guest: tg.guest, pair: tg.pair, away: tg.away, M, yFn: ws.floorAt || floorAt || yFn, t0: tg.t0, t1: tg.t1 });
         scene.add(visit.group);
         stories.push({ st: visit, tg });
         tg.labelPos2 = visit.labelPos2;
@@ -224,12 +236,13 @@ async function setup(data) {
         scene.add(st.group);
         return { ws: { group: st.group, update: (t) => st.update(t, 0, 3) }, st, focus: st.focus };
       }
-      const ws = workScene({ job: g.job, variant: g.variant, anchor, ax, az, away, id: 9100 + i });
+      const at = workPlace(g.job, sh), gAway = Math.atan2(at.az, at.ax);
+      const ws = workScene({ job: g.job, variant: g.variant, anchor: at.anchor, ax: at.ax, az: at.az, away: gAway, id: 9100 + i });
       scene.add(ws.group);
       if (ws.room) scene.add(ws.room);
-      const visit = g.guest ? buildVisit({ host: ws, hostJob: g.job, guest: { job: g.guest }, pair: g.pair, away, M, yFn: ws.floorAt || yFn, t0: 0, t1: 3 }) : null;
+      const visit = g.guest ? buildVisit({ host: ws, hostJob: g.job, guest: { job: g.guest }, pair: g.pair, away: gAway, M, yFn: ws.floorAt || at.floorAt || yFn, t0: 0, t1: 3 }) : null;
       if (visit) scene.add(visit.group);
-      return { ws, visit, focus: visit ? ws.focus.clone().lerp(visit.stand.clone().setY(visit.stand.y + 1.1), 0.4) : ws.focus };
+      return { ws, visit, away: gAway, focus: visit ? ws.focus.clone().lerp(visit.stand.clone().setY(visit.stand.y + 1.1), 0.4) : ws.focus };
     });
   }
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
@@ -325,7 +338,7 @@ async function shot(pos, look, t = 10, phase, interior = 0, fov) {
 /** Test renders: gallery scene i at time t, seen from `angle` around it (the croft shots' side). */
 async function galleryShot(i, t, turn = 0.25) {
   const ctx = window.__ctx;
-  const angle = ctx.galleryAway + turn;
+  const angle = (ctx.gallery[i].away ?? ctx.galleryAway) + turn;
   // only the scene asked for: hide the video's own work scenes (the first one is in this same croft)
   for (const ws of [...ctx.works, ...ctx.interiors.map((x) => x.ws)]) { ws.group.visible = false; if (ws.room) ws.room.visible = false; }
   ctx.gallery.forEach((g, k) => { g.ws.group.visible = k === i; if (g.ws.room) g.ws.room.visible = k === i; if (g.visit) g.visit.group.visible = k === i; });

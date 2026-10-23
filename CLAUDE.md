@@ -190,8 +190,10 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - Commissions (owner 2026-10-23): buildings with no goal, begun on the next day the kingdom runs, whatever its
   size (`COMMISSIONS` in `tiers.js`, saved with tier `commission`). The first is the Fletcher's Workshop: a
   thatched timber workshop with bows on the wall, a fletching bench under a lean-to, a barrel of arrows, staves
-  drying and a straw target (`fletcher_workshop` in `buildings.js`), on the free ground nearest the market
+  drying and a straw target (`fletcher_workshop` in `buildings.js`, one day to build), on the free ground nearest the market
   that fronts a street (`placeFletcherWorkshop` in `world.js`, after the plots, so nothing moves).
+  Once it stands, Fletchers work in its yard instead of their croft (`workPlace` in `main.js`: fletching at
+  a bench, shooting at a target, visits), with the street and the camera in front.
 - `src/audio/` narration templates (names are never read aloud), Kokoro TTS (`am_adam`), procedural
   music, camera-driven sound effects with strikes synced to the work animations (`sfx.js`).
   The voice follows the shots: `produceVideo` first sets the scene up once to get the shot plan
