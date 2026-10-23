@@ -76,6 +76,7 @@ const T = {
       chat: (h, g) => `The ${g} drops by for a chat with the ${h}.`,
     },
     tavern: ['Meanwhile, the tavern is full tonight!', 'Over at the tavern, the mugs are full!', 'At the tavern, the cider is flowing!'],
+    church: { chapel: ['In the chapel, the villagers pray for the kingdom.', 'The chapel pews are full today!'], cathedral: ['Under the great vaults, the cathedral is full!', 'The bishop blesses a full cathedral.'] },
     houses1: ['A new house rises along the road.', 'Builders finished a fresh new home.'],
     houses: [(n) => `${n} new houses rise along the roads.`, (n) => `Builders raised ${n} new homes.`],
     rebuilt: [(n) => `${n === 1 ? 'An old ruin was' : `${n} old ruins were`} rebuilt.`],
@@ -165,6 +166,7 @@ T.it = {
     chat: (h, g) => `${cap(the(g))} passa a fare due chiacchiere con ${the(h)}.`,
   },
   tavern: ['Intanto la taverna è piena!', 'In taverna i boccali sono pieni!'],
+  church: { chapel: ['Nella cappella, gli abitanti pregano per il regno.', 'Oggi i banchi della cappella sono pieni!'], cathedral: ['Sotto le grandi volte, la cattedrale è piena!', 'Il vescovo benedice la cattedrale gremita.'] },
   houses1: ['Una nuova casa sorge lungo la strada.'],
   houses: [(n) => `${n} nuove case sorgono lungo le strade.`],
   rebuilt: [(n) => `${n === 1 ? 'Una rovina è stata ricostruita' : `${n} rovine sono state ricostruite`}.`],
@@ -199,7 +201,7 @@ const BUILDING_IT = {
   lighthouse: 'il Faro', colossus: 'il Colosso degli Iscritti', crier_stand: 'il Palco del Banditore', pillory: 'la Gogna', tailor_stall: 'la Bottega del Sarto', physician_booth: 'il Banco del Medico',
   potter_stall: 'la Bottega del Vasaio', cobbler_stall: 'il Banco del Calzolaio', cooperage: 'la Bottega del Bottaio', apiary: 'le Arnie',
   bell_foundry: 'la Fonderia di Campane', clock_tower: "la Torre dell'Orologio", stone_bridge: 'il Grande Ponte',
-  fletcher_workshop: "la Bottega dell'Arcaio",
+  fletcher_workshop: "la Bottega dell'Arcaio", counting_house: 'la Casa delle Tasse', apothecary_shop: 'la Bottega dello Speziale',
 };
 
 const JOB_IT = {
@@ -284,6 +286,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   const amb = shots.find((c) => c.kind === 'ambient');
   if (amb && L.ambient[amb.id]) add(pick(L.ambient[amb.id]), 'ambient', 4);
   if (diff.scenes ? diff.scenes.tavern : tavernScene(state)) add(pick(L.tavern), 'tavern', 6);
+  if (diff.scenes?.church) add(pick(L.church[diff.scenes.church]), 'church', 6);
   const nb = diff.housesBuilt.length;
   if (nb === 1) add(pick(L.houses1), 'houses', 5);
   else if (nb > 1) add(pick(L.houses)(nb.toLocaleString('en-US')), 'houses', 5);
@@ -315,7 +318,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
   // same order as the shots: caravan, new buildings, villagers at work, then the rest
   // the comment invitation comes with the named villagers (tavern), so the goal and the call to action keep the end
-  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'raised', 'requests', 'count', 'person', 'pair', 'ambient', 'tavern', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
+  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'raised', 'requests', 'count', 'person', 'pair', 'ambient', 'tavern', 'church', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   // between equals, a sentence about a shot of its own stays (it fills that shot)
   const own = new Set(shots.length ? S.filter((s, i) => sentenceAnchors(S, shots)[i] !== null && !(s.role in FIXED_AT)) : []);
@@ -341,7 +344,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
 // Which shot each kind of sentence talks about (see makePlan in src/render/scene/timeline.js).
 const SHOT_OF = {
   story: (c) => c.kind === 'event', completed: (c) => c.kind === 'building', unlocked: (c) => c.kind === 'building',
-  requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', pair: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', comment: (c) => c.kind === 'tavern', ambient: (c) => c.kind === 'ambient',
+  requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', pair: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', church: (c) => c.kind === 'church', comment: (c) => c.kind === 'tavern', ambient: (c) => c.kind === 'ambient',
   houses: (c) => c.kind === 'house' && !c.raised, rebuilt: (c) => c.kind === 'house' && !c.raised, raised: (c) => c.kind === 'house' && c.raised, abandoned: (c) => c.kind === 'loss', ruined: (c) => c.kind === 'loss',
 };
 // fixed parts of the video: the wide shot with the goal (23.5 s) and the call to action (27 s)

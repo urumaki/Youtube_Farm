@@ -130,6 +130,10 @@ function buildWorld(seed) {
   // the dense plots new houses take from 2026-10-23 on (ids from DENSE_ID), laid out round everything else;
   // houses already standing keep their plots, and a dense plot on one of them is passed over (simulate.js)
   w.densePlots = buildPlots(w, seed, { dense: true });
+  // owner 2026-10-23: the tax collector's Counting House and the Apothecary's Shop, after everything else (the dense
+  // plots too), so no plot, street or lot moves
+  placeStreetLot(w, 'counting_house', 6, 5, [...w.plots, ...w.finePlots, ...w.densePlots]);
+  placeStreetLot(w, 'apothecary_shop', 6, 5, [...w.plots, ...w.finePlots, ...w.densePlots]);
   return w;
 }
 
@@ -163,10 +167,14 @@ function placePalace(w) {
 // fronts a street, found after every plot, street and lot is laid out, so nothing else moves. The lot's
 // front (+z) faces the street.
 function placeFletcherWorkshop(w) {
-  const hw = 6, hd = 5;
+  placeStreetLot(w, 'fletcher_workshop', 6, 5, [...w.plots, ...w.finePlots]);
+}
+
+/** A workshop lot `id` (2hw x 2hd) on the free ground nearest the market that fronts a street, its front (+z) to the street. */
+function placeStreetLot(w, id, hw, hd, plots) {
   const taken = new SpatialHash(40);
   const take = (b) => taken.insert(obbAabb(b), b);
-  for (const p of [...w.plots, ...w.finePlots]) take(grow(p, 1));
+  for (const p of plots) take(grow(p, 1));
   for (const s of w.pathIndex.segs) take(segmentObb(s.ax, s.az, s.bx, s.bz, s.hw + 1));
   for (const l of Object.values(w.lots)) if (!l.virtual || l.hw > 0) take(grow(l, 2));
   for (const f of w.fields) take(grow(f, 2));
@@ -189,9 +197,9 @@ function placeFletcherWorkshop(w) {
     let river = Infinity;
     for (let i = 1; i < w.riverPts.length; i++) river = Math.min(river, distToSegment(x, z, ...w.riverPts[i - 1], ...w.riverPts[i]));
     if (river < RIVER_HALF_WIDTH + 15) continue;
-    const lot = { id: 'fletcher_workshop', x, z, hw, hd, rot };
+    const lot = { id, x, z, hw, hd, rot };
     if (hits(lot)) continue;
-    w.lots.fletcher_workshop = lot;
+    w.lots[id] = lot;
     return;
   }
 }

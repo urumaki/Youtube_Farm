@@ -79,13 +79,16 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const scenes = diff.scenes || null;
   const tavern = people && named.length > 0 && buildings.items.tavern && (scenes ? scenes.tavern : tavernScene(state));
   const keepers = tavern ? named.filter((n) => n.job === 'innkeeper' || n.job === 'brewer').slice(0, 2) : [];
+  // or the church interior (owner 2026-10-23): named villagers praying in the pews, the priest or bishop at the altar
+  const church = people && named.length > 0 && scenes?.church && buildings.items[scenes.church] ? scenes.church : null;
+  const clergy = church ? named.filter((n) => n.job === 'priest' || n.job === 'bishop').sort((a, b) => (b.job === (church === 'cathedral' ? 'bishop' : 'priest')) - (a.job === (church === 'cathedral' ? 'bishop' : 'priest'))).slice(0, 2) : [];
   // who is shown at work comes from the simulation (src/sim/featured.js): today's named villagers first,
   // never yesterday's jobs again, one per job; older saves fall back to the same rule without yesterday
   // a shot can show two villagers: the guest visits the host at work (src/render/scene/visit.js)
   const featured = diff.featured || pickFeatured(state);
   const shots = featured.map((f) => ({ f, n: named.find((n) => n.id === f.id), g: f.with ? named.find((n) => n.id === f.with.id) : null }))
-    .filter(({ n }) => n && !keepers.includes(n))
-    .slice(0, tavern ? 2 : people ? 3 : Math.min(3, Math.max(2, maxTargets - targets.length - 2)));
+    .filter(({ n }) => n && !keepers.includes(n) && !clergy.includes(n))
+    .slice(0, tavern || church ? 2 : people ? 3 : Math.min(3, Math.max(2, maxTargets - targets.length - 2)));
   const atWork = shots.flatMap(({ n, g }) => (g ? [n, g] : [n])); // everyone on screen at work
   const camFrom = Math.floor(rand01(state.seed, 'camstyle', state.day) * CAM_STYLES.length);
   const usedVariants = new Set();
@@ -140,6 +143,15 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
       kind: 'tavern', id: 'tavern', pos: buildings.items.tavern.focus.clone(), radius: 10, front: 0, label: null, labels: [],
       weight: 1.8, cut: true, // a hard cut inside (and out again): the camera never flies through the walls
       patrons: patrons.map((n) => ({ name: n.name, job: n.job })), keepers: keepers.map((n) => ({ name: n.name, job: n.job })),
+    });
+  }
+  if (church) {
+    // the newest names in the front pews (the caravan's newcomers too: the church shows them again, seated)
+    const worshippers = named.filter((n) => !clergy.includes(n) && !atWork.includes(n) && n.id !== ambient?.hero?.id).slice(0, church === 'cathedral' ? 16 : 12);
+    targets.push({
+      kind: 'church', id: church, pos: buildings.items[church].focus.clone(), radius: 10, front: 0, label: null, labels: [],
+      weight: 1.8, cut: true, // a hard cut inside and out, as for the tavern
+      clergy: clergy.map((n) => ({ name: n.name, job: n.job })), worshippers: worshippers.map((n) => ({ name: n.name, job: n.job })),
     });
   }
   // 3) new or rebuilt houses fill the rest (a spread of them), only on days without named villagers

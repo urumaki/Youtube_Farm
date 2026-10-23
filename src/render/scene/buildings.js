@@ -286,6 +286,60 @@ const BUILD = {
     out.lights.push([-4.4, 2.3, 3.0]);
     out.focusH = 2.6;
   },
+  counting_house(b, lot, out) {
+    // owner 2026-10-23: the tax collector's house. A stone ground floor with barred windows and an arched door,
+    // a timber upper storey jutting over the street, the royal banners, a sign with a gold coin; the front (+z)
+    // stays clear for the queue of taxpayers along it
+    b.add('stone', boxGeo(9, 3.2, 5.5), 0, 1.6, -2.2);
+    b.add('timber', boxGeo(9.6, 2.6, 6.1), 0, 4.5, -2.2);
+    b.add('woodDark', boxGeo(9.8, 0.25, 6.3), 0, 3.25, -2.2); // the jetty beam under the upper storey
+    b.add('slate', gableGeo(10.4, 7, 2.8), 0, 5.8, -2.2);
+    b.add('stone', boxGeo(0.9, 3.4, 0.9), 3.6, 7.3, -3.6); // chimney
+    b.add('woodDark', boxGeo(1.4, 2.3, 0.15), 1.6, 1.15, 0.58); // the door under a round arch
+    b.add('stoneDark', new THREE.TorusGeometry(0.75, 0.14, 6, 12, Math.PI), 1.6, 2.3, 0.6);
+    b.add('woodDark', new THREE.CircleGeometry(0.7, 12, 0, Math.PI), 1.6, 2.3, 0.58);
+    for (const x of [-3.2, -1.2]) { // barred windows
+      b.add('window', boxGeo(1.0, 1.1, 0.12), x, 1.8, 0.56);
+      for (let i = -1; i <= 1; i++) b.add('iron', boxGeo(0.05, 1.1, 0.05), x + i * 0.3, 1.8, 0.66);
+    }
+    windowsRow(b, -3.4, 3.4, 4.6, 0.86, 3, 'windowWarm');
+    // the sign: a gold coin on an iron arm by the door
+    b.add('iron', boxGeo(0.06, 0.06, 1.0), 2.8, 2.9, 1.05);
+    b.add('gold', cylGeo(0.42, 0.42, 0.08, 18).rotateZ(Math.PI / 2), 2.8, 2.4, 1.4);
+    b.add('woodDark', boxGeo(0.12, 0.6, 0.12), 2.8, 2.75, 1.4);
+    // a strongbox and a barrel by the wall
+    b.add('woodDark', boxGeo(0.9, 0.55, 0.6), -4.0, 0.28, 1.0); b.add('iron', boxGeo(0.95, 0.08, 0.65), -4.0, 0.45, 1.0);
+    b.add('wood', cylGeo(0.35, 0.3, 0.85, 12), 3.9, 0.42, 1.0);
+    out.banners.push([-2.2, 5.8, 0.9, 1.2, 2.0], [0.2, 5.8, 0.9, 1.2, 2.0]);
+    out.lights.push([0.6, 2.6, 1.0]);
+    out.smoke.push([3.6, 9.1, -3.6]);
+    out.focusH = 3;
+  },
+  apothecary_shop(b, lot, out) {
+    // owner 2026-10-23: the apothecary's shop. A timber house with a shop window under a green awning, jars and
+    // bottles on its sill, herbs hanging to dry, a sign with a mortar and pestle, a bench for the ones waiting;
+    // the front (+z) stays clear for the queue of the sick and the lame
+    house(b, 0, -2.2, 9, 5.5, 3.6, { roof: 'roofRed', wall: 'timber', roofH: 3 });
+    b.add('window', boxGeo(3.0, 1.4, 0.12), -2.0, 1.75, 0.56); // the shop window and its sill
+    b.add('woodDark', boxGeo(3.4, 0.14, 0.7), -2.0, 1.0, 0.85);
+    b.add('woodDark', boxGeo(3.4, 0.9, 0.1), -2.0, 0.5, 1.15);
+    for (let i = 0; i < 8; i++) b.add(i % 3 ? 'clay' : 'stained', cylGeo(0.08 + (i % 2) * 0.03, 0.1, 0.2 + (i % 3) * 0.08, 8), -3.3 + i * 0.37, 1.18 + (i % 3) * 0.04, 0.85);
+    b.add('awning2', boxGeo(3.6, 0.06, 1.3).rotateX(0.35), -2.0, 2.75, 1.05);
+    for (let i = 0; i < 6; i++) b.add('greens', new THREE.ConeGeometry(0.12, 0.42, 6).rotateX(Math.PI), -3.4 + i * 0.56, 2.25, 1.35);
+    b.add('woodDark', boxGeo(3.6, 0.06, 0.06), -2.0, 2.5, 1.35); // the pole the herbs hang from
+    b.add('woodDark', boxGeo(1.2, 2.3, 0.15), 2.0, 1.15, 0.6); // the green door
+    b.add('greens', boxGeo(1.0, 2.1, 0.05), 2.0, 1.1, 0.68);
+    windowsRow(b, -3, 3, 4.6, 0.56, 3, 'windowWarm');
+    // the sign: a mortar and pestle on a board, hung from an iron arm
+    b.add('iron', boxGeo(0.06, 0.06, 1.0), 3.3, 3.0, 1.1);
+    b.add('woodDark', boxGeo(0.08, 0.8, 0.8), 3.3, 2.5, 1.45);
+    b.add('stoneDark', cylGeo(0.22, 0.15, 0.25, 10), 3.38, 2.4, 1.45);
+    b.add('wood', cylGeo(0.04, 0.05, 0.5, 6).rotateX(0.5), 3.38, 2.65, 1.5);
+    b.add('wood', boxGeo(1.8, 0.45, 0.4), 4.2, 0.22, 3.4, Math.PI / 2); // the bench
+    out.lights.push([0.3, 2.6, 1.2]);
+    out.smoke.push([-3, 7.6, -3]);
+    out.focusH = 3;
+  },
   apiary(b, lot, out) {
     // straw skeps in a row on a long bench, a small shelter roof over them
     b.add('woodDark', boxGeo(4.0, 0.5, 0.8), 0, 0.25, 0);

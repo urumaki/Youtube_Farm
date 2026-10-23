@@ -382,6 +382,7 @@ const SCENES = {
   tavern: [['chatter', 0.45], ['fire', 0.15]],
   district: [['chatter', 0.3], ['cart', 0.3]],
   chapel: [['bell', 0.5]],
+  church: [['bell', 0.18]], // inside the church (owner 2026-10-23): a far bell, the candles
   cathedral: [['bell', 0.55], ['chisel', 0.3]],
   windmill: [['creak', 0.6]],
   quarry: [['chisel', 0.7], ['stone', 0.5]],
@@ -463,6 +464,7 @@ function sceneFor(cue) {
   if (cue.kind === 'villager') return { walls: 'patrol', wall2: 'patrol', sparring: 'sparring', boat: 'boat', rod: 'boat', net: 'boat', night: 'nightwatch', wallnight: 'nightwatch', wall2night: 'nightwatch', change: 'change', wall2change: 'change' }[cue.variant] ?? null; // work: synced strikes below
   if (cue.kind === 'caravan') return 'caravan';
   if (cue.kind === 'tavern') return 'tavern';
+  if (cue.kind === 'church') return 'church';
   if (cue.kind === 'ambient') return SCENES[cue.id] ? cue.id : null; // the fields: hoe strikes below
   if (cue.kind === 'event') return ['ev_' + cue.id, 'ev_' + cue.id.split('_')[0]].find((k) => SCENES[k]) || 'story'; // a later step: its own bed or the story's
   if (cue.kind === 'castle' || cue.kind === 'gate') return 'castle';

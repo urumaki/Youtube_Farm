@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { genesis, advance, deriveVillagers, ABANDON_DAYS, SCHEMA_VERSION } from '../src/sim/simulate.js';
-import { TIERS, jobFor, houseCapacity } from '../src/sim/tiers.js';
+import { TIERS, jobFor, houseCapacity, mergedJob } from '../src/sim/tiers.js';
 import { cleanName, isOffensive } from '../src/sim/names.js';
 import { migrate, writeAtomic, saveDay, baseStateFor } from '../src/sim/state.js';
 import { validate } from '../src/sim/validate.js';
@@ -123,7 +123,7 @@ test('tiers unlock at their thresholds with their unique jobs and buildings', ()
     assert.ok(!below.unlockedTiers.includes(t.id), `${t.id} locked below ${t.at}`);
     assert.ok(at.state.unlockedTiers.includes(t.id), `${t.id} unlocked at ${t.at}`);
     assert.ok(at.diffs[1].unlocked.includes(t.id));
-    t.unique.forEach((job, k) => assert.equal(jobFor(SEED, t.at - 1 + k), job));
+    t.unique.forEach((job, k) => assert.equal(jobFor(SEED, t.at - 1 + k), mergedJob(job)));
     // begun, or waiting for a day the video can show it (s.buildQueue)
     for (const b of t.buildings) assert.ok([...at.state.buildings, ...at.state.buildQueue].some((x) => x.id === b), `${b} started or queued`);
   }
@@ -446,11 +446,15 @@ test('scenes: the same scene does not come back within three days', async () => 
     const keys = Object.entries(s.sceneLog).filter(([, day]) => day === s.day).map(([k]) => k);
     for (const k of keys) {
       // a job with few scenes may have to repeat one when its villager must be shown; the tavern and the everyday shots never do
-      if ((k === 'tavern' || k.startsWith('ambient:')) && last[k] !== undefined) assert.ok(s.day - last[k] >= SCENE_GAP, `${k} on day ${last[k]} and ${s.day}`);
+      if ((k === 'tavern' || k === 'church' || k.startsWith('ambient:')) && last[k] !== undefined) assert.ok(s.day - last[k] >= SCENE_GAP, `${k} on day ${last[k]} and ${s.day}`);
       last[k] = s.day;
     }
+    // one interior a day at most: the tavern or the church (owner 2026-10-23); no priest at work in a croft
+    assert.ok(!(s.scenes.tavern && s.scenes.church), `tavern and church on day ${s.day}`);
+    assert.ok(!s.featured.some((f) => ['priest', 'bishop'].includes(f.job) || ['priest', 'bishop'].includes(f.with?.job)), 'a priest at work');
   }
   assert.ok(last.tavern !== undefined, 'the tavern was shown');
+  assert.ok(last.church !== undefined, 'the church was shown');
 });
 
 test('inside the Second Wall houses get another storey before new plots are used', async () => {
@@ -553,14 +557,41 @@ test("the Fletcher's Workshop (a commission) is begun on the next day, once, on 
   assert.equal(s.buildings.find((b) => b.id === 'fletcher_workshop').status, 'done');
 });
 
+test('jobs folded on 2026-10-23: mayor and reeve collect taxes, weaver, chronicler, admiral; the Counting House comes with them', async () => {
+  const { wantsFromText, availableJobs } = await import('../src/sim/requests.js');
+  const { obbOverlap, grow } = await import('../src/sim/geometry.js');
+  const index = (job) => TIERS.find((t) => t.unique.includes(job)).at - 1 + TIERS.find((t) => t.unique.includes(job)).unique.indexOf(job);
+  for (const [job, to] of [['reeve', 'taxcollector'], ['mayor', 'taxcollector'], ['chronicler', 'scholar'], ['admiral', 'fisherman']]) assert.equal(jobFor(SEED, index(job)), to);
+  for (const [text, job] of [['can I be the mayor', 'taxcollector'], ['I want to be a weaver', 'tailor'], ['make me the chronicler', 'scholar'], ['admiral please', 'fisherman']]) assert.deepEqual(wantsFromText(text), [job]);
+  assert.ok(availableJobs(300).has('taxcollector'), 'tax collectors from 250');
+  // the Counting House and the Apothecary's Shop stand on free ground by a street
+  const w = world(SEED);
+  for (const id of ['counting_house', 'apothecary_shop']) {
+    const lot = w.lots[id];
+    assert.ok(lot, id);
+    for (const p of [...w.plots, ...w.finePlots, ...w.densePlots, ...w.fields]) assert.equal(obbOverlap(lot, p), false, `${id} on ${p.id ?? 'a field'}`);
+    for (const l of Object.values(w.lots)) if (l !== lot && (!l.virtual || l.hw > 0)) assert.equal(obbOverlap(grow(lot, 1), l), false, `${id} on ${l.id}`);
+  }
+  // a kingdom that reached 250 before the Counting House existed begins it on its next day
+  const { state: s0 } = run([0, 120, 260, 300, 300, 300, 300, 300, 300]);
+  s0.buildings = s0.buildings.filter((b) => b.id !== 'counting_house');
+  s0.pendingConstruction = s0.pendingConstruction.filter((p) => p.building !== 'counting_house');
+  s0.buildQueue = (s0.buildQueue || []).filter((q) => q.id !== 'counting_house');
+  const later = [];
+  let s = s0;
+  for (let i = 0; i < 4; i++) { const r = advance(s, { subscribers: 300, date: dateOf(10 + i) }); s = r.state; later.push(...r.diff.buildingsStarted); }
+  assert.ok(later.includes('counting_house'), 'the Counting House is begun');
+  assert.equal(s.buildings.filter((b) => b.id === 'counting_house').length, 1);
+});
+
 test('comment words of 2026-10-22: typos and synonyms reach the jobs, the new jobs are asked for, a name is not a job', async () => {
   const { wantsFromText } = await import('../src/sim/requests.js');
   const cases = {
     'i wanna be a gaurd': 'guard', 'THANK YOU FIR ADDINF ME AS A GAAurd': 'guard', 'I subscribed can i be a mercenary': 'guard',
     'May i be the Bishop of this great kingdom': 'bishop', 'Can I be a weaponsmith?': 'blacksmith', 'Can I own my own pub': 'innkeeper',
     'yo can i work on the harbour': 'fisherman', 'i want to be the herbalist': 'apothecary', 'I subbed can I be a messenger?': 'crier',
-    'May I be town idiot': 'jester', 'Can I be a military officer': 'knight', 'May I Be A Architect': 'stonemason', 'Subbed Can I be a politician': 'reeve',
-    'May I be a lawyer': 'reeve', 'Can i be the head of trade?': 'merchant', 'Can I be a scientist': 'scholar', 'can i be a groudnskeeper or gardener': 'peasant',
+    'May I be town idiot': 'jester', 'Can I be a military officer': 'knight', 'May I Be A Architect': 'stonemason', 'Subbed Can I be a politician': 'taxcollector',
+    'May I be a lawyer': 'taxcollector', 'Can i be the head of trade?': 'merchant', 'Can I be a scientist': 'scholar', 'can i be a groudnskeeper or gardener': 'peasant',
     'can I be a Hunter?': 'hunter', 'can i be a butcher': 'butcher', 'I request to be an egineer': 'engineer', 'May I be a Shepard tending to sheep?': 'shepherd',
     'Can I be a rancher? I like goats': 'shepherd', 'i want to be a tanner please': 'tanner', 'loyal military engineer': 'engineer',
     'call me Hunter, I want to bake bread': 'baker',

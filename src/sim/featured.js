@@ -6,7 +6,7 @@
 // To fit more people in 30 seconds, a shot can show two villagers together: one visits the other at work
 // (the blacksmith hands a sword to the guard, the miller brings flour to the baker...).
 import { hash } from './prng.js';
-import { tavernScene } from './tiers.js';
+import { tavernScene, churchScene } from './tiers.js';
 
 // jobs with the most to see when two candidates are otherwise equal
 const INTEREST = ['blacksmith', 'toolsmith', 'woodcutter', 'baker', 'stonemason', 'fisherman', 'carpenter', 'fletcher', 'miller', 'farmer', 'peasant', 'guard', 'knight'];
@@ -41,21 +41,23 @@ function pairOf(a, b) {
 /**
  * The shots of villagers at work, best first: [{ id, name, job, today, with, pair }]. `with` is the
  * visiting villager ({ id, name, job, today }) or null; `pair` the PAIRS id, 'visit' or null.
- * `slots`: how many shots (two when the tavern closes the video, three otherwise). `tavern`: whether the
- * tavern closes the video today (src/sim/scenes.js). `stale(job)`: true when every scene of that job was
+ * `slots`: how many shots (two when the tavern or the church closes the video, three otherwise). `tavern`: whether the
+ * tavern closes the video today, `church` which church (src/sim/scenes.js). `stale(job)`: true when every scene of that job was
  * shown in the last days, so somebody else is shown if possible.
  */
-export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScene(state), stale = () => false } = {}) {
+export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScene(state), church = null, stale = () => false } = {}) {
   const day = state.day;
   const avoid = new Set(avoidJobs);
-  slots ??= tavern ? 2 : 3;
+  slots ??= tavern || church ? 2 : 3;
+  // owner 2026-10-23: priests and bishops are shown in the church (church.js), not at work in a croft
+  const clergy = !!churchScene(state);
   const people = Object.entries(state.names || {})
     .map(([id, n]) => {
       const last = state.lastShown?.[id];
       return { id: Number(id), name: n.name, job: state.villagers?.[Number(id)]?.job ?? n.job, today: n.day === day, asked: n.requestDay === day, complained: n.complainDay === day, last: last < day ? last : undefined };
     })
     // innkeepers and brewers serve in the tavern scene when it closes the video
-    .filter((n) => n.id < state.subscriberCount && n.job && !(tavern && (n.job === 'innkeeper' || n.job === 'brewer')));
+    .filter((n) => n.id < state.subscriberCount && n.job && !(tavern && (n.job === 'innkeeper' || n.job === 'brewer')) && !(clergy && (n.job === 'priest' || n.job === 'bishop')));
   // someone who wrote they could not find themselves in the last video comes before everybody (owner 2026-10-21)
   const score = (n) => (n.complained ? 30 : 0) + (n.today ? 8 : 0) + (n.asked ? 3 : 0) + (n.last === undefined ? 4 : Math.min(3, (day - n.last) / 3))
     + (avoid.has(n.job) ? -6 : 0) + (n.last === day - 1 ? -10 : 0) + (stale(n.job) ? -4 : 0);

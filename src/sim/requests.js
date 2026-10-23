@@ -1,7 +1,7 @@
 // Job requests from comments ("can I work at the tavern?"). The comment text is read once for these
 // keywords and then discarded; only the resulting job ids are kept. A job the kingdom has not unlocked
 // yet makes the villager an apprentice, promoted when the tier is reached.
-import { TIERS, JOBS, MERGED, tiersReached } from './tiers.js';
+import { TIERS, JOBS, MERGED, tiersReached, mergedJob } from './tiers.js';
 
 // [regex, job] — matched anywhere in the comment (English and Italian); order of appearance in the
 // comment decides preference, so "commander, or else a fletcher" tries the commander first
@@ -35,8 +35,12 @@ const KEYWORDS = [
   [/scholar|\bscribe|librar|studioso|scientist|scienziat|inventor/, 'scholar'],
   [/doctor|healer|physician|medico|guaritore/, 'physician'],
   [/apothecar|alchemist|alchimista|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
-  // running the town is the reeve's job: the council, politics, the law
-  [/\breeve\b|council|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice|consiglier/, 'reeve'],
+  // running the town was the reeve's job (the council, politics, the law); owner 2026-10-23: the tax collector's now
+  [/\breeve\b|council|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice|consiglier/, 'taxcollector'],
+  // jobs folded into another (owner 2026-10-23): the weaver into the tailor, the chronicler into the scholar, the admiral into the sailor
+  [/\bweaver|\bweav(e|ing)\b|\bloom\b|tessitor|telaio/, 'tailor'],
+  [/chronicler|historian|\bhistory\b|cronista|\bstorico/, 'scholar'],
+  [/\badmiral|ammiraglio/, 'fisherman'],
   // new jobs asked for in the comments of 2026-10-22 (owner 2026-10-23, by request only)
   [/hunter|\bhunt(ing)?\b|cacciator|\bcaccia\b/, 'hunter'],
   [/butcher|macellai|\bmeat\b/, 'butcher'],
@@ -56,7 +60,7 @@ const KEYWORDS = [
   [/chimney\s*sweep|\bsweep|spazzacamin/, 'chimneysweep'],
   [/falcon|\bhawk|falconier|\bfalco\b/, 'falconer'],
   [/\bcook|\bchef\b|\bcuoc[oa]|\bkitchen|\bcucina\b/, 'cook'],
-  [/\bmayor|sindaco/, 'mayor'],
+  [/\bmayor|sindaco/, 'taxcollector'],
   [/executioner|headsman|\bboia\b|carnefice|giustiziere/, 'executioner'],
   [/town\s*crier|\bcrier\b|\bherald|banditore|araldo|messaggero|messenger|courier|doomsayer/, 'crier'],
 ];
@@ -96,15 +100,15 @@ export function wantsFromText(text) {
 export function availableJobs(population) {
   const out = new Set(Object.entries(JOBS).filter(([id, j]) => j.requestOnly && id !== 'apprentice' && !MERGED[id]).map(([id]) => id));
   for (const t of tiersReached(Math.max(1, population))) {
-    t.unique.forEach((j) => out.add(j));
-    Object.keys(t.pool).forEach((j) => out.add(j));
+    t.unique.forEach((j) => out.add(mergedJob(j)));
+    Object.keys(t.pool).forEach((j) => out.add(mergedJob(j)));
   }
   return out;
 }
 
 /** The tier that unlocks a job (for "apprentice until ..."). */
 export function tierOfJob(job) {
-  return TIERS.find((t) => t.unique.includes(job) || job in t.pool) || null;
+  return TIERS.find((t) => [...t.unique, ...Object.keys(t.pool)].some((j) => mergedJob(j) === job)) || null;
 }
 
 // "I can't see myself", "my name wasn't there", "dove sono?": the commenter did not find their villager in

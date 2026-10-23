@@ -7,7 +7,7 @@ import { world } from './world.js';
 import { dailyEvents } from './events.js';
 import { pickStory } from './stories.js';
 import { pickFeatured, shownJobs, markShown } from './featured.js';
-import { planScenes, tavernToday, staleJob } from './scenes.js';
+import { planScenes, tavernToday, churchToday, staleJob } from './scenes.js';
 import { planWall2, wallBlockers, insideWall2, crossesFields } from './wall.js';
 import { obbOverlap, obbAabb, SpatialHash } from './geometry.js';
 
@@ -174,9 +174,11 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   s.buildQueue ||= [];
   const queued = (b) => s.buildQueue.some((q) => q.id === b) || s.buildings.some((x) => x.id === b);
   for (const t of tiersReached(target)) {
-    if (s.unlockedTiers.includes(t.id)) continue;
-    s.unlockedTiers.push(t.id);
-    diff.unlocked.push(t.id);
+    if (!s.unlockedTiers.includes(t.id)) {
+      s.unlockedTiers.push(t.id);
+      diff.unlocked.push(t.id);
+    }
+    // also a building added to a tier the kingdom had already reached (the Counting House, owner 2026-10-23)
     for (const b of t.buildings) if (!queued(b)) s.buildQueue.push({ id: b, tier: t.id });
   }
   // buildings the owner commissions with no goal (COMMISSIONS in tiers.js)
@@ -222,12 +224,12 @@ export function planDay(s, prev, diff) {
     diff.events[0].weather = 'rain';
   }
   diff.avoidJobs = prev.day > 0 ? shownJobs(prev) : [];
-  const tavern = tavernToday(s);
-  diff.featured = pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, stale: (job) => staleJob(s, job) });
+  const tavern = tavernToday(s), church = churchToday(s, tavern);
+  diff.featured = pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, church, stale: (job) => staleJob(s, job) });
   s.featured = diff.featured;
   markShown(s, diff.featured);
   const shownBuildings = new Set([...diff.buildingsStarted, ...diff.buildingsCompleted]).size;
-  diff.scenes = planScenes(s, { featured: diff.featured, tavern, avoidJobs: diff.avoidJobs, buildingShots: Math.min(2, shownBuildings) });
+  diff.scenes = planScenes(s, { featured: diff.featured, tavern, church, avoidJobs: diff.avoidJobs, buildingShots: Math.min(2, shownBuildings) });
   s.scenes = diff.scenes;
 }
 
@@ -320,7 +322,7 @@ function assignNames(s, commenters, blocked, diff) {
 
 // The Noble Quarter (owner 2026-10-22): once the University is begun, these newcomers live in the finer
 // houses on the wide plots below the castle (world.js finePlots), and nobody else does.
-const FINE_JOBS = new Set(['merchant', 'knight', 'scholar', 'physician', 'mayor', 'reeve', 'bishop', 'taxcollector', 'chronicler', 'admiral']);
+const FINE_JOBS = new Set(['merchant', 'knight', 'scholar', 'physician', 'bishop', 'taxcollector']);
 const FINE_CAPACITY = 8; // three storeys
 
 function findHome(s, w, id, day, diff, getScan, setScan, byId) {

@@ -215,6 +215,30 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   names (3 before), as `timeline.js` shows them (`SHOWN_STARTS` in `simulate.js`); the others wait in
   `s.buildQueue` (in tier order, commissions last) and begin on the next days (`diff.buildingsWaiting`). The
   fields, the wall guard and the charter stone have no shot and take no room.
+- Jobs folded together again (owner 2026-10-23, `MERGED`): the Mayor and the Reeve into the Tax Collector (so tax
+  collectors come from 250, the Reeve's tier; apprentices waiting for the job were promoted), the Weaver into the Tailor,
+  the Chronicler into the Scholar, the Admiral into the Sailor (so the Fisherman). Comment words follow; `availableJobs`
+  and `tierOfJob` map through `mergedJob`.
+- Own places instead of the croft (owner 2026-10-23), variants that need a building (`NEEDS` in `scenes.js`, else the job's
+  usual croft scene): merchants behind one of the market stalls weighing goods on a balance for a haggling customer
+  (`merchant:stall`); the tax collector at a table by the door of the Counting House with a queue of taxpayers holding
+  their purses (`taxcollector:counting`); the apothecary at the Apothecary's Shop with a queue of the sick and the lame
+  (crutches, a bandaged head, an arm in a sling, a cough; `apothecary:shop`). The queues are `queue.js` (`queue` in the
+  scene config); `workPlace` in `main.js` gives the place and the way the worker faces. The Counting House (tier 250,
+  with the first tax collector) and the Apothecary's Shop (tier 5000) are workshops on free ground by a street near the
+  market (`placeStreetLot` in `world.js`, after the dense plots so nothing moves). A building added later to a tier the
+  kingdom already reached is queued like a new one (the Counting House on the real kingdom). Test with
+  `npm run render -- --real --subs 775 --built counting_house,apothecary_shop --gallery "merchant:stall,taxcollector:counting,apothecary:shop"`
+  (`--built` makes buildings stand finished in a test render).
+- Church interior (owner 2026-10-23, `church.js`): the Chapel, or the Cathedral once built, with pews both sides of a red
+  carpet, villagers praying on them (hands together, heads bowed), stained glass, candles, the priest blessing from behind
+  the altar (in the Cathedral always a bishop with mitre and crozier; another named cleric reads at the lectern). The
+  newest named villagers sit in the front pews with small name tags that take turns, as in the caravan (12 in the
+  Chapel, 16 in the Cathedral). It closes the "at work" part like the tavern (two villager shots), never on a tavern day
+  and not again within 3 days (`churchToday` in `scenes.js`, `diff.scenes.church`); priests and bishops are only shown
+  there once a church stands (`pickFeatured`). The building's outside is hidden while the camera is in (the
+  Cathedral's transept and aisles are solid boxes across the nave). Test with `npm run render -- --real --subs 775 --church
+  [--built cathedral] --stills 19,21,23`.
 - Commissions (owner 2026-10-23): buildings with no goal, begun on the next day the kingdom runs, whatever its
   size (`COMMISSIONS` in `tiers.js`, saved with tier `commission`). The first is the Fletcher's Workshop: a
   thatched timber workshop with bows on the wall, a fletching bench under a lean-to, a barrel of arrows, staves

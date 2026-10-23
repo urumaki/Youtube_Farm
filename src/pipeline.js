@@ -4,6 +4,7 @@ import path from 'node:path';
 import { genesis, advance } from './sim/simulate.js';
 import { storyFor } from './sim/stories.js';
 import { pickFeatured, shownJobs } from './sim/featured.js';
+import { churchScene } from './sim/tiers.js';
 import { baseStateFor, saveDay, lastKnownCount, migrate, STATE_DIR } from './sim/state.js';
 import { getSubscriberCount } from './fetch/youtube.js';
 import { fetchCommenters } from './fetch/comments.js';
@@ -40,6 +41,8 @@ export function parseArgs(argv) {
     else if (k === '--gallery-times') a.galleryTimes = v();
     else if (k === '--story') a.story = v(); // test renders: force today's story event (bandits, quarrel, merchants, halloween)
     else if (k === '--real') a.real = true; // test renders: start from the real state/ (read only)
+    else if (k === '--church') a.church = true; // test renders: the church interior closes the video (not the tavern)
+    else if (k === '--built') a.built = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: these buildings stand finished
     else if (k === '--names') a.names = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: fake commenters
     else throw new Error(`unknown option ${k}`);
   }
@@ -165,6 +168,13 @@ export async function testRender(args, log = console) {
   if (!args.day && !Number.isFinite(args.subs)) throw new Error('--subs N is required');
   if (args.day) args.subs ??= 0;
   const { state, diff } = args.day ? savedDay(args.day) : args.real ? realNextDay(args) : testKingdom({ subs: args.subs, from: args.from, date: args.date, seed: args.seed, names: args.names });
+  for (const id of args.built || []) {
+    const b = state.buildings.find((x) => x.id === id);
+    if (b) Object.assign(b, { status: 'done', doneDay: state.day });
+    else state.buildings.push({ id, tier: 'test', status: 'done', startedDay: state.day, doneDay: state.day, daysTotal: 0 });
+    state.pendingConstruction = state.pendingConstruction.filter((p) => p.building !== id);
+  }
+  if (args.church) diff.scenes = state.scenes = { ...(diff.scenes || { variants: {}, ambient: null }), tavern: false, church: churchScene(state) };
   if (args.story) diff.story = state.story = storyFor(state, args.story);
   if (args.story === 'storm') diff.weather = state.weather = 'rain'; // as the daily simulation does
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));

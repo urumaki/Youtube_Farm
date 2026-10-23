@@ -5,7 +5,12 @@ import { hash } from './prng.js';
 
 // Jobs folded into another (owner 2026-10-22: the same work under two names). The tiers keep their old
 // weights, so every other villager keeps their job; jobFor, the saves (migrate) and the comments map these.
-export const MERGED = { warrior: 'guard', sailor: 'fisherman', toolsmith: 'blacksmith', weirdo: 'jester' };
+// Owner 2026-10-23: the mayor and the reeve collect the taxes, the weaver is a tailor, the chronicler a scholar,
+// the admiral a sailor (and so a fisherman).
+export const MERGED = {
+  warrior: 'guard', sailor: 'fisherman', toolsmith: 'blacksmith', weirdo: 'jester',
+  mayor: 'taxcollector', reeve: 'taxcollector', weaver: 'tailor', chronicler: 'scholar', admiral: 'fisherman',
+};
 export const mergedJob = (job) => MERGED[job] || job;
 
 export const JOBS = {
@@ -95,6 +100,8 @@ export const BUILDINGS = {
   clock_tower: { label: 'the Clock Tower', days: 10 },
   stone_bridge: { label: 'the Great Bridge', days: 30 },
   fletcher_workshop: { label: "the Fletcher's Workshop", days: 1 },
+  counting_house: { label: 'the Counting House', days: 2 }, // owner 2026-10-23: the tax collector's, a queue of taxpayers at its door
+  apothecary_shop: { label: "the Apothecary's Shop", days: 2 }, // owner 2026-10-23: a queue of the sick and the lame at its door
   district_east: { label: 'the East Ward', days: 3 },
   charter_stone: { label: 'the Charter Stone', days: 1 },
   district_north: { label: 'the North Ward', days: 3 },
@@ -117,7 +124,8 @@ export const TIERS = [
   // so the wait between two big goals is shorter. Only add tiers above the current population, or
   // existing villagers would change job.
   { id: 'crier', at: 175, title: 'Busy Town', unique: ['crier'], pool: {}, buildings: ['crier_stand'], goal: 'the Town Crier rings the bell' },
-  { id: 'walled', at: 250, title: 'Walled Town', unique: ['reeve', 'carpenter'], pool: { carpenter: 1.2, guard: 1 }, buildings: ['wall2', 'townhall'], goal: 'the Second Wall rises' },
+  // the reeve is the first tax collector (MERGED), so the Counting House comes with him
+  { id: 'walled', at: 250, title: 'Walled Town', unique: ['reeve', 'carpenter'], pool: { carpenter: 1.2, guard: 1 }, buildings: ['wall2', 'townhall', 'counting_house'], goal: 'the Second Wall rises' },
   { id: 'harbor', at: 500, title: 'Harbor Town', unique: ['bishop', 'knight', 'fisherman'], pool: { sailor: 1.5, knight: 0.5 }, buildings: ['harbor', 'cathedral', 'tournament'], goal: 'the Harbor opens' },
   { id: 'justice', at: 750, title: 'Town of Law', unique: ['executioner'], pool: {}, buildings: ['pillory'], goal: 'the Executioner takes up the axe' },
   { id: 'pottery', at: 850, title: 'Town of Potters', unique: ['potter'], pool: { potter: 0.4 }, buildings: ['potter_stall'], goal: 'the Potter sets up the wheel' },
@@ -132,7 +140,7 @@ export const TIERS = [
   { id: 'north', at: 2500, title: 'Growing City', unique: ['engineer'], pool: { engineer: 0.2 }, buildings: ['district_north'], goal: 'the North Ward is founded' },
   { id: 'honey', at: 3000, title: 'Town of Honey', unique: ['beekeeper'], pool: { beekeeper: 0.3 }, buildings: ['apiary'], goal: 'the first beehives arrive' },
   { id: 'bells', at: 4000, title: 'Town of Bells', unique: ['bellfounder'], pool: { bellfounder: 0.2 }, buildings: ['bell_foundry'], goal: 'the Bell Foundry casts its first bell' },
-  { id: 'learned', at: 5000, title: 'City of Song', unique: ['apothecary', 'bard'], pool: { apothecary: 0.3, bard: 0.6 }, buildings: ['district_south'], goal: 'the South Ward is founded' },
+  { id: 'learned', at: 5000, title: 'City of Song', unique: ['apothecary', 'bard'], pool: { apothecary: 0.3, bard: 0.6 }, buildings: ['district_south', 'apothecary_shop'], goal: 'the South Ward is founded' },
   { id: 'clock', at: 7500, title: 'Town of the Clock', unique: ['clockmaker'], pool: { clockmaker: 0.2 }, buildings: ['clock_tower'], goal: 'the Clock Tower strikes the hour' },
   { id: 'royal', at: 10000, title: 'Royal City', unique: ['taxcollector', 'chronicler'], pool: { taxcollector: 0.3, chronicler: 0.2 }, buildings: ['palace', 'district_far', 'stone_bridge'], goal: 'the Royal Palace is commissioned' }, // the Great Bridge too (owner 2026-10-23, was 250,000)
   { id: 'maritime', at: 100000, title: 'Maritime Realm', unique: ['admiral'], pool: { admiral: 0.05 }, buildings: ['lighthouse'], goal: 'the Lighthouse is lit' },
@@ -180,6 +188,13 @@ export function houseCapacity(population) {
   if (population < 500) return 2;
   if (population < 2000) return 4;
   return 8;
+}
+
+/** The church the video can go into (owner 2026-10-23): the Cathedral once built, else the Chapel; null before either. */
+export function churchScene(state) {
+  if (!Object.keys(state.names || {}).length) return null;
+  const done = (id) => state.buildings.some((b) => b.id === id && b.status === 'done');
+  return done('cathedral') ? 'cathedral' : done('chapel') ? 'chapel' : null;
 }
 
 /** The video shows the tavern interior on days with named villagers once the tavern is built. */

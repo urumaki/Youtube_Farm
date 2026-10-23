@@ -16,6 +16,7 @@ import { createOverlay } from './overlay.js';
 import { buildWorkScene, sceneOf } from './work.js';
 import { buildCaravan } from './caravan.js';
 import { buildTavernInterior } from './tavern.js';
+import { buildChurchInterior } from './church.js';
 import { buildStory } from './stories/index.js';
 import { buildFields, buildWheat } from './ambient.js';
 import { buildWallWatch } from './wallwatch.js';
@@ -24,6 +25,7 @@ import { buildSparring, buildDummyDrill } from './drills.js';
 import { buildBoat, buildRiverbank, buildNightWatch } from './away.js';
 import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
+import { buildQueue } from './queue.js';
 import { heightAt } from '../../sim/world.js';
 import { pointInObb, grow } from '../../sim/geometry.js';
 
@@ -97,7 +99,7 @@ async function setup(data) {
   // named villagers are shown at work in their croft; today's named villagers arrive in a caravan
   const works = [];
   const ctx0 = {};
-  let caravan = null, tavern = null;
+  let caravan = null, tavern = null, church = null;
   const stories = [];
   const yFn = (x, z) => heightAt(w, x, z) + 0.03;
   const interiors = []; // villagers working inside a building (the baker's bakehouse), lit while the camera is in
@@ -121,8 +123,24 @@ async function setup(data) {
   // where a villager works: the croft behind the house, facing away from it; the Fletcher works in the yard of
   // the Fletcher's Workshop once it stands (owner 2026-10-23), with the street (and the camera) in front
   const shop = state.buildings.some((b) => b.id === 'fletcher_workshop' && b.status === 'done') ? buildings.items.fletcher_workshop : null;
-  // and fighters drilling at the straw dummy do it in the castle's training yard (owner 2026-10-23)
-  const workPlace = (job, sh, variant = null) => {
+  // and fighters drilling at the straw dummy do it in the castle's training yard (owner 2026-10-23); merchants at a market
+  // stall, the tax collector at the Counting House door, the apothecary at the shop (`face`: the way they look, along
+  // the front, so the camera on the street sees the queue in profile)
+  const atLot = (item, x, z) => {
+    const { lot } = item, o = item.toWorld([0, 0, 0]), e = item.toWorld([1, 0, 0]);
+    const floorAt = (px, pz) => (pointInObb(grow(lot, 0.4), px, pz) ? item.base : yFn(px, pz));
+    return { anchor: item.toWorld([x, 0, z]), ax: -Math.sin(lot.rot), az: Math.cos(lot.rot), floorAt, face: Math.atan2(e.x - o.x, e.z - o.z) };
+  };
+  const workPlace = (job, sh, variant = null, id = 0) => {
+    if (variant === 'counting' && buildings.items.counting_house) return atLot(buildings.items.counting_house, -2.3, 2.1);
+    if (variant === 'shop' && buildings.items.apothecary_shop) return atLot(buildings.items.apothecary_shop, -1.6, 2.4);
+    if (variant === 'stall' && buildings.items.market) {
+      // behind the counter of one of the eight stalls (buildings.js), facing the middle of the square
+      const m = buildings.items.market, k = Math.abs(id) % 8, side = k < 4 ? -1 : 1, x = [-15, -5, 5, 15][k % 4];
+      const anchor = m.toWorld([x, 0.05, side * 11.65]), mid = m.toWorld([x, 0, 0]);
+      const d = new THREE.Vector3().subVectors(mid, anchor).setY(0).normalize();
+      return { anchor, ax: d.x, az: d.z, floorAt: () => m.base + 0.05, face: Math.atan2(d.x, d.z) };
+    }
     if (variant === 'dummy' && castle.training) {
       const { at, view, floor } = castle.training;
       return { anchor: at.clone(), ax: view[0], az: view[1], floorAt: () => floor };
@@ -138,8 +156,20 @@ async function setup(data) {
     anchor.y = yFn(anchor.x, anchor.z);
     return { anchor, ax, az, floorAt: null };
   };
-  // the work scene in a croft: the bakehouse for bakers, the straw dummy for fighters, else work.js
-  const workScene = ({ job, variant, anchor, ax, az, away, id }) => {
+  // the work scene in a croft: the bakehouse for bakers, the straw dummy for fighters, else work.js; people queueing in
+  // front of a few (queue.js)
+  const workScene = (o) => {
+    const ws = workSceneOnly(o), q = sceneOf(o.job, o.variant).queue;
+    if (!q) return ws;
+    const queue = buildQueue(q, { M, seed: state.seed, id: o.id });
+    ws.group.add(queue.group);
+    ws.group.updateMatrixWorld(true);
+    ws.focus = ws.group.localToWorld(queue.mid.clone());
+    const update = ws.update;
+    ws.update = (t, ...a) => { update(t, ...a); queue.update(t); };
+    return ws;
+  };
+  const workSceneOnly = ({ job, variant, anchor, ax, az, away, id, face }) => {
     if (indoorScene(job, variant)) return buildBakehouse({ variant, anchor, away, M, seed: state.seed, id, heightAt: (x, z) => heightAt(w, x, z) });
     const make = variant === 'dummy' ? buildDummyDrill : buildWorkScene;
     // scenes by the house (the beggar against its back wall): `home` metres out from the wall, facing the croft
@@ -150,7 +180,7 @@ async function setup(data) {
       return make({ job, variant, anchor: at, face: Math.atan2(ax, az) + homeTurn, M, seed: state.seed, id });
     }
     // turned 1.1 rad from the camera side (a profile view of the work), or as the scene asks
-    return make({ job, variant, anchor, face: Math.atan2(ax, az) + (sceneOf(job, variant).turn ?? 1.1), M, seed: state.seed, id });
+    return make({ job, variant, anchor, face: face ?? Math.atan2(ax, az) + (sceneOf(job, variant).turn ?? 1.1), M, seed: state.seed, id });
   };
   if (plan) for (const tg of plan.targets) {
     if (tg.kind === 'villager' && AWAY_VARIANTS.has(tg.variant)) {
@@ -169,9 +199,9 @@ async function setup(data) {
       stories.push({ st, tg });
     } else if (tg.kind === 'villager') {
       const v = state.villagers[tg.id];
-      const { anchor, ax, az, floorAt } = workPlace(tg.sceneJob || v.job, houses.shapes.get(v.house), tg.variant);
+      const { anchor, ax, az, floorAt, face } = workPlace(tg.sceneJob || v.job, houses.shapes.get(v.house), tg.variant, tg.id);
       tg.away = Math.atan2(az, ax);
-      const ws = workScene({ job: tg.sceneJob || v.job, variant: tg.variant, anchor, ax, az, away: tg.away, id: tg.id });
+      const ws = workScene({ job: tg.sceneJob || v.job, variant: tg.variant, anchor, ax, az, away: tg.away, id: tg.id, face });
       scene.add(ws.group);
       if (ws.room) { scene.add(ws.room); interiors.push({ ws, tg }); tg.cam = (u) => ws.cam(u, !!tg.guest); } else works.push(ws);
       tg.work = ws;
@@ -201,6 +231,11 @@ async function setup(data) {
       tg.labels = tavern.labels;
       tg.cam = tavern.cam;
       tg.banner = data.lang === 'it' ? 'La Taverna' : 'The Tavern';
+    } else if (tg.kind === 'church') {
+      church = buildChurchInterior({ item: buildings.items[tg.id], kind: tg.id, M, seed: state.seed, clergy: tg.clergy, worshippers: tg.worshippers });
+      tg.labels = church.labels;
+      tg.cam = church.cam;
+      tg.banner = data.lang === 'it' ? (tg.id === 'cathedral' ? 'La Cattedrale' : 'La Cappella') : tg.id === 'cathedral' ? 'The Cathedral' : 'The Chapel';
     } else if (tg.kind === 'event') {
       const st = buildStory({ story: tg.story, w, state, M, buildings, houses, yFn, seed: state.seed, lang: data.lang, water });
       if (!st) continue;
@@ -241,8 +276,8 @@ async function setup(data) {
         scene.add(st.group);
         return { ws: { group: st.group, update: (t) => st.update(t, 0, 3) }, st, focus: st.focus };
       }
-      const at = workPlace(g.job, sh, g.variant), gAway = Math.atan2(at.az, at.ax);
-      const ws = workScene({ job: g.job, variant: g.variant, anchor: at.anchor, ax: at.ax, az: at.az, away: gAway, id: 9100 + i });
+      const at = workPlace(g.job, sh, g.variant, i), gAway = Math.atan2(at.az, at.ax);
+      const ws = workScene({ job: g.job, variant: g.variant, anchor: at.anchor, ax: at.ax, az: at.az, away: gAway, id: 9100 + i, face: at.face });
       scene.add(ws.group);
       if (ws.room) scene.add(ws.room);
       const visit = g.guest ? buildVisit({ host: ws, hostJob: g.job, guest: { job: g.guest }, pair: g.pair, away: gAway, M, yFn: ws.floorAt || at.floorAt || yFn, t0: 0, t1: 3 }) : null;
@@ -253,7 +288,7 @@ async function setup(data) {
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
   const overlay = viewer ? null : createOverlay(document.getElementById('stage'), data);
 
-  const ctx = { ...ctx0, renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, interiors, caravan, tavern, stories };
+  const ctx = { ...ctx0, renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, interiors, caravan, tavern, church, stories };
   ctx.stats = {
     setupMs: Math.round(performance.now() - t0), houses: state.houses.length, animated: animated.size, trees: nature.count,
     walkers: life.walkers, guards: life.guards, targets: plan?.targets.map((t) => `${t.kind}:${t.id ?? ''}`),
@@ -288,8 +323,9 @@ function applyFrame(ctx, t) {
     if (st.bannerAt) tg.banner = st.bannerAt(t, tg.t0, tg.t1); // a title that changes (the New Year countdown)
   }
   const ev = evaluate(plan, t);
-  const inside = ev.active?.kind === 'tavern' || !!ev.active?.interior;
+  const inside = ev.active?.kind === 'tavern' || ev.active?.kind === 'church' || !!ev.active?.interior;
   if (ctx.tavern) ctx.tavern.update(t, ev.active?.kind === 'tavern');
+  if (ctx.church) ctx.church.update(t, ev.active?.kind === 'church');
   for (const { ws, tg } of ctx.interiors || []) ws.update(t, ev.active === tg);
   // flights between shots can dip into a hill: keep the camera a few metres above the ground (less in the
   // villager shots, which film people from eye level and below)

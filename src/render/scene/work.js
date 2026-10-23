@@ -183,6 +183,13 @@ Object.assign(JOB_SCENES, {
   'beggar:hat': { period: 3.4, raise: -1.5, down: -0.35, bend: 0.28, sound: 'none', tool: 'tankard', props: 'begging', smooth: true, left: -0.15, sway: true },
   'innkeeper:barrel': { period: 2.6, hit: 0.4, raise: -1.15, down: -0.95, bend: 0.1, fx: 'ale', sound: 'none', tool: 'tankard', props: 'keg', smooth: true, left: -0.7 },
   'brewer:stir': { period: 2.0, hit: 0.5, raise: -1.2, down: -1.2, bend: 0.2, fx: 'steam', sound: 'none', tool: 'paddle', props: 'vat', stir: true, both: true },
+  // owner 2026-10-23: at their own place, with people queueing in front of them (queue.js; `queue`): the tax collector at
+  // the door of the Counting House with taxpayers holding their purses, the apothecary at the Apothecary's Shop with the
+  // sick and the lame, the merchant behind a market stall weighing goods for a haggling customer
+  'taxcollector:counting': { period: 0.75, raise: -1.3, down: -1.05, bend: 0.12, sound: 'none', tool: null, props: 'ledger', smooth: true, left: -1.1, queue: 'tax', radius: 8.2 },
+  apothecary: { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95 },
+  'apothecary:shop': { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95, queue: 'sick', radius: 8.2 },
+  'merchant:stall': { period: 2.2, raise: -1.35, down: -0.95, bend: 0.08, sound: 'none', tool: null, props: 'scales', smooth: true, left: -0.9, queue: 'customer', radius: 6.4 },
 });
 JOB_SCENES.warrior = JOB_SCENES.knight;
 for (const [from, to] of [['toolsmith', 'blacksmith'], ['brewer', 'innkeeper']]) {
@@ -579,6 +586,34 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       add(boxGeo(0.4, 0.05, 0.25).translate(0.45, 1.1, 0.75), M.gold);
       for (const [x, n] of [[0.0, 5], [0.12, 3], [0.2, 7]]) add(cylGeo(0.04, 0.04, n * 0.012, 10).translate(x, 0.84 + n * 0.006, 0.45), M.gold);
       return new THREE.Vector3(0.05, 0.9, 0.5);
+    }
+    case 'scales': { // a balance on the stall's counter (the market stall is the counter), apples, a bolt of cloth, a jug
+      add(boxGeo(0.3, 0.04, 0.2).translate(0.25, 1.02, 0.75), M.woodDark);
+      add(cylGeo(0.025, 0.03, 0.5, 6).translate(0.25, 1.27, 0.75), M.iron);
+      const beam = new THREE.Group();
+      beam.position.set(0.25, 1.52, 0.75);
+      holder.add(beam);
+      const bm = new THREE.Mesh(boxGeo(0.62, 0.025, 0.025), M.iron);
+      beam.add(bm);
+      const pans = [-1, 1].map((s) => {
+        const pan = new THREE.Group();
+        pan.position.x = s * 0.3;
+        beam.add(pan);
+        const cord = new THREE.Mesh(cylGeo(0.006, 0.006, 0.22, 4).translate(0, -0.11, 0), M.iron);
+        const dish = new THREE.Mesh(cylGeo(0.11, 0.07, 0.03, 12).translate(0, -0.23, 0), M.gold);
+        pan.add(cord, dish);
+        return pan;
+      });
+      const apple = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 6).translate(0, -0.18, 0), M.clothRed);
+      pans[0].add(apple);
+      anim.push((t, c) => {
+        beam.rotation.z = 0.16 * Math.sin(c * Math.PI * 2);
+        for (const p of pans) p.rotation.z = -beam.rotation.z; // the pans hang straight down
+      });
+      for (let i = 0; i < 6; i++) add(new THREE.SphereGeometry(0.06, 8, 6).translate(-0.35 + (i % 3) * 0.12, 1.06 + Math.floor(i / 3) * 0.08, 0.7 + (i % 2) * 0.08), M.clothRed);
+      add(cylGeo(0.12, 0.12, 0.5, 10).rotateZ(Math.PI / 2).translate(-0.2, 1.12, 1.0), M.clothBlue);
+      add(cylGeo(0.06, 0.08, 0.22, 8).translate(0.65, 1.11, 0.95), M.clay);
+      return new THREE.Vector3(0.1, 1.1, 0.7);
     }
     case 'dough': { // a table with a lump of dough that squashes under the hands
       add(boxGeo(1.4, 0.08, 0.7).translate(0, 0.8, 0.62), M.wood);
