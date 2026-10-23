@@ -282,9 +282,9 @@ test('comment job requests: granted when unlocked, apprentice (then promoted) wh
   const job = (n) => r.state.villagers.find((v) => v.name === n).job;
   assert.equal(job('Pilot'), 'innkeeper');
   assert.equal(job('Sir'), 'apprentice');
-  assert.equal(job('Balint'), 'fletcher', 'second choice when the first is locked');
+  assert.equal(job('Balint'), 'apprentice', 'the first job named is locked: apprentice, never a later one (owner 2026-10-23)');
   assert.equal(job('Weird'), 'jester', 'the weirdo is folded into the jester');
-  assert.deepEqual(r.diff.requests.map((q) => q.granted), [true, false, true, true]);
+  assert.deepEqual(r.diff.requests.map((q) => q.granted), [true, false, false, true]);
   checkInvariants(r.state);
   // an existing villager asks for another job later
   r = advance(r.state, { subscribers: 60, date: dateOf(6), commenters: [W('a', 'Pilot', 'actually let me be a blacksmith', '5')] });
@@ -292,7 +292,7 @@ test('comment job requests: granted when unlocked, apprentice (then promoted) wh
   // the knight tier arrives at 500: the apprentice is promoted
   r = advance(r.state, { subscribers: 500, date: dateOf(7) });
   assert.equal(job('Sir'), 'knight');
-  assert.deepEqual(r.diff.promoted.map((p) => p.name), ['Sir']);
+  assert.deepEqual(r.diff.promoted.map((p) => p.name), ['Sir', 'Balint']);
   // history snapshots keep the chosen jobs
   assert.equal(deriveVillagers(r.state).find((v) => v.name === 'Pilot').job, 'blacksmith');
 });

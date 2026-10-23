@@ -249,10 +249,11 @@ function assignNames(s, commenters, blocked, diff) {
   const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !looksLikeCode(raw) && !looksLikeCode(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
   const avail = availableJobs(s.subscriberCount);
   const villagerOf = (author) => Object.keys(s.names).find((id) => s.names[id].author === author);
-  // a request sets the job if the kingdom has it, otherwise the villager is an apprentice until it does
+  // a request sets the job if the kingdom has it, otherwise the villager is an apprentice until it does;
+  // only the first job named counts (owner 2026-10-23: never a later one in its place)
   const applyRequest = (id, wants) => {
     const n = s.names[id];
-    const pick = wants.find((j) => avail.has(j));
+    const pick = avail.has(wants[0]) ? wants[0] : null;
     n.job = pick || 'apprentice';
     if (pick) delete n.wants; else n.wants = wants[0];
     n.requestDay = s.day;
