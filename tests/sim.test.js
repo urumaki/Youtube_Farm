@@ -563,5 +563,10 @@ test('comment words of 2026-10-22: typos and synonyms reach the jobs, the new jo
   };
   for (const [text, job] of Object.entries(cases)) assert.equal(wantsFromText(text)[0], job, text);
   const { JOBS } = await import('../src/sim/tiers.js');
-  for (const j of ['hunter', 'butcher', 'engineer', 'shepherd', 'tanner']) assert.ok(JOBS[j]?.requestOnly, j);
+  for (const j of ['hunter', 'butcher', 'shepherd', 'tanner']) assert.ok(JOBS[j]?.requestOnly, j);
+  // the Engineer comes at 2500: asked for before that, the villager is an apprentice until then
+  const { tierOfJob, availableJobs } = await import('../src/sim/requests.js');
+  assert.equal(tierOfJob('engineer')?.at, 2500);
+  assert.equal(availableJobs(2499).has('engineer'), false);
+  assert.equal(availableJobs(2500).has('engineer'), true);
 });

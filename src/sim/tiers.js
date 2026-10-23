@@ -60,7 +60,7 @@ export const JOBS = {
   // asked for in the comments of 2026-10-22 (owner 2026-10-23), by request only
   hunter: { label: 'Hunter', color: '#4f5e2e', requestOnly: true },
   butcher: { label: 'Butcher', color: '#8e2f2a', requestOnly: true },
-  engineer: { label: 'Engineer', color: '#6d5a3a', requestOnly: true },
+  engineer: { label: 'Engineer', color: '#6d5a3a' }, // unlocked at 2500 (owner 2026-10-23), asked for before that: apprentice
   shepherd: { label: 'Shepherd', color: '#8a7b54', requestOnly: true },
   tanner: { label: 'Tanner', color: '#7a4f2c', requestOnly: true },
 };
@@ -128,7 +128,8 @@ export const TIERS = [
   { id: 'healers', at: 1500, title: 'Town of Healers', unique: ['physician'], pool: { physician: 0.5 }, buildings: ['physician_booth'], goal: 'the Physician arrives' },
   { id: 'shoes', at: 1750, title: 'Well-Shod Town', unique: ['cobbler'], pool: { cobbler: 0.4 }, buildings: ['cobbler_stall'], goal: 'the Cobbler opens a stall' },
   { id: 'barrels', at: 2000, title: 'Town of Barrels', unique: ['cooper'], pool: { cooper: 0.4 }, buildings: ['cooperage'], goal: 'the Cooper opens the cooperage' },
-  { id: 'north', at: 2500, title: 'Growing City', unique: ['weaver'], pool: {}, buildings: ['district_north'], goal: 'the North Ward is founded' },
+  // the Engineer took the Weaver's place here (owner 2026-10-23: the Weaver already comes at 1000)
+  { id: 'north', at: 2500, title: 'Growing City', unique: ['engineer'], pool: { engineer: 0.2 }, buildings: ['district_north'], goal: 'the North Ward is founded' },
   { id: 'honey', at: 3000, title: 'Town of Honey', unique: ['beekeeper'], pool: { beekeeper: 0.3 }, buildings: ['apiary'], goal: 'the first beehives arrive' },
   { id: 'bells', at: 4000, title: 'Town of Bells', unique: ['bellfounder'], pool: { bellfounder: 0.2 }, buildings: ['bell_foundry'], goal: 'the Bell Foundry casts its first bell' },
   { id: 'learned', at: 5000, title: 'City of Song', unique: ['apothecary', 'bard'], pool: { apothecary: 0.3, bard: 0.6 }, buildings: ['district_south'], goal: 'the South Ward is founded' },

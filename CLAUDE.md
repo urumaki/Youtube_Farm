@@ -188,7 +188,7 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   and the bridge are virtual lots added after the plots (`world.js`), so plots never move. Jobs only by
   request: Rat Catcher, Chimney Sweep, Falconer, Cook, and (owner 2026-10-23, from the comments of 2026-10-22)
   Hunter (shoots at a straw deer, no animal hurt), Butcher (cleaver, ham, sausages), Engineer (hammers a model
-  trebuchet that throws a turnip), Shepherd (crook, sheep grazing in the croft), Tanner (scrapes a hide on the
+  trebuchet that throws a turnip; unlocked at 2500 in place of the Weaver, before that asking makes an apprentice), Shepherd (crook, sheep grazing in the croft), Tanner (scrapes a hide on the
   beam). The same day more comment words were added for jobs the kingdom has (typos like "gaurd", weaponsmith,
   pub, harbour, herbalist, messenger, bishop, politician/lawyer for the reeve, architect for the mason...), and a
   name asked for ("call me Hunter") is never read as a job request.
