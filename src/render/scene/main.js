@@ -25,6 +25,8 @@ import { buildSparring, buildDummyDrill } from './drills.js';
 import { buildBoat, buildRiverbank, buildNightWatch } from './away.js';
 import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
+import { buildSweepRoom } from './room.js';
+import { huntSpot } from '../../sim/wall.js';
 import { buildQueue } from './queue.js';
 import { heightAt } from '../../sim/world.js';
 import { pointInObb, grow } from '../../sim/geometry.js';
@@ -151,6 +153,47 @@ async function setup(data) {
     anchor.y = heightAt(w, anchor.x, anchor.z) + 0.12;
     return { anchor, ax: -s, az: c, floorAt: (x, z) => yFn(x, z) + (pointInObb(f, x, z) ? 0.09 : 0) };
   };
+  // market stalls: two stall scenes in one video never share a stall
+  const stalls = new Map();
+  const stallOf = (id) => {
+    if (!stalls.has(id)) {
+      const used = new Set(stalls.values());
+      let k = Math.abs(id) % 8;
+      while (used.has(k) && used.size < 8) k = (k + 1) % 8;
+      stalls.set(id, k);
+    }
+    return stalls.get(id);
+  };
+  // an alley between two houses near the rat catcher's (owner 2026-10-23): beside a house, clear from its front to its
+  // back, with the next house 1.5 to 3 m away; the camera at its street end
+  const shapes = [...houses.shapes.values()], inverse = new Map();
+  const inHouse = (p, skip, pad) => shapes.some((o) => {
+    if (o === skip || Math.abs(o.x - p.x) > 14 || Math.abs(o.z - p.z) > 14) return false;
+    if (!inverse.has(o)) inverse.set(o, o.matrix.clone().invert());
+    const q = p.clone().applyMatrix4(inverse.get(o));
+    return Math.abs(q.x) < o.W / 2 + pad && Math.abs(q.z) < o.D / 2 + pad;
+  });
+  const alleyBy = (sh) => {
+    const near = shapes.filter((o) => Math.hypot(o.x - sh.x, o.z - sh.z) < 160).sort((a, b) => Math.hypot(a.x - sh.x, a.z - sh.z) - Math.hypot(b.x - sh.x, b.z - sh.z));
+    for (const o of near.slice(0, 80)) for (const sd of [1, -1]) {
+      const at = (x, z) => new THREE.Vector3(x, 0, z).applyMatrix4(o.matrix);
+      const x = sd * (o.W / 2 + 1.0);
+      if ([-o.D / 2, 0.3, o.D / 2].some((z) => inHouse(at(x, z), o, 0.3))) continue;
+      if (!inHouse(at(sd * (o.W / 2 + 3.0), 0), o, 0.05)) continue;
+      const anchor = at(x, 0.3), street = at(x, -1).sub(at(x, 0)).setY(0).normalize();
+      anchor.y = yFn(anchor.x, anchor.z);
+      // the camera looks down the alley from its street end, slowly in
+      const from = at(x, -o.D / 2 - 2.6), to = at(x, -o.D / 2 - 0.6), look = anchor.clone().setY(anchor.y + 0.8);
+      from.y = yFn(from.x, from.z) + 1.7; to.y = yFn(to.x, to.z) + 1.5;
+      const cam = (u) => ({ pos: from.clone().lerp(to, u * u * (3 - 2 * u)), look });
+      return { anchor, ax: street.x, az: street.z, floorAt: null, cam };
+    }
+    return null;
+  };
+  // the far grass beyond the fields (as the flock at pasture, everyday.js): the shepherd's pen
+  const farField = [...w.fields].sort((a, b) => b.z * -1 - a.z * -1 || b.x - a.x).slice(0, 6).sort((a, b) => b.x - a.x)[0];
+  // the hunter: in a clearing in the woods outside the Second Wall, shooting outward toward the trees
+  const hunt = huntSpot(w, state);
   const workPlace = (job, sh, variant = null, id = 0) => {
     if (variant === 'counting' && buildings.items.counting_house) return atLot(buildings.items.counting_house, -2.3, 2.1);
     if (variant === 'shop' && buildings.items.apothecary_shop) return atLot(buildings.items.apothecary_shop, -1.6, 2.4);
@@ -161,10 +204,35 @@ async function setup(data) {
     if (job === 'farmer' && fieldCount > 1 && state.buildings.some((b) => b.id === 'fields')) return atField(id);
     if (variant === 'stall' && buildings.items.market) {
       // behind the counter of one of the eight stalls (buildings.js), facing the middle of the square
-      const m = buildings.items.market, k = Math.abs(id) % 8, side = k < 4 ? -1 : 1, x = [-15, -5, 5, 15][k % 4];
+      const m = buildings.items.market, k = stallOf(id), side = k < 4 ? -1 : 1, x = [-15, -5, 5, 15][k % 4];
       const anchor = m.toWorld([x, 0.05, side * 11.65]), mid = m.toWorld([x, 0, 0]);
       const d = new THREE.Vector3().subVectors(mid, anchor).setY(0).normalize();
       return { anchor, ax: d.x, az: d.z, floorAt: () => m.base + 0.05, face: Math.atan2(d.x, d.z) };
+    }
+    // the bard and the jester perform in the market square, between the north stalls and the road
+    if (variant === 'square' && buildings.items.market) {
+      const m = buildings.items.market, x = [-11, 11, -3, 3][Math.abs(id) % 4];
+      const anchor = m.toWorld([x, 0.05, -6.5]), d = m.toWorld([x, 0.05, 0]).sub(anchor).setY(0).normalize();
+      return { anchor, ax: d.x, az: d.z, floorAt: () => m.base + 0.05 };
+    }
+    if (variant === 'alley') { const a = alleyBy(sh); if (a) return a; }
+    if (variant === 'pen' && farField) {
+      const anchor = new THREE.Vector3(farField.x + farField.hw + 12, 0, farField.z + 2);
+      anchor.y = yFn(anchor.x, anchor.z);
+      return { anchor, ax: 0, az: 1, floorAt: null };
+    }
+    if (variant === 'boar' || variant === 'stag') {
+      const { ox, oz } = hunt, anchor = new THREE.Vector3(hunt.x - ox * 3, 0, hunt.z - oz * 3);
+      anchor.y = yFn(anchor.x, anchor.z);
+      // the camera behind the hunter's shoulder, looking down the line of the shot; the arrow flies along the hunter's
+      // -1.3 rad (work.js)
+      const k = Math.cos(0.3), q = Math.sin(0.3);
+      return { anchor, ax: -ox * k + oz * q, az: -oz * k - ox * q, floorAt: null, face: Math.atan2(ox, oz) + Math.atan2(Math.cos(1.3), Math.sin(1.3)) };
+    }
+    // the engineer in front of a building going up, the plan in hand
+    if (variant === 'site') {
+      const id0 = (state.pendingConstruction || []).map((p) => p.building).find((b) => buildings.items[b]?.lot?.hw > 0);
+      if (id0) return { ...atLot(buildings.items[id0], 0, buildings.items[id0].lot.hd + 3.5), face: undefined };
     }
     if (variant === 'dummy' && castle.training) {
       const { at, view, floor } = castle.training;
@@ -194,8 +262,8 @@ async function setup(data) {
     ws.update = (t, ...a) => { update(t, ...a); queue.update(t); };
     return ws;
   };
-  const workSceneOnly = ({ job, variant, anchor, ax, az, away, id, face }) => {
-    if (indoorScene(job, variant)) return buildBakehouse({ variant, anchor, away, M, seed: state.seed, id, heightAt: (x, z) => heightAt(w, x, z) });
+  const workSceneOnly = ({ job, variant, anchor, ax, az, away, id, face, t0 = 0 }) => {
+    if (indoorScene(job, variant)) return (job === 'chimneysweep' ? buildSweepRoom : buildBakehouse)({ variant, anchor, away, M, seed: state.seed, id, heightAt: (x, z) => heightAt(w, x, z) });
     const make = variant === 'dummy' ? buildDummyDrill : buildWorkScene;
     // scenes by the house (the beggar against its back wall): `home` metres out from the wall, facing the croft
     const { home, homeTurn = 0 } = sceneOf(job, variant);
@@ -205,12 +273,14 @@ async function setup(data) {
       return make({ job, variant, anchor: at, face: Math.atan2(ax, az) + homeTurn, M, seed: state.seed, id });
     }
     // turned 1.1 rad from the camera side (a profile view of the work), or as the scene asks
-    return make({ job, variant, anchor, face: face ?? Math.atan2(ax, az) + (sceneOf(job, variant).turn ?? 1.1), M, seed: state.seed, id });
+    return make({ job, variant, anchor, face: face ?? Math.atan2(ax, az) + (sceneOf(job, variant).turn ?? 1.1), M, seed: state.seed, id, t0 });
   };
   if (plan) for (const tg of plan.targets) {
     if (tg.kind === 'villager' && barScene(tg.variant) && buildings.items.tavern) {
       // the innkeeper or brewer behind the bar of the tavern (owner 2026-10-23), a visitor at the counter
-      const bar = buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, keepers: [{ name: tg.label.title, job: tg.sceneJob }], bar: true, guest: tg.guest || null });
+      // or the bard playing in the corner by the fireplace
+      const bar = tg.variant === 'inn' ? buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, minstrel: { name: tg.label.title } })
+        : buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, keepers: [{ name: tg.label.title, job: tg.sceneJob }], bar: true, guest: tg.guest || null });
       interiors.push({ ws: bar, tg });
       tg.cam = bar.cam;
       tg.pos.copy(bar.focus);
@@ -232,11 +302,12 @@ async function setup(data) {
       stories.push({ st, tg });
     } else if (tg.kind === 'villager') {
       const v = state.villagers[tg.id];
-      const { anchor, ax, az, floorAt, face } = workPlace(tg.sceneJob || v.job, houses.shapes.get(v.house), tg.variant, tg.id);
+      const { anchor, ax, az, floorAt, face, cam } = workPlace(tg.sceneJob || v.job, houses.shapes.get(v.house), tg.variant, tg.id);
       tg.away = Math.atan2(az, ax);
-      const ws = workScene({ job: tg.sceneJob || v.job, variant: tg.variant, anchor, ax, az, away: tg.away, id: tg.id, face });
+      const ws = workScene({ job: tg.sceneJob || v.job, variant: tg.variant, anchor, ax, az, away: tg.away, id: tg.id, face, t0: tg.t0 });
       scene.add(ws.group);
       if (ws.room) { scene.add(ws.room); interiors.push({ ws, tg }); tg.cam = (u) => ws.cam(u, !!tg.guest); } else works.push(ws);
+      if (cam) tg.cam = cam; // a place with its own camera (down an alley)
       tg.work = ws;
       tg.pos.copy(ws.focus);
       tg.labelPos.copy(ws.labelPos);
@@ -310,7 +381,8 @@ async function setup(data) {
         return { ws: { group: st.group, update: (t) => st.update(t, 0, 3) }, st, focus: st.focus };
       }
       if (barScene(g.variant) && buildings.items.tavern) {
-        const bar = buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, keepers: [{ name: 'Test', job: g.job }], bar: true, guest: g.guest ? { name: 'Guest', job: g.guest } : null });
+        const bar = g.variant === 'inn' ? buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, minstrel: { name: 'Test' } })
+          : buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, keepers: [{ name: 'Test', job: g.job }], bar: true, guest: g.guest ? { name: 'Guest', job: g.guest } : null });
         return { ws: { group: bar.group, room: bar.group, update: bar.update, cam: bar.cam }, focus: bar.focus };
       }
       const at = workPlace(g.job, sh, g.variant, i), gAway = Math.atan2(at.az, at.ax);
@@ -319,7 +391,7 @@ async function setup(data) {
       if (ws.room) scene.add(ws.room);
       const visit = g.guest ? buildVisit({ host: ws, hostJob: g.job, guest: { job: g.guest }, pair: g.pair, away: gAway, M, yFn: ws.floorAt || at.floorAt || yFn, t0: 0, t1: 3 }) : null;
       if (visit) scene.add(visit.group);
-      return { ws, visit, away: gAway, focus: visit ? ws.focus.clone().lerp(visit.stand.clone().setY(visit.stand.y + 1.1), 0.4) : ws.focus };
+      return { ws, visit, away: gAway, cam: at.cam, focus: visit ? ws.focus.clone().lerp(visit.stand.clone().setY(visit.stand.y + 1.1), 0.4) : ws.focus };
     });
   }
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
@@ -433,6 +505,7 @@ async function galleryShot(i, t, turn = 0.25) {
     const c = g.st.cam(Math.min(1, t / 3));
     return shot(c.pos.toArray(), c.look.toArray(), 10, g.st.phase);
   }
+  if (g.cam) { const c = g.cam(Math.min(1, t / 3)); return shot(c.pos.toArray(), c.look.toArray(), 10); }
   if (g.ws.room) { // inside the bakehouse or the tavern: its own camera and lights (the gallery shot lasts 3 s)
     const c = g.ws.cam(Math.min(1, t / 3), !!g.visit);
     return shot(c.pos.toArray(), c.look.toArray(), 10, undefined, 1, c.fov);

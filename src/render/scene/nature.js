@@ -5,7 +5,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { heightAt, fbm, CASTLE, RIVER_HALF_WIDTH } from '../../sim/world.js';
 import { rand01 } from '../../sim/prng.js';
 import { SpatialHash, obbAabb, pointInObb, grow } from '../../sim/geometry.js';
-import { planWall2, wallLayout } from '../../sim/wall.js';
+import { planWall2, wallLayout, huntSpot } from '../../sim/wall.js';
 
 function clean(g) {
   const q = g.index ? g.toNonIndexed() : g;
@@ -56,6 +56,8 @@ export function buildNature(w, state, M, { season = 'summer' } = {}) {
     for (const s of pieces) block.insert(obbAabb(grow(s, 5)), grow(s, 5));
     for (const [x, z] of [...towers, ...gates.map((g) => [g.x, g.z])]) { const b = { x, z, hw: 10, hd: 10, rot: 0 }; block.insert(obbAabb(b), b); }
   }
+  // the hunter's clearing outside the walls (work.js, main.js)
+  { const h = huntSpot(w, state), b = { x: h.x, z: h.z, hw: h.r, hd: h.r, rot: 0 }; block.insert(obbAabb(b), b); }
   const blocked = (x, z) => {
     for (const b of block.query([x, z, x, z])) if (pointInObb(b, x, z)) return true;
     return false;

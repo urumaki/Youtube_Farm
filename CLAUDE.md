@@ -239,6 +239,22 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (`inside`: `buildTavernInterior(..., { bar: true, guest })`, own camera and lamps, a visitor stands at the counter; never
   on a tavern day); their croft scenes are no longer picked then (`UNTIL` in `scenes.js`). Test with
   `npm run render -- --real --subs 1400 --gallery "blacksmith:anvil,woodcutter:chop,stonemason:block,miller:sacks,farmer:hoe,executioner,crier:stand,innkeeper:inside+fisherman"`.
+  And (owner 2026-10-23, same day): the carpenter hauls a handcart of planks and logs through his croft (`carpenter:cart`,
+  `haul`, walks across the shot); the bard plays a pipe in the market square for two listeners, a hat for coins at his feet
+  (`bard:square`), or the lute in the tavern's corner (`bard:inn`, `buildTavernInterior(..., { minstrel })`, own camera); the
+  jester juggles three burning torches in the square (`jester:square`, `torches`); the rat catcher chases rats in an alley
+  between two houses near his own (`alleyBy` in `main.js`: beside a house, clear front to back, the next house 1.5-3 m away;
+  the camera looks down it from the street, `cam` from `workPlace`); the chimney sweep sweeps the flue from a big fireplace
+  inside a house (`chimneysweep:house`, `room.js`: a room at his croft seen only during the shot, like the bakehouse); the
+  cook ladles stew and holds out a bowl at a market stall (`cook:stall`), the butcher chops under hanging hams at one
+  (`butcher:stall`; two stall scenes in one video never share a stall, `stallOf`); the hunter shoots at a boar or a stag in a
+  clearing outside the Second Wall (`hunter:boar`/`stag`, `huntSpot` in `wall.js`: out from the wall's northernmost corner past
+  every plot, lot, field and road; no trees there, `nature.js`); the arrow lands short and the animal bolts (`once`: one
+  shot per scene, from the shot's start); the shepherd at the gate of a sheep pen on the grass beyond the fields
+  (`shepherd:pen`); the tanner with a long rack of hides drying behind him; the engineer checks a plan on a parchment in front
+  of a building going up (`engineer:site`, only while something other than the wall is under construction). Every jester
+  wears a jester's cap and every chimney sweep has a face black with soot, in every scene (`dress` in `work.js`, by the
+  job's own tunic colour). Test with `--gallery "carpenter:cart,bard:square,bard:inn,jester:square,ratcatcher:alley,chimneysweep:house,cook:stall,butcher:stall,hunter:boar,shepherd:pen,tanner,engineer:site"`.
 - Church interior (owner 2026-10-23, `church.js`): the Chapel, or the Cathedral once built, with pews both sides of a red
   carpet, villagers praying on them (hands together, heads bowed), stained glass, candles, the priest blessing from behind
   the altar (in the Cathedral always a bishop with mitre and crozier; another named cleric reads at the lectern). The

@@ -19,13 +19,19 @@ const FIGHTER_SCENES = ['walls', 'sparring', 'dummy'];
 export const VARIANTS = {
   guard: [...FIGHTER_SCENES, 'night', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
   farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
-  blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw'],
+  blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw', 'cart'],
   baker: ['oven', 'knead'], fisherman: ['rod', 'net', 'boat'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
   // owner 2026-10-23: innkeepers and brewers serve behind the bar inside the tavern once it stands ('inside')
   innkeeper: ['inside', 'tavern', 'barrel'], brewer: ['inside', 'tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
   // owner 2026-10-23: at their own place once it stands (else their usual scene in the croft), with a queue in front;
   // the crier calls out from the Crier's Stand
   merchant: ['stall'], taxcollector: ['counting'], apothecary: ['shop'], crier: ['stand'],
+  // owner 2026-10-23: the bard plays the flute in the market square or the lute in the tavern, the jester juggles burning
+  // torches in the square, the cook and the butcher keep a market stall, the rat catcher works in an alley, the chimney
+  // sweep inside a house, the hunter at the edge of a field outside the walls (a boar or a stag), the shepherd at a sheep
+  // pen, the engineer in front of a building going up (src/render/scene/work.js, main.js)
+  bard: ['square', 'inn'], jester: ['square'], cook: ['stall'], butcher: ['stall'], ratcatcher: ['alley'], chimneysweep: ['house'],
+  hunter: ['boar', 'stag'], shepherd: ['pen'], engineer: ['site'],
 };
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
 // the fisherman always fishes on the river (owner 2026-10-22): from a jetty with a rod or a net, or in a boat
@@ -33,14 +39,18 @@ export const AWAY_VARIANTS = new Set(['walls', 'sparring', 'boat', 'rod', 'net',
 // scenes at dusk (the light changes for the shot)
 export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished
-const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop', inside: 'tavern', stand: 'crier_stand' };
+const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop', inside: 'tavern', stand: 'crier_stand',
+  square: 'market', inn: 'tavern' };
 // croft scenes no longer used once the building stands (the innkeeper's barrel in the croft, once the tavern is open)
 const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
-// scenes on a platform with no room for a visitor: a host with a guest stays in the croft
-const SOLO_VARIANTS = new Set(['stand']);
+// scenes with no room for a visitor (on a platform, on the move, inside a house): a host with a guest stays in the croft
+const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house']);
+// buildings with no shot of their own: no engineer stands in front of them
+const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');
 /** False for a scene whose place is not built yet (the Second Wall's wall walk, the Counting House...) or no longer used. */
-export const sceneReady = (state, variant) => (!NEEDS[variant] || built(state, NEEDS[variant])) && !(UNTIL[variant] && built(state, UNTIL[variant]));
+export const sceneReady = (state, variant) => (!NEEDS[variant] || built(state, NEEDS[variant])) && !(UNTIL[variant] && built(state, UNTIL[variant]))
+  && (variant !== 'site' || !!state?.pendingConstruction?.some((p) => !NO_SITE.has(p.building)));
 // the guards' everyday shots are the same scenes as a guard's own walls and sparring shots
 const AMBIENT_KEY = { patrol: 'guard:walls', sparring: 'guard:sparring', change: 'guard:change' };
 const FIGHTERS = ['guard', 'knight', 'warrior'];
@@ -101,8 +111,8 @@ export function planScenes(state, { featured, tavern, church = null, avoidJobs =
   for (const f of shots) {
     const n = state.names[f.id];
     const job = f.job === 'apprentice' && n?.wants ? n.wants : f.job;
-    // no innkeeper shot inside the tavern on the day the tavern interior closes the video
-    const v = pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), ready: (x) => sceneReady(state, x) && !(tavern && x === 'inside') });
+    // no innkeeper or bard shot inside the tavern on the day the tavern interior closes the video
+    const v = pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), ready: (x) => sceneReady(state, x) && !(tavern && (x === 'inside' || x === 'inn')) });
     if (v) used.add(v);
     variants[f.id] = v;
   }

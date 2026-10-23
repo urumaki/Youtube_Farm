@@ -54,9 +54,9 @@ export function rig(M, color, { seated = false, walk = false, ground = false } =
     boxGeo(0.13, 0.08, 0.24).translate(-0.09, 0.04, 0.04), boxGeo(0.13, 0.08, 0.24).translate(0.09, 0.04, 0.04)]), M.gear);
   add(body, merged([cylGeo(0.19, 0.33, 0.9, 12).translate(0, 0.36, 0),
     new THREE.SphereGeometry(0.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.25, 0.5, 0.85).translate(0, 0.8, 0)]), tunic);
-  add(body, merged([cylGeo(0.235, 0.24, 0.07, 12).translate(0, 0.46, 0), cylGeo(0.215, 0.2, 0.09, 12).translate(0, 1.17, 0),
-    new THREE.ConeGeometry(0.2, 0.26, 12).translate(0, 1.34, 0)]), M.gear);
-  add(body, merged([new THREE.SphereGeometry(0.17, 12, 10).scale(1, 1.1, 1).translate(0, 1.04, 0), cylGeo(0.07, 0.08, 0.12, 8).translate(0, 0.88, 0)]), M.skin);
+  add(body, cylGeo(0.235, 0.24, 0.07, 12).translate(0, 0.46, 0), M.gear); // the belt
+  const hat = add(body, merged([cylGeo(0.215, 0.2, 0.09, 12).translate(0, 1.17, 0), new THREE.ConeGeometry(0.2, 0.26, 12).translate(0, 1.34, 0)]), M.gear);
+  const head = add(body, merged([new THREE.SphereGeometry(0.17, 12, 10).scale(1, 1.1, 1).translate(0, 1.04, 0), cylGeo(0.07, 0.08, 0.12, 8).translate(0, 0.88, 0)]), M.skin);
   const arm = (side) => {
     const g = new THREE.Group();
     g.position.set(side * 0.3, 0.8, 0);
@@ -68,7 +68,41 @@ export function rig(M, color, { seated = false, walk = false, ground = false } =
     g.add(hand);
     return { g, hand };
   };
-  return { root, body, r: arm(1), l: arm(-1), legs: walkLegs, tunic };
+  const P = { root, body, r: arm(1), l: arm(-1), legs: walkLegs, tunic, hat, head };
+  dress(P, color, M);
+  return P;
+}
+
+// Owner 2026-10-23: every jester wears a jester's cap (two-coloured horns with bells) and every chimney sweep has a
+// face black with soot, in every scene (at work, in the caravan, the tavern, the church...). The rig only gets the
+// tunic colour, which is the job's own (JOBS[job].color, unique to each job), so it tells them by that.
+let soot = null;
+function dress(P, color, M) {
+  if (color === JOBS.jester.color) {
+    P.hat.visible = false;
+    P.body.add(jesterCap(M));
+  } else if (color === JOBS.chimneysweep.color) {
+    soot ??= new THREE.MeshStandardMaterial({ color: '#3a312c', roughness: 0.95 });
+    P.head.material = soot;
+  }
+}
+function jesterCap(M) {
+  const g = new THREE.Group();
+  const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m); return m; };
+  add(cylGeo(0.215, 0.2, 0.1, 12).translate(0, 1.17, 0), M.gold);
+  // three floppy horns (left, right, back), each going up and out and then drooping, a bell at each tip
+  const horn = (dir, mat) => {
+    const seg = (from, a, h, r0, r1) => {
+      const geo = cylGeo(r1, r0, h, 8).translate(0, h / 2, 0);
+      if (dir[2]) geo.rotateX(-a * dir[2]); else geo.rotateZ(a * dir[0]);
+      add(geo.translate(from.x, from.y, from.z), mat);
+      return from.clone().add(new THREE.Vector3(-Math.sin(a) * h * dir[0], Math.cos(a) * h, -Math.sin(a) * h * dir[2]));
+    };
+    const tip = seg(seg(new THREE.Vector3(0, 1.2, 0), 0.75, 0.26, 0.11, 0.06), 2.1, 0.2, 0.06, 0.025);
+    add(new THREE.SphereGeometry(0.045, 8, 6).translate(tip.x, tip.y, tip.z), M.gold);
+  };
+  horn([1, 0, 0], M.clothRed); horn([-1, 0, 0], M.greens); horn([0, 0, 1], M.clothRed);
+  return g;
 }
 
 // a soft round dot, so particles are not drawn as squares (made once, in the browser only)
@@ -127,6 +161,24 @@ const JOB_SCENES = {
   crier: { period: 0.42, raise: -2.75, down: -2.2, bend: 0, sound: 'none', tool: 'handbell', props: 'notice', smooth: true, left: -1.3 },
   // owner 2026-10-23: up on the Crier's Stand (its own bell and notice board), half turned to the square
   'crier:stand': { period: 0.42, raise: -2.75, down: -2.2, bend: 0, sound: 'none', tool: 'handbell', props: 'none', smooth: true, left: -1.3, turn: 0.4, radius: 6.2 },
+  // owner 2026-10-23, more scenes away from the croft: the carpenter hauls a handcart of planks along (`haul`); the bard
+  // plays the flute in the market square for a couple of listeners (`flute`); the jester juggles three burning torches
+  // there (`torches`); the rat catcher chases rats in an alley between two houses; the chimney sweep sweeps a flue from a
+  // fireplace inside a house (room.js); the cook ladles stew and holds out a bowl at a market stall, the butcher chops at
+  // one under hanging hams; the hunter shoots at a boar or a stag at the edge of a field outside the walls, the arrow
+  // lands short and the animal runs off (nobody gets hurt, `once`: one shot per scene); the shepherd leans on the gate of
+  // a sheep pen; the engineer checks the plan on a parchment in front of a building going up (`read`)
+  'carpenter:cart': { period: 1.0, hit: 0.5, raise: 0.3, down: 0.3, bend: 0.18, sound: 'none', tool: null, props: 'none', haul: true, turn: Math.PI / 2, radius: 7.4 },
+  'bard:square': { period: 0.6, hit: 0.5, raise: -1.3, down: -1.3, bend: -0.04, sound: 'none', tool: null, props: 'busk', flute: true, turn: 0.45, radius: 6.6 },
+  'jester:square': { period: 0.75, raise: -1.4, down: -0.7, bend: 0, sound: 'none', tool: null, props: 'busk', juggle: true, torches: true, turn: 0.45, radius: 6.6, labelH: 3.4 },
+  'ratcatcher:alley': { period: 1.3, hit: 0.65, raise: -2.4, down: -0.6, bend: 0.35, fx: 'dirt', sound: 'hoe', tool: 'sack', props: 'alley', both: true, turn: Math.PI * 0.85, radius: 5.6 },
+  'chimneysweep:house': { period: 1.2, hit: 0.5, raise: -2.75, down: -2.35, bend: 0, fx: 'soot', sound: 'none', tool: 'brush', props: 'hearth', push: true, left: -0.35 },
+  'cook:stall': { period: 2.4, raise: -1.45, down: -0.55, bend: 0.08, fx: 'steam', sound: 'none', tool: 'bowl', props: 'dishes', smooth: true, left: -0.7, queue: 'customer', radius: 6.4 },
+  'butcher:stall': { period: 1.3, hit: 0.72, raise: -2.5, down: -0.95, bend: 0.2, fx: null, sound: 'chop', tool: 'cleaver', props: 'meatstall', left: -0.9, queue: 'customer', radius: 6.4 },
+  'hunter:boar': { period: 3.4, hit: 0.62, raise: -1.5, down: -1.5, bend: 0, fx: null, sound: 'none', tool: null, props: 'boar', archer: true, once: true, radius: 6.5 },
+  'hunter:stag': { period: 3.4, hit: 0.62, raise: -1.5, down: -1.5, bend: 0, fx: null, sound: 'none', tool: null, props: 'stag', archer: true, once: true, radius: 6.5 },
+  'shepherd:pen': { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'crook', props: 'pen', left: -0.6, look: true, turn: 1.9, radius: 8 },
+  'engineer:site': { period: 2.0, hit: 0.5, raise: -1.1, down: -1.1, bend: 0.15, sound: 'none', tool: null, props: 'none', read: true, turn: 2.0, radius: 7.4 },
   // owner 2026-10-22: the tailor sews at a table, the physician grinds a remedy, the tax collector counts coins
   tailor: { period: 0.9, raise: -1.55, down: -1.08, bend: 0.15, sound: 'none', tool: null, props: 'sewing', smooth: true, left: -1.05 },
   physician: { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95 },
@@ -268,6 +320,9 @@ export function toolGeo(kind, M) {
     add(cylGeo(0.095, 0.09, 0.24, 12).translate(0, -0.02, 0.12), M.wood);
     add(cylGeo(0.098, 0.098, 0.035, 12).translate(0, 0.115, 0.12), M.clothIvory); // foam
     add(new THREE.TorusGeometry(0.06, 0.015, 5, 10).rotateY(Math.PI / 2).translate(0, 0, 0.23), M.woodDark); // handle
+  } else if (kind === 'bowl') { // a wooden bowl of stew held out flat
+    add(cylGeo(0.13, 0.08, 0.08, 12).translate(0, -0.02, 0.14), M.wood);
+    add(cylGeo(0.115, 0.115, 0.01, 12).translate(0, 0.02, 0.14), M.clay);
   } else if (kind === 'bucket') {
     add(cylGeo(0.16, 0.12, 0.26, 10).translate(0, -0.2, 0.1), M.wood);
     add(new THREE.TorusGeometry(0.13, 0.012, 4, 10, Math.PI).translate(0, -0.08, 0.1), M.iron);
@@ -857,7 +912,164 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       for (const x of [1.2, 2.2]) add(boxGeo(0.07, 1.8, 0.07).translate(x, 0.9, 1.9), M.woodDark); // the drying frame, behind
       for (const y of [0.35, 1.7]) add(boxGeo(1.1, 0.06, 0.06).translate(1.7, y, 1.9), M.woodDark);
       add(boxGeo(0.85, 1.2, 0.02).translate(1.7, 1.02, 1.9), M.soil);
+      // owner 2026-10-23: a long rack of hides drying behind the tanner, stretched on frames, a few hung over a pole
+      const hides = [M.soil, M.gear, M.clay];
+      for (let i = 0; i < 4; i++) {
+        const x = -1.9 + i * 1.15, z = -1.5 - (i % 2) * 0.25;
+        for (const dx of [-0.5, 0.5]) add(boxGeo(0.07, 2.0, 0.07).translate(x + dx, 1.0, z), M.woodDark);
+        for (const y of [0.4, 1.9]) add(boxGeo(1.1, 0.06, 0.06).translate(x, y, z), M.woodDark);
+        add(boxGeo(0.82, 1.3 - (i % 3) * 0.12, 0.02).translate(x, 1.15, z), hides[i % 3]);
+        for (let k = 0; k < 4; k++) add(cylGeo(0.006, 0.006, 0.16, 3).rotateZ(Math.PI / 2).translate(x + (k < 2 ? -0.47 : 0.47), 0.75 + (k % 2) * 0.75, z), M.clothIvory); // the lacing
+      }
+      add(boxGeo(4.4, 0.07, 0.07).translate(-0.2, 1.7, -2.6), M.woodDark);
+      for (const x of [-2.4, 2.0]) add(boxGeo(0.08, 1.7, 0.08).translate(x, 0.85, -2.6), M.woodDark);
+      for (let i = 0; i < 3; i++) add(boxGeo(0.7, 0.02, 0.9).rotateX(Math.PI / 2).translate(-1.3 + i * 1.3, 1.25, -2.6), hides[(i + 1) % 3]);
       return new THREE.Vector3(0, 0.82, 0.5);
+    }
+    case 'busk': { // a hat for coins in front, two listeners a few steps off, one clapping
+      add(cylGeo(0.18, 0.14, 0.1, 10).translate(0.5, 0.05, 1.1), M.gear);
+      for (let i = 0; i < 4; i++) add(cylGeo(0.03, 0.03, 0.01, 8).translate(0.45 + i * 0.04, 0.1, 1.08), M.gold);
+      const fans = [[1.8, 1.7, '#3f5a7a'], [2.5, 0.5, '#8a6a3a']].map(([x, z, color], i) => {
+        const P = rig(M, color);
+        P.root.position.set(x, 0, z);
+        P.root.rotation.y = Math.atan2(-x, -z);
+        holder.add(P.root);
+        return { P, i };
+      });
+      anim.push((t) => fans.forEach(({ P, i }) => {
+        if (i === 0) { const k = Math.abs(Math.sin(t * 6)); P.r.g.rotation.set(-1.2, 0, -0.35 + 0.25 * k); P.l.g.rotation.set(-1.2, 0, 0.35 - 0.25 * k); } // clapping
+        else { P.r.g.rotation.set(-0.15, 0, 0); P.l.g.rotation.set(-0.15, 0, 0); }
+        P.body.rotation.z = 0.05 * Math.sin(t * 2.2 + i * 2);
+      }));
+      return new THREE.Vector3(0, 1.2, 0.4);
+    }
+    case 'alley': { // rats round the rat catcher's feet in a narrow alley, a barrel and a broken crate against the wall
+      const rats = [0, 1, 2].map(() => {
+        const r = new THREE.Group();
+        r.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6).scale(1, 0.8, 1.8), M.stoneDark), { castShadow: true }));
+        r.add(new THREE.Mesh(cylGeo(0.008, 0.004, 0.2, 4).rotateX(Math.PI / 2).translate(0, 0, -0.2), M.stoneDark));
+        holder.add(r);
+        return r;
+      });
+      anim.push((t) => rats.forEach((r, i) => {
+        const a = t * 2.6 + i * 2.1;
+        r.position.set(Math.cos(a) * 0.45, 0.06, 0.9 + Math.sin(a) * 0.5);
+        r.rotation.y = -a;
+      }));
+      add(cylGeo(0.3, 0.35, 0.6, 10).translate(-0.55, 0.3, 1.9), M.wood);
+      add(boxGeo(0.5, 0.35, 0.45).rotateY(0.4).rotateZ(0.25).translate(0.45, 0.2, 2.4), M.woodDark);
+      return new THREE.Vector3(0, 0.1, 0.9);
+    }
+    case 'hearth': // the fireplace is part of the room (room.js): soot falls from the flue above the sweep
+      return new THREE.Vector3(0, 2.2, 0.15);
+    case 'dishes': { // a pot of stew steaming on a brazier on the stall's counter, a stack of bowls, a loaf, a ladle
+      add(cylGeo(0.22, 0.25, 0.12, 10).translate(-0.45, 1.06, 0.7), M.iron);
+      add(boxGeo(0.3, 0.05, 0.3).translate(-0.45, 1.12, 0.7), M.ember);
+      add(cylGeo(0.24, 0.2, 0.3, 14).translate(-0.45, 1.3, 0.7), M.iron);
+      add(cylGeo(0.22, 0.22, 0.02, 14).translate(-0.45, 1.44, 0.7), M.clay);
+      add(cylGeo(0.012, 0.012, 0.45, 5).rotateZ(0.5).translate(-0.35, 1.6, 0.7), M.woodDark);
+      for (let i = 0; i < 4; i++) add(cylGeo(0.11, 0.07, 0.06, 10).translate(0.35, 1.03 + i * 0.05, 0.75), M.wood);
+      for (const x of [0.05, 0.62]) {
+        add(cylGeo(0.11, 0.07, 0.06, 10).translate(x, 1.03, 0.95), M.wood);
+        add(cylGeo(0.09, 0.09, 0.01, 10).translate(x, 1.06, 0.95), M.clay);
+      }
+      add(new THREE.SphereGeometry(0.12, 10, 8).scale(1.5, 0.7, 1).translate(0.7, 1.06, 0.6), M.hay);
+      return new THREE.Vector3(-0.45, 1.5, 0.7);
+    }
+    case 'meatstall': { // a block on the stall's counter with a joint on it, hams and strings of sausages hanging from the awning
+      add(cylGeo(0.22, 0.24, 0.16, 12).translate(0, 1.08, 0.75), M.wood);
+      add(new THREE.SphereGeometry(0.13, 10, 8).scale(1.5, 0.7, 1).translate(0.05, 1.22, 0.75), M.clay);
+      add(boxGeo(2.6, 0.06, 0.06).translate(0, 2.05, 1.15), M.woodDark);
+      for (const x of [-1.0, -0.55, 0.55, 1.0]) {
+        add(cylGeo(0.006, 0.006, 0.18, 3).translate(x, 1.95, 1.15), M.iron);
+        add(new THREE.SphereGeometry(0.15, 10, 8).scale(0.85, 1.6, 0.85).translate(x, 1.62, 1.15), M.clay); // a ham
+        add(cylGeo(0.04, 0.05, 0.12, 6).translate(x, 1.86, 1.15), M.clothIvory); // its bone
+      }
+      for (const x of [-0.25, 0.25]) for (let i = 0; i < 4; i++) add(cylGeo(0.04, 0.04, 0.16, 6).translate(x, 1.93 - i * 0.17, 1.15), M.clay);
+      for (let i = 0; i < 3; i++) add(new THREE.SphereGeometry(0.12, 8, 6).scale(1.6, 0.8, 1).translate(-0.6 + i * 0.32, 1.04, 0.95), M.clay);
+      return new THREE.Vector3(0, 1.17, 0.75);
+    }
+    case 'boar':
+    case 'stag': { // an animal at the edge of the trees: it grazes, the arrow lands short, it bolts (nobody gets hurt)
+      const d = new THREE.Vector3(-Math.cos(1.3), 0, Math.sin(1.3));
+      const c = new THREE.Vector3(-0.26, 0, 0.92).addScaledVector(d, 5.4);
+      const beast = new THREE.Group();
+      beast.position.copy(c);
+      beast.rotation.y = Math.atan2(d.x, d.z);
+      holder.add(beast);
+      const hide = new THREE.MeshStandardMaterial({ color: kind === 'boar' ? '#3b2c22' : '#8a5a34', roughness: 0.9 });
+      const part = (geo, m, parent = beast) => parent.add(Object.assign(new THREE.Mesh(geo, m), { castShadow: true }));
+      const boar = kind === 'boar', bodyH = boar ? 0.55 : 0.95;
+      part(new THREE.SphereGeometry(boar ? 0.36 : 0.32, 12, 9).scale(boar ? 1.7 : 1.9, boar ? 1.05 : 0.95, 1).translate(0, bodyH, 0), hide);
+      const head = new THREE.Group();
+      head.position.set(boar ? -0.62 : -0.6, bodyH + (boar ? 0.02 : 0.25), 0);
+      beast.add(head);
+      if (boar) {
+        part(cylGeo(0.13, 0.22, 0.42, 10).rotateZ(Math.PI / 2).translate(-0.12, -0.02, 0), hide, head);
+        part(cylGeo(0.07, 0.07, 0.04, 10).rotateZ(Math.PI / 2).translate(-0.34, -0.03, 0), M.clay, head); // the snout
+        for (const s of [-1, 1]) {
+          part(new THREE.ConeGeometry(0.02, 0.13, 5).rotateZ(-0.6).translate(-0.28, 0.03, s * 0.08), M.clothIvory, head); // tusks
+          part(new THREE.ConeGeometry(0.05, 0.11, 4).translate(0.02, 0.17, s * 0.09), hide, head); // ears
+        }
+        part(boxGeo(0.95, 0.07, 0.05).translate(0.05, bodyH + 0.36, 0), M.stoneDark); // the bristly ridge
+      } else {
+        part(cylGeo(0.09, 0.13, 0.55, 8).rotateZ(-0.7).translate(0.15, -0.12, 0), hide, head); // the neck
+        part(new THREE.SphereGeometry(0.12, 10, 8).scale(1.6, 0.9, 0.9).translate(-0.12, 0.12, 0), hide, head);
+        for (const s of [-1, 1]) {
+          part(cylGeo(0.015, 0.022, 0.42, 5).rotateX(s * 0.45).translate(0, 0.38, s * 0.1), M.woodDark, head); // antlers
+          for (const k of [0, 1]) part(cylGeo(0.01, 0.014, 0.17, 5).rotateZ(-0.9 + k * 0.4).rotateX(s * 0.45).translate(-0.06, 0.4 + k * 0.12, s * (0.13 + k * 0.05)), M.woodDark, head);
+        }
+        part(new THREE.SphereGeometry(0.06, 8, 6).translate(0.6, bodyH + 0.12, 0), M.clothIvory); // white tail
+      }
+      const legs = [[-0.36, -0.13], [-0.36, 0.13], [0.36, -0.13], [0.36, 0.13]].map(([x, z]) => {
+        const leg = new THREE.Group();
+        leg.position.set(x, bodyH - 0.12, z);
+        beast.add(leg);
+        part(boxGeo(0.07, bodyH - 0.08, 0.07).translate(0, -(bodyH - 0.08) / 2, 0), boar ? M.stoneDark : hide, leg);
+        return leg;
+      });
+      // the arrow lands in the grass a little short of the animal; then it turns and bolts toward the trees
+      const hit = 0.62;
+      anim.push((t, cyc) => {
+        const u = cyc - Math.floor(cyc), run = u > hit + 0.03 ? (u - hit - 0.03) / (1 - hit) : 0;
+        beast.position.copy(c).addScaledVector(d, run * run * 9 + run * 2);
+        beast.rotation.y = Math.atan2(d.x, d.z) + Math.min(1, run * 5) * (Math.PI / 2); // head away from the hunter
+        beast.position.y = run > 0 ? 0.12 * Math.abs(Math.sin(t * 14)) : 0;
+        head.rotation.z = run > 0 ? -0.2 : 0.45 + 0.2 * Math.sin(t * 1.6); // grazing, head down
+        legs.forEach((leg, i) => { leg.rotation.z = run > 0 ? 0.7 * Math.sin(t * 16 + (i % 2) * Math.PI + (i > 1 ? 1 : 0)) : 0; });
+      });
+      return c.clone().addScaledVector(d, -0.75).setY(0.05);
+    }
+    case 'pen': { // a pen of split rails with sheep in it, the shepherd at the gate
+      const P0 = [-2.3, 0.6], P1 = [2.3, 4.6];
+      const rails = [];
+      for (const [ax, az, bx, bz] of [[P0[0], P0[1], P1[0], P0[1]], [P1[0], P0[1], P1[0], P1[1]], [P1[0], P1[1], P0[0], P1[1]], [P0[0], P1[1], P0[0], P0[1]]]) {
+        const len = Math.hypot(bx - ax, bz - az), n = Math.round(len / 1.5);
+        for (let i = 0; i <= n; i++) rails.push(boxGeo(0.1, 1.05, 0.1).translate(ax + ((bx - ax) * i) / n, 0.52, az + ((bz - az) * i) / n));
+        for (const y of [0.45, 0.85]) {
+          if (az === P0[1] && bz === P0[1] && y) { // the front side has the open gate in the middle
+            for (const [x0, x1] of [[ax, -0.6], [0.6, bx]]) rails.push(boxGeo(Math.abs(x1 - x0), 0.07, 0.05).translate((x0 + x1) / 2, y, az));
+            continue;
+          }
+          rails.push(boxGeo(len, 0.07, 0.05).rotateY(-Math.atan2(bz - az, bx - ax)).translate((ax + bx) / 2, y, (az + bz) / 2));
+        }
+      }
+      add(merged(rails), M.woodDark);
+      const gate = new THREE.Group();
+      gate.position.set(0.6, 0, P0[1]);
+      gate.rotation.y = -1.2; // swung open
+      holder.add(gate);
+      for (const y of [0.45, 0.85]) gate.add(Object.assign(new THREE.Mesh(boxGeo(1.2, 0.07, 0.05).translate(-0.6, y, 0), M.wood), { castShadow: true }));
+      add(boxGeo(0.9, 0.08, 0.4).translate(1.6, 0.35, 3.9), M.wood); // a trough
+      const flock = Array.from({ length: 7 }, (_, i) => {
+        const s = sheep(M);
+        s.g.position.set(-1.5 + (i % 4) * 1.0 + (i > 3 ? 0.5 : 0), 0, 1.7 + Math.floor(i / 4) * 1.5 + (i % 2) * 0.3);
+        s.g.rotation.y = i * 1.9;
+        holder.add(s.g);
+        return { ...s, ph: i * 1.3 };
+      });
+      anim.push((t) => flock.forEach((s) => { s.head.rotation.x = 0.55 + 0.25 * Math.sin(t * 1.2 + s.ph); }));
+      return new THREE.Vector3(0, 1.2, 2.4);
     }
     case 'none':
       return new THREE.Vector3(0, 1.2, 0.4);
@@ -932,12 +1144,12 @@ function arrowGroup(M) {
  * @param face    yaw the worker faces (radians, world)
  */
 // bare: no props of its own (a scene that builds the place itself, like the wheat fields in ambient.js)
-export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id, color = null, bare = false }) {
+export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id, color = null, bare = false, t0 = 0 }) {
   const cfg = sceneOf(job, variant);
   const group = new THREE.Group();
   group.position.copy(anchor);
   group.rotation.y = face;
-  const P = rig(M, color || JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer, ground: !!cfg.ground, seated: !!cfg.seated });
+  const P = rig(M, color || JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer || !!cfg.haul, ground: !!cfg.ground, seated: !!cfg.seated });
   if (cfg.lute) P.body.add(lute(M));
   group.add(P.root);
   const propsG = new THREE.Group();
@@ -976,7 +1188,53 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     propsG.position.set(tp.x - impact.x, 0, tp.z - impact.z);
     impact.set(tp.x, impact.y, tp.z);
   }
-  const balls = cfg.juggle ? [M.clothRed, M.gold, M.clothBlue].map((m) => { const b = new THREE.Mesh(new THREE.SphereGeometry(0.095, 12, 10), m); b.castShadow = true; group.add(b); return b; }) : [];
+  // juggled balls, or burning torches: a wooden stick with a flame at one end, turning over in the air
+  const torch = () => {
+    const g = new THREE.Group();
+    g.add(Object.assign(new THREE.Mesh(cylGeo(0.026, 0.032, 0.6, 6), M.woodDark), { castShadow: true }));
+    g.add(new THREE.Mesh(cylGeo(0.05, 0.04, 0.1, 8).translate(0, 0.31, 0), M.gear));
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.32, 7).translate(0, 0.5, 0), M.flame);
+    g.add(flame);
+    g.userData.flame = flame;
+    return g;
+  };
+  const balls = cfg.juggle ? (cfg.torches ? [0, 1, 2].map(torch) : [M.clothRed, M.gold, M.clothBlue].map((m) => new THREE.Mesh(new THREE.SphereGeometry(0.095, 12, 10), m)))
+    .map((b) => { b.castShadow = true; group.add(b); return b; }) : [];
+  // the bard's flute, held across to the right of the mouth
+  if (cfg.flute) { // a pipe from the lips down to the hands, a flared end
+    P.body.add(Object.assign(new THREE.Mesh(cylGeo(0.017, 0.02, 0.52, 8).rotateX(2.14).translate(0, 0.84, 0.39), M.woodDark), { castShadow: true }));
+    P.body.add(new THREE.Mesh(cylGeo(0.035, 0.022, 0.07, 8).rotateX(2.14).translate(0, 0.62, 0.6), M.woodDark));
+  }
+  // the engineer's plan: a parchment with blue lines, held open in both hands
+  if (cfg.read) {
+    const plan = new THREE.Group();
+    plan.position.set(0, 0.78, 0.42);
+    plan.rotation.x = -0.95;
+    plan.add(new THREE.Mesh(boxGeo(0.56, 0.38, 0.008), M.clothIvory));
+    for (const [w, h, x, y] of [[0.4, 0.012, 0, 0.1], [0.4, 0.012, 0, -0.1], [0.012, 0.2, -0.2, 0], [0.012, 0.2, 0.2, 0], [0.012, 0.2, 0, 0], [0.2, 0.012, -0.1, 0.02]]) plan.add(new THREE.Mesh(boxGeo(w, h, 0.004).translate(x, y, 0.006), M.clothBlue));
+    for (const x of [-0.29, 0.29]) plan.add(new THREE.Mesh(cylGeo(0.022, 0.022, 0.4, 8).translate(x, 0, 0), M.clothIvory)); // the rolled ends
+    P.body.add(plan);
+  }
+  // the carpenter's handcart of planks, pulled along by its shafts
+  let cart = null;
+  if (cfg.haul) {
+    cart = new THREE.Group();
+    group.add(cart);
+    const part = (geo, m) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; cart.add(o); return o; };
+    part(boxGeo(1.05, 0.08, 1.5).translate(0, 0.62, -1.95), M.woodDark);
+    for (const s of [-1, 1]) part(boxGeo(0.05, 0.28, 1.5).translate(s * 0.5, 0.8, -1.95), M.woodDark);
+    for (const s of [-1, 1]) part(cylGeo(0.03, 0.03, 1.15, 6).rotateX(Math.PI / 2 - 0.12).translate(s * 0.3, 0.71, -0.75), M.woodDark); // the shafts
+    for (let i = 0; i < 6; i++) part(boxGeo(0.22, 0.05, 2.1).translate(-0.3 + (i % 3) * 0.3, 0.69 + Math.floor(i / 3) * 0.06, -2.0), M.wood); // planks
+    for (let i = 0; i < 3; i++) part(cylGeo(0.09, 0.09, 1.6, 8).rotateX(Math.PI / 2).translate(-0.25 + i * 0.25, 0.86, -2.0), M.wood); // and logs
+    cart.userData.wheels = [-1, 1].map((s) => {
+      const wh = new THREE.Group();
+      wh.position.set(s * 0.6, 0.42, -2.05);
+      cart.add(wh);
+      wh.add(Object.assign(new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.04, 6, 18).rotateY(Math.PI / 2), M.woodDark), { castShadow: true }));
+      for (let k = 0; k < 3; k++) wh.add(new THREE.Mesh(boxGeo(0.03, 0.78, 0.04).rotateX((k * Math.PI) / 3), M.woodDark));
+      return wh;
+    });
+  }
   if (cfg.pouch) impact.set(0.45, 1.1, 0.6); // seeds fly from the sower's hand
   let pts = null, fx = null;
   if (cfg.fx) { fx = FX[cfg.fx]; pts = particles(fx.n * 2, fx.color, fx.size, fx.add); group.add(pts); }
@@ -1007,7 +1265,8 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     net.position.copy(impact);
     group.add(net);
   }
-  const offset = rand01(seed, 'work', id) * cfg.period;
+  // a scene that happens once (the hunter's one shot) starts its cycle as the shot starts
+  const offset = cfg.once ? cfg.period * 0.05 - t0 : rand01(seed, 'work', id) * cfg.period;
   const lerp = THREE.MathUtils.lerp;
   // sideways swings: wind the body back, sweep through the work at the hit, follow through
   const twist = (u) => (u < cfg.hit - 0.2 ? lerp(-0.1, 0.9, ease(u / (cfg.hit - 0.2)))
@@ -1162,8 +1421,35 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
         balls.forEach((b, i) => {
           const ph = ((t + offset) / (cfg.period * 1.5) + i / 3) % 1; // each ball flies from one hand to the other and back
           const side = ph < 0.5 ? 1 : -1, q = (ph % 0.5) * 2;
-          b.position.set(side * (0.25 - 0.5 * q), 1.05 + 4 * q * (1 - q) * 0.75, 0.45);
+          b.position.set(side * (0.25 - 0.5 * q), 1.05 + 4 * q * (1 - q) * (cfg.torches ? 1.25 : 0.75), 0.45);
+          if (cfg.torches) {
+            b.rotation.set(0, 0, side * (0.4 + q * Math.PI * 2)); // a full turn in the air
+            b.userData.flame.scale.set(1, 0.85 + 0.25 * Math.sin(t * 23 + i * 2), 1);
+          }
         });
+      }
+      if (cfg.flute) {
+        // both hands up at the flute, fingers busy, swaying to the tune
+        P.r.g.rotation.set(-1.25, 0, -0.5 + 0.04 * Math.sin(t * 17));
+        P.l.g.rotation.set(-1.45, 0, 0.5 + 0.04 * Math.sin(t * 13));
+        P.body.rotation.set(-0.04 + 0.04 * Math.sin(t * 2.4), 0.12 * Math.sin(t * 1.2), 0.06 * Math.sin(t * 2.4));
+      }
+      if (cfg.read) {
+        // reads the plan, then looks up at the building going up, then back down at the plan
+        const up = ease(THREE.MathUtils.clamp(0.5 + 0.9 * Math.sin((t + offset) * 0.9), 0, 1));
+        P.r.g.rotation.set(-1.05, 0, -0.32); P.l.g.rotation.set(-1.05, 0, 0.32);
+        P.body.rotation.set(lerp(0.2, -0.08, up), lerp(0, 0.35, up) * Math.sin((t + offset) * 0.45), 0);
+      }
+      if (cart) {
+        // walking along, the cart rolling behind; the camera waits halfway along the way
+        const d = THREE.MathUtils.clamp(0.85 * (t - t0 - 1.6), -2.2, 2.2);
+        P.root.position.z = d;
+        cart.position.z = d;
+        for (const wh of cart.userData.wheels) wh.rotation.x = d / 0.42;
+        P.legs[0].rotation.x = 0.45 * Math.sin(d * 3.6); P.legs[1].rotation.x = -0.45 * Math.sin(d * 3.6);
+        P.r.g.rotation.set(0.32, 0, -0.08); P.l.g.rotation.set(0.32, 0, 0.08); // arms back on the shafts
+        P.body.rotation.set(cfg.bend, 0, 0);
+        P.root.position.y = 0.04 * Math.abs(Math.cos(d * 3.6));
       }
       if (cfg.push) P.root.position.z = 0.25 * Math.sin(((t + offset) / cfg.period) * Math.PI * 2);
       // a loaf on the peel on the way into the oven, none on the way back

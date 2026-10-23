@@ -238,3 +238,23 @@ export function wallBlockers(w, route) {
   for (const g of gates) for (const k of [-1, 1]) out.push({ x: g.x + Math.cos(g.rot) * k * 7, z: g.z + Math.sin(g.rot) * k * 7, hw: 5, hd: 5, rot: g.rot });
   return out;
 }
+
+/**
+ * A clearing in the woods outside the Second Wall (owner 2026-10-23: the hunter shoots at a boar or a stag outside the
+ * walls): out from the wall's northernmost corner (from the first plan's ellipse before the wall is planned), past every
+ * plot, lot, field and road (the plot list never changes, so houses never come to it), with the way outward from the
+ * town. No trees grow within `r` of it (nature.js), so the trees stand round its edge.
+ */
+export function huntSpot(w, state) {
+  const pts = state.wall2?.pts;
+  const [px, pz] = pts?.length ? pts.reduce((a, b) => (b[1] < a[1] ? b : a)) : [C.x - 10, -C.rz * 1.2];
+  const dx = px - C.x, dz = pz - C.z, l = Math.hypot(dx, dz) || 1, ox = dx / l, oz = dz / l, r = 13;
+  const taken = [...w.plots, ...w.finePlots, ...w.densePlots, ...w.fields, ...Object.values(w.lots).filter((o) => !o.virtual)];
+  for (let d = 32; d < 600; d += 4) {
+    const x = px + ox * d, z = pz + oz * d, box = { x, z, hw: r + 4, hd: r + 4, rot: 0 };
+    if (w.river.dist(x, z) < RIVER_HALF_WIDTH + r + 6 || w.pathIndex.edgeDist(x, z, 40) < r + 4) continue;
+    if (taken.some((o) => Math.abs(o.x - x) < 80 && Math.abs(o.z - z) < 80 && obbOverlap(box, o))) continue;
+    return { x, z, ox, oz, r };
+  }
+  return { x: px + ox * 32, z: pz + oz * 32, ox, oz, r };
+}

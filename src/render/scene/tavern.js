@@ -23,8 +23,11 @@ const BAR_X = 3.5;
  * @param keepers  [{ name, job }] named innkeepers/brewers behind the bar (up to 2)
  * @param bar      the shot of one innkeeper or brewer at work (owner 2026-10-23): no small name tags (the shot's own big
  *                 label names them), a closer camera on the bar, and `guest` ({ name, job } or null) standing at the counter
+ * @param minstrel the shot of one bard at work (owner 2026-10-23): { name } plays in the corner by the fireplace, no small
+ *                 name tags, a camera on them
  */
-export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [], bar = false, guest = null }) {
+export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [], bar = false, guest = null, minstrel = null }) {
+  if (minstrel) patrons = [{ name: minstrel.name, job: 'bard' }];
   const group = new THREE.Group();
   item.group.add(group);
   const toWorld = (x, y, z) => new THREE.Vector3(x, y, z).applyMatrix4(item.group.matrix);
@@ -178,7 +181,7 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [],
     B.body.add(lute(M));
     group.add(B.root);
     people.push({ P: B, kind: 'bard' });
-    if (bard) labels.push({ pos: toWorld(-4.2, F + 2.3, 2.9), title: bard.name, sub: JOBS.bard.label });
+    if (bard && !minstrel) labels.push({ pos: toWorld(-4.2, F + 2.3, 2.9), title: bard.name, sub: JOBS.bard.label });
   }
   // barkeepers behind the counter, facing the room: one pours from the tap, one wipes the counter
   const barSpots = [{ z: -1.5, kind: 'pour' }, { z: 1.3, kind: 'wipe' }];
@@ -219,13 +222,16 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [],
   // the barkeeper's own shot: in front of the counter, a slow dolly toward the one pouring
   const barFrom = toWorld(-1.4, 2.15, -3.5), barTo = toWorld(0.0, 1.95, -3.1), barLook = toWorld(BAR_X + 0.4, F + 1.3, -1.2);
   const barCam = (u) => ({ pos: barFrom.clone().lerp(barTo, ease(u)), look: barLook.clone() });
+  // the bard's own shot: from the middle of the room, high over the tables, slowly toward the corner
+  const bardFrom = toWorld(-0.4, 2.45, 0.2), bardTo = toWorld(-1.6, 2.2, 1.1), bardLook = toWorld(-4.2, F + 1.0, 2.9);
+  const bardCam = (u) => ({ pos: bardFrom.clone().lerp(bardTo, ease(u)), look: bardLook.clone() });
 
   return {
     group,
     labels,
-    cam: bar ? barCam : cam,
-    focus: bar ? toWorld(BAR_X + 0.75, F + 1.2, barSpots[0].z) : toWorld(0, 1.2, 0),
-    labelPos: toWorld(BAR_X + 0.75, F + 2.45, barSpots[0].z),
+    cam: minstrel ? bardCam : bar ? barCam : cam,
+    focus: minstrel ? toWorld(-4.2, F + 1.0, 2.9) : bar ? toWorld(BAR_X + 0.75, F + 1.2, barSpots[0].z) : toWorld(0, 1.2, 0),
+    labelPos: minstrel ? toWorld(-4.2, F + 2.3, 2.9) : toWorld(BAR_X + 0.75, F + 2.45, barSpots[0].z),
     labelPos2: guest ? toWorld(BAR_X - 0.75, F + 2.15, -0.85) : null,
     update(t, inside) {
       for (const { l, i } of lights) {

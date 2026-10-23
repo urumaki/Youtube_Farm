@@ -502,6 +502,23 @@ test('innkeepers and brewers serve inside the tavern once it stands, the crier c
   assert.deepEqual([...picks('crier', open, true)], [null], 'a visitor: the croft');
 });
 
+test('scenes away from the croft of 2026-10-23: the market, the tavern, a building going up', async () => {
+  const { pickVariant, sceneReady } = await import('../src/sim/scenes.js');
+  const town = { buildings: [{ id: 'market', status: 'done' }, { id: 'tavern', status: 'done' }], pendingConstruction: [] };
+  const bare = { buildings: [], pendingConstruction: [{ building: 'wall2' }] };
+  const picks = (job, state, croft = false) => new Set(Array.from({ length: 60 }, (_, id) => pickVariant(job, SEED, 9, id, new Set(), { croft, ready: (v) => sceneReady(state, v) })));
+  assert.deepEqual([...picks('bard', town)].sort(), ['inn', 'square']);
+  assert.deepEqual([...picks('bard', bare)], [null], 'no market and no tavern: the lute in the croft');
+  for (const job of ['cook', 'butcher']) assert.deepEqual([...picks(job, town)], ['stall']);
+  assert.deepEqual([...picks('jester', town)], ['square']);
+  assert.deepEqual([...picks('engineer', bare)], [null], 'only the wall going up: no site to stand at');
+  assert.deepEqual([...picks('engineer', { ...bare, pendingConstruction: [{ building: 'chapel' }] })], ['site']);
+  assert.deepEqual([...picks('chimneysweep', town)], ['house']);
+  assert.deepEqual([...picks('chimneysweep', town, true)], [null], 'a visitor: the croft');
+  assert.deepEqual([...picks('hunter', town)].sort(), ['boar', 'stag']);
+  assert.ok(picks('carpenter', town).has('cart') && !picks('carpenter', town, true).has('cart'));
+});
+
 test('the Second Wall never stands on a house: planned round the town, houses in its way move, new ones keep off it', async () => {
   const { wallBlockers } = await import('../src/sim/wall.js');
   const { obbOverlap } = await import('../src/sim/geometry.js');

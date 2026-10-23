@@ -17,10 +17,12 @@ const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 // the scenes of each job and the ones away from the croft live in the simulation, which picks the day's
 // scenes (src/sim/scenes.js); older saves without `diff.scenes` pick them here
 export { VARIANTS, AWAY_VARIANTS, pickVariant };
-// scenes inside a building (the baker's bakehouse, bakery.js): own camera, a hard cut in and out
-export const indoorScene = (job, variant) => job === 'baker' && BAKEHOUSE_VARIANTS.has(variant);
-// the innkeeper or brewer behind the bar of the tavern (tavern.js): own camera, a hard cut in and out, the room's lamps
-export const barScene = (variant) => variant === 'inside';
+// scenes inside a building (the baker's bakehouse, bakery.js; the chimney sweep's room, room.js): own camera, a hard cut
+// in and out
+export const indoorScene = (job, variant) => (job === 'baker' && BAKEHOUSE_VARIANTS.has(variant)) || (job === 'chimneysweep' && variant === 'house');
+// the innkeeper or brewer behind the bar of the tavern, or the bard in its corner (tavern.js): own camera, a hard cut in
+// and out, the room's lamps
+export const barScene = (variant) => variant === 'inside' || variant === 'inn';
 // the croft shots move the camera in different ways, never the same way twice in a row
 export const CAM_STYLES = ['push', 'reveal', 'orbit', 'low'];
 
