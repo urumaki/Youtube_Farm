@@ -111,6 +111,10 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   and quiver instead of the spear. The everyday guard shots are patrol, sparring or the changing of the
   guard. The castle's background guards (`life.js`) are hidden during these shots. Test with
   `--real --gallery "guard:change,guard:wall2night"` (the Second Wall ones need a state where it is done).
+- Training yard (owner 2026-10-23, `castle.js`): a sanded square in the castle courtyard between the well and
+  the barracks, with a rail fence, two straw dummies, a rack of spears and two shields. The guards' and knights'
+  straw dummy drill (variant `dummy`) now happens there instead of in their croft (`castle.training`,
+  `workPlace` in `main.js`); the sparring shot is right beside it.
 - Woodcutter (owner 2026-10-21): only the arm holding the axe moves (one-handed overhead chop, the body
   and the other arm stay still); the handcart scene is no longer picked.
 - Wheat fields (owner 2026-10-22, `buildWheat` in `ambient.js`, everyday shot `wheat`): many farmers in one

@@ -178,6 +178,33 @@ export function buildCastle(M) {
   b.add('woodDark', boxGeo(0.2, 2.6, 0.2), 14, G + 1.6, -9.2);
   b.add('woodDark', boxGeo(0.2, 2.6, 0.2), 14, G + 1.6, -6.8);
   b.add('roofRed', gableGeo(1.2, 3.2, 0.9).rotateY(Math.PI / 2), 14, G + 2.9, -8);
+  // the guards' training yard (owner 2026-10-23): a sanded square between the well and the barracks, inside the
+  // courtyard paths, with a rail fence on two sides, two straw dummies, a rack of spears, shields and a bench
+  const TY = { x: 14, z: 3.5, hw: 5, hd: 4.5 };
+  b.add('dirt', boxGeo(TY.hw * 2, 0.06, TY.hd * 2, 3), TY.x, G + 0.17, TY.z);
+  for (let z = TY.z - TY.hd; z <= TY.z + TY.hd + 0.01; z += 1.5) b.add('woodDark', boxGeo(0.12, 0.95, 0.12), TY.x - TY.hw, G + 0.6, z);
+  for (let x = TY.x - TY.hw + 1.5; x <= TY.x + TY.hw + 0.01; x += 1.5) b.add('woodDark', boxGeo(0.12, 0.95, 0.12), x, G + 0.6, TY.z + TY.hd);
+  for (const y of [0.55, 0.95]) {
+    b.add('wood', boxGeo(0.07, 0.08, TY.hd * 2), TY.x - TY.hw, G + y, TY.z);
+    b.add('wood', boxGeo(TY.hw * 2, 0.08, 0.07), TY.x, G + y, TY.z + TY.hd);
+  }
+  for (const [x, z] of [[16.8, 6.6], [18.2, 3.2]]) { // straw dummies: a post, a stuffed body, arms, a sack head
+    b.add('woodDark', cylGeo(0.07, 0.08, 1.9, 6), x, G + 1.1, z);
+    b.add('hay', cylGeo(0.26, 0.3, 0.75, 10), x, G + 1.45, z);
+    b.add('woodDark', boxGeo(1.1, 0.09, 0.09), x, G + 1.7, z);
+    b.add('clothIvory', new THREE.SphereGeometry(0.2, 10, 8), x, G + 2.05, z);
+    b.add('clothRed', cylGeo(0.12, 0.12, 0.02, 12).rotateX(Math.PI / 2), x - 0.3, G + 1.5, z); // the mark to hit
+  }
+  // the weapon rack against the fence: spears leaning on a bar, two shields hung on the rails
+  for (const x of [11.6, 13.6]) b.add('woodDark', boxGeo(0.12, 1.6, 0.12), x, G + 0.95, TY.z + TY.hd - 0.35);
+  b.add('woodDark', boxGeo(2.2, 0.1, 0.1), 12.6, G + 1.65, TY.z + TY.hd - 0.35);
+  for (let i = 0; i < 6; i++) {
+    const x = 11.85 + i * 0.32;
+    b.add('wood', cylGeo(0.025, 0.025, 2.2, 5).rotateX(0.12), x, G + 1.25, TY.z + TY.hd - 0.5);
+    b.add('iron', new THREE.ConeGeometry(0.045, 0.22, 6).rotateX(0.12), x, G + 2.45, TY.z + TY.hd - 0.36);
+  }
+  for (const [x, key] of [[15.2, 'clothBlue'], [16.3, 'clothRed']]) b.add(key, cylGeo(0.36, 0.36, 0.05, 16).rotateX(Math.PI / 2), x, G + 0.8, TY.z + TY.hd - 0.08);
+  b.add('wood', boxGeo(0.45, 0.45, 2.2), TY.x - TY.hw + 0.5, G + 0.4, TY.z - 1.5); // the bench by the fence
   // stairs from the courtyard up to the wall walk (south and north walls)
   for (const s of [-1, 1]) {
     const zc = s * (H - WALL_T / 2 - 1.0);
@@ -289,6 +316,8 @@ export function buildCastle(M) {
 
   return {
     group, torches, banners, flags, drawbridge, chains, guardWalks, courtyardLoop,
+    // where a guard drills at a straw dummy in the training yard; the camera stands to the north (-z)
+    training: { at: new THREE.Vector3(11.2, G + 0.2, 5.2), view: [0, -1], floor: G + 0.2 },
     gate: new THREE.Vector3(H + 5, G + 6, 0), keep: new THREE.Vector3(K.x, G + 14, K.z),
     signPos: new THREE.Vector3(H + 5.4, G + passH + 1.7, 0),
     update(t, { bridgeOpen = 1 } = {}) {

@@ -121,7 +121,12 @@ async function setup(data) {
   // where a villager works: the croft behind the house, facing away from it; the Fletcher works in the yard of
   // the Fletcher's Workshop once it stands (owner 2026-10-23), with the street (and the camera) in front
   const shop = state.buildings.some((b) => b.id === 'fletcher_workshop' && b.status === 'done') ? buildings.items.fletcher_workshop : null;
-  const workPlace = (job, sh) => {
+  // and fighters drilling at the straw dummy do it in the castle's training yard (owner 2026-10-23)
+  const workPlace = (job, sh, variant = null) => {
+    if (variant === 'dummy' && castle.training) {
+      const { at, view, floor } = castle.training;
+      return { anchor: at.clone(), ax: view[0], az: view[1], floorAt: () => floor };
+    }
     if (job === 'fletcher' && shop) {
       const { lot } = shop;
       const floorAt = (x, z) => (pointInObb(grow(lot, 0.4), x, z) ? shop.base : yFn(x, z));
@@ -164,7 +169,7 @@ async function setup(data) {
       stories.push({ st, tg });
     } else if (tg.kind === 'villager') {
       const v = state.villagers[tg.id];
-      const { anchor, ax, az, floorAt } = workPlace(tg.sceneJob || v.job, houses.shapes.get(v.house));
+      const { anchor, ax, az, floorAt } = workPlace(tg.sceneJob || v.job, houses.shapes.get(v.house), tg.variant);
       tg.away = Math.atan2(az, ax);
       const ws = workScene({ job: tg.sceneJob || v.job, variant: tg.variant, anchor, ax, az, away: tg.away, id: tg.id });
       scene.add(ws.group);
@@ -236,7 +241,7 @@ async function setup(data) {
         scene.add(st.group);
         return { ws: { group: st.group, update: (t) => st.update(t, 0, 3) }, st, focus: st.focus };
       }
-      const at = workPlace(g.job, sh), gAway = Math.atan2(at.az, at.ax);
+      const at = workPlace(g.job, sh, g.variant), gAway = Math.atan2(at.az, at.ax);
       const ws = workScene({ job: g.job, variant: g.variant, anchor: at.anchor, ax: at.ax, az: at.az, away: gAway, id: 9100 + i });
       scene.add(ws.group);
       if (ws.room) scene.add(ws.room);
