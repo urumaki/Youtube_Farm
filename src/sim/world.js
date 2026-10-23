@@ -127,6 +127,9 @@ function buildWorld(seed) {
   w.lots.stone_bridge = { id: 'stone_bridge', x: bp[0], z: bp[1], hw: 5, hd: RIVER_HALF_WIDTH + 9, rot: Math.atan2(bq[1] - bp[1], bq[0] - bp[0]), virtual: true, onWater: true };
   placeFletcherWorkshop(w);
   placePalace(w);
+  // the dense plots new houses take from 2026-10-23 on (ids from DENSE_ID), laid out round everything else;
+  // houses already standing keep their plots, and a dense plot on one of them is passed over (simulate.js)
+  w.densePlots = buildPlots(w, seed, { dense: true });
   return w;
 }
 
@@ -198,6 +201,7 @@ function placeFletcherWorkshop(w) {
 // its first lot in the east (the streets there already steer round that ground), the quarter's streets
 // leave the castle approach, and its wide plots (`w.finePlots`, ids from FINE_ID) take the finer houses.
 export const FINE_ID = 100000;
+export const DENSE_ID = 200000;
 const NOBLE_STREETS = [
   { id: 'noble_avenue', kind: 'main', width: 7, parent: 'approach', pts: [[74, 1], [74, 40], [78, 80], [84, 120], [88, 160], [92, 200], [94, 232]] },
   { id: 'noble_east1', parent: 'noble_avenue', pts: [[80, 94], [115, 96], [158, 104]] },
@@ -589,11 +593,12 @@ export function isWater(w, x, z) {
 }
 
 // ---------------------------------------------------------------- plots
-function buildPlots(w, seed) {
+function buildPlots(w, seed, { dense = false } = {}) {
   const blockers = new SpatialHash(40);
   const add = (b) => blockers.insert(obbAabb(b), b);
   for (const s of w.pathIndex.segs) add(segmentObb(s.ax, s.az, s.bx, s.bz, s.hw + 1));
-  for (const l of Object.values(w.lots)) if (!l.virtual) add(grow(l, 2.5));
+  for (const l of Object.values(w.lots)) if (!l.virtual || (dense && l.hw > 0)) add(grow(l, 2.5));
+  if (dense) for (const p of w.finePlots) add(grow(p, 1));
   for (const s of w.wall2.segments) add(grow(s, 3));
   for (const t of w.wall2.towers) add({ x: t[0], z: t[1], hw: 7, hd: 7, rot: 0 });
   for (const f of w.fields) add(grow(f, 2));
@@ -603,17 +608,20 @@ function buildPlots(w, seed) {
   // grows as ribbons along its streets rather than as a block.
   const cands = [];
   for (const road of w.roads) {
-    const r = rng(seed, 'plots', road.id);
+    if (dense && road.noble) continue; // the Noble Quarter's streets keep their wide plots
+    const r = rng(seed, dense ? 'plots2' : 'plots', road.id);
     const pl = polyline(road.pts);
     for (const side of [-1, 1]) {
       let s = road.id === 'approach' ? 4 : r.float(5, 9);
       while (s < pl.total - 6) {
         const main = road.kind === 'main';
-        const width = main ? r.float(5.8, 9) : r.float(6.5, 10.5);
+        // dense (owner 2026-10-23): narrow medieval frontages close together, so more houses fit on a street
+        const width = dense ? (main ? r.float(5.2, 6.6) : r.float(5.6, 7.4)) : main ? r.float(5.8, 9) : r.float(6.5, 10.5);
         const depth = main ? r.float(18, 27) : r.float(14, 21);
-        const gap = r.chance(0.1) ? r.float(3.5, 8) : r.float(0.5, 1.6); // the odd gap: a yard or an alley
+        const gap = dense ? (r.chance(0.05) ? r.float(3, 5) : r.float(0.2, 0.5))
+          : r.chance(0.1) ? r.float(3.5, 8) : r.float(0.5, 1.6); // the odd gap: a yard or an alley
         const [px, pz, ang] = pl.at(s + width / 2);
-        const setback = r.float(1.3, 3);
+        const setback = dense ? r.float(1.0, 1.6) : r.float(1.3, 3);
         const off = road.width / 2 + setback + depth / 2;
         cands.push({
           x: px - Math.sin(ang) * off * side,
@@ -642,9 +650,9 @@ function buildPlots(w, seed) {
     let bad = false;
     for (const b of blockers.query(box)) if (obbOverlap(c, b)) { bad = true; break; }
     if (bad) continue;
-    for (const p of accepted.query(box)) if (obbOverlap(grow(c, 0.6), p)) { bad = true; break; }
+    for (const p of accepted.query(box)) if (obbOverlap(grow(c, dense ? 0.1 : 0.6), p)) { bad = true; break; }
     if (bad) continue;
-    c.id = plots.length;
+    c.id = (dense ? DENSE_ID : 0) + plots.length;
     c.y = hc;
     c.yMin = Math.min(...hs, hc);
     accepted.insert(box, c);

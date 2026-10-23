@@ -3,8 +3,9 @@
 // abandoned and ruin states; individually animated houses for today's construction.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { heightAt } from '../../sim/world.js';
+import { heightAt, DENSE_ID } from '../../sim/world.js';
 import { houseStyle, houseFloors } from '../../sim/simulate.js';
+import { insideWall2 } from '../../sim/wall.js';
 import { hash, rand01 } from '../../sim/prng.js';
 import { gableGeo, boxGeo, cylGeo } from './kit.js';
 import { buildHouseVariant, propGeos } from './houseKit.js';
@@ -15,7 +16,7 @@ const WALL_COLORS = ['#efe6d2', '#e2c48c', '#e6c3b4', '#cfd5d6', '#d8c6a4', '#f4
 const q05 = (v) => Math.round(v * 2) / 2;
 
 /** Which variant a house uses, and where it stands. */
-export function houseShape(seed, house, plot, w) {
+export function houseShape(seed, house, plot, w, { terrace = false } = {}) {
   const st = houseStyle(seed, plot.id);
   const h = hash(seed, 'arch', plot.id);
   const cap = house.cap0 ?? house.capacity; // as built: storeys added later keep the footprint
@@ -27,12 +28,18 @@ export function houseShape(seed, house, plot, w) {
   else if (built === 1 && h % 5 === 2) arch = 'stone';
   else if (built >= 2 && h % 7 < 2) arch = 'stone';
   if (plot.fine) arch = 'fine'; // the Noble Quarter's town houses (owner 2026-10-22)
-  const W = plot.fine ? Math.min(q05(2 * plot.hw - 2.5), 12) : Math.max(5, Math.min(q05(2 * plot.hw - 1.0), cap >= 4 ? 9 : 8));
+  // terraced rows inside the walls: the house fills its plot's frontage and the gap to the next plot, square to
+  // the street, its front on one line with the neighbours' fronts
+  const row = terrace && !plot.fine ? streetLine(w, plot) : null;
+  const W = plot.fine ? Math.min(q05(2 * plot.hw - 2.5), 12) : row ? Math.min(q05(2 * plot.hw + (plot.id >= DENSE_ID ? 0.4 : 1.1)), 11.5)
+    : Math.max(5, Math.min(q05(2 * plot.hw - 1.0), cap >= 4 ? 9 : 8));
   const D = plot.fine ? 10 : Math.max(5, Math.min(q05(Math.min(2 * plot.hd - 6, cap >= 4 ? 8.5 : 7)), 8.5));
   const side = plot.facing || 1;
-  const c = Math.cos(plot.rot), s = Math.sin(plot.rot);
+  const rot = row ? row.rot : plot.rot;
+  const c = Math.cos(rot), s = Math.sin(rot);
   const nx = -s, nz = c;
-  const lz = -side * (plot.hd - D / 2 - (plot.fine ? 2.5 : 1.0)); // front of the house on the street, croft behind
+  // front of the house on the street, croft behind
+  const lz = row ? -side * (row.dist - row.halfWidth - 0.9 - D / 2) : -side * (plot.hd - D / 2 - (plot.fine ? 2.5 : 1.0));
   const hx = plot.x + nx * lz, hz = plot.z + nz * lz;
   let hmin = Infinity, hmax = -Infinity;
   for (const [u, v] of [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, 0]]) {
@@ -41,14 +48,32 @@ export function houseShape(seed, house, plot, w) {
     hmin = Math.min(hmin, hh); hmax = Math.max(hmax, hh);
   }
   const base = hmax + 0.15;
-  const yaw = -plot.rot + (side < 0 ? Math.PI : 0);
+  const yaw = -rot + (side < 0 ? Math.PI : 0);
   const matrix = new THREE.Matrix4().compose(new THREE.Vector3(hx, base, hz), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)), new THREE.Vector3(1, 1, 1));
   return {
-    st, arch, floors, W, D, side, base, hmin, matrix, x: hx, z: hz, rot: plot.rot, plot, yaw,
+    st, arch, floors, W, D, side, base, hmin, matrix, x: hx, z: hz, rot, plot, yaw,
     wallColor: WALL_COLORS[hash(seed, 'wall', plot.id) % WALL_COLORS.length], roofColor: ROOF_COLORS[hash(seed, 'roof', plot.id) % ROOF_COLORS.length],
     chimney: st.chimney || arch === 'stone', dormer: floors >= 2 && h % 4 === 0,
     key: (damaged) => `${arch}|${W}|${D}|${floors}|${st.chimney || arch === 'stone' ? 1 : 0}|${floors >= 2 && h % 4 === 0 ? 1 : 0}|${damaged ? 1 : 0}`,
   };
+}
+
+/** The street a plot fronts: its direction there (turned to the plot's own) and how far the plot's centre is from it. */
+function streetLine(w, plot) {
+  const road = w.allPaths.find((r) => r.id === plot.road);
+  if (!road) return null;
+  let best = null;
+  for (let i = 1; i < road.pts.length; i++) {
+    const [ax, az] = road.pts[i - 1], [bx, bz] = road.pts[i];
+    const dx = bx - ax, dz = bz - az, l2 = dx * dx + dz * dz || 1e-9;
+    const u = Math.max(0, Math.min(1, ((plot.x - ax) * dx + (plot.z - az) * dz) / l2));
+    const d = Math.hypot(plot.x - ax - u * dx, plot.z - az - u * dz);
+    if (!best || d < best.dist) best = { dist: d, ang: Math.atan2(dz, dx) };
+  }
+  let rot = best.ang;
+  while (rot - plot.rot > Math.PI / 2) rot -= Math.PI;
+  while (plot.rot - rot > Math.PI / 2) rot += Math.PI;
+  return { rot, dist: best.dist, halfWidth: road.width / 2 };
 }
 
 const variantCache = new Map();
@@ -109,7 +134,7 @@ export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 300 
 
   for (const h of state.houses) {
     const plot = plots.get(h.plot);
-    const sh = houseShape(seed, h, plot, w);
+    const sh = houseShape(seed, h, plot, w, { terrace: !!state.wall2?.pts && insideWall2(state.wall2.pts, plot.x, plot.z, 0.03, w) });
     shapes.set(h.id, sh);
     if (animatedIds.has(h.id)) continue;
     const ch = getChunk(sh.x, sh.z);

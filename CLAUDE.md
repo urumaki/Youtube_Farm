@@ -113,6 +113,12 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   and quiver instead of the spear. The everyday guard shots are patrol, sparring or the changing of the
   guard. The castle's background guards (`life.js`) are hidden during these shots. Test with
   `--real --gallery "guard:change,guard:wall2night"` (the Second Wall ones need a state where it is done).
+- Terraced houses and dense plots (owner 2026-10-23): inside the Second Wall every house fills its plot's frontage
+  and the gap to the next, square to the street with its front on one line (`streetLine` in `houses.js`), so
+  the streets read as rows. New houses take the dense plots (`w.densePlots`, ids from `DENSE_ID`, narrow
+  5-7 m frontages close together, laid out after everything else; `s.plotsV` 2, `s.nextDense`), passing over any
+  plot a standing house covers, so houses already built never move and more fit on each street (at 1300
+  subscribers, 47 of the new houses stand inside the walls). The old plot list (`w.plots`) stays for them.
 - Training yard (owner 2026-10-23, `castle.js`): a sanded square in the castle courtyard between the well and
   the barracks, with a rail fence, two straw dummies, a rack of spears and two shields. The guards' and knights'
   straw dummy drill (variant `dummy`) now happens there instead of in their croft (`castle.training`,

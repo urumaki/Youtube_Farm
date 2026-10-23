@@ -47,7 +47,7 @@ function farTreeGeo(conifer) {
 export function buildNature(w, state, M, { season = 'summer' } = {}) {
   const seed = w.seed;
   const block = new SpatialHash(50);
-  for (const p of [...w.plots, ...w.finePlots]) block.insert(obbAabb(grow(p, 2)), grow(p, 2));
+  for (const p of [...w.plots, ...w.finePlots, ...w.densePlots]) block.insert(obbAabb(grow(p, 2)), grow(p, 2));
   for (const l of Object.values(w.lots)) if (!l.virtual) block.insert(obbAabb(grow(l, 6)), grow(l, 6));
   for (const f of w.fields) block.insert(obbAabb(grow(f, 3)), grow(f, 3));
   // no trees on the Second Wall's route (planned round the houses, src/sim/wall.js)

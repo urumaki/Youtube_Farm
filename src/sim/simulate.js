@@ -9,7 +9,7 @@ import { pickStory } from './stories.js';
 import { pickFeatured, shownJobs, markShown } from './featured.js';
 import { planScenes, tavernToday, staleJob } from './scenes.js';
 import { planWall2, wallBlockers, insideWall2, crossesFields } from './wall.js';
-import { obbOverlap } from './geometry.js';
+import { obbOverlap, obbAabb, SpatialHash } from './geometry.js';
 
 export const SCHEMA_VERSION = 1;
 export const ABANDON_DAYS = 7;
@@ -99,6 +99,7 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   const s = withNameFields(structuredClone(prev));
   const seed = s.seed;
   const w = world(seed);
+  if (s.plotsV !== 2) { s.plotsV = 2; s.nextDense = 0; } // new houses take the dense plots from now on
   const target = Math.max(0, Math.floor(subscribers));
   s.day += 1;
   s.date = date;
@@ -397,9 +398,24 @@ function raiseHouse(s, day, diff) {
 
 /**
  * The next plot for a new house in the order the town grows, never one on the Second Wall's route.
- * `s.nextPlot` is where to look next (plots before it are used or lie on the wall).
+ * `s.nextPlot` is where to look next (plots before it are used or lie on the wall). From 2026-10-23 (owner: houses
+ * closer together, more plots) new houses take the dense plots (`s.plotsV` 2, `s.nextDense`), passing over the
+ * ones a standing house already covers.
  */
 function nextFreePlot(s, w) {
+  if (s.plotsV === 2) {
+    const wall = s.wall2 ? blockersOf(w, s.wall2) : [];
+    const built = new SpatialHash(40);
+    for (const p of s.plots) built.insert(obbAabb(p), p);
+    const taken = (p) => wall.some((b) => obbOverlap(b, p)) || [...built.query(obbAabb(p))].some((q) => obbOverlap(p, q));
+    let i = s.nextDense ?? 0;
+    while (w.densePlots[i] && taken(w.densePlots[i])) i++;
+    s.nextDense = i + 1;
+    const p = w.densePlots[i];
+    if (!p) return null;
+    const { id, x, z, y, yMin, hw, hd, rot, facing, road } = p;
+    return { id, x, z, y, yMin, hw, hd, rot, facing, road };
+  }
   let i = s.nextPlot ?? s.plots.length;
   const wall = s.wall2 ? blockersOf(w, s.wall2) : [];
   while (w.plots[i] && wall.some((b) => obbOverlap(b, w.plots[i]))) i++;

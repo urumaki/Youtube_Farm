@@ -33,6 +33,8 @@
     "scenes": { "type": ["object", "null"] },
     "wall2": { "type": ["object", "null"] },
     "nextPlot": { "type": "integer", "minimum": 0 },
+    "plotsV": { "type": "integer" },
+    "nextDense": { "type": "integer", "minimum": 0 },
     "nextFine": { "type": "integer", "minimum": 0 }
   },
   "$defs": {
