@@ -125,6 +125,8 @@ const JOB_SCENES = {
   // in-between goals: the town crier rings a hand bell by the notice board, the executioner (nobody gets
   // hurt in the kingdom) chops cabbages on the block
   crier: { period: 0.42, raise: -2.75, down: -2.2, bend: 0, sound: 'none', tool: 'handbell', props: 'notice', smooth: true, left: -1.3 },
+  // owner 2026-10-23: up on the Crier's Stand (its own bell and notice board), half turned to the square
+  'crier:stand': { period: 0.42, raise: -2.75, down: -2.2, bend: 0, sound: 'none', tool: 'handbell', props: 'none', smooth: true, left: -1.3, turn: 0.4, radius: 6.2 },
   // owner 2026-10-22: the tailor sews at a table, the physician grinds a remedy, the tax collector counts coins
   tailor: { period: 0.9, raise: -1.55, down: -1.08, bend: 0.15, sound: 'none', tool: null, props: 'sewing', smooth: true, left: -1.05 },
   physician: { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95 },

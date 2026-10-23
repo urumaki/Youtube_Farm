@@ -461,7 +461,7 @@ const WORK_BEDS = { blacksmith: [['fire', 0.25]], toolsmith: [['fire', 0.25]], b
 function sceneFor(cue) {
   if (cue.kind === 'house') return cue.rebuilt ? 'rebuilt' : 'house';
   if (cue.kind === 'loss') return 'loss';
-  if (cue.kind === 'villager') return { walls: 'patrol', wall2: 'patrol', sparring: 'sparring', boat: 'boat', rod: 'boat', net: 'boat', night: 'nightwatch', wallnight: 'nightwatch', wall2night: 'nightwatch', change: 'change', wall2change: 'change' }[cue.variant] ?? null; // work: synced strikes below
+  if (cue.kind === 'villager') return { inside: 'tavern', walls: 'patrol', wall2: 'patrol', sparring: 'sparring', boat: 'boat', rod: 'boat', net: 'boat', night: 'nightwatch', wallnight: 'nightwatch', wall2night: 'nightwatch', change: 'change', wall2change: 'change' }[cue.variant] ?? null; // work: synced strikes below
   if (cue.kind === 'caravan') return 'caravan';
   if (cue.kind === 'tavern') return 'tavern';
   if (cue.kind === 'church') return 'church';

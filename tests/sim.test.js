@@ -488,6 +488,20 @@ test('guards on the Second Wall only once it is finished', async () => {
   for (const v of ['walls', 'wallnight', 'change']) assert.ok(early.has(v), `${v} on the castle walls`);
 });
 
+test('innkeepers and brewers serve inside the tavern once it stands, the crier calls from his stand (owner 2026-10-23)', async () => {
+  const { pickVariant, sceneReady } = await import('../src/sim/scenes.js');
+  const before = { buildings: [{ id: 'tavern', status: 'construction' }] }, open = { buildings: [{ id: 'tavern', status: 'done' }, { id: 'crier_stand', status: 'done' }] };
+  const picks = (job, state, croft = false) => new Set(Array.from({ length: 60 }, (_, id) => pickVariant(job, SEED, 9, id, new Set(), { croft, ready: (v) => sceneReady(state, v) })));
+  for (const job of ['innkeeper', 'brewer']) {
+    assert.deepEqual([...picks(job, open)], ['inside'], `${job} once the tavern is open`);
+    assert.deepEqual([...picks(job, open, true)], ['inside'], `${job} with a visitor`);
+    assert.ok(!picks(job, before).has('inside'), `${job} before the tavern is open`);
+  }
+  assert.deepEqual([...picks('crier', open)], ['stand']);
+  assert.deepEqual([...picks('crier', before)], [null], 'no stand yet: the croft');
+  assert.deepEqual([...picks('crier', open, true)], [null], 'a visitor: the croft');
+});
+
 test('the Second Wall never stands on a house: planned round the town, houses in its way move, new ones keep off it', async () => {
   const { wallBlockers } = await import('../src/sim/wall.js');
   const { obbOverlap } = await import('../src/sim/geometry.js');

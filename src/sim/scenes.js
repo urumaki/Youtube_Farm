@@ -21,9 +21,11 @@ export const VARIANTS = {
   farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
   blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw'],
   baker: ['oven', 'knead'], fisherman: ['rod', 'net', 'boat'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
-  innkeeper: ['tavern', 'barrel'], brewer: ['tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
-  // owner 2026-10-23: at their own place once it stands (else their usual scene in the croft), with a queue in front
-  merchant: ['stall'], taxcollector: ['counting'], apothecary: ['shop'],
+  // owner 2026-10-23: innkeepers and brewers serve behind the bar inside the tavern once it stands ('inside')
+  innkeeper: ['inside', 'tavern', 'barrel'], brewer: ['inside', 'tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
+  // owner 2026-10-23: at their own place once it stands (else their usual scene in the croft), with a queue in front;
+  // the crier calls out from the Crier's Stand
+  merchant: ['stall'], taxcollector: ['counting'], apothecary: ['shop'], crier: ['stand'],
 };
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
 // the fisherman always fishes on the river (owner 2026-10-22): from a jetty with a rod or a net, or in a boat
@@ -31,9 +33,14 @@ export const AWAY_VARIANTS = new Set(['walls', 'sparring', 'boat', 'rod', 'net',
 // scenes at dusk (the light changes for the shot)
 export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished
-const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop' };
-/** False for a scene whose place is not built yet (the Second Wall's wall walk, the Counting House...). */
-export const sceneReady = (state, variant) => !NEEDS[variant] || !!state?.buildings?.some((b) => b.id === NEEDS[variant] && b.status === 'done');
+const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop', inside: 'tavern', stand: 'crier_stand' };
+// croft scenes no longer used once the building stands (the innkeeper's barrel in the croft, once the tavern is open)
+const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
+// scenes on a platform with no room for a visitor: a host with a guest stays in the croft
+const SOLO_VARIANTS = new Set(['stand']);
+const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');
+/** False for a scene whose place is not built yet (the Second Wall's wall walk, the Counting House...) or no longer used. */
+export const sceneReady = (state, variant) => (!NEEDS[variant] || built(state, NEEDS[variant])) && !(UNTIL[variant] && built(state, UNTIL[variant]));
 // the guards' everyday shots are the same scenes as a guard's own walls and sparring shots
 const AMBIENT_KEY = { patrol: 'guard:walls', sparring: 'guard:sparring', change: 'guard:change' };
 const FIGHTERS = ['guard', 'knight', 'warrior'];
@@ -72,7 +79,7 @@ export function churchToday(state, tavern) {
  * when there is a choice, not one shown in the last days (`isRecent(variant)`).
  */
 export function pickVariant(job, seed, day, id, used = new Set(), { croft = false, isRecent = () => false, ready = () => true } = {}) {
-  const opts = VARIANTS[job]?.filter((v) => !(croft && AWAY_VARIANTS.has(v)) && ready(v));
+  const opts = VARIANTS[job]?.filter((v) => !(croft && (AWAY_VARIANTS.has(v) || SOLO_VARIANTS.has(v))) && ready(v));
   if (!opts?.length) return null;
   const k = Math.floor(rand01(seed, 'variant', day, id) * opts.length);
   const order = opts.map((_, i) => opts[(k + i) % opts.length]);
@@ -94,7 +101,8 @@ export function planScenes(state, { featured, tavern, church = null, avoidJobs =
   for (const f of shots) {
     const n = state.names[f.id];
     const job = f.job === 'apprentice' && n?.wants ? n.wants : f.job;
-    const v = pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), ready: (x) => sceneReady(state, x) });
+    // no innkeeper shot inside the tavern on the day the tavern interior closes the video
+    const v = pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), ready: (x) => sceneReady(state, x) && !(tavern && x === 'inside') });
     if (v) used.add(v);
     variants[f.id] = v;
   }

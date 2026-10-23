@@ -19,6 +19,8 @@ const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 export { VARIANTS, AWAY_VARIANTS, pickVariant };
 // scenes inside a building (the baker's bakehouse, bakery.js): own camera, a hard cut in and out
 export const indoorScene = (job, variant) => job === 'baker' && BAKEHOUSE_VARIANTS.has(variant);
+// the innkeeper or brewer behind the bar of the tavern (tavern.js): own camera, a hard cut in and out, the room's lamps
+export const barScene = (variant) => variant === 'inside';
 // the croft shots move the camera in different ways, never the same way twice in a row
 export const CAM_STYLES = ['push', 'reveal', 'orbit', 'low'];
 
@@ -101,7 +103,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const variant = scenes && n.id in scenes.variants ? scenes.variants[n.id] : pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g, ready: (v) => sceneReady(state, v) });
     if (variant) usedVariants.add(variant);
     const castleShot = AWAY_VARIANTS.has(variant);
-    const indoor = indoorScene(sceneJob, variant);
+    const indoor = indoorScene(sceneJob, variant) || barScene(variant);
     targets.push({
       kind: 'villager', id: n.id, job: n.job, sceneJob, variant, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
       // a hard cut into each villager (a flight down into a croft only shows roofs and grass)

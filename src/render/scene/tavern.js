@@ -21,8 +21,10 @@ const BAR_X = 3.5;
  * @param item     buildings.items.tavern (its group carries the lot transform)
  * @param patrons  [{ name, job }] named villagers drinking at the tables
  * @param keepers  [{ name, job }] named innkeepers/brewers behind the bar (up to 2)
+ * @param bar      the shot of one innkeeper or brewer at work (owner 2026-10-23): no small name tags (the shot's own big
+ *                 label names them), a closer camera on the bar, and `guest` ({ name, job } or null) standing at the counter
  */
-export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [] }) {
+export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [], bar = false, guest = null }) {
   const group = new THREE.Group();
   item.group.add(group);
   const toWorld = (x, y, z) => new THREE.Vector3(x, y, z).applyMatrix4(item.group.matrix);
@@ -193,8 +195,17 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [] 
     P.body.add(apron);
     group.add(P.root);
     people.push({ P, kind: spot.kind });
-    if (k) labels.push({ pos: toWorld(BAR_X + 0.75, F + 2.45, spot.z), title: k.name, sub: JOBS[k.job]?.label || k.job });
+    if (k && !bar) labels.push({ pos: toWorld(BAR_X + 0.75, F + 2.45, spot.z), title: k.name, sub: JOBS[k.job]?.label || k.job });
   });
+  // a visitor at the counter, tankard in hand, facing the barkeeper
+  if (guest) {
+    const G = rig(M, JOBS[guest.job]?.color || '#7a6a55');
+    G.root.position.set(BAR_X - 0.75, F, -0.85);
+    G.root.rotation.y = Math.PI / 2 - 0.35;
+    G.r.hand.add(toolGeo('tankard', M));
+    group.add(G.root);
+    people.push({ P: G, kind: 'guest' });
+  }
 
   // ---------------------------------------------------------------- camera
   // along the front wall from the door corner: first the bar and the barkeepers, then a slow turn
@@ -205,12 +216,17 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [] 
     const k = ease(u);
     return { pos: camFrom.clone().lerp(camTo, k), look: lookFrom.clone().lerp(lookTo, ease(Math.max(0, (u - 0.25) / 0.75))) };
   };
+  // the barkeeper's own shot: in front of the counter, a slow dolly toward the one pouring
+  const barFrom = toWorld(-1.4, 2.15, -3.5), barTo = toWorld(0.0, 1.95, -3.1), barLook = toWorld(BAR_X + 0.4, F + 1.3, -1.2);
+  const barCam = (u) => ({ pos: barFrom.clone().lerp(barTo, ease(u)), look: barLook.clone() });
 
   return {
     group,
     labels,
-    cam,
-    focus: toWorld(0, 1.2, 0),
+    cam: bar ? barCam : cam,
+    focus: bar ? toWorld(BAR_X + 0.75, F + 1.2, barSpots[0].z) : toWorld(0, 1.2, 0),
+    labelPos: toWorld(BAR_X + 0.75, F + 2.45, barSpots[0].z),
+    labelPos2: guest ? toWorld(BAR_X - 0.75, F + 2.15, -0.85) : null,
     update(t, inside) {
       for (const { l, i } of lights) {
         l.visible = inside; // a light count change recompiles shaders once, only on the cut in and out
@@ -238,6 +254,11 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [] 
           P.l.g.rotation.set(-1.35 + 0.08 * Math.sin(t * 2.1), 0, -0.25);
           P.body.rotation.set(-0.05, 0.12 * Math.sin(t * 1.3), 0.05 * Math.sin(t * 2.6));
           P.root.position.y = F + 0.03 * Math.abs(Math.sin(t * 4.2)); // tapping along
+        } else if (p.kind === 'guest') { // leans on the counter, a swig now and then
+          const u = (t / 3.6) % 1, lift = u < 0.15 ? ease(u / 0.15) : u < 0.35 ? 1 : u < 0.45 ? 1 - ease((u - 0.35) / 0.1) : 0;
+          P.r.g.rotation.set(THREE.MathUtils.lerp(-1.0, -2.1, lift), 0, 0);
+          P.l.g.rotation.set(-1.05, 0, 0.1);
+          P.body.rotation.x = 0.1 - 0.15 * lift;
         } else if (p.kind === 'pour') {
           P.r.g.rotation.set(-1.35 + 0.05 * Math.sin(t * 2), 0, 0);
           P.l.g.rotation.set(-1.0, 0, 0.15);

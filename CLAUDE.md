@@ -230,6 +230,15 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   kingdom already reached is queued like a new one (the Counting House on the real kingdom). Test with
   `npm run render -- --real --subs 775 --built counting_house,apothecary_shop --gallery "merchant:stall,taxcollector:counting,apothecary:shop"`
   (`--built` makes buildings stand finished in a test render).
+  More of them (owner 2026-10-23, `PLACES` in `main.js`): once their building stands, every scene of the job happens in
+  front of it with the croft scene's props (visits too): the smith in the forge's yard under the awning, the woodcutter by
+  the sawmill's log pile, the mason on the quarry floor, the miller at the windmill door, the executioner chopping cabbages
+  at the foot of the pillory (the camera on the market square); farmers work in one of the odd fields (no hay bales there),
+  standing on the crop (`atField`). The crier rings his bell up on the Crier's Stand (`crier:stand`, no visit: a host with a
+  guest stays in the croft, `SOLO_VARIANTS`). Innkeepers and brewers serve behind the bar inside the tavern once it is open
+  (`inside`: `buildTavernInterior(..., { bar: true, guest })`, own camera and lamps, a visitor stands at the counter; never
+  on a tavern day); their croft scenes are no longer picked then (`UNTIL` in `scenes.js`). Test with
+  `npm run render -- --real --subs 1400 --gallery "blacksmith:anvil,woodcutter:chop,stonemason:block,miller:sacks,farmer:hoe,executioner,crier:stand,innkeeper:inside+fisherman"`.
 - Church interior (owner 2026-10-23, `church.js`): the Chapel, or the Cathedral once built, with pews both sides of a red
   carpet, villagers praying on them (hands together, heads bowed), stained glass, candles, the priest blessing from behind
   the altar (in the Cathedral always a bishop with mitre and crozier; another named cleric reads at the lectern). The
