@@ -135,7 +135,7 @@ export function buildCaravan({ w, named, M, seed, yFn }) {
         const s = sHead + row * ROW + rand01(seed, 'car', i) * 0.4;
         place(figures[i], s, side * 0.75);
         figures[i].position.y += Math.abs(Math.sin(t * 7 + i)) * 0.05;
-        labels[i].pos.copy(figures[i].position).add(new THREE.Vector3(0, 2.3 + (i % 2) * 0.55, 0)); // stagger the pair
+        labels[i].pos.copy(figures[i].position).add(new THREE.Vector3(0, 2.25 + (i % 3) * 0.45, 0)); // three heights, so more tags fit
       });
       wagons.forEach((wg, k) => {
         const s = sHead + rows * ROW + 6.6 + k * 9.5; // the ox walks behind the last row

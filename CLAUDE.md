@@ -46,7 +46,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - `src/render/scene/` Three.js scene rendered frame by frame in headless Chromium (`capture.js`).
   Shot plan in `timeline.js`. Days with named villagers (owner's choice, 2026-10-19): the video opens on the
   caravan of today's named villagers with name tags (`caravan.js`, no castle hook; the counter shows over it
-  for 2 s) → up to 2 new buildings, ~2.5 s each → 3 named villagers at work (`work.js`) → wide shot with
+  for 2 s; owner 2026-10-23: smaller tags at three heights, and those that would overlap take turns
+  through the shot, so every newcomer's name and job shows for a while, `overlay.js`) → up to 2 new buildings, ~2.5 s each → 3 named villagers at work (`work.js`) → wide shot with
   credits (23.5-27 s: a still card with the 10 newest names and "and N more villagers", so it stays
   readable as names grow) → call to action. The caravan shot lasts 4.5 s (owner: 4-5 s at most); the other shots share the
   rest by weight. New houses are not shown one by one on those days. Once the tavern is built,

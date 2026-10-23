@@ -24,6 +24,7 @@ const CSS = `
 #ov .tag{position:absolute;transform:translate(-50%,-100%);padding:4px 10px 5px;border-radius:12px;background:rgba(18,29,71,.82);border:2px solid #e3b23c;white-space:nowrap;text-align:center;line-height:1.05}
 #ov .tag .t{font-family:'Cinzel',serif;font-weight:700;font-size:22px;color:#fff4d6}
 #ov .tag .s{font-weight:700;font-size:14px;color:#e3b23c;letter-spacing:1px;text-transform:uppercase}
+#ov .tag.small{padding:3px 7px 4px;border-radius:10px}#ov .tag.small .t{font-size:18px}#ov .tag.small .s{font-size:11px}
 #ov .banner{position:absolute;left:0;right:0;top:46px;text-align:center;font-family:'Cinzel',serif;font-weight:700;font-size:48px;color:#fff4d6;text-shadow:0 4px 0 #6b4a12,0 6px 20px rgba(0,0,0,.8)}
 #ov .pin{position:absolute;width:4px;background:#e3b23c;transform:translateX(-50%)}
 #ov .goal{position:absolute;left:20px;right:20px;top:330px;text-align:center;font-weight:800;font-size:48px;line-height:1.2;text-shadow:0 3px 14px rgba(0,0,0,.9)}
@@ -161,13 +162,20 @@ export function createOverlay(root, data) {
         banner.style.opacity = hook ? 0 : Math.max(0, Math.min(1, (ev.activeU - 0.08) * 6, (t - 2.2) * 6, (0.97 - ev.activeU) * 12));
         const sw = W - SAFE.left - SAFE.right, sh = H - SAFE.top - SAFE.bottom;
         const placed = [];
-        const items = tg.labels.map((lb) => {
+        // the caravan (owner 2026-10-23: more names): smaller tags, and the ones that would overlap take turns, so
+        // that every newcomer's tag shows for a while; the turn changes a few times in the shot
+        const caravan = tg.kind === 'caravan';
+        const n = tg.labels.length, turns = caravan ? Math.min(4, Math.max(1, Math.ceil(n / 9))) : 1;
+        const turn = Math.min(turns - 1, Math.floor(((ev.activeU - 0.08) / 0.89) * turns));
+        const lead = Math.round((turn * n) / turns); // the first newcomer whose tag comes first this turn
+        const items = tg.labels.map((lb, i) => {
           v.copy(lb.pos).project(camera);
-          return { lb, x: (v.x * 0.5 + 0.5) * W - SAFE.left, y: (-v.y * 0.5 + 0.5) * H - SAFE.top, z: v.z };
-        }).filter((it) => it.z < 1 && it.x > -40 && it.x < sw + 40 && it.y > 130 && it.y < sh - 200).sort((a, b) => a.z - b.z);
+          return { lb, x: (v.x * 0.5 + 0.5) * W - SAFE.left, y: (-v.y * 0.5 + 0.5) * H - SAFE.top, z: v.z, rank: (i - lead + n) % n };
+        }).filter((it) => it.z < 1 && it.x > -40 && it.x < sw + 40 && it.y > 130 && it.y < sh - 200).sort((a, b) => (caravan ? a.rank - b.rank : 0) || a.z - b.z);
         items.forEach((it, i) => {
           let el = tagEls[i];
-          if (!el) { el = document.createElement('div'); el.className = 'tag'; ov.querySelector('.safe').appendChild(el); tagEls[i] = el; }
+          if (!el) { el = document.createElement('div'); ov.querySelector('.safe').appendChild(el); tagEls[i] = el; }
+          el.className = caravan ? 'tag small' : 'tag';
           el.innerHTML = `<div class="t">${esc(it.lb.title)}</div><div class="s">${esc(it.lb.sub || '')}</div>`;
           el.style.display = 'block';
           const wEl = el.offsetWidth, hEl = el.offsetHeight;
