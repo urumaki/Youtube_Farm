@@ -83,7 +83,9 @@ export function buildCaravan({ w, named, M, seed, yFn }) {
   if (!named.length) return null;
   const road = w.roads.find((r) => r.id === 'east') || w.roads[0];
   const pl = polyline(road.pts);
-  const people = named.slice(0, 40);
+  // three abreast (owner 2026-10-23: many more names), up to 60 walking; the rest ride in the wagons
+  const FILES = 3;
+  const people = named.slice(0, 60);
   const nWagons = Math.ceil(named.length / 50);
   const group = new THREE.Group();
   group.visible = false;
@@ -96,7 +98,7 @@ export function buildCaravan({ w, named, M, seed, yFn }) {
     return f;
   });
   const wagons = Array.from({ length: nWagons }, (_, k) => { const wg = wagon(M, seed, k); group.add(wg.g); return wg; });
-  const rows = Math.ceil(people.length / 2);
+  const rows = Math.ceil(people.length / FILES);
   // the column's head walks from s0 + span toward the market; wagons follow the people
   const span = 14;
   const s0 = Math.min(pl.total - 40, 70);
@@ -131,9 +133,9 @@ export function buildCaravan({ w, named, M, seed, yFn }) {
       const walked = (t - t0 + 1.5) * SPEED;
       const sHead = s0 + span - walked;
       people.forEach((p, i) => {
-        const row = Math.floor(i / 2), side = i % 2 ? 1 : -1;
+        const row = Math.floor(i / FILES), file = (i % FILES) - (FILES - 1) / 2;
         const s = sHead + row * ROW + rand01(seed, 'car', i) * 0.4;
-        place(figures[i], s, side * 0.75);
+        place(figures[i], s, file * 1.05);
         figures[i].position.y += Math.abs(Math.sin(t * 7 + i)) * 0.05;
         labels[i].pos.copy(figures[i].position).add(new THREE.Vector3(0, 2.25 + (i % 3) * 0.45, 0)); // three heights, so more tags fit
       });
