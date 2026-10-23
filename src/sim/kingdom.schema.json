@@ -34,6 +34,7 @@
     "wall2": { "type": ["object", "null"] },
     "nextPlot": { "type": "integer", "minimum": 0 },
     "plotsV": { "type": "integer" },
+    "buildQueue": { "type": "array", "items": { "type": "object", "required": ["id", "tier"] } },
     "nextDense": { "type": "integer", "minimum": 0 },
     "nextFine": { "type": "integer", "minimum": 0 }
   },

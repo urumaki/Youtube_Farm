@@ -124,7 +124,8 @@ test('tiers unlock at their thresholds with their unique jobs and buildings', ()
     assert.ok(at.state.unlockedTiers.includes(t.id), `${t.id} unlocked at ${t.at}`);
     assert.ok(at.diffs[1].unlocked.includes(t.id));
     t.unique.forEach((job, k) => assert.equal(jobFor(SEED, t.at - 1 + k), job));
-    for (const b of t.buildings) assert.ok(at.state.buildings.some((x) => x.id === b), `${b} started`);
+    // begun, or waiting for a day the video can show it (s.buildQueue)
+    for (const b of t.buildings) assert.ok([...at.state.buildings, ...at.state.buildQueue].some((x) => x.id === b), `${b} started or queued`);
   }
   // tiers never re-lock when the population shrinks
   const shrink = run([120, 40]).state;
@@ -135,10 +136,12 @@ test('tiers unlock at their thresholds with their unique jobs and buildings', ()
 
 test('construction finishes after the configured number of days', () => {
   let { state: s } = run([100]);
+  let day = 1;
+  while (!s.buildings.some((b) => b.id === 'chapel')) s = advance(s, { subscribers: 100, date: dateOf(++day) }).state; // queued first
   const chapel = s.buildings.find((b) => b.id === 'chapel');
   assert.equal(chapel.status, 'construction');
   for (let d = 1; d <= chapel.daysTotal; d++) {
-    const r = advance(s, { subscribers: 100, date: dateOf(1 + d) });
+    const r = advance(s, { subscribers: 100, date: dateOf(day + d) });
     s = r.state;
     const done = s.buildings.find((b) => b.id === 'chapel').status === 'done';
     assert.equal(done, d === chapel.daysTotal, `day ${d}`);
@@ -453,7 +456,7 @@ test('scenes: the same scene does not come back within three days', async () => 
 test('inside the Second Wall houses get another storey before new plots are used', async () => {
   const { houseFloors } = await import('../src/sim/simulate.js');
   const { insideWall2 } = await import('../src/sim/wall.js');
-  const { state: s0 } = run([0, 120, 260, 300]);
+  const { state: s0 } = run([0, 120, 260, 300, 300, 300, 300, 300, 300]); // the queued buildings begin a few a day
   assert.ok(s0.wall2, 'the Second Wall is begun');
   const plots0 = s0.plots.length;
   const { state: s, diff } = advance(s0, { subscribers: 420, date: dateOf(20) });
@@ -519,9 +522,10 @@ test('the University opens at 1000 below the castle; merchants, knights, scholar
   assert.ok(w.finePlots.length >= 20, `${w.finePlots.length} wide plots`);
   const others = [...w.plots, ...obstacles(w).filter((o) => !['road', 'wall2'].includes(o.kind)).map((o) => o.box)]; // wall2: the first plan, never built
   for (const p of w.finePlots) assert.ok(!others.some((o) => obbOverlap(p, o)), `noble plot ${p.id} overlaps`);
-  const { state: s, diffs } = run([300, 700, 990, 1100, 1300, 1500], DEFAULT_SEED);
+  // the University may wait a few days in the queue (only a few buildings begin each day)
+  const { state: s, diffs } = run([300, 700, 990, 1100, 1100, 1100, 1100, 1100, 1100, 1100, 1100, 1300, 1500], DEFAULT_SEED);
   checkInvariants(s);
-  assert.ok(diffs[3].buildingsStarted.includes('university'), 'the University is begun at 1000');
+  assert.ok(diffs.slice(3).some((d) => d.buildingsStarted.includes('university')), 'the University is begun after 1000');
   const fine = s.houses.filter((h) => h.fine);
   assert.ok(fine.length > 0, 'fine houses are built');
   const rich = new Set(['merchant', 'knight', 'scholar', 'physician', 'mayor', 'reeve', 'bishop', 'taxcollector', 'chronicler', 'admiral']);
@@ -569,4 +573,13 @@ test('comment words of 2026-10-22: typos and synonyms reach the jobs, the new jo
   assert.equal(tierOfJob('engineer')?.at, 2500);
   assert.equal(availableJobs(2499).has('engineer'), false);
   assert.equal(availableJobs(2500).has('engineer'), true);
+});
+
+test('no more buildings begin on a day than the video can show; the rest wait for the next days', () => {
+  const { state: s, diffs } = run([800, 800, 800, 800, 800, 800, 800, 800, 800, 800, 800, 800]);
+  const NO_SHOT = new Set(['fields', 'guardposts', 'charter_stone']);
+  for (const d of diffs) assert.ok(d.buildingsStarted.filter((b) => !NO_SHOT.has(b)).length <= 3, `day ${d.day}: ${d.buildingsStarted}`);
+  assert.ok(diffs[0].buildingsWaiting?.length > 0, 'some wait on the first day');
+  assert.equal(s.buildQueue.length, 0, 'all have begun in the end');
+  checkInvariants(s);
 });

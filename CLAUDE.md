@@ -207,6 +207,10 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   beam). The same day more comment words were added for jobs the kingdom has (typos like "gaurd", weaponsmith,
   pub, harbour, herbalist, messenger, bishop, politician/lawyer for the reeve, architect for the mason...), and a
   name asked for ("call me Hunter") is never read as a job request.
+- Buildings begin only when the video can show them (owner 2026-10-23): at most 2 a day once villagers have
+  names (3 before), as `timeline.js` shows them (`SHOWN_STARTS` in `simulate.js`); the others wait in
+  `s.buildQueue` (in tier order, commissions last) and begin on the next days (`diff.buildingsWaiting`). The
+  fields, the wall guard and the charter stone have no shot and take no room.
 - Commissions (owner 2026-10-23): buildings with no goal, begun on the next day the kingdom runs, whatever its
   size (`COMMISSIONS` in `tiers.js`, saved with tier `commission`). The first is the Fletcher's Workshop: a
   thatched timber workshop with bows on the wall, a fletching bench under a lean-to, a barrel of arrows, staves

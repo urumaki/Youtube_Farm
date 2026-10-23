@@ -14,6 +14,9 @@ import { obbOverlap, obbAabb, SpatialHash } from './geometry.js';
 export const SCHEMA_VERSION = 1;
 export const ABANDON_DAYS = 7;
 export const DEFAULT_SEED = hash('Subscriber Kingdom');
+// new buildings the video can show on one day, and the ones with no shot of their own (see timeline.js)
+const SHOWN_STARTS = 2;
+const NO_SHOT = new Set(['fields', 'guardposts', 'charter_stone']);
 
 export function genesis({ seed = DEFAULT_SEED, date = '1970-01-01' } = {}) {
   return {
@@ -164,14 +167,30 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
     if (days > 0) { s.pendingConstruction.push({ building: b, daysLeft: days, daysTotal: days }); diff.buildingsStarted.push(b); }
     else diff.buildingsCompleted.push(b);
   };
+  // Owner 2026-10-23: a building begins only on a day the video can show it. The video has room for SHOWN_STARTS
+  // new buildings (2 once villagers have names, as in timeline.js); the others wait in s.buildQueue and begin on
+  // the next days, in order. Buildings without a shot of their own (the fields, the wall guard, the charter
+  // stone) take no room.
+  s.buildQueue ||= [];
+  const queued = (b) => s.buildQueue.some((q) => q.id === b) || s.buildings.some((x) => x.id === b);
   for (const t of tiersReached(target)) {
     if (s.unlockedTiers.includes(t.id)) continue;
     s.unlockedTiers.push(t.id);
     diff.unlocked.push(t.id);
-    for (const b of t.buildings) begin(b, t.id);
+    for (const b of t.buildings) if (!queued(b)) s.buildQueue.push({ id: b, tier: t.id });
   }
   // buildings the owner commissions with no goal (COMMISSIONS in tiers.js)
-  for (const b of COMMISSIONS) if (!s.buildings.some((x) => x.id === b)) begin(b, 'commission');
+  for (const b of COMMISSIONS) if (!queued(b)) s.buildQueue.push({ id: b, tier: 'commission' });
+  let room = Object.keys(s.names || {}).length > 0 ? SHOWN_STARTS : SHOWN_STARTS + 1;
+  const waiting = [];
+  for (const q of s.buildQueue) {
+    const shot = !NO_SHOT.has(q.id);
+    if (shot && room <= 0) { waiting.push(q); continue; }
+    begin(q.id, q.tier);
+    if (shot) room--;
+  }
+  s.buildQueue = waiting;
+  if (waiting.length) diff.buildingsWaiting = waiting.map((q) => q.id);
 
   // The Second Wall's route is planned round the houses standing when it begins (src/sim/wall.js)
   ensureWall2(s, w, diff);
