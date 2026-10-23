@@ -232,7 +232,7 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   narrator fell silent over the raised house while a sentence waited for a later villager); a sentence about
   a building waits for that building's shot. On caravan days there is no "+N villagers" sentence.
 - `src/publish/` YouTube upload (resumable, OAuth); `state/published.json` prevents double uploads.
-- `.github/workflows/daily.yml` runs at 06:17 UTC (GitHub often starts it hours late);
+- `.github/workflows/daily.yml` runs at 03:17 UTC (GitHub often starts it hours late);
   `voice-samples.yml` renders TTS samples on demand.
 
 ## Open ideas the owner mentioned

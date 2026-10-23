@@ -209,7 +209,7 @@ in real time.
 
 ## Automation
 
-`.github/workflows/daily.yml` runs every day at 06:17 UTC (and on demand): install, tests, daily
+`.github/workflows/daily.yml` runs every day at 03:17 UTC (and on demand): install, tests, daily
 cycle, commit `state/`, upload the MP4 as a workflow artifact. Add `YOUTUBE_API_KEY` (and the
 optional OAuth / ElevenLabs secrets) under *Settings → Secrets and variables → Actions*.
 With `PUBLISH_TARGETS=youtube` the video is uploaded as a Short (see above). Instagram/TikTok are
