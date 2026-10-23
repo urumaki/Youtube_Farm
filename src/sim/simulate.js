@@ -7,7 +7,7 @@ import { world } from './world.js';
 import { dailyEvents } from './events.js';
 import { pickStory } from './stories.js';
 import { pickFeatured, shownJobs, markShown } from './featured.js';
-import { planScenes, tavernToday, churchToday, staleJob } from './scenes.js';
+import { planScenes, tavernToday, churchToday, staleJob, introVariant } from './scenes.js';
 import { planWall2, wallBlockers, insideWall2, crossesFields } from './wall.js';
 import { obbOverlap, obbAabb, SpatialHash } from './geometry.js';
 
@@ -225,7 +225,7 @@ export function planDay(s, prev, diff) {
   }
   diff.avoidJobs = prev.day > 0 ? shownJobs(prev) : [];
   const tavern = tavernToday(s), church = churchToday(s, tavern);
-  diff.featured = pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, church, stale: (job) => staleJob(s, job) });
+  diff.featured = pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, church, stale: (job) => staleJob(s, job), intro: (job) => !!introVariant(s, job) });
   s.featured = diff.featured;
   markShown(s, diff.featured);
   const shownBuildings = new Set([...diff.buildingsStarted, ...diff.buildingsCompleted]).size;

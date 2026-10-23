@@ -43,9 +43,10 @@ function pairOf(a, b) {
  * visiting villager ({ id, name, job, today }) or null; `pair` the PAIRS id, 'visit' or null.
  * `slots`: how many shots (two when the tavern or the church closes the video, three otherwise). `tavern`: whether the
  * tavern closes the video today, `church` which church (src/sim/scenes.js). `stale(job)`: true when every scene of that job was
- * shown in the last days, so somebody else is shown if possible.
+ * shown in the last days, so somebody else is shown if possible. `intro(job)`: true when a villager of that job introduced
+ * today has an everyday scene of their own (src/sim/scenes.js INTRO): they get no visitor and visit nobody.
  */
-export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScene(state), church = null, stale = () => false } = {}) {
+export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScene(state), church = null, stale = () => false, intro = () => false } = {}) {
   const day = state.day;
   const avoid = new Set(avoidJobs);
   slots ??= tavern || church ? 2 : 3;
@@ -68,14 +69,17 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
   const usedJobs = new Set(), usedIds = new Set();
   const free = (n) => !usedIds.has(n.id) && (!usedJobs.has(n.job) || n.complained);
   const entry = (n) => ({ id: n.id, name: n.name, job: n.job, today: n.today });
+  const solo = (n) => n.today && intro(n.job);
   for (const n of people) {
     if (out.length >= slots) break;
     if (!free(n)) continue;
     usedIds.add(n.id); usedJobs.add(n.job);
-    // a partner: the best free villager who works with them, or one never shown yet dropping by
+    // a partner: the best free villager who works with them, or one never shown yet dropping by; a villager
+    // introduced today in an everyday scene of the job (the changing of the guard...) is shown alone (`intro`)
     let shot = null;
     for (const m of people) {
-      if (!free(m) || m.job === n.job) continue;
+      if (solo(n)) break;
+      if (!free(m) || m.job === n.job || solo(m)) continue;
       shot = pairOf(n, m);
       if (!shot && m.last === undefined && score(m) > 0) {
         if (VISIT_HOSTS.includes(n.job)) shot = { id: 'visit', host: n, guest: m };

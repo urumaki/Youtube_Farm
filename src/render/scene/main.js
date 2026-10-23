@@ -117,6 +117,13 @@ async function setup(data) {
     // guards on the castle walls or the Second Wall: by day, at night, the changing of the guard
     const WATCH = { walls: ['castle', 'day'], wallnight: ['castle', 'night'], change: ['castle', 'change'], wall2: ['wall2', 'day'], wall2night: ['wall2', 'night'], wall2change: ['wall2', 'change'] };
     if (WATCH[variant]) return buildWallWatch({ where: WATCH[variant][0], mode: WATCH[variant][1], castle, w, state, M, seed: state.seed, hero, lang: data.lang, tag: false });
+    // an everyday shot as the villager's own scene (owner 2026-10-23): the big name label where the small tag would be
+    if (['fields', 'wheat', 'pasture', 'laundry'].includes(variant)) {
+      const st = ambientScene(variant, hero);
+      if (!st) return null;
+      const tag = st.labels.shift();
+      return { ...st, labels: [], banner: null, labelPos: tag?.pos ?? st.focus.clone().add(new THREE.Vector3(0, 1.6, 0)) };
+    }
     return variant === 'sparring' ? buildSparring({ M, seed: state.seed, hero, lang: data.lang, tag: false })
         : variant === 'boat' ? buildBoat({ w, M, hero, home, heightAt: ground })
           : variant === 'rod' || variant === 'net' ? buildRiverbank({ w, M, hero, home, heightAt: ground, mode: variant, guest })
@@ -303,6 +310,7 @@ async function setup(data) {
       // or on the night watch; a fisherman out in a boat
       const hero = { id: tg.id, name: tg.label.title, job: tg.sceneJob };
       const st = awayScene(tg.variant, hero, houses.shapes.get(state.villagers[tg.id].house), tg.guest);
+      if (!st) continue;
       // a guest the scene has no place for gets no name tag (only the river scenes take one)
       if (tg.guest) { if (st.labelPos2) tg.labelPos2 = st.labelPos2; else tg.label2 = null; }
       st.setWindow?.(tg.t0, tg.t1);

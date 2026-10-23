@@ -18,7 +18,7 @@ export const SCENE_GAP = 3;
 const FIGHTER_SCENES = ['walls', 'sparring', 'dummy'];
 export const VARIANTS = {
   guard: [...FIGHTER_SCENES, 'night', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
-  farmer: ['hoe', 'sow', 'scythe'], peasant: ['spade', 'sow'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
+  farmer: ['hoe', 'sow', 'scythe', 'fields', 'wheat'], peasant: ['spade', 'sow', 'laundry'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
   blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw', 'cart'],
   baker: ['oven', 'knead'], fisherman: ['rod', 'net', 'boat'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
   // owner 2026-10-23: innkeepers and brewers serve behind the bar inside the tavern once it stands ('inside')
@@ -31,11 +31,18 @@ export const VARIANTS = {
   // sweep inside a house, the hunter at the edge of a field outside the walls (a boar or a stag), the shepherd at a sheep
   // pen, the engineer in front of a building going up (src/render/scene/work.js, main.js)
   bard: ['square', 'inn'], jester: ['square'], cook: ['stall'], butcher: ['stall'], ratcatcher: ['alley'], chimneysweep: ['house'],
-  hunter: ['boar', 'stag'], shepherd: ['pen'], engineer: ['site'], falconer: ['meadow'],
+  hunter: ['boar', 'stag'], shepherd: ['pen', 'pasture'], engineer: ['site'], falconer: ['meadow'],
 };
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
 // the fisherman always fishes on the river (owner 2026-10-22): from a jetty with a rod or a net, or in a boat
-export const AWAY_VARIANTS = new Set(['walls', 'sparring', 'boat', 'rod', 'net', 'night', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change']);
+export const AWAY_VARIANTS = new Set(['walls', 'sparring', 'boat', 'rod', 'net', 'night', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change',
+  'fields', 'wheat', 'pasture', 'laundry']);
+// the everyday shots (ambient.js, everyday.js) as a villager's own scene, with the name tag (owner 2026-10-23): a villager
+// introduced today is shown in one of them when the job has one (a new guard comes on duty at the changing of the guard,
+// a new farmer works in the wheat with the others...), so the presentations change from day to day
+export const INTRO = { guard: ['wall2change', 'change'], knight: ['sparring'], farmer: ['wheat', 'fields'], peasant: ['laundry'], shepherd: ['pasture'] };
+// out on the land: not in winter (as the everyday shots)
+const SUMMER = new Set(['fields', 'wheat', 'pasture']);
 // scenes at dusk (the light changes for the shot)
 export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished
@@ -50,7 +57,9 @@ const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');
 /** False for a scene whose place is not built yet (the Second Wall's wall walk, the Counting House...) or no longer used. */
 export const sceneReady = (state, variant) => (!NEEDS[variant] || built(state, NEEDS[variant])) && !(UNTIL[variant] && built(state, UNTIL[variant]))
-  && (variant !== 'site' || !!state?.pendingConstruction?.some((p) => !NO_SITE.has(p.building)));
+  && (variant !== 'site' || !!state?.pendingConstruction?.some((p) => !NO_SITE.has(p.building)))
+  && !(SUMMER.has(variant) && winter(state));
+const winter = (state) => { const m = Number(state?.date?.slice(5, 7)); return m === 12 || m <= 2; };
 // the guards' everyday shots are the same scenes as a guard's own walls and sparring shots
 const AMBIENT_KEY = { patrol: 'guard:walls', sparring: 'guard:sparring', change: 'guard:change' };
 const FIGHTERS = ['guard', 'knight', 'warrior'];
@@ -84,6 +93,11 @@ export function churchToday(state, tavern) {
   return !tavern && church && !recentScene(state, 'church') ? church : null;
 }
 
+/** The everyday scene a villager introduced today is shown in (INTRO), or null: ready today, not shown in the last days. */
+export function introVariant(state, job, used = new Set()) {
+  return INTRO[job]?.find((v) => !used.has(v) && sceneReady(state, v) && !recentScene(state, sceneKey(job, v))) ?? null;
+}
+
 /**
  * The scene for a villager of this job today (null: the job's only scene), not one already used today and,
  * when there is a choice, not one shown in the last days (`isRecent(variant)`).
@@ -112,7 +126,7 @@ export function planScenes(state, { featured, tavern, church = null, avoidJobs =
     const n = state.names[f.id];
     const job = f.job === 'apprentice' && n?.wants ? n.wants : f.job;
     // no innkeeper or bard shot inside the tavern on the day the tavern interior closes the video
-    const v = pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), ready: (x) => sceneReady(state, x) && !(tavern && (x === 'inside' || x === 'inn')) });
+    const v = (f.today && !f.with && introVariant(state, job, used)) || pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), ready: (x) => sceneReady(state, x) && !(tavern && (x === 'inside' || x === 'inn')) });
     if (v) used.add(v);
     variants[f.id] = v;
   }

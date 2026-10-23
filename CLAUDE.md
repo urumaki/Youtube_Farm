@@ -146,6 +146,12 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   farmers hoeing in the field nearest the castle, a shepherd with the flock on the grass beyond the fields,
   or washing day at the river; never a job already shown yesterday or today; a named guard, farmer or
   peasant not shown elsewhere gets the name tag. Test one with `--gallery ambient:pasture`.
+  They also introduce new villagers (owner 2026-10-23, `INTRO`/`introVariant` in `scenes.js`): a villager named today
+  whose job has an everyday shot is shown in it with the big name label, alone (no visit, `intro` in `pickFeatured`):
+  a new guard comes on duty at the changing of the guard (on the Second Wall once it stands), a knight spars, a farmer
+  works in the wheat or the fields with the others, a peasant at the washing by the river, a shepherd with the flock.
+  Not in winter for the land ones, not a scene shown in the last 3 days. They are also ordinary scenes of those jobs
+  (`fields`, `wheat`, `laundry`, `pasture` in `VARIANTS`, away scenes drawn by `ambientScene` via `awayScene`).
 - Villager shots vary (owner 2026-10-20): every common job has 2-3 scenes, one picked per villager and day
   (`VARIANTS` in `timeline.js`; `'job:variant'` entries in `JOB_SCENES`, `work.js`): guards on the walls,
   sparring or at the straw dummy (`drills.js`); farmers hoeing, sowing or reaping; the smith at the anvil,

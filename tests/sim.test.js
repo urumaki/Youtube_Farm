@@ -502,6 +502,34 @@ test('innkeepers and brewers serve inside the tavern once it stands, the crier c
   assert.deepEqual([...picks('crier', open, true)], [null], 'a visitor: the croft');
 });
 
+test('villagers introduced today are shown alone in an everyday scene of their job (owner 2026-10-23)', async () => {
+  const { introVariant, planScenes } = await import('../src/sim/scenes.js');
+  const { pickFeatured } = await import('../src/sim/featured.js');
+  const kingdom = (date, jobs) => ({
+    seed: SEED, day: 9, date, subscriberCount: jobs.length, unlockedTiers: ['guard'], buildings: [], pendingConstruction: [], sceneLog: {},
+    villagers: jobs.map((job) => ({ job })), names: Object.fromEntries(jobs.map((job, id) => [id, { name: `N${id}`, job, day: 9 }])),
+  });
+  const plan = (s) => {
+    const featured = pickFeatured(s, { avoidJobs: [], tavern: false, intro: (job) => !!introVariant(s, job) });
+    return { featured, scenes: planScenes(s, { featured, tavern: false }) };
+  };
+  const { featured, scenes } = plan(kingdom('2026-10-23', ['guard', 'blacksmith', 'farmer']));
+  for (const [id, want] of [[0, ['change']], [2, ['wheat', 'fields']]]) {
+    const f = featured.find((x) => x.id === id);
+    assert.ok(f && !f.with, `${f?.job ?? id} is shown alone`);
+    assert.ok(want.includes(scenes.variants[id]), `${f.job}: ${scenes.variants[id]}`);
+  }
+  assert.ok(!featured.some((f) => f.with?.id === 0), 'the new guard does not visit the smith');
+  assert.equal(plan(kingdom('2026-10-23', ['shepherd', 'peasant'])).scenes.variants[0], 'pasture');
+  assert.equal(plan(kingdom('2026-10-23', ['shepherd', 'peasant'])).scenes.variants[1], 'laundry');
+  // winter: no work on the land, so the farmer may visit or be visited again
+  assert.equal(introVariant(kingdom('2026-01-10', ['farmer']), 'farmer'), null);
+  // shown in the last days: not again
+  const seen = kingdom('2026-10-23', ['guard']);
+  seen.sceneLog = { 'guard:change': 8 };
+  assert.equal(introVariant(seen, 'guard'), null);
+});
+
 test('scenes away from the croft of 2026-10-23: the market, the tavern, a building going up', async () => {
   const { pickVariant, sceneReady } = await import('../src/sim/scenes.js');
   const town = { buildings: [{ id: 'market', status: 'done' }, { id: 'tavern', status: 'done' }], pendingConstruction: [] };
