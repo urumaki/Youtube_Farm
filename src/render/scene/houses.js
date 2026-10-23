@@ -27,6 +27,12 @@ export function houseShape(seed, house, plot, w, { terrace = false } = {}) {
   if (built === 1 && h % 5 < 2) arch = floors > 1 ? 'timber' : 'cottage'; // a raised cottage is rebuilt timber-framed
   else if (built === 1 && h % 5 === 2) arch = 'stone';
   else if (built >= 2 && h % 7 < 2) arch = 'stone';
+  // more looks (owner 2026-10-23): some timber houses turn their gable to the street, some keep a shop on the
+  // ground floor, some are built of red brick with a crow-stepped gable
+  if (arch === 'timber') {
+    const k = hash(seed, 'look', plot.id) % 10;
+    arch = k < 3 ? 'gabled' : k < 5 ? 'shop' : k < 6 ? 'brick' : 'timber';
+  }
   if (plot.fine) arch = 'fine'; // the Noble Quarter's town houses (owner 2026-10-22)
   // terraced rows inside the walls: the house fills its plot's frontage and the gap to the next plot, square to
   // the street, its front on one line with the neighbours' fronts
@@ -113,6 +119,7 @@ export function houseMaterials(M) {
   return {
     stone: M.stone, stoneDark: M.stoneDark, plaster: M.plasterTint, woodDark: M.woodDark, wood: M.wood, roofTile: M.roofTile,
     thatch: M.thatch, slate: M.slate, glass: M.window, dark: M.iron, iron: M.iron, clay: M.clay, soil: M.soil, greens: M.greens,
+    brick: M.brick, clothRed: M.clothRed, clothBlue: M.clothBlue, hay: M.hay,
   };
 }
 

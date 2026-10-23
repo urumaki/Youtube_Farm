@@ -125,7 +125,9 @@ function roof(P, { W, D, y: y0, pitch, mat, thatch, damaged, front, zc = 0 }) {
 
 /**
  * Build one variant.
- * spec: { arch: 'timber'|'stone'|'cottage'|'fine', W, D, floors, chimney, dormer, damaged, seed }
+ * spec: { arch: 'timber'|'stone'|'cottage'|'fine'|'gabled'|'brick'|'shop', W, D, floors, chimney, dormer, damaged, seed }
+ * More looks (owner 2026-10-23): 'gabled' a timber house with its gable to the street; 'brick' red brick with a
+ * crow-stepped gable to the street; 'shop' a timber house with an open shop front, a counter and an awning.
  * 'fine': a Noble Quarter town house (owner 2026-10-22): a taller stone ground floor with a carved doorway,
  * timber-framed upper floors oversailing the street, an oriel window, two chimneys, two dormers.
  */
@@ -133,8 +135,9 @@ export function buildHouseVariant(spec) {
   const { arch, W, D, floors, chimney, dormer, damaged } = spec;
   const r = rng(spec.seed || 1, 'hv', arch, W, D, floors);
   const P = new Parts();
-  const timber = arch === 'timber', fine = arch === 'fine';
-  const wallMat = arch === 'stone' ? 'stone' : 'plaster';
+  const timber = arch === 'timber' || arch === 'gabled' || arch === 'shop', fine = arch === 'fine';
+  const brick = arch === 'brick', streetGable = arch === 'gabled' || brick, shop = arch === 'shop';
+  const wallMat = arch === 'stone' ? 'stone' : brick ? 'brick' : 'plaster';
   const groundH = arch === 'cottage' ? 2.7 : fine ? FLOOR_H + 0.5 : FLOOR_H;
   // foundation course
   P.box('foundation', 'stoneDark', W + 0.3, 0.45, D + 0.3, 0, 0.22, 0);
@@ -161,9 +164,12 @@ export function buildHouseVariant(spec) {
     if (doorX !== null) openings.push({ x: doorX, y: 1.05, w: fine ? 1.6 : 1.1, h: fine ? 2.5 : 2.1 });
     if (oriel) openings.push({ x: 0, y: 1.5, w: 2.0, h: 2.2 });
     const winY = f === 0 ? (fine ? 1.75 : 1.55) : 1.45;
+    const shopFront = shop && f === 0 && !damaged;
+    if (shopFront) openings.push({ x: -doorX * 0.9, y: 1.35, w: Math.min(3.2, Wf * 0.45), h: 1.7 });
     for (let i = 0; i < nWin; i++) {
       const x = -Wf / 2 + ((i + 0.5) * Wf) / nWin;
       if (doorX !== null && Math.abs(x - doorX) < (fine ? 1.8 : 1.3)) continue;
+      if (shopFront) continue; // the shop front takes the rest of the ground floor
       if (oriel && Math.abs(x) < 1.8) continue;
       openings.push({ x, y: winY, w: fine ? 1.1 : f === 0 ? 0.9 : 1.0, h: fine ? 1.35 : f === 0 ? 1.0 : 1.1, win: true });
     }
@@ -206,6 +212,18 @@ export function buildHouseVariant(spec) {
       P.box(layer, 'woodDark', Wf + 0.1, 0.24, 0.24, 0, y0 + 0.12, zf + 0.1);
       for (let x = -Wf / 2 + 0.25; x <= Wf / 2 - 0.2; x += 0.55) P.box(layer, 'woodDark', 0.16, 0.16, j + 0.2, x, y0 - 0.08, zf + j / 2 + 0.05);
     }
+    if (shopFront) {
+      // the shop: a dark opening, a counter on trestles with goods on it, a sloping cloth awning on poles
+      const sx = -doorX * 0.9, sw = Math.min(3.2, Wf * 0.45);
+      P.box(layer, 'dark', sw, 1.7, 0.06, sx, y0 + 1.35, zf - 0.13);
+      P.box(layer, 'woodDark', sw + 0.3, 0.14, 0.16, sx, y0 + 2.25, zf - 0.16);
+      P.box('details', 'wood', sw, 0.12, 0.7, sx, 0.95, zf - 0.45);
+      for (const s of [-1, 1]) P.box('details', 'woodDark', 0.1, 0.9, 0.6, sx + s * (sw / 2 - 0.15), 0.45, zf - 0.45);
+      for (let i = 0; i < 4; i++) P.box('details', i % 2 ? 'clay' : 'hay', 0.32, 0.28, 0.32, sx - sw / 2 + 0.4 + i * (sw - 0.8) / 3, 1.15, zf - 0.45);
+      const cloth = r.chance(0.5) ? 'clothRed' : 'clothBlue';
+      P.box('details', cloth, sw + 0.5, 0.06, 1.5, sx, 2.45, zf - 0.75, 0, -0.32);
+      for (const s of [-1, 1]) P.box('details', 'woodDark', 0.08, 2.2, 0.08, sx + s * (sw / 2 + 0.15), 1.1, zf - 1.42);
+    }
     if (arch === 'stone' || (fine && f === 0)) {
       // quoins
       for (let k = 0; k < Math.floor(H / 0.5); k++) for (const sx of [-1, 1]) for (const zz of [zf, zb]) {
@@ -216,11 +234,29 @@ export function buildHouseVariant(spec) {
   });
   if ((timber || fine) && floors > 1) P.box('top', 'woodDark', W + 0.35, 0.22, D + 0.5, 0, eaves + 0.05, -0.2);
   // roof
-  const pitch = arch === 'cottage' ? 0.85 : arch === 'stone' ? 0.72 : fine ? 1.0 : 0.92;
+  const pitch = arch === 'cottage' ? 0.85 : arch === 'stone' ? 0.72 : fine || streetGable ? 1.0 : 0.92;
   const roofMat = arch === 'cottage' ? 'thatch' : arch === 'stone' ? 'slate' : 'roofTile';
   const drop = 0.08 - 0.02 + (arch === 'cottage' ? 0.55 : 0.4) * Math.tan(pitch); // how far roof() sets the roof down onto the walls
-  const rise = roof(P, { W, D: D + jetty, y: eaves + 0.1, pitch, mat: roofMat, thatch: arch === 'cottage', damaged, front: timber || fine ? 'plaster' : wallMat, zc: -jetty / 2 });
-  if ((dormer || fine) && !damaged) for (const dx of fine ? [-W / 4, W / 4] : [0]) {
+  let rise;
+  if (streetGable) {
+    // the ridge runs back from the street: a roof built across, turned a quarter round, gables front and back
+    const R = new Parts();
+    rise = roof(R, { W: D + jetty, D: W, y: eaves + 0.1, pitch, mat: roofMat, thatch: false, damaged, front: brick ? 'brick' : 'plaster' });
+    const turn = new THREE.Matrix4().makeRotationY(Math.PI / 2).premultiply(new THREE.Matrix4().makeTranslation(0, 0, -jetty / 2));
+    for (const [k, geos] of R.map) for (const g of geos) { g.applyMatrix4(turn); if (!P.map.has(k)) P.map.set(k, []); P.map.get(k).push(g); }
+    if (brick) {
+      // crow steps: the brick gables rise above the roof in steps, front and back
+      const n = 4, wallTop = eaves, apex = rise * ((W / 2) / (W / 2 + 0.4)), stepW = W / (2 * n);
+      for (const zz of [-D / 2 - jetty - 0.05, D / 2 + 0.05]) {
+        for (let i = 0; i < n; i++) for (const s of [-1, 1]) {
+          const hgt = ((i + 1) / n) * apex + 0.3;
+          P.box('roof', 'brick', stepW, hgt, 0.36, s * (W / 2 - (i + 0.5) * stepW), wallTop + hgt / 2, zz, 0, 0, 0, 1);
+        }
+        P.box('roof', 'stoneDark', stepW * 0.9, 0.16, 0.44, 0, wallTop + apex + 0.38, zz);
+      }
+    }
+  } else rise = roof(P, { W, D: D + jetty, y: eaves + 0.1, pitch, mat: roofMat, thatch: arch === 'cottage', damaged, front: timber || fine ? 'plaster' : wallMat, zc: -jetty / 2 });
+  if ((dormer || fine) && !damaged && !streetGable) for (const dx of fine ? [-W / 4, W / 4] : [0]) {
     const dw = Math.min(1.8, W * 0.3), dy = eaves + rise * 0.3 - drop;
     P.box('roof', fine ? 'plaster' : wallMat, dw, 1.3, 1.2, dx, dy + 0.65, -D / 4);
     P.box('roof', 'glass', dw * 0.55, 0.8, 0.05, dx, dy + 0.7, -D / 4 - 0.62);

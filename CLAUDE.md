@@ -119,6 +119,10 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   5-7 m frontages close together, laid out after everything else; `s.plotsV` 2, `s.nextDense`), passing over any
   plot a standing house covers, so houses already built never move and more fit on each street (at 1300
   subscribers, 47 of the new houses stand inside the walls). The old plot list (`w.plots`) stays for them.
+- More house looks (owner 2026-10-23, `houseKit.js`): of the timber-framed houses, 3 in 10 turn their gable to the
+  street (`gabled`), 2 in 10 have a shop on the ground floor with a counter of goods and a red or blue awning
+  (`shop`), 1 in 10 are red brick with crow-stepped gables front and back (`brick`, material `brick`); picked by
+  plot id in `houseShape` (`houses.js`).
 - Training yard (owner 2026-10-23, `castle.js`): a sanded square in the castle courtyard between the well and
   the barracks, with a rail fence, two straw dummies, a rack of spears and two shields. The guards' and knights'
   straw dummy drill (variant `dummy`) now happens there instead of in their croft (`castle.training`,

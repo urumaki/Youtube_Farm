@@ -36,18 +36,18 @@ function speckle(ctx, w, h, r, n, alpha, light = false) {
 }
 
 /** Ashlar stonework: color map + bump map. Blocks ~0.5 x 0.3 of the tile. */
-export function stoneTextures(seed, base = [150, 144, 132]) {
+export function stoneTextures(seed, base = [150, 144, 132], { rows = 8, bw0 = 48, bw1 = 96, mortar = 'rgb(92,88,80)' } = {}) {
   const r = rng(seed, 'stone');
   const S = 512;
   const [c, ctx] = canvas(S);
   const [b, bctx] = canvas(S);
-  ctx.fillStyle = 'rgb(92,88,80)'; ctx.fillRect(0, 0, S, S);
+  ctx.fillStyle = mortar; ctx.fillRect(0, 0, S, S);
   bctx.fillStyle = '#000'; bctx.fillRect(0, 0, S, S);
-  const rows = 8, rh = S / rows;
+  const rh = S / rows;
   for (let y = 0; y < rows; y++) {
-    let x = y % 2 ? -r.float(20, 60) : 0;
+    let x = y % 2 ? -r.float(bw0 * 0.4, bw0 * 1.2) : 0;
     while (x < S) {
-      const bw = r.float(48, 96);
+      const bw = r.float(bw0, bw1);
       const k = r.float(-22, 18);
       const warm = r.float(-8, 8);
       ctx.fillStyle = `rgb(${base[0] + k + warm},${base[1] + k},${base[2] + k - warm})`;

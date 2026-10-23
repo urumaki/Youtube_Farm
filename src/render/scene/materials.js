@@ -8,6 +8,7 @@ import {
 export function makeMaterials(seed) {
   const stone = stoneTextures(seed);
   const stoneDark = stoneTextures(seed + 1, [118, 112, 104]);
+  const brick = stoneTextures(seed + 7, [150, 74, 54], { rows: 22, bw0: 38, bw1: 46, mortar: 'rgb(176,166,150)' }); // small red bricks
   const roof = roofTexture(seed);
   const night = { value: 0 };
   const std = (o) => new THREE.MeshStandardMaterial({ roughness: 0.9, metalness: 0, ...o });
@@ -52,6 +53,7 @@ export function makeMaterials(seed) {
     foliage: std({ roughness: 0.85, vertexColors: false }),
     trunk: std({ color: '#5a4030' }),
     plasterTint: std({ map: plasterTexture(seed, false) }), // tinted per instance
+    brick: std({ map: brick.map, bumpMap: brick.bump, bumpScale: 1.2 }),
     clay: std({ color: '#9a5236', roughness: 0.8 }),
     soil: std({ color: '#4e3b2a', roughness: 1 }),
     greens: std({ color: '#4f7a2e', roughness: 0.9 }),
