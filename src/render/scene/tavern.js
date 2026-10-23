@@ -16,6 +16,7 @@ const PATRON_COLORS = ['#7b3b2a', '#3f5a7a', '#5d6b35', '#8a6a3a', '#6a4a6e', '#
 // tables (centre x, z); a bench on each long side, two seats per bench
 const TABLES = [[-2.2, -1.2], [1.2, -1.0], [-1.0, 2.2], [1.8, 2.4]];
 const BAR_X = 3.5;
+const SITTERS = 14;
 
 /**
  * @param item     buildings.items.tavern (its group carries the lot transform)
@@ -25,8 +26,10 @@ const BAR_X = 3.5;
  *                 label names them), a closer camera on the bar, and `guest` ({ name, job } or null) standing at the counter
  * @param minstrel the shot of one bard at work (owner 2026-10-23): { name } plays in the corner by the fireplace, no small
  *                 name tags, a camera on them
+ * @param musician { name, job }: the named villager who plays the lute in the corner when no named bard drinks here
+ *                 (owner 2026-10-23: the one playing has a name too)
  */
-export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [], bar = false, guest = null, minstrel = null }) {
+export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [], bar = false, guest = null, minstrel = null, musician = null }) {
   if (minstrel) patrons = [{ name: minstrel.name, job: 'bard' }];
   const group = new THREE.Group();
   item.group.add(group);
@@ -152,12 +155,14 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [],
   // seats: far benches (facing the camera) first, then the near ones
   const seats = [];
   for (const side of [1, -1]) for (const [tx, tz] of TABLES) for (const dx of [-0.45, 0.45]) seats.push({ x: tx + dx, z: tz + side * 0.78, face: side > 0 ? Math.PI : 0 });
-  // a bard plays in the corner by the fireplace: a named bard when one is among the patrons, else a travelling one
+  // a bard plays in the corner by the fireplace: a named bard when one is among the patrons, else `musician`, else a
+  // travelling one
   const bardIdx = patrons.findIndex((p) => p.job === 'bard');
-  const bard = bardIdx >= 0 ? patrons[bardIdx] : null;
-  if (bard) patrons = patrons.filter((p, i) => i !== bardIdx);
-  const nAnon = 11 - Math.min(patrons.length, 11);
-  const sitters = [...patrons.slice(0, 11).map((p) => ({ ...p, named: true }))];
+  const bard = bardIdx >= 0 ? patrons[bardIdx] : musician;
+  if (bardIdx >= 0) patrons = patrons.filter((p, i) => i !== bardIdx);
+  // owner 2026-10-23: more names at the tables (14 of the 16 seats taken)
+  const nAnon = SITTERS - Math.min(patrons.length, SITTERS);
+  const sitters = [...patrons.slice(0, SITTERS).map((p) => ({ ...p, named: true }))];
   for (let i = 0; i < nAnon; i++) sitters.push({ name: null, job: null });
   // spread the anonymous drinkers over the free seats, deterministically
   const free = seats.map((s, i) => i).slice(patrons.length);
@@ -181,7 +186,7 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [],
     B.body.add(lute(M));
     group.add(B.root);
     people.push({ P: B, kind: 'bard' });
-    if (bard && !minstrel) labels.push({ pos: toWorld(-4.2, F + 2.3, 2.9), title: bard.name, sub: JOBS.bard.label });
+    if (bard && !minstrel) labels.push({ pos: toWorld(-4.2, F + 2.3, 2.9), title: bard.name, sub: bard.job === 'bard' ? JOBS.bard.label : 'Bard tonight' });
   }
   // barkeepers behind the counter, facing the room: one pours from the tap, one wipes the counter
   const barSpots = [{ z: -1.5, kind: 'pour' }, { z: 1.3, kind: 'wipe' }];

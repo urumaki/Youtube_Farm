@@ -56,12 +56,54 @@ export function houseShape(seed, house, plot, w, { terrace = false } = {}) {
   const base = hmax + 0.15;
   const yaw = -rot + (side < 0 ? Math.PI : 0);
   const matrix = new THREE.Matrix4().compose(new THREE.Vector3(hx, base, hz), new THREE.Quaternion().setFromEuler(new THREE.Euler(0, yaw, 0)), new THREE.Vector3(1, 1, 1));
-  return {
+  const sh = {
     st, arch, floors, W, D, side, base, hmin, matrix, x: hx, z: hz, rot, plot, yaw,
     wallColor: WALL_COLORS[hash(seed, 'wall', plot.id) % WALL_COLORS.length], roofColor: ROOF_COLORS[hash(seed, 'roof', plot.id) % ROOF_COLORS.length],
     chimney: st.chimney || arch === 'stone', dormer: floors >= 2 && h % 4 === 0,
-    key: (damaged) => `${arch}|${W}|${D}|${floors}|${st.chimney || arch === 'stone' ? 1 : 0}|${floors >= 2 && h % 4 === 0 ? 1 : 0}|${damaged ? 1 : 0}`,
+    key: (damaged) => `${arch}|${sh.W}|${D}|${floors}|${st.chimney || arch === 'stone' ? 1 : 0}|${floors >= 2 && h % 4 === 0 ? 1 : 0}|${damaged ? 1 : 0}`,
   };
+  return sh;
+}
+
+// how far a house reaches out beyond its side walls: the upper floors oversail 0.125 m, a gable turned to the street
+// has its eaves on the sides (houseKit.js); side walls of neighbours stand the two reaches apart
+const reach = (sh) => (sh.arch === 'gabled' ? 0.45 : 0.15);
+const cornersOf = (sh) => {
+  const c = Math.cos(sh.rot), s = Math.sin(sh.rot);
+  return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([u, v]) => [sh.x + c * u * sh.W / 2 - s * v * sh.D / 2, sh.z + s * u * sh.W / 2 + c * v * sh.D / 2]);
+};
+/**
+ * Houses on neighbouring plots could run into each other by up to a metre (owner 2026-10-23: two houses overlapping in
+ * the raised house's shot; terraced rows and the dense plots between older ones). A house beside another gives up half
+ * the overlap: it gets narrower on that side, so the two side walls stand their reaches apart. Changes `shapes` in place.
+ */
+export function fitNeighbours(shapes) {
+  const list = [...shapes.values()];
+  const grid = new Map(), cell = 24, at = (x, z) => `${Math.floor(x / cell)},${Math.floor(z / cell)}`;
+  for (const sh of list) { const k = at(sh.x, sh.z); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(sh); }
+  const near = (sh) => { const out = [], i = Math.floor(sh.x / cell), j = Math.floor(sh.z / cell); for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) out.push(...(grid.get(`${i + a},${j + b}`) || [])); return out; };
+  const fits = new Map();
+  for (const sh of list) {
+    const c = Math.cos(sh.rot), s = Math.sin(sh.rot), half = sh.W / 2;
+    let left = half, right = half;
+    for (const o of near(sh)) {
+      if (o === sh || Math.hypot(o.x - sh.x, o.z - sh.z) > 20) continue;
+      const pts = cornersOf(o).map(([x, z]) => [(x - sh.x) * c + (z - sh.z) * s, -(x - sh.x) * s + (z - sh.z) * c]);
+      const xs = pts.map((p) => p[0]), zs = pts.map((p) => p[1]);
+      if (Math.min(...zs) >= sh.D / 2 - 0.05 || Math.max(...zs) <= -sh.D / 2 + 0.05) continue; // in front or behind, not beside
+      const x0 = Math.min(...xs), x1 = Math.max(...xs);
+      const gap = reach(sh) + reach(o);
+      if (x1 <= -half - gap || x0 >= half + gap) continue; // clear of it
+      if (x0 + x1 >= 0) right = Math.min(right, (half + x0) / 2 - gap / 2);
+      else left = Math.min(left, (half - x1) / 2 - gap / 2);
+    }
+    if (left < half - 0.01 || right < half - 0.01) fits.set(sh, [Math.max(left, 1.5), Math.max(right, 1.5)]);
+  }
+  for (const [sh, [left, right]] of fits) {
+    const W = Math.floor((left + right) * 10) / 10, shift = (right - left) / 2;
+    sh.x += Math.cos(sh.rot) * shift; sh.z += Math.sin(sh.rot) * shift; sh.W = W;
+    sh.matrix.setPosition(sh.x, sh.base, sh.z);
+  }
 }
 
 /** The street a plot fronts: its direction there (turned to the plot's own) and how far the plot's centre is from it. */
@@ -143,6 +185,10 @@ export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 300 
     const plot = plots.get(h.plot);
     const sh = houseShape(seed, h, plot, w, { terrace: !!state.wall2?.pts && insideWall2(state.wall2.pts, plot.x, plot.z, 0.03, w) });
     shapes.set(h.id, sh);
+  }
+  fitNeighbours(shapes);
+  for (const h of state.houses) {
+    const sh = shapes.get(h.id);
     if (animatedIds.has(h.id)) continue;
     const ch = getChunk(sh.x, sh.z);
     ch.near.push('plinth', { geo: unit.plinth, mat: M.stoneDark }, local(sh, 0, 0.05, 0, sh.W + 0.6, sh.base - sh.hmin + 0.7, sh.D + 0.6));

@@ -105,7 +105,9 @@ const BUILD = {
     b.add('stone', boxGeo(1.8, 10, 1.8), 3.2, 5, -1.5);
     b.add('ember', boxGeo(3.2, 2.6, 0.2), -1.5, 1.5, 4.05);
     b.add('iron', boxGeo(1.0, 0.6, 0.5), -1.5, 0.95, 5.6); b.add('stoneDark', boxGeo(0.5, 0.6, 0.5), -1.5, 0.3, 5.6);
-    b.add('woodDark', boxGeo(4, 0.25, 2), 1.6, 3.2, 5); // awning
+    // the awning over the yard: a slate lean-to from the wall down onto a beam on two posts
+    b.add('slate', boxGeo(4.4, 0.15, 2.3).rotateX(0.28), 1.6, 3.45, 5.05);
+    b.add('woodDark', boxGeo(4.2, 0.25, 0.25), 1.6, 3.08, 5.9);
     for (const x of [-0.2, 3.4]) b.add('woodDark', boxGeo(0.2, 3.2, 0.2), x, 1.6, 5.9);
     out.smoke.push([3.2, 10.6, -1.5, 'dark']);
     out.lights.push([-1.5, 1.6, 4.6]);

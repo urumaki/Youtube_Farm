@@ -77,15 +77,20 @@ const T = {
     },
     tavern: ['Meanwhile, the tavern is full tonight!', 'Over at the tavern, the mugs are full!', 'At the tavern, the cider is flowing!'],
     church: { chapel: ['In the chapel, the villagers pray for the kingdom.', 'The chapel pews are full today!'], cathedral: ['Under the great vaults, the cathedral is full!', 'The bishop blesses a full cathedral.'] },
-    houses1: ['A new house rises along the road.', 'Builders finished a fresh new home.'],
-    houses: [(n) => `${n} new houses rise along the roads.`, (n) => `Builders raised ${n} new homes.`],
+    // owner 2026-10-23: more lines about building, the narrator repeated himself too often
+    houses1: ['A new house rises along the road.', 'Builders finished a fresh new home.', 'One more family gets a roof over their heads.', 'Another home joins the street.'],
+    houses: [(n) => `${n} new houses rise along the roads.`, (n) => `Builders raised ${n} new homes.`, (n) => `${n} more families move into new homes.`, (n) => `The streets fill up with ${n} new houses.`],
     rebuilt: [(n) => `${n === 1 ? 'An old ruin was' : `${n} old ruins were`} rebuilt.`],
-    raised: [(n) => `Inside the walls, ${n === 1 ? 'a house grows' : `${n} houses grow`} a new storey.`, () => 'No room left? The town builds upward!'],
+    raised: [(n) => `Inside the walls, ${n === 1 ? 'a house grows' : `${n} houses grow`} a new storey.`, () => 'No room left? The town builds upward!',
+      (n) => `Up go the roofs: ${n === 1 ? 'a house gains' : `${n} houses gain`} another floor.`, () => 'Short of land, the town grows taller.'],
     abandoned: [(n) => `${n === 1 ? 'One house stands' : `${n} houses stand`} empty now.`],
     ruined: [(n) => `${n === 1 ? 'An abandoned house has' : `${n} abandoned houses have`} fallen into ruin.`],
-    unlocked: [(b) => `The kingdom has grown enough for ${b}!`, (b) => `Hear ye! Work begins on ${b}!`],
-    completed: [(b) => `${cap(b)} is finally complete!`, (b) => `${cap(b)} opens its doors today!`],
-    progress: [(b, p) => `${cap(b)} is ${p} percent built.`],
+    unlocked: [(b) => `The kingdom has grown enough for ${b}!`, (b) => `Hear ye! Work begins on ${b}!`, (b) => `The builders break ground for ${b}.`,
+      (b) => `Stone and timber arrive: ${b} is on its way!`, (b) => `Today the first stone is laid for ${b}.`, (b) => `Scaffolding goes up for ${b}.`,
+      (b) => `The masons start work on ${b}.`, (b) => `By royal decree, ${b} will be built!`],
+    completed: [(b) => `${cap(b)} is finally complete!`, (b) => `${cap(b)} opens its doors today!`, (b) => `The last stone is set: ${b} is done!`,
+      (b) => `The scaffolding comes down from ${b}.`, (b) => `${cap(b)} stands finished at last.`, (b) => `The builders put down their tools: ${b} is ready!`],
+    progress: [(b, p) => `${cap(b)} is ${p} percent built.`, (b, p) => `Work on ${b} goes on: ${p} percent done.`, (b, p) => `${cap(b)} is rising, ${p} percent so far.`],
     milestone: [(m) => `We passed ${m} villagers!`],
     goal: [(n, g) => `${n} more villagers until ${g}.`, (n, g) => `Just ${n} more villagers and ${g}.`],
     cta: ['Subscribe to become a villager.', 'Subscribe, and you move in tomorrow.', 'Subscribe to claim your house in the kingdom.'],
@@ -167,15 +172,17 @@ T.it = {
   },
   tavern: ['Intanto la taverna è piena!', 'In taverna i boccali sono pieni!'],
   church: { chapel: ['Nella cappella, gli abitanti pregano per il regno.', 'Oggi i banchi della cappella sono pieni!'], cathedral: ['Sotto le grandi volte, la cattedrale è piena!', 'Il vescovo benedice la cattedrale gremita.'] },
-  houses1: ['Una nuova casa sorge lungo la strada.'],
-  houses: [(n) => `${n} nuove case sorgono lungo le strade.`],
+  houses1: ['Una nuova casa sorge lungo la strada.', 'Un’altra famiglia ha un tetto sopra la testa.', 'Un’altra casa si aggiunge alla via.'],
+  houses: [(n) => `${n} nuove case sorgono lungo le strade.`, (n) => `${n} famiglie entrano nelle loro case nuove.`, (n) => `Le vie si riempiono di ${n} case nuove.`],
   rebuilt: [(n) => `${n === 1 ? 'Una rovina è stata ricostruita' : `${n} rovine sono state ricostruite`}.`],
-  raised: [(n) => `Dentro le mura, ${n === 1 ? 'una casa si alza' : `${n} case si alzano`} di un piano.`],
+  raised: [(n) => `Dentro le mura, ${n === 1 ? 'una casa si alza' : `${n} case si alzano`} di un piano.`, () => 'Poco spazio? La città cresce in altezza!',
+    (n) => `Su i tetti: ${n === 1 ? 'una casa guadagna' : `${n} case guadagnano`} un piano.`],
   abandoned: [(n) => `${n === 1 ? 'Una casa ora è vuota' : `${n} case ora sono vuote`}.`],
   ruined: [(n) => `${n === 1 ? 'Una casa abbandonata è crollata' : `${n} case abbandonate sono crollate`}.`],
-  unlocked: [(b) => `Il regno è abbastanza grande per ${b}!`],
-  completed: [(b) => `Lavori finiti: ecco ${b}!`],
-  progress: [(b, p) => `Lavori per ${b} al ${p} per cento.`],
+  unlocked: [(b) => `Il regno è abbastanza grande per ${b}!`, (b) => `Udite udite! Iniziano i lavori per ${b}!`, (b) => `I costruttori aprono il cantiere per ${b}.`,
+    (b) => `Arrivano pietre e travi: presto avremo ${b}!`, (b) => `Oggi si posa la prima pietra per ${b}.`, (b) => `Si alzano le impalcature per ${b}.`],
+  completed: [(b) => `Lavori finiti: ecco ${b}!`, (b) => `Posata l’ultima pietra: ecco ${b}!`, (b) => `Oggi apre le porte ${b}!`, (b) => `Gli operai hanno finito: ecco ${b}!`],
+  progress: [(b, p) => `Lavori per ${b} al ${p} per cento.`, (b, p) => `Il cantiere per ${b} avanza: siamo al ${p} per cento.`],
   milestone: [(m) => `Abbiamo superato ${m} abitanti!`],
   goal: [(n, g) => `Ancora ${n} abitanti e ${g}.`],
   cta: ['Iscriviti per diventare un abitante.', 'Iscriviti e domani avrai la tua casa nel regno.'],
@@ -234,6 +241,9 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   const L = T[lang] || T.en;
   const r = rng(seed, 'narration', diff.date, lang);
   const pick = (a) => r.pick(a);
+  // never the same line twice in one video (two buildings begun the same day)
+  const said = new Set();
+  const fresh = (a) => { const free = a.filter((f) => !said.has(f)), x = r.pick(free.length ? free : a); said.add(x); return x; };
   const bname = (id) => (lang === 'it' ? BUILDING_IT[id] : BUILDINGS[id].label);
   const job = (j) => (lang === 'it' ? JOB_IT[j] : JOBS[j].label.toLowerCase());
   const S = []; // {text, role, priority} lower priority dropped first when too long
@@ -293,8 +303,8 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   if (diff.housesRebuilt.length) add(pick(L.rebuilt)(diff.housesRebuilt.length), 'rebuilt', 5);
   // the raised house has its own shot: its sentence is kept, or the narrator is silent over it
   if (diff.housesRaised?.length) add(pick(L.raised)(diff.housesRaised.length), 'raised', shots.some((c) => c.raised) ? 8 : 7);
-  for (const b of diff.buildingsStarted.slice(0, 2)) add(pick(L.unlocked)(bname(b)), 'unlocked', 8, null, b);
-  for (const b of diff.buildingsCompleted.slice(0, 2)) add(BUILDINGS[b].plural ? (lang === 'it' ? 'I campi sono pronti per la semina!' : 'The fields are ready to sow!') : pick(L.completed)(bname(b)), 'completed', 8, null, b);
+  for (const b of diff.buildingsStarted.slice(0, 2)) add(fresh(L.unlocked)(bname(b)), 'unlocked', 8, null, b);
+  for (const b of diff.buildingsCompleted.slice(0, 2)) add(BUILDINGS[b].plural ? (lang === 'it' ? 'I campi sono pronti per la semina!' : 'The fields are ready to sow!') : fresh(L.completed)(bname(b)), 'completed', 8, null, b);
   if (diff.housesAbandoned.length) add(pick(L.abandoned)(diff.housesAbandoned.length), 'abandoned', 7);
   if (diff.housesRuined.length) add(pick(L.ruined)(diff.housesRuined.length), 'ruined', 7);
   const milestone = diff.events.filter((e) => e.type === 'milestone').at(-1); // the biggest one passed today

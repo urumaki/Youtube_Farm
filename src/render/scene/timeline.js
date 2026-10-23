@@ -142,11 +142,16 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   }
   if (ambient) targets.push(ambient);
   if (tavern) {
-    const patrons = named.filter((n) => !keepers.includes(n) && !atWork.includes(n) && n.id !== ambient?.hero?.id).slice(0, 8);
+    // owner 2026-10-23: more names at the tables, and the one playing the lute has a name: a named bard, else another
+    // named villager who plays tonight
+    const idle = named.filter((n) => !keepers.includes(n) && !atWork.includes(n) && n.id !== ambient?.hero?.id);
+    const patrons = idle.slice(0, 13);
+    const musician = patrons.some((n) => n.job === 'bard') ? null : idle.find((n) => n.job === 'bard') || idle[13] || null;
     targets.push({
       kind: 'tavern', id: 'tavern', pos: buildings.items.tavern.focus.clone(), radius: 10, front: 0, label: null, labels: [],
       weight: 1.8, cut: true, // a hard cut inside (and out again): the camera never flies through the walls
       patrons: patrons.map((n) => ({ name: n.name, job: n.job })), keepers: keepers.map((n) => ({ name: n.name, job: n.job })),
+      musician: musician && { name: musician.name, job: musician.job },
     });
   }
   if (church) {
@@ -264,6 +269,15 @@ function orbitPose(tg, u) {
     return {
       pos: new THREE.Vector3(tg.pos.x + Math.cos(a) * r, tg.pos.y + h, tg.pos.z + Math.sin(a) * r),
       look: tg.pos.clone().add(new THREE.Vector3(0, lookY, 0)),
+    };
+  }
+  if (tg.raised) {
+    // a raised house stands in a terraced row (owner 2026-10-23: the neighbours filled the frame): high over the street,
+    // nearly square to the front, over the roofs across the street, the new storey in the middle of the frame
+    const a = tg.front + 0.15 - 0.3 * u;
+    return {
+      pos: new THREE.Vector3(tg.pos.x + Math.cos(a) * 26, tg.pos.y + 11, tg.pos.z + Math.sin(a) * 26),
+      look: tg.pos.clone().add(new THREE.Vector3(0, 1.2, 0)),
     };
   }
   const r = tg.radius;

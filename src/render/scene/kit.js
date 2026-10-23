@@ -48,6 +48,9 @@ export function gableGeo(w, d, h, tile = 3) {
     for (let k = 0; k < 3; k++) [v[t * 9 + 3 + k], v[t * 9 + 6 + k]] = [v[t * 9 + 6 + k], v[t * 9 + 3 + k]];
     for (let k = 0; k < 2; k++) [uv[t * 6 + 2 + k], uv[t * 6 + 4 + k]] = [uv[t * 6 + 4 + k], uv[t * 6 + 2 + k]];
   }
+  // the underside, facing down: seen from below the eaves the roof is not hollow (it looked as if it floated over the walls)
+  v.push(-hw, 0, -hd, hw, 0, -hd, hw, 0, hd, -hw, 0, -hd, hw, 0, hd, -hw, 0, hd);
+  uv.push(0, 0, w / tile, 0, w / tile, d / tile, 0, 0, w / tile, d / tile, 0, d / tile);
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
   g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));

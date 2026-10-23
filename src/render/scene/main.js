@@ -351,7 +351,7 @@ async function setup(data) {
       tg.banner = data.lang === 'it' ? `La carovana: ${caravan.count} nuov${caravan.count === 1 ? 'o arrivo' : 'i arrivi'}` : `The caravan: ${caravan.count} newcomer${caravan.count === 1 ? '' : 's'}`;
       tg.caravan = caravan;
     } else if (tg.kind === 'tavern') {
-      tavern = buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, patrons: tg.patrons, keepers: tg.keepers });
+      tavern = buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, patrons: tg.patrons, keepers: tg.keepers, musician: tg.musician });
       tg.labels = tavern.labels;
       tg.cam = tavern.cam;
       tg.banner = data.lang === 'it' ? 'La Taverna' : 'The Tavern';

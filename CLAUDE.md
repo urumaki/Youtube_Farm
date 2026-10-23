@@ -262,6 +262,14 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   of a building going up (`engineer:site`, only while something other than the wall is under construction). Every jester
   wears a jester's cap and every chimney sweep has a face black with soot, in every scene (`dress` in `work.js`, by the
   job's own tunic colour). Test with `--gallery "carpenter:cart,bard:square,bard:inn,jester:square,ratcatcher:alley,chimneysweep:house,cook:stall,butcher:stall,hunter:boar,shepherd:pen,tanner,engineer:site"`.
+- Fixes of 2026-10-23 (owner, after the day's re-render): roofs are closed underneath (`gableGeo` has a bottom face; seen
+  from below the eaves the forge's roof looked as if it floated) and the forge's awning is a slate lean-to on a beam and two
+  posts; neighbouring houses that ran into each other give up half the overlap (`fitNeighbours` in `houses.js`: side walls
+  stand 0.3 m apart, more beside a gable turned to the street, whose eaves are on the sides); the raised house's shot looks
+  at it square from high over the street (`pose` in `timeline.js`); more narrator lines about buildings and houses, never
+  the same one twice in a video (`fresh` in `narration.js`); the tavern seats 14 with name tags that take turns like the
+  caravan's (`overlay.js`), and the one playing the lute always has a name: a named bard, else another named villager
+  tagged "Bard tonight" (`musician`).
 - Church interior (owner 2026-10-23, `church.js`): the Chapel, or the Cathedral once built, with pews both sides of a red
   carpet, villagers praying on them (hands together, heads bowed), stained glass, candles, the priest blessing from behind
   the altar (in the Cathedral always a bishop with mitre and crozier; another named cleric reads at the lectern). The
