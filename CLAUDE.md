@@ -267,7 +267,11 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   posts; neighbouring houses that ran into each other give up half the overlap (`fitNeighbours` in `houses.js`: side walls
   stand 0.3 m apart, more beside a gable turned to the street, whose eaves are on the sides); the raised house's shot looks
   at it square from high over the street (`pose` in `timeline.js`); more narrator lines about buildings and houses, never
-  the same one twice in a video (`fresh` in `narration.js`); the tavern seats 14 with name tags that take turns like the
+  the same one twice in a video (`fresh` in `narration.js`), and every line fits its shot (owner, same day: with the new
+  lines the voice ran 2 s late over the shots): `fitShots` estimates how long each line takes (`spokenLength`), takes a
+  shorter variant of a line that would run past its shot (each template list has short ones: "Up goes the Potter's
+  Stall!"), drops a line that would still run into the next shot or whose shot another line took, then applies the word
+  budget; the lines naming a job or a building take their shots first, one welcome per villager shot; the tavern seats 14 with name tags that take turns like the
   caravan's (`overlay.js`), and the one playing the lute always has a name: a named bard, else another named villager
   tagged "Bard tonight" (`musician`).
 - Church interior (owner 2026-10-23, `church.js`): the Chapel, or the Cathedral once built, with pews both sides of a red

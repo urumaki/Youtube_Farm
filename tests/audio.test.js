@@ -99,3 +99,30 @@ test('sentences follow the shots they talk about, so the narrator never waits ov
   const h = s.sentences.find((x) => x.building === 'harbor'), c = s.sentences.find((x) => x.building === 'cathedral');
   assert.ok(h && c && s.sentences.indexOf(h) < s.sentences.indexOf(c), 'each building over its own shot');
 });
+
+test('each line fits its shot: short lines over the 2.3 s building shots, nothing runs on into the next shot (owner 2026-10-23)', async () => {
+  const fs = await import('node:fs');
+  const { migrate } = await import('../src/sim/state.js');
+  const { sentenceAnchors, spokenLength } = await import('../src/audio/narration.js');
+  const { schedule } = await import('../src/audio/tts/index.js');
+  // day 2026-10-23: the voice ran two seconds late, "the town builds upward" over the blacksmith
+  const { state, diff } = JSON.parse(fs.readFileSync(new URL('../state/history/2026-10-23.json', import.meta.url)));
+  const cues = [
+    { kind: 'caravan', id: 'caravan', t0: 0, t1: 4.5 }, { kind: 'building', id: 'potter_stall', t0: 4.5, t1: 6.81 },
+    { kind: 'building', id: 'university', t0: 6.81, t1: 9.12 }, { kind: 'house', id: 180, raised: true, t0: 9.12, t1: 11.43 },
+    { kind: 'villager', job: 'blacksmith', job2: 'baker', t0: 11.43, t1: 15.16 }, { kind: 'villager', job: 'carpenter', job2: 'farmer', t0: 15.16, t1: 18.88 },
+    { kind: 'tavern', id: 'tavern', t0: 18.88, t1: 23.5 },
+  ];
+  const s = buildScript(migrate(state), diff, { lang: 'en', shots: cues });
+  const len = s.sentences.map((x) => spokenLength(x.text));
+  const at = sentenceAnchors(s.sentences, cues);
+  const starts = schedule(len, at, 29.5);
+  const shotOf = (t) => cues.find((c) => t >= c.t0 && t < c.t1);
+  s.sentences.forEach((x, i) => {
+    if (at[i] === null || x.role === 'goal' || x.role === 'cta') return;
+    const shot = shotOf(at[i]);
+    assert.ok(starts[i] + len[i] <= shot.t1 + 0.6, `"${x.text}" (${starts[i].toFixed(1)}-${(starts[i] + len[i]).toFixed(1)}) runs past its shot (${shot.t1})`);
+  });
+  for (const id of ['potter_stall', 'university']) assert.ok(s.sentences.some((x) => x.building === id), `a line for ${id}`);
+  assert.ok(s.sentences.some((x) => x.role === 'raised'), 'a line for the raised house');
+});

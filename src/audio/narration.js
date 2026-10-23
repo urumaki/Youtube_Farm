@@ -23,7 +23,8 @@ const T = {
     granted: [(n, j) => (n === 1 ? `A wish was granted: we have a new ${j}!` : `The Lord granted ${n} job requests today!`)],
     apprentice: [(n) => `${n === 1 ? 'One apprentice waits' : `${n} apprentices wait`} for their trade to arrive.`],
     promoted: [(j) => `An apprentice finally becomes a ${j}!`],
-    caravan: [(n) => (n === 1 ? 'A traveler arrives with a cart full of belongings!' : `A caravan of ${n} newcomers rolls into town!`)],
+    caravan: [(n) => (n === 1 ? 'A traveler arrives with a cart full of belongings!' : `A caravan of ${n} newcomers rolls into town!`),
+      (n) => (n === 1 ? 'A traveler rolls in!' : `${n} newcomers roll in!`)],
     // story events (src/sim/stories.js): named villagers are heroes or comic characters, nobody gets hurt
     story: {
       quarrel: [(e) => `Two villagers are quarrelling in the square over ${OVER_EN[e.over]}!`, (e) => `Trouble in the square: a loud quarrel over ${OVER_EN[e.over]}!`],
@@ -82,14 +83,14 @@ const T = {
     houses: [(n) => `${n} new houses rise along the roads.`, (n) => `Builders raised ${n} new homes.`, (n) => `${n} more families move into new homes.`, (n) => `The streets fill up with ${n} new houses.`],
     rebuilt: [(n) => `${n === 1 ? 'An old ruin was' : `${n} old ruins were`} rebuilt.`],
     raised: [(n) => `Inside the walls, ${n === 1 ? 'a house grows' : `${n} houses grow`} a new storey.`, () => 'No room left? The town builds upward!',
-      (n) => `Up go the roofs: ${n === 1 ? 'a house gains' : `${n} houses gain`} another floor.`, () => 'Short of land, the town grows taller.'],
+      (n) => `Up go the roofs: ${n === 1 ? 'a house gains' : `${n} houses gain`} another floor.`, () => 'Short of land, the town grows taller.', () => 'The houses grow taller!'],
     abandoned: [(n) => `${n === 1 ? 'One house stands' : `${n} houses stand`} empty now.`],
     ruined: [(n) => `${n === 1 ? 'An abandoned house has' : `${n} abandoned houses have`} fallen into ruin.`],
     unlocked: [(b) => `The kingdom has grown enough for ${b}!`, (b) => `Hear ye! Work begins on ${b}!`, (b) => `The builders break ground for ${b}.`,
       (b) => `Stone and timber arrive: ${b} is on its way!`, (b) => `Today the first stone is laid for ${b}.`, (b) => `Scaffolding goes up for ${b}.`,
-      (b) => `The masons start work on ${b}.`, (b) => `By royal decree, ${b} will be built!`],
+      (b) => `The masons start work on ${b}.`, (b) => `By royal decree, ${b} will be built!`, (b) => `Work begins on ${b}!`, (b) => `Up goes ${b}!`],
     completed: [(b) => `${cap(b)} is finally complete!`, (b) => `${cap(b)} opens its doors today!`, (b) => `The last stone is set: ${b} is done!`,
-      (b) => `The scaffolding comes down from ${b}.`, (b) => `${cap(b)} stands finished at last.`, (b) => `The builders put down their tools: ${b} is ready!`],
+      (b) => `The scaffolding comes down from ${b}.`, (b) => `${cap(b)} stands finished at last.`, (b) => `The builders put down their tools: ${b} is ready!`, (b) => `${cap(b)} is done!`],
     progress: [(b, p) => `${cap(b)} is ${p} percent built.`, (b, p) => `Work on ${b} goes on: ${p} percent done.`, (b, p) => `${cap(b)} is rising, ${p} percent so far.`],
     milestone: [(m) => `We passed ${m} villagers!`],
     goal: [(n, g) => `${n} more villagers until ${g}.`, (n, g) => `Just ${n} more villagers and ${g}.`],
@@ -122,7 +123,7 @@ T.it = {
   granted: [(n, j) => (n === 1 ? `Desiderio esaudito: abbiamo un nuovo ${j}!` : `Il Signore ha esaudito ${n} richieste oggi!`)],
   apprentice: [(n) => `${n === 1 ? 'Un apprendista aspetta' : `${n} apprendisti aspettano`} il suo mestiere.`],
   promoted: [(j) => `Un apprendista diventa finalmente ${j}!`],
-  caravan: [(n) => (n === 1 ? 'Arriva un viandante con il suo carro!' : `Arriva una carovana con ${n} nuovi abitanti!`)],
+  caravan: [(n) => (n === 1 ? 'Arriva un viandante con il suo carro!' : `Arriva una carovana con ${n} nuovi abitanti!`), (n) => (n === 1 ? 'Arriva un viandante!' : `Arrivano ${n} nuovi abitanti!`)],
   story: {
     quarrel: [(e) => `Due abitanti litigano in piazza per ${OVER_IT[e.over]}!`, (e) => `Guai in piazza: una lite furiosa per ${OVER_IT[e.over]}!`],
     merchants: [(e) => `Passano mercanti ${FROM_IT[e.from] || 'da terre lontane'} con ${GOODS_IT[e.goods] || 'merci rare'}.`],
@@ -176,12 +177,12 @@ T.it = {
   houses: [(n) => `${n} nuove case sorgono lungo le strade.`, (n) => `${n} famiglie entrano nelle loro case nuove.`, (n) => `Le vie si riempiono di ${n} case nuove.`],
   rebuilt: [(n) => `${n === 1 ? 'Una rovina è stata ricostruita' : `${n} rovine sono state ricostruite`}.`],
   raised: [(n) => `Dentro le mura, ${n === 1 ? 'una casa si alza' : `${n} case si alzano`} di un piano.`, () => 'Poco spazio? La città cresce in altezza!',
-    (n) => `Su i tetti: ${n === 1 ? 'una casa guadagna' : `${n} case guadagnano`} un piano.`],
+    (n) => `Su i tetti: ${n === 1 ? 'una casa guadagna' : `${n} case guadagnano`} un piano.`, () => 'Le case crescono!'],
   abandoned: [(n) => `${n === 1 ? 'Una casa ora è vuota' : `${n} case ora sono vuote`}.`],
   ruined: [(n) => `${n === 1 ? 'Una casa abbandonata è crollata' : `${n} case abbandonate sono crollate`}.`],
   unlocked: [(b) => `Il regno è abbastanza grande per ${b}!`, (b) => `Udite udite! Iniziano i lavori per ${b}!`, (b) => `I costruttori aprono il cantiere per ${b}.`,
-    (b) => `Arrivano pietre e travi: presto avremo ${b}!`, (b) => `Oggi si posa la prima pietra per ${b}.`, (b) => `Si alzano le impalcature per ${b}.`],
-  completed: [(b) => `Lavori finiti: ecco ${b}!`, (b) => `Posata l’ultima pietra: ecco ${b}!`, (b) => `Oggi apre le porte ${b}!`, (b) => `Gli operai hanno finito: ecco ${b}!`],
+    (b) => `Arrivano pietre e travi: presto avremo ${b}!`, (b) => `Oggi si posa la prima pietra per ${b}.`, (b) => `Si alzano le impalcature per ${b}.`, (b) => `Al via ${b}!`],
+  completed: [(b) => `Lavori finiti: ecco ${b}!`, (b) => `Posata l’ultima pietra: ecco ${b}!`, (b) => `Oggi apre le porte ${b}!`, (b) => `Gli operai hanno finito: ecco ${b}!`, (b) => `Ecco ${b}!`],
   progress: [(b, p) => `Lavori per ${b} al ${p} per cento.`, (b, p) => `Il cantiere per ${b} avanza: siamo al ${p} per cento.`],
   milestone: [(m) => `Abbiamo superato ${m} abitanti!`],
   goal: [(n, g) => `Ancora ${n} abitanti e ${g}.`],
@@ -248,9 +249,13 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   const job = (j) => (lang === 'it' ? JOB_IT[j] : JOBS[j].label.toLowerCase());
   const S = []; // {text, role, priority} lower priority dropped first when too long
   // about: the job it names; building: the building it names (it waits for that building's shot)
-  const add = (text, role, priority, about = null, building = null) => text && S.push({ text, role, priority, job: about, building });
+  // alts: the other lines that say the same; a shorter one is taken when the line would not fit its shot (fitShots)
+  const add = (text, role, priority, about = null, building = null, alts = null) => text && S.push({ text, role, priority, job: about, building, alts });
+  const line = (f, args) => (typeof f === 'function' ? f(...args) : f);
+  // a line picked from a list of templates, with the others as alts
+  const addT = (list, args, role, priority, about = null, building = null, choose = pick) => add(line(choose(list), args), role, priority, about, building, list.map((f) => line(f, args)));
 
-  add(pick(L.open)(diff), 'open', 9);
+  addT(L.open, [diff], 'open', 9);
   const d = diff.delta;
   // on caravan days the counter already shows "+N villagers" and the caravan sentence says it: the
   // opening stays short enough to end with the caravan shot (4.5 s)
@@ -262,7 +267,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   else add(pick(L.same), 'delta', 10);
 
   // villagers named by commenters today are welcomed by job; otherwise up to two newcomers (special jobs first)
-  if ((diff.named || []).length) add(pick(L.caravan)(diff.named.length), 'caravan', 9);
+  if ((diff.named || []).length) addT(L.caravan, [diff.named.length], 'caravan', 9);
   const granted = (diff.requests || []).filter((q) => q.granted), waiting = (diff.requests || []).filter((q) => !q.granted);
   // the villagers the video shows at work (src/sim/featured.js): the narrator only names jobs on screen
   // (hosts and the guests who visit them)
@@ -273,7 +278,9 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   if (waiting.length) add(pick(L.apprentice)(waiting.length), 'requests', 6);
   if ((diff.promoted || []).length) add(pick(L.promoted)(job(diff.promoted[0].job)), 'requests', 8, diff.promoted[0].job);
   const welcomed = featured ? (diff.named || []).filter((v) => featured.some((f) => f.today && f.job === v.job)) : (diff.named || []).slice(0, 3);
-  const byJob = featured ? featured.filter((f) => f.today).map((f) => f.job).slice(0, 2) : [...new Set(welcomed.map((v) => v.job))].slice(0, 2);
+  // one welcome per shot: the host named today, else the guest (two welcomes over one shot ran into the next shots)
+  const byJob = featured ? (diff.featured || []).map((f) => (f.today ? f.job : f.with?.today ? f.with.job : null)).filter(Boolean).slice(0, 2)
+    : [...new Set(welcomed.map((v) => v.job))].slice(0, 2);
   byJob.forEach((j, i) => {
     const n = welcomed.filter((v) => v.job === j).length;
     const text = n > 1 && lang === 'en' ? `Welcome our ${n === 2 ? 'two' : 'three'} new ${plural(job(j))}!` : pick(L.welcome)({ job: job(j) });
@@ -298,13 +305,16 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   if (diff.scenes ? diff.scenes.tavern : tavernScene(state)) add(pick(L.tavern), 'tavern', 6);
   if (diff.scenes?.church) add(pick(L.church[diff.scenes.church]), 'church', 6);
   const nb = diff.housesBuilt.length;
-  if (nb === 1) add(pick(L.houses1), 'houses', 5);
-  else if (nb > 1) add(pick(L.houses)(nb.toLocaleString('en-US')), 'houses', 5);
+  if (nb === 1) addT(L.houses1, [], 'houses', 5);
+  else if (nb > 1) addT(L.houses, [nb.toLocaleString('en-US')], 'houses', 5);
   if (diff.housesRebuilt.length) add(pick(L.rebuilt)(diff.housesRebuilt.length), 'rebuilt', 5);
   // the raised house has its own shot: its sentence is kept, or the narrator is silent over it
-  if (diff.housesRaised?.length) add(pick(L.raised)(diff.housesRaised.length), 'raised', shots.some((c) => c.raised) ? 8 : 7);
-  for (const b of diff.buildingsStarted.slice(0, 2)) add(fresh(L.unlocked)(bname(b)), 'unlocked', 8, null, b);
-  for (const b of diff.buildingsCompleted.slice(0, 2)) add(BUILDINGS[b].plural ? (lang === 'it' ? 'I campi sono pronti per la semina!' : 'The fields are ready to sow!') : fresh(L.completed)(bname(b)), 'completed', 8, null, b);
+  if (diff.housesRaised?.length) addT(L.raised, [diff.housesRaised.length], 'raised', shots.some((c) => c.raised) ? 8 : 7);
+  for (const b of diff.buildingsStarted.slice(0, 2)) addT(L.unlocked, [bname(b)], 'unlocked', 8, null, b, fresh);
+  for (const b of diff.buildingsCompleted.slice(0, 2)) {
+    if (BUILDINGS[b].plural) add(lang === 'it' ? 'I campi sono pronti per la semina!' : 'The fields are ready to sow!', 'completed', 8, null, b);
+    else addT(L.completed, [bname(b)], 'completed', 8, null, b, fresh);
+  }
   if (diff.housesAbandoned.length) add(pick(L.abandoned)(diff.housesAbandoned.length), 'abandoned', 7);
   if (diff.housesRuined.length) add(pick(L.ruined)(diff.housesRuined.length), 'ruined', 7);
   const milestone = diff.events.filter((e) => e.type === 'milestone').at(-1); // the biggest one passed today
@@ -312,7 +322,7 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   const story = !diff.story && diff.events.find((e) => L.events[e.type]); // a story event replaces the flavor line
   if (story) add(L.events[story.type](story), 'event', 4);
   const prog = diff.events.find((e) => e.type === 'construction' && !diff.buildingsStarted.includes(e.building));
-  if (prog) add(pick(L.progress)(bname(prog.building), Math.round(prog.progress * 100)), 'progress', 3);
+  if (prog) addT(L.progress, [bname(prog.building), Math.round(prog.progress * 100)], 'progress', 3);
   add(L.weather[diff.weather], 'weather', 2);
   if (diff.next) {
     const g = lang === 'it' ? goalIt(diff.next) : diff.next.goal;
@@ -332,11 +342,6 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   // between equals, a sentence about a shot of its own stays (it fills that shot)
   const own = new Set(shots.length ? S.filter((s, i) => sentenceAnchors(S, shots)[i] !== null && !(s.role in FIXED_AT)) : []);
-  while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
-    const victim = [...S].sort((a, b) => a.priority - b.priority || own.has(a) - own.has(b))[0];
-    if (victim.priority >= 9) break;
-    S.splice(S.indexOf(victim), 1);
-  }
   // with the shot plan known, the sentences follow the shots they wait for: a sentence about a later shot
   // spoken first leaves the narrator silent until that shot (day 2026-10-22: "64 job requests" waited for
   // the third villager over the raised house). A sentence with no shot stays after the one before it.
@@ -346,9 +351,52 @@ export function buildScript(state, diff, { lang = 'en', seed = state.seed, shots
     const keyed = S.map((s, i) => ({ s, i, k: (key = at[i] ?? key) }));
     keyed.sort((a, b) => a.k - b.k || a.i - b.i);
     S.splice(0, S.length, ...keyed.map((x) => x.s));
+    fitShots(S, shots, r);
+  }
+  while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
+    const victim = [...S].sort((a, b) => a.priority - b.priority || own.has(a) - own.has(b))[0];
+    if (victim.priority >= 9) break;
+    S.splice(S.indexOf(victim), 1);
   }
   const text = S.map((s) => s.text).join(' ');
   return { sentences: S.map(({ text, role, job: about, building }) => ({ text, role, ...(about ? { job: about } : {}), ...(building ? { building } : {}) })), text, words: words(text) };
+}
+
+// About how long a line takes to say (the voice of 2026-10-23: ~18 letters a second, numbers and pauses slower)
+export const spokenLength = (t) => 0.055 * (t.match(/\p{L}/gu) || []).length + 0.4 * (t.match(/\d/g) || []).length + 0.3 * (t.match(/[,:;?]/g) || []).length;
+const GAP = 0.28, FIRST = 0.38; // the pause between sentences and the first word (src/audio/tts/index.js)
+// never dropped for time: the opening, the story event, the goal and the call to action
+const MUST = new Set(['open', 'delta', 'caravan', 'story', 'goal', 'cta']);
+
+/**
+ * Owner 2026-10-23: the voice ran late over the shots (a building shot lasts 2.3 s; a long line about it ran into the next
+ * shot and pushed everything after it). With the shot plan known, each sentence must end by the end of its shot and
+ * before the next sentence that waits for a shot: when it would not, it takes one of its alts that fits (the shortest
+ * when none does); a sentence that would still run past its shot into the next (or, with no shot of its own, into the
+ * next sentence's shot) is dropped, unless it is a must (MUST), and so is a line about a villager or a building that got no
+ * shot (another line took it). Runs before the word budget, on all the sentences.
+ */
+function fitShots(S, shots, r) {
+  const cues = sentenceCues(S, shots);
+  const out = [];
+  let t = FIRST;
+  S.forEach((s, i) => {
+    const c = cues[i], start = Math.max(t, c?.at ?? t);
+    const next = cues.slice(i + 1).find(Boolean);
+    const end = Math.min(c?.end ?? Infinity, next?.at ?? Infinity);
+    if (s.alts && spokenLength(s.text) > end - start) {
+      const fit = s.alts.filter((a) => spokenLength(a) <= end - start && !out.some((o) => o.text === a));
+      s.text = fit.length ? r.pick(fit) : s.alts.reduce((a, b) => (spokenLength(b) < spokenLength(a) ? b : a));
+    }
+    // past its own shot, or (with no shot of its own) into the time of the next sentence that waits for a shot
+    const over = c ? (c.end ?? Infinity) + 0.6 : (next?.at ?? Infinity) + 0.3;
+    if (start + spokenLength(s.text) > over && !MUST.has(s.role)) return;
+    // a line about a villager or a building whose shot another line took would be heard over some other shot
+    if (!c && (s.job || s.building) && !MUST.has(s.role)) return;
+    out.push(s);
+    t = start + spokenLength(s.text) + GAP;
+  });
+  S.splice(0, S.length, ...out);
 }
 
 // Which shot each kind of sentence talks about (see makePlan in src/render/scene/timeline.js).
@@ -366,9 +414,20 @@ const FIXED_AT = { goal: 23.7, cta: 27.1 };
  * cues: the shots from the renderer ([{kind, t0, t1}]).
  */
 export function sentenceAnchors(sentences, cues = []) {
+  return sentenceCues(sentences, cues).map((c) => (c ? c.at : null));
+}
+
+/** For each sentence, when it should start and when its shot ends ({ at, end }; no end for the fixed parts), or null. */
+function sentenceCues(sentences, cues = []) {
   const used = new Set();
-  return sentences.map((s) => {
-    if (FIXED_AT[s.role] !== undefined) return FIXED_AT[s.role];
+  // the sentences naming a job or a building take their shots first, then the others take the shots left
+  // (2026-10-23: "16 apprentices wait..." took the carpenter's shot and the carpenters' welcome lost it)
+  const named = (s) => !!(s.building || s.job);
+  const out = new Array(sentences.length).fill(null);
+  for (const pass of [true, false]) sentences.forEach((s, i) => { if (named(s) === pass) out[i] = cueOf(s); });
+  return out;
+  function cueOf(s) {
+    if (FIXED_AT[s.role] !== undefined) return { at: FIXED_AT[s.role] };
     const match = SHOT_OF[s.role];
     // a sentence naming a job waits for that villager's shot (and for no other; a visiting villager is in
     // the host's shot); otherwise the next shot of its kind
@@ -379,8 +438,8 @@ export function sentenceAnchors(sentences, cues = []) {
         : cues.find((c) => match(c) && !used.has(c)));
     if (!cue) return null;
     used.add(cue);
-    return cue.t0 + 0.25;
-  });
+    return { at: cue.t0 + 0.25, end: cue.t1 };
+  }
 }
 
 function goalIt(next) {
