@@ -85,10 +85,14 @@ function door(P, layer, put, x, w, h, damaged) {
 }
 
 /** Gable roof with real thickness, eaves, ridge, bargeboards; returns nothing. Ridge along x. */
-function roof(P, { W, D, y, pitch, mat, thatch, damaged, front, zc = 0 }) {
+function roof(P, { W, D, y: y0, pitch, mat, thatch, damaged, front, zc = 0 }) {
   const ov = thatch ? 0.55 : 0.4, og = thatch ? 0.4 : 0.3;
   const half = D / 2 + ov;
   const rise = half * Math.tan(pitch);
+  // the slabs rest on the walls (owner 2026-10-23: the roofs looked like they floated): their underside meets the
+  // top of the walls (y0 - 0.1) along the wall line, so the overhang drops below it; the gables stand on the walls
+  const wallTop = y0 - 0.1;
+  const y = wallTop - ov * Math.tan(pitch) + 0.02;
   const slope = Math.hypot(half, rise);
   const th = thatch ? 0.45 : 0.16;
   for (const s of [-1, 1]) {
@@ -113,7 +117,7 @@ function roof(P, { W, D, y, pitch, mat, thatch, damaged, front, zc = 0 }) {
     tri.setAttribute('position', new THREE.Float32BufferAttribute(sx > 0 ? [0, 0, hw, 0, 0, -hw, 0, rise * (hw / half), 0] : [0, 0, -hw, 0, 0, hw, 0, rise * (hw / half), 0], 3));
     tri.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, D / 2, 0, D / 4, rise / 2], 2));
     tri.computeVertexNormals();
-    P.add('roof', front, tri, sx * (W / 2), y, zc);
+    P.add('roof', front, tri, sx * (W / 2), wallTop, zc);
     if (!thatch) for (const s of [-1, 1]) P.add('roof', 'woodDark', boxGeo(0.1, 0.24, slope, 1), sx * (W / 2 + og), y + rise / 2 + 0.05, zc + s * half / 2, 0, s * pitch);
   }
   return rise;
@@ -214,23 +218,24 @@ export function buildHouseVariant(spec) {
   // roof
   const pitch = arch === 'cottage' ? 0.85 : arch === 'stone' ? 0.72 : fine ? 1.0 : 0.92;
   const roofMat = arch === 'cottage' ? 'thatch' : arch === 'stone' ? 'slate' : 'roofTile';
+  const drop = 0.08 - 0.02 + (arch === 'cottage' ? 0.55 : 0.4) * Math.tan(pitch); // how far roof() sets the roof down onto the walls
   const rise = roof(P, { W, D: D + jetty, y: eaves + 0.1, pitch, mat: roofMat, thatch: arch === 'cottage', damaged, front: timber || fine ? 'plaster' : wallMat, zc: -jetty / 2 });
   if ((dormer || fine) && !damaged) for (const dx of fine ? [-W / 4, W / 4] : [0]) {
-    const dw = Math.min(1.8, W * 0.3), dy = eaves + rise * 0.3;
+    const dw = Math.min(1.8, W * 0.3), dy = eaves + rise * 0.3 - drop;
     P.box('roof', fine ? 'plaster' : wallMat, dw, 1.3, 1.2, dx, dy + 0.65, -D / 4);
     P.box('roof', 'glass', dw * 0.55, 0.8, 0.05, dx, dy + 0.7, -D / 4 - 0.62);
     for (const s of [-1, 1]) P.box('roof', roofMat, dw / 2 + 0.35, 0.1, 1.5, dx + s * dw / 4, dy + 1.45, -D / 4, 0, 0, s * -0.6);
   }
   let chimneyTop = null;
   if (chimney || fine) for (const side of fine ? [-1, 1] : [r.chance(0.5) ? -1 : 1]) {
-    const cx = side * (W / 2 - 0.55), top = eaves + rise + 1.0;
+    const cx = side * (W / 2 - 0.55), top = eaves + rise - drop + 1.0;
     chimneyTop = [cx, top + 0.7, 0.4];
     P.box('details', 'stone', 0.75, top - 0.4, 0.75, cx, (top + 0.4) / 2, 0.4, 0, 0, 0, 1);
     P.box('details', 'stoneDark', 0.95, 0.14, 0.95, cx, top + 0.07, 0.4);
     P.add('details', 'clay', cylGeo(0.13, 0.15, 0.45, 8), cx + 0.15, top + 0.36, 0.4);
     if (r.chance(0.5)) P.add('details', 'clay', cylGeo(0.12, 0.14, 0.38, 8), cx - 0.17, top + 0.33, 0.4);
   }
-  return { parts: P.merged(), eaves, rise, height: eaves + rise, chimneyTop, jetty, topBase: levels.at(-1).y };
+  return { parts: P.merged(), eaves, rise, height: eaves + rise - drop, chimneyTop, jetty, topBase: levels.at(-1).y };
 }
 
 function wrapY(put, y0, H) {
