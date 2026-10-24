@@ -97,7 +97,8 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const camFrom = Math.floor(rand01(state.seed, 'camstyle', state.day) * CAM_STYLES.length);
   const usedVariants = new Set();
   let crofts = 0;
-  const jobSub = (n) => (n.job === 'apprentice' && n.wants ? `Apprentice ${jobLabel(n.wants)}` : jobLabel(n.job));
+  // the winner of the guards' tournament is the Captain of the Guard (owner 2026-10-25, state.guardCaptain)
+  const jobSub = (n) => (n.job === 'apprentice' && n.wants ? `Apprentice ${jobLabel(n.wants)}` : n.id === state.guardCaptain && n.job === 'guard' ? 'Captain of the Guard' : jobLabel(n.job));
   for (const { f, n, g } of shots) {
     const apprentice = n.job === 'apprentice' && n.wants;
     const sceneJob = apprentice ? n.wants : n.job;

@@ -75,6 +75,14 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Owner: medieval only, nothing magic
   (no wizards, witches, spells; the alchemist became the Apothecary, "speziale"). Tone rule (owner): named villagers are heroes or comic, never
   villains or victims; nobody gets hurt. Test one with `npm run render -- --real --subs N --story bandits`.
+  The guards' tournament (owner 2026-10-25, `tourney`, scene `stories/tourney.js`): a knockout over three quiet days
+  (`round1`, `semis`, `final`) among eight named guards drawn at random, in a rope ring on the market square, two bouts
+  abreast, every fighter with a name tag; late in the shot each loser lowers the sword and bows, the winner raises it
+  ("Goes through!"). In each bout the guard named on an earlier day wins 85% (`TOURNEY_ODDS`), the one named later 15%,
+  two named the same day 50%; the whole bracket is drawn on the first day (`rounds`, `champion`), so the days agree. On
+  the last day the champion becomes Captain of the Guard (`state.guardCaptain`; the tag reads "Captain of the Guard" in
+  the final and on that guard's work shots, `jobSub` in `timeline.js`). Needs 8 named guards, no rain or snow on the first
+  day, cooldown 30 days. Test a day with `--story tourney`, `--story tourney:semis`, `--story tourney:final`.
   The people in a role are named villagers of that job when the kingdom has them (owner 2026-10-25, `roleCast` in
   `stories.js`): the guards beside the heroes against the bandits (`guardCast`) and the King's banner guards in the
   procession and at the feast (`escort`) are named guards or knights, the folk with torches against the wolves named

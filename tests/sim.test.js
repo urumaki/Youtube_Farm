@@ -681,3 +681,39 @@ test('no more buildings begin on a day than the video can show; the rest wait fo
   assert.equal(s.buildQueue.length, 0, 'all have begun in the end');
   checkInvariants(s);
 });
+
+test("the guards' tournament: a knockout of eight named guards over three days, older names win 85%, the champion is captain (owner 2026-10-25)", async () => {
+  const { storyFor, STORIES } = await import('../src/sim/stories.js');
+  assert.deepEqual(STORIES.tourney.steps, ['round1', 'semis', 'final']);
+  // guards 0-3 named on day 1, 4-7 on day 5, 8-9 on day 5 too
+  const kingdom = (date) => ({
+    seed: SEED, date, day: 9, buildings: [], weather: 'clear',
+    villagers: Array.from({ length: 10 }, () => ({ job: 'guard' })),
+    names: Object.fromEntries(Array.from({ length: 10 }, (_, id) => [id, { name: `G${id}`, day: id < 4 ? 1 : 5 }])),
+  });
+  let older = 0, mixed = 0, same = 0, sameA = 0;
+  for (let d = 1; d <= 400; d++) {
+    const date = `2027-${String(1 + (d % 12)).padStart(2, '0')}-${String(1 + (d % 28)).padStart(2, '0')}-${d}`;
+    const s = kingdom(date);
+    const t = storyFor(s, 'tourney');
+    assert.equal(t.rounds.length, 3);
+    assert.deepEqual(t.rounds.map((b) => b.length), [4, 2, 1]);
+    assert.equal(new Set(t.cast.map((c) => c.id)).size, 8, 'eight different guards');
+    for (const [k, bouts] of t.rounds.entries()) {
+      for (const b of bouts) {
+        assert.ok([b.a.id, b.b.id].includes(b.winner));
+        if (k + 1 < t.rounds.length) assert.ok(t.rounds[k + 1].some((n) => n.a.id === b.winner || n.b.id === b.winner), 'the winner fights next');
+        if (b.a.day !== b.b.day) { mixed++; if (b.winner === (b.a.day < b.b.day ? b.a : b.b).id) older++; } else { same++; if (b.winner === b.a.id) sameA++; }
+      }
+    }
+    const fin = storyFor(s, 'tourney:final');
+    assert.equal(fin.cast.length, 2);
+    assert.equal(s.guardCaptain, t.champion, 'the champion becomes captain');
+  }
+  assert.ok(Math.abs(older / mixed - 0.85) < 0.05, `older names win ${(older / mixed).toFixed(2)}`);
+  assert.ok(Math.abs(sameA / same - 0.5) < 0.07, `same day ${(sameA / same).toFixed(2)}`);
+  // too few named guards: no tournament
+  const few = kingdom('2027-01-01');
+  for (const id of [7, 8, 9]) few.villagers[id].job = 'farmer';
+  assert.equal(storyFor(few, 'tourney'), null);
+});

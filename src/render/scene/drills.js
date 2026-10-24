@@ -34,7 +34,7 @@ function shield(M) {
   return g;
 }
 
-function fighter(M, color, { withShield = true } = {}) {
+export function fighter(M, color, { withShield = true } = {}) {
   const P = person(M, color);
   P.r.hand.add(sword(M));
   if (withShield) P.l.hand.add(shield(M));
@@ -46,8 +46,8 @@ function fighter(M, color, { withShield = true } = {}) {
 
 // one exchange: the attacker winds up, cuts down at the hit, and recovers; the defender raises sword and
 // shield to meet it
-const PERIOD = 1.05, HIT = 0.55;
-function attackArm(u) {
+export const PERIOD = 1.05, HIT = 0.55;
+export function attackArm(u) {
   if (u < 0.4) return lerp(-1.1, -2.9, ease(u / 0.4));
   if (u < HIT) return lerp(-2.9, -1.8, ((u - 0.4) / (HIT - 0.4)) ** 2);
   return lerp(-1.8, -1.1, ease((u - HIT) / (1 - HIT)));

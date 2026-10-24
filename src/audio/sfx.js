@@ -414,6 +414,8 @@ const SCENES = {
   ev_royal_feast: [['chatter', 0.55], ['cheer', 0.3]],
   ev_royal_leave: [['fanfare', 0.45], ['cheer', 0.5], ['cart', 0.35]],
   ev_archery_final: [['chatter', 0.3], ['cheer', 0.45]],
+  ev_tourney: [['chatter', 0.35], ['cheer', 0.3]],
+  ev_tourney_final: [['fanfare', 0.4], ['chatter', 0.3], ['cheer', 0.5]],
   ev_flood_recede: [['water', 0.5], ['cheer', 0.45]],
   ev_quarrel_peace: [['chatter', 0.4], ['cheer', 0.4]],
   // everyday shots

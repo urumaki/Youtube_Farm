@@ -15,10 +15,12 @@ import { buildNewYear } from './newyear.js';
 import { buildCamp } from './camp.js';
 export { storyCue } from '../../../sim/stories.js';
 import { buildFeast } from './feast.js';
+import { buildTourney } from './tourney.js';
 
 const BUILDERS = {
   quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween,
   fire: buildFire, rebuild: buildRebuild, wolves: buildWolves, storm: buildStorm, royal: buildRoyal, pig: buildPig, archery: buildArchery, flood: buildFlood, newyear: buildNewYear,
+  tourney: buildTourney,
 };
 
 // later steps of a story told over several days (src/sim/stories.js) with a scene of their own; the other

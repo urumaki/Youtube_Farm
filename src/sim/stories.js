@@ -17,6 +17,8 @@ export const FROM_IT = {
 };
 export const GOODS_IT = { spices: 'spezie', wool: 'lana', salt: 'sale', silk: 'seta', amber: 'ambra', wine: 'vino', 'iron tools': 'attrezzi di ferro', honey: 'miele', 'dyed cloth': 'stoffe colorate' };
 const HEROES = ['knight', 'warrior', 'guard', 'fletcher'];
+// the guards' tournament: the chance that the guard named first (the older name) wins a bout
+export const TOURNEY_ODDS = 0.85;
 const BUILDERS = ['carpenter', 'stonemason'];
 const COSTUMES = ['ghost', 'scarecrow', 'pumpkin']; // folk costumes only, nothing magic (owner)
 
@@ -47,6 +49,9 @@ export const STORIES = {
   flood: { minPop: 30, cooldown: 25, weight: 2, needs: (s) => s.weather === 'rain', steps: ['rise', 'recede'] },
   // the heats, then the final with the winner's rosette
   archery: { minPop: 40, cooldown: 12, weight: 2, needs: (s) => !['rain', 'snow'].includes(s.weather), steps: ['heats', 'final'] },
+  // the guards' tournament (owner 2026-10-25): a knockout over three days among eight named guards, the winner becomes
+  // Captain of the Guard (state.guardCaptain)
+  tourney: { minPop: 60, cooldown: 30, weight: 2, needs: (s) => namedVillagers(s).filter((n) => n.job === 'guard').length >= 8 && !['rain', 'snow'].includes(s.weather), steps: ['round1', 'semis', 'final'] },
 };
 const STORY_CHANCE = 0.5;
 
@@ -165,6 +170,32 @@ const BUILD = {
     while (cast.length < 6 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
     // the King's two banner guards, named guards or knights
     return { cast, escort: roleCast(state, r, ['guard', 'knight'], 2, cast) };
+  },
+  tourney(state, r, arc) {
+    if (arc?.data) {
+      // the same bracket; the round of the day (its fighters are the cast); the champion is made captain on the last day
+      const round = arc.step === 'final' ? 2 : arc.step === 'semis' ? 1 : 0;
+      if (arc.step === 'final') state.guardCaptain = arc.data.champion;
+      return { ...arc.data, cast: arc.data.rounds[round].flatMap((b) => [b.a, b.b]) };
+    }
+    // eight named guards drawn at random; in each bout the one named first (the older name) wins 85 times in 100, the
+    // newer 15, two named the same day 50/50 (owner 2026-10-25). All three rounds are decided now, so the days agree.
+    const pool = namedVillagers(state).filter((n) => n.job === 'guard'), entrants = [];
+    while (entrants.length < 8 && pool.length) entrants.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    if (entrants.length < 8) return null;
+    const odds = (a, b) => (a.day < b.day ? TOURNEY_ODDS : a.day > b.day ? 1 - TOURNEY_ODDS : 0.5);
+    const rounds = [];
+    let field = entrants.map(({ id, name, job, day }) => ({ id, name, job, day }));
+    while (field.length > 1) {
+      const bouts = [];
+      for (let i = 0; i < field.length; i += 2) {
+        const a = field[i], b = field[i + 1];
+        bouts.push({ a, b, winner: (r.chance(odds(a, b)) ? a : b).id });
+      }
+      rounds.push(bouts);
+      field = bouts.map((bt) => (bt.winner === bt.a.id ? bt.a : bt.b));
+    }
+    return { rounds, champion: field[0].id, cast: rounds[0].flatMap((b) => [b.a, b.b]) };
   },
   storm(state, r) {
     const pool = namedVillagers(state).slice(0, 12), cast = [];
