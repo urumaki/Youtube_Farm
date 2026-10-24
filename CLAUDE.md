@@ -16,11 +16,13 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   a change; render full videos only when asked.
 
 ## Commands
-- `npm test` — must stay green (node:test, ~30 tests).
+- `npm test` — must stay green (node:test, ~60 tests).
 - `npm run render -- --subs 118 --from 72 [--names "A,B"] [--stills 4,15,24]` — test render, never
   touches `state/`. `--names` fakes commenters. `--real` starts from the real `state/` (next day, read
   only) instead of a fresh two-day test kingdom: needed to test anything that exists only later (tavern).
-- `npm run daily -- --dry-run --subs 80` — simulate the next real day without saving.
+- `npm run daily -- --dry-run --subs 80` — simulate the next real day without saving (no video).
+- `node scripts/preview-day.js 1600 [date]` — render the next real day (real comments since the last saved day, the given
+  subscribers) to `output/<date>_en_preview_<subs>.mp4`, read only: nothing saved, nothing published.
 - `node scripts/verify-video.js output/x.mp4` — format checks.
 - `node scripts/map.js` — map of the town from above (`output/map.png`): houses by storeys, free plots,
   fields, the Second Wall with gates, buildings standing / going up / still to come with their goal.
@@ -309,8 +311,9 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (`overlay.js`). Owner does not want royal family or noble titles (prince, princess) as jobs for now. Done: tavern interior with named patrons.
   Ideas not done: narrator jokes for refused requests ("clone me", "landlord").
 
-## Status at handoff (2026-10-19)
-- Daily upload works (videos 74VLgbuvzGU, YQjmBQNZlo4, 2mydn7mgvjU). ~118 subscribers, 24 named villagers.
+## Status (2026-10-24)
+- Daily upload works (first videos 74VLgbuvzGU, YQjmBQNZlo4, 2mydn7mgvjU; 2026-10-23 is bb3qhk45GRw). Day 8 (2026-10-23):
+  1350 subscribers, 371 named villagers, ~150 new commenters a day.
 - More story events the owner may pick: wedding, tournament, villager leaving with a bundle on unsubscribe, Christmas, New Year fireworks.
 - Voice still `am_adam`; owner may switch after listening to the Voice samples action.
 - Owner pinned (or will pin) a comment: "call me <name>" + a job, "watch the end credits".
