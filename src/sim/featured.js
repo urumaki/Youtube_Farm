@@ -50,8 +50,9 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
   const day = state.day;
   const avoid = new Set(avoidJobs);
   slots ??= tavern || church ? 2 : 3;
-  // owner 2026-10-23: priests and bishops are shown in the church (church.js), not at work in a croft
-  const clergy = !!churchScene(state);
+  // owner 2026-10-23: priests and bishops are shown in the church (church.js) on the days it closes the video; on the other
+  // days they are out at work too (owner 2026-10-25: blessing the fields, preaching in the square, at a wayside cross)
+  const clergy = !!church;
   const people = Object.entries(state.names || {})
     .map(([id, n]) => {
       const last = state.lastShown?.[id];

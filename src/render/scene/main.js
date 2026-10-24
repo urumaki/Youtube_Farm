@@ -166,6 +166,10 @@ async function setup(data) {
   const PLACES = {
     blacksmith: ['forge', 1.6, 6.4], toolsmith: ['forge', 1.6, 6.4], woodcutter: ['sawmill', 0.8, 9.2],
     stonemason: ['quarry', -8, -12.4, { y: 0.2, back: true }], miller: ['windmill', 2.6, 5.4], executioner: ['pillory', 0.3, -3.0, { back: true }],
+    // owner 2026-10-25: the potter, the tailor and the cobbler in front of their stalls on the market square, the scholar
+    // on the University's lawn, the cooper, the bell founder and the clockmaker in front of their workshops on the ward squares
+    potter: ['potter_stall', 0, 2.7], tailor: ['tailor_stall', 0, 2.7], cobbler: ['cobbler_stall', 0, 2.7],
+    scholar: ['university', 6, -3, { y: 0.12 }], cooper: ['cooperage', 0, 3.6], bellfounder: ['bell_foundry', 0, 3.8], clockmaker: ['clock_tower', 0, 4.2],
   };
   // farmers work in one of the fields (owner 2026-10-23), on the crop (its surface is 0.12 m above the ground); the
   // odd ones, which have no hay bales in summer and autumn (buildFields in buildings.js)
@@ -221,6 +225,9 @@ async function setup(data) {
   const workPlace = (job, sh, variant = null, id = 0) => {
     if (variant === 'counting' && buildings.items.counting_house) return atLot(buildings.items.counting_house, -2.3, 2.1);
     if (variant === 'shop' && buildings.items.apothecary_shop) return atLot(buildings.items.apothecary_shop, -1.6, 2.4);
+    if (variant === 'booth' && buildings.items.physician_booth) return atLot(buildings.items.physician_booth, -1.6, 2.6);
+    // the priest blesses one of the fields
+    if (variant === 'bless' && fieldCount > 1) return atField(id);
     // the crier up on the Crier's Stand, calling to the square
     if (variant === 'stand' && buildings.items.crier_stand) return { ...atLot(buildings.items.crier_stand, 0.1, 0.25, { y: 0.77 }), face: undefined };
     const place = PLACES[job] && done(PLACES[job][0]);
@@ -234,7 +241,7 @@ async function setup(data) {
       return { anchor, ax: d.x, az: d.z, floorAt: () => m.base + 0.05, face: Math.atan2(d.x, d.z) };
     }
     // the bard and the jester perform in the market square, between the north stalls and the road
-    if (variant === 'square' && buildings.items.market) {
+    if ((variant === 'square' || variant === 'proclaim' || variant === 'preach') && buildings.items.market) {
       const m = buildings.items.market, x = [-11, 11, -3, 3][Math.abs(id) % 4];
       const anchor = m.toWorld([x, 0.05, -6.5]), d = m.toWorld([x, 0.05, 0]).sub(anchor).setY(0).normalize();
       return { anchor, ax: d.x, az: d.z, floorAt: () => m.base + 0.05 };

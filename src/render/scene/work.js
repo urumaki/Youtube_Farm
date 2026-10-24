@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { rand01 } from '../../sim/prng.js';
 import { JOBS } from '../../sim/tiers.js';
-import { cylGeo, boxGeo, sheep } from './kit.js';
+import { cylGeo, boxGeo, gableGeo, sheep } from './kit.js';
 
 const ease = (x) => x * x * (3 - 2 * x);
 const flat = (g) => { const q = g.index ? g.toNonIndexed() : g; q.deleteAttribute('uv'); return q; };
@@ -84,6 +84,19 @@ function dress(P, color, M) {
   } else if (color === JOBS.chimneysweep.color) {
     soot ??= new THREE.MeshStandardMaterial({ color: '#3a312c', roughness: 0.95 });
     P.head.material = soot;
+  } else if (color === JOBS.priest.color || color === JOBS.bishop.color) {
+    // clergy (owner 2026-10-25, shown at work too): a red stole; the bishop a mitre with a gold band
+    const stole = new THREE.Mesh(boxGeo(0.16, 0.85, 0.04), M.clothRed);
+    stole.position.set(0, 0.42, 0.29);
+    P.body.add(stole);
+    if (color === JOBS.bishop.color) {
+      P.hat.visible = false;
+      const mitre = new THREE.Mesh(new THREE.ConeGeometry(0.23, 0.62, 4).scale(1, 1, 0.7).translate(0, 1.47, 0), M.clothIvory);
+      const band = new THREE.Mesh(cylGeo(0.215, 0.225, 0.07, 12), M.gold);
+      band.position.y = 1.2;
+      mitre.castShadow = true;
+      P.body.add(mitre, band);
+    }
   }
 }
 function jesterCap(M) {
@@ -246,9 +259,23 @@ Object.assign(JOB_SCENES, {
   apothecary: { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95 },
   'apothecary:shop': { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95, queue: 'sick', radius: 8.2 },
   'merchant:stall': { period: 2.2, raise: -1.35, down: -0.95, bend: 0.08, sound: 'none', tool: null, props: 'scales', smooth: true, left: -0.9, queue: 'customer', radius: 6.4 },
+  // owner 2026-10-25, a second scene for the jobs that had one: the tax collector goes door to door, his tally in hand,
+  // a householder holding out a purse at the door; the merchant unloads sacks of goods from a cart onto a stack; the
+  // physician at the Physician's Booth with a queue of the sick; the executioner sharpens his axe on a grindstone (sparks);
+  // the jester juggles for two children; the crier reads a proclamation in the square to a small crowd; the priest (and the
+  // bishop) blesses the fields with holy water, preaches in the square, or prays at a wayside cross by the house
+  'taxcollector:rounds': { period: 2.0, raise: -1.1, down: -1.1, bend: 0.1, sound: 'none', tool: null, props: 'doorstep', read: true, smooth: true, turn: 1.1, radius: 6.4 },
+  'merchant:cart': { period: 2.3, hit: 0.5, raise: -1.45, down: -0.7, bend: 0.45, fx: null, sound: 'none', tool: 'sack', props: 'goodscart', smooth: true, both: true, carry: true },
+  'physician:booth': { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95, queue: 'sick', radius: 8.2 },
+  'executioner:grind': { period: 1.2, raise: -1.2, down: -0.95, bend: 0.25, fx: 'sparks', sound: 'none', tool: 'axe', props: 'grindstone', smooth: true, both: true, hood: true },
+  'jester:kids': { period: 0.9, raise: -1.2, down: -0.8, bend: 0, sound: 'none', tool: null, props: 'kids', juggle: true, turn: 0.45, radius: 6.2 },
+  'crier:proclaim': { period: 2.6, raise: -1.15, down: -1.15, bend: -0.05, sound: 'none', tool: null, props: 'crowd', read: true, smooth: true, turn: 0.45, radius: 6.8 },
+  priest: { period: 3.0, raise: -2.4, down: -0.5, bend: 0.05, sound: 'none', tool: null, props: 'shrine', smooth: true, left: -1.0 },
+  'priest:bless': { period: 2.2, raise: -2.3, down: -0.9, bend: 0, fx: 'splash', sound: 'none', tool: null, props: 'none', smooth: true, left: -1.0, turn: 0.4 },
+  'priest:preach': { period: 2.8, raise: -2.6, down: -0.8, bend: -0.05, sound: 'none', tool: null, props: 'crowd', smooth: true, left: -1.0, turn: 0.45, radius: 6.8 },
 });
 JOB_SCENES.warrior = JOB_SCENES.knight;
-for (const [from, to] of [['toolsmith', 'blacksmith'], ['brewer', 'innkeeper']]) {
+for (const [from, to] of [['toolsmith', 'blacksmith'], ['brewer', 'innkeeper'], ['bishop', 'priest']]) {
   for (const k of Object.keys(JOB_SCENES)) if (k === to || k.startsWith(to + ':')) JOB_SCENES[from + k.slice(to.length)] ??= JOB_SCENES[k];
 }
 
@@ -954,6 +981,87 @@ function buildProps(kind, M, add, anim = [], holder = null) {
         P.body.rotation.z = 0.05 * Math.sin(t * 2.2 + i * 2);
       }));
       return new THREE.Vector3(0, 1.2, 0.4);
+    }
+    case 'doorstep': { // a house front with an open door; the householder in the doorway holds out a purse, now and then
+      // the front faces halfway between the tax collector and the camera (which stands off to his right, `turn` 1.1)
+      const front = new THREE.Group();
+      front.position.set(0.1, 0, 1.75);
+      front.rotation.y = Math.atan2(-0.85, -0.53);
+      holder.add(front);
+      const put = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; front.add(m); };
+      put(boxGeo(3.4, 3.0, 0.25).translate(0, 1.5, -0.2), M.plaster);
+      for (const x of [-1.6, 1.6]) put(boxGeo(0.18, 3.0, 0.3).translate(x, 1.5, -0.2), M.woodDark);
+      put(boxGeo(3.4, 0.18, 0.3).translate(0, 2.95, -0.2), M.woodDark);
+      put(boxGeo(1.1, 2.0, 0.3).translate(0, 1.0, -0.19), M.woodDark); // the doorway
+      put(boxGeo(0.08, 1.95, 1.0).translate(-0.55, 0.98, 0.45), M.wood); // the door, swung open
+      put(boxGeo(1.3, 0.12, 0.5).translate(0, 0.06, 0.2), M.stone); // the step
+      put(boxGeo(0.6, 0.5, 0.06).translate(1.05, 1.9, -0.05), M.woodDark); // a window
+      const H = rig(M, '#8a6a3a');
+      H.root.position.set(0, 0.12, 0.15);
+      front.add(H.root);
+      const purse = toolGeo('sack', M);
+      purse.scale.setScalar(0.4);
+      H.r.hand.add(purse);
+      anim.push((t) => { const k = 0.5 + 0.5 * Math.sin(t * 1.4); H.r.g.rotation.set(-0.5 - 0.9 * k, 0, 0); H.l.g.rotation.set(-0.2, 0, 0); });
+      return new THREE.Vector3(0, 1.2, 0.4);
+    }
+    case 'goodscart': { // a cart in front, loaded with crates and a barrel; sacks and crates stacked behind on the left
+      add(boxGeo(1.3, 0.08, 1.8).translate(0.15, 0.62, 1.55), M.woodDark);
+      for (const s of [-1, 1]) add(boxGeo(0.05, 0.32, 1.8).translate(0.15 + s * 0.63, 0.8, 1.55), M.woodDark);
+      for (const s of [-1, 1]) {
+        add(new THREE.TorusGeometry(0.44, 0.045, 6, 16).rotateY(Math.PI / 2).translate(0.15 + s * 0.76, 0.44, 1.6), M.woodDark);
+        add(cylGeo(0.06, 0.06, 0.1, 8).rotateZ(Math.PI / 2).translate(0.15 + s * 0.76, 0.44, 1.6), M.iron);
+      }
+      for (const s of [-1, 1]) add(cylGeo(0.03, 0.03, 1.2, 6).rotateX(Math.PI / 2 - 0.25).translate(0.15 + s * 0.45, 0.45, 0.35), M.woodDark);
+      for (const [x, z, m] of [[-0.15, 1.2, M.wood], [0.4, 1.3, M.woodDark], [-0.1, 1.9, M.wood]]) add(boxGeo(0.45, 0.4, 0.45).translate(x, 0.86, z), m);
+      add(cylGeo(0.22, 0.22, 0.5, 12).translate(0.45, 0.91, 1.95), M.wood);
+      for (const [x, y, z] of [[-1.4, 0.2, -0.6], [-1.4, 0.2, -0.1], [-1.4, 0.55, -0.35], [-1.85, 0.2, -0.35]]) add(new THREE.SphereGeometry(0.26, 10, 8).scale(1, 0.8, 0.9).translate(x, y, z), M.hay);
+      add(boxGeo(0.5, 0.45, 0.5).translate(-1.45, 0.22, 0.45), M.wood);
+      return new THREE.Vector3(0.15, 0.95, 1.45);
+    }
+    case 'grindstone': { // a grindstone on a wooden frame, turned by a treadle; a bucket of water beside it
+      for (const s of [-1, 1]) add(boxGeo(0.08, 0.95, 0.08).translate(s * 0.3, 0.47, 0.75), M.woodDark);
+      add(boxGeo(0.7, 0.08, 0.9).translate(0, 0.2, 0.75), M.woodDark);
+      add(cylGeo(0.03, 0.03, 0.7, 6).rotateZ(Math.PI / 2).translate(0, 0.85, 0.75), M.iron);
+      const wheel = new THREE.Mesh(cylGeo(0.38, 0.38, 0.12, 18).rotateZ(Math.PI / 2), M.stone);
+      wheel.position.set(0, 0.85, 0.75);
+      wheel.castShadow = true;
+      holder.add(wheel);
+      wheel.add(new THREE.Mesh(boxGeo(0.14, 0.05, 0.6), M.stoneDark)); // a mark, so the turning shows
+      add(cylGeo(0.18, 0.15, 0.3, 10).translate(0.65, 0.15, 0.85), M.wood);
+      anim.push((t) => { wheel.rotation.x = -t * 7; });
+      return new THREE.Vector3(0, 1.2, 0.42);
+    }
+    case 'kids': // two children watching, one clapping, one jumping
+    case 'crowd': { // a few listeners gathered round, nodding (the square, or the priest's flock)
+      const kids = kind === 'kids';
+      // off to the side away from the camera (it stands on the worker's -x side), as for the busker
+      const spots = kids ? [[1.5, 1.2, '#c85a3a'], [2.2, 0.1, '#4a7ac2']] : [[1.3, 1.3, '#3f5a7a'], [2.0, 0.3, '#8a6a3a'], [1.8, 2.1, '#5d6b35']];
+      const people = spots.map(([x, z, color], i) => {
+        const P = rig(M, color);
+        if (kids) P.root.scale.setScalar(0.62);
+        P.root.position.set(x, 0, z);
+        P.root.rotation.y = Math.atan2(-x, -z);
+        holder.add(P.root);
+        return { P, i };
+      });
+      anim.push((t) => people.forEach(({ P, i }) => {
+        if (kids && i === 0) { const k = Math.abs(Math.sin(t * 6)); P.r.g.rotation.set(-1.2, 0, -0.35 + 0.25 * k); P.l.g.rotation.set(-1.2, 0, 0.35 - 0.25 * k); }
+        else if (kids) { P.root.position.y = 0.18 * Math.abs(Math.sin(t * 4.5)); P.r.g.rotation.set(-2.6, 0, 0); P.l.g.rotation.set(-2.6, 0, 0); }
+        else { P.r.g.rotation.set(-0.15, 0, 0); P.l.g.rotation.set(-0.15, 0, 0); P.head.rotation.x = 0.12 * Math.sin(t * 2 + i * 1.7); }
+        P.body.rotation.z = 0.04 * Math.sin(t * 2.2 + i * 2);
+      }));
+      return new THREE.Vector3(0, 1.2, 0.4);
+    }
+    case 'shrine': { // a wayside cross under a little roof, a candle and flowers at its foot
+      add(boxGeo(0.14, 2.1, 0.14).translate(0, 1.05, 1.3), M.woodDark);
+      add(boxGeo(0.8, 0.12, 0.12).translate(0, 1.6, 1.3), M.woodDark);
+      add(gableGeo(1.0, 0.5, 0.25).translate(0, 2.1, 1.3), M.roofTile);
+      add(boxGeo(0.5, 0.3, 0.4).translate(0, 0.15, 1.1), M.stone);
+      add(cylGeo(0.03, 0.03, 0.18, 6).translate(0.12, 0.39, 1.05), M.clothIvory);
+      add(new THREE.ConeGeometry(0.025, 0.07, 6).translate(0.12, 0.51, 1.05), M.flame);
+      for (const [x, m] of [[-0.12, M.clothRed], [-0.02, M.gold]]) add(new THREE.SphereGeometry(0.05, 6, 5).translate(x, 0.34, 1.0), m);
+      return new THREE.Vector3(0, 1.4, 0.6);
     }
     case 'alley': { // rats round the rat catcher's feet in a narrow alley, a barrel and a broken crate against the wall
       const rats = [0, 1, 2].map(() => {

@@ -25,12 +25,14 @@ export const VARIANTS = {
   innkeeper: ['inside', 'tavern', 'barrel'], brewer: ['inside', 'tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
   // owner 2026-10-23: at their own place once it stands (else their usual scene in the croft), with a queue in front;
   // the crier calls out from the Crier's Stand
-  merchant: ['stall'], taxcollector: ['counting'], apothecary: ['shop'], crier: ['stand'],
+  merchant: ['stall', 'cart'], taxcollector: ['counting', 'rounds'], apothecary: ['shop'], crier: ['stand', 'proclaim'],
+  // owner 2026-10-25: a second scene for the jobs that had one, the physician at the Physician's Booth, the clergy at work
+  physician: ['booth'], executioner: ['chop', 'grind'], priest: ['bless', 'preach', 'shrine'], bishop: ['bless', 'preach', 'shrine'],
   // owner 2026-10-23: the bard plays the flute in the market square or the lute in the tavern, the jester juggles burning
   // torches in the square, the cook and the butcher keep a market stall, the rat catcher works in an alley, the chimney
   // sweep inside a house, the hunter at the edge of a field outside the walls (a boar or a stag), the shepherd at a sheep
   // pen, the engineer in front of a building going up (src/render/scene/work.js, main.js)
-  bard: ['square', 'inn'], jester: ['square'], cook: ['stall'], butcher: ['stall'], ratcatcher: ['alley'], chimneysweep: ['house'],
+  bard: ['square', 'inn'], jester: ['square', 'kids'], cook: ['stall'], butcher: ['stall'], ratcatcher: ['alley'], chimneysweep: ['house'],
   hunter: ['boar', 'stag'], shepherd: ['pen', 'pasture'], engineer: ['site'], falconer: ['meadow'],
 };
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
@@ -47,11 +49,11 @@ const SUMMER = new Set(['fields', 'wheat', 'pasture']);
 export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished
 const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop', inside: 'tavern', stand: 'crier_stand',
-  square: 'market', inn: 'tavern' };
+  square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth' };
 // croft scenes no longer used once the building stands (the innkeeper's barrel in the croft, once the tavern is open)
 const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
 // scenes with no room for a visitor (on a platform, on the move, inside a house): a host with a guest stays in the croft
-const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house']);
+const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless']);
 // buildings with no shot of their own: no engineer stands in front of them
 const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');

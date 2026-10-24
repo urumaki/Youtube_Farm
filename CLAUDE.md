@@ -284,13 +284,25 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   stepping out of the building toward the camera (squares are open paving). Spots in front of a lot are on the ground under
   them (`floorOf`: a foundation's top, a square's sloping side, else the terrain): before 2026-10-24 `atLot` put the
   woodcutter by the sawmill and his visitor 0.25 m up in the air.
+- Second scenes and own places (owner 2026-10-25, for the jobs that had one scene, `work.js`, `scenes.js`, `main.js`): the tax
+  collector goes door to door with his tally, a householder holding out a purse in a doorway (`taxcollector:rounds`, a house
+  front turned halfway to the camera, props `doorstep`); the merchant loads sacks from a stack onto a cart (`merchant:cart`);
+  the physician works at the Physician's Booth with a queue of the sick once it stands (`physician:booth`); the executioner
+  sharpens his axe on a grindstone at the pillory (`executioner:grind`, sparks); the jester juggles for two children
+  (`jester:kids`); the crier reads a proclamation to a small crowd in the market square (`crier:proclaim`); priests and
+  bishops (red stole; the bishop a mitre, `dress`) bless a field with holy water (`priest:bless`, needs the fields), preach
+  to a crowd in the square (`priest:preach`) or pray at a wayside cross by the house (`shrine`); `bishop:*` uses the
+  priest's scenes. Listeners and children stand on the side away from the camera (`crowd`, `kids`). The potter, the tailor
+  and the cobbler work in front of their stalls on the market square, the scholar on the University's lawn, the cooper,
+  the bell founder and the clockmaker in front of their workshops (`PLACES`), once those stand. Test with
+  `npm run render -- --real --subs 1900 --built physician_booth,tailor_stall,university,cobbler_stall --gallery "taxcollector:rounds,merchant:cart,physician:booth,executioner:grind,jester:kids,crier:proclaim,priest:bless,priest:preach,priest,bishop:preach,potter,tailor,scholar,cobbler"`.
 - Church interior (owner 2026-10-23, `church.js`): the Chapel, or the Cathedral once built, with pews both sides of a red
   carpet, villagers praying on them (hands together, heads bowed), stained glass, candles, the priest blessing from behind
   the altar (in the Cathedral always a bishop with mitre and crozier; another named cleric reads at the lectern). The
   newest named villagers sit in the front pews with small name tags that take turns, as in the caravan (12 in the
   Chapel, 16 in the Cathedral). It closes the "at work" part like the tavern (two villager shots), never on a tavern day
-  and not again within 3 days (`churchToday` in `scenes.js`, `diff.scenes.church`); priests and bishops are only shown
-  there once a church stands (`pickFeatured`). The building's outside is hidden while the camera is in (the
+  and not again within 3 days (`churchToday` in `scenes.js`, `diff.scenes.church`); on that day priests and bishops are
+  only shown there (`pickFeatured`); on the other days they are out at work (below). The building's outside is hidden while the camera is in (the
   Cathedral's transept and aisles are solid boxes across the nave). Test with `npm run render -- --real --subs 775 --church
   [--built cathedral] --stills 19,21,23`.
 - Commissions (owner 2026-10-23): buildings with no goal, begun on the next day the kingdom runs, whatever its
