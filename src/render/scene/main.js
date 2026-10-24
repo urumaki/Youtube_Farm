@@ -28,7 +28,8 @@ import { buildBakehouse } from './bakery.js';
 import { buildSweepRoom } from './room.js';
 import { huntSpot } from '../../sim/wall.js';
 import { buildQueue } from './queue.js';
-import { heightAt } from '../../sim/world.js';
+import { heightAt, WATER_LEVEL } from '../../sim/world.js';
+import { JOBS } from '../../sim/tiers.js';
 import { pointInObb, grow } from '../../sim/geometry.js';
 
 const FPS = 30;
@@ -136,10 +137,26 @@ async function setup(data) {
   // stall, the tax collector at the Counting House door, the apothecary at the shop (`face`: the way they look, along
   // the front, so the camera on the street sees the queue in profile)
   // (`y` above the lot's level, `back`: the camera on the lot's back side, -z)
+  // the ground under a spot: the top of a building's paved foundation or a square's sloping side, else the terrain
+  const pads = Object.values(buildings.items).filter((it) => it.pad && it.lot?.hw > 0);
+  const floorOf = (x, z) => {
+    let y = yFn(x, z);
+    for (const { lot, base, padH, flare } of pads) {
+      const c = Math.cos(-lot.rot), s = Math.sin(-lot.rot), dx = x - lot.x, dz = z - lot.z;
+      const out = Math.max(Math.abs(dx * c - dz * s) - lot.hw - 0.5, Math.abs(dx * s + dz * c) - lot.hd - 0.5);
+      if (out <= 0) y = Math.max(y, base + 0.05);
+      else if (out < flare) y = Math.max(y, base + 0.05 - (padH * out) / flare);
+    }
+    return y;
+  };
+  // a spot in front of a lot may be off its foundation, down on the grass (2026-10-24: the woodcutter in front of the sawmill
+  // and his visitor stood 0.25 m up in the air)
   const atLot = (item, x, z, { y = 0, back = false } = {}) => {
     const { lot } = item, o = item.toWorld([0, 0, 0]), e = item.toWorld([1, 0, 0]), s = back ? -1 : 1;
-    const floorAt = (px, pz) => (pointInObb(grow(lot, 0.4), px, pz) ? item.base + y : yFn(px, pz));
-    return { anchor: item.toWorld([x, y, z]), ax: -Math.sin(lot.rot) * s, az: Math.cos(lot.rot) * s, floorAt, face: Math.atan2(e.x - o.x, e.z - o.z) };
+    const floorAt = (px, pz) => (pointInObb(grow(lot, 0.4), px, pz) ? item.base + y : floorOf(px, pz));
+    const anchor = item.toWorld([x, y, z]);
+    anchor.y = floorAt(anchor.x, anchor.z);
+    return { anchor, ax: -Math.sin(lot.rot) * s, az: Math.cos(lot.rot) * s, floorAt, face: Math.atan2(e.x - o.x, e.z - o.z) };
   };
   const done = (id) => state.buildings.some((b) => b.id === id && b.status === 'done') && buildings.items[id];
   // owner 2026-10-23: the jobs with a workplace of their own work there once it stands, every scene of the job: the smith in
@@ -384,6 +401,42 @@ async function setup(data) {
       stories.push({ st, tg });
     }
   }
+  // builders at each building going up (owner 2026-10-24). The vertical frame is narrow, so they stand in a loose group on
+  // the line from the camera (halfway through its move round the building, timeline.js) to the building, low in the frame;
+  // never inside a building (they step back out of it toward the camera), over water, in a house or on another lot. Seen
+  // only during the building's shot
+  const crews = [];
+  const SPOTS = [[-0.9, 0], [0.8, 0.1], [0.05, -0.08], [-0.4, 0.17], [1.3, 0.06]]; // across the view (x D/8) and deeper (x D/10), at least 1.7 m and 1.3 m
+  if (plan) for (const tg of plan.targets) {
+    const item = tg.kind === 'building' && tg.builders?.length && buildings.items[tg.id], lot = item?.lot;
+    if (!lot || !(lot.hw > 0) || lot.onWater) continue;
+    const others = Object.values(buildings.items).filter((it) => it !== item && it.lot?.hw > 0 && it !== buildings.items[lot.onPlaza]);
+    const r = tg.radius, a = tg.front + 0.2, f = tg.pos;
+    const cam = new THREE.Vector3(f.x + Math.cos(a) * r, 0, f.z + Math.sin(a) * r);
+    const dir = new THREE.Vector3(-Math.cos(a), 0, -Math.sin(a)), side = new THREE.Vector3(-dir.z, 0, dir.x);
+    // the ground 16 degrees below the middle of the frame for a small building, 11 for the others (their name tags stay
+    // above the captions)
+    const H = f.y + r * 0.5 - floorOf(f.x, f.z), D = H / Math.tan(Math.atan((r * 0.5 + 2) / r) + (r < 20 ? 0.28 : 0.19));
+    const wide = Math.max(D / 8, 1.7), deep = Math.max(D / 10, 1.3);
+    const labels = [];
+    tg.builders.forEach((b, i) => {
+      const [across, deeper] = SPOTS[i % SPOTS.length];
+      const spot = cam.clone().addScaledVector(dir, D + deep * 10 * deeper).addScaledVector(side, wide * across);
+      // squares (the wards, the market) are open paving: builders may stand on them
+      for (let k = 0; k < 60 && !lot.plaza && pointInObb(grow(lot, 1.2), spot.x, spot.z); k++) spot.addScaledVector(dir, -0.5);
+      if (heightAt(w, spot.x, spot.z) < WATER_LEVEL + 0.3 || inHouse(spot, null, 0.8) || others.some((it) => pointInObb(grow(it.lot, 0.3), spot.x, spot.z))) return;
+      spot.y = floorOf(spot.x, spot.z);
+      const [job, variant] = b.role.split(':');
+      // side on to the camera, half of them each way (the one with the plan looks toward the building)
+      const turn = (sceneOf(job, variant).turn ?? 1.1) * (i % 2 ? -1 : 1);
+      const ws = buildWorkScene({ job, variant, anchor: spot, face: Math.atan2(-dir.x, -dir.z) + turn, M, seed: state.seed, id: b.id, color: JOBS[b.job]?.color, t0: tg.t0 });
+      ws.group.visible = false;
+      scene.add(ws.group);
+      crews.push({ ws, tg });
+      labels.push({ pos: spot.clone().setY(spot.y + 2.1), title: b.name, sub: b.sub });
+    });
+    if (labels.length) tg.labels = labels;
+  }
   // test renders (--gallery): every work scene and visit asked for, one at a time, in the croft behind the
   // first named villager's house (kept clear like in the video)
   if (data.gallery) {
@@ -417,7 +470,7 @@ async function setup(data) {
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
   const overlay = viewer ? null : createOverlay(document.getElementById('stage'), data);
 
-  const ctx = { ...ctx0, renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, interiors, caravan, tavern, church, stories };
+  const ctx = { ...ctx0, renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, interiors, caravan, tavern, church, stories, crews };
   ctx.stats = {
     setupMs: Math.round(performance.now() - t0), houses: state.houses.length, animated: animated.size, trees: nature.count,
     walkers: life.walkers, guards: life.guards, targets: plan?.targets.map((t) => `${t.kind}:${t.id ?? ''}`),
@@ -443,6 +496,10 @@ function setFov(camera, fov) {
 function applyFrame(ctx, t) {
   const { plan, camera, env, castle, animated, buildings, life, water, M, houses, nature, overlay, renderer } = ctx;
   for (const ws of ctx.works || []) ws.update(t);
+  for (const { ws, tg } of ctx.crews || []) {
+    ws.group.visible = t >= tg.t0 - 0.1 && t <= tg.t1 + 0.1;
+    if (ws.group.visible) ws.update(t);
+  }
   const ct = ctx.caravan && plan.targets.find((x) => x.kind === 'caravan');
   if (ct) ctx.caravan.update(t, ct.t0, ct.t1);
   let quiet = false; // a guard scene on the castle walls is on: no other guards walking through it

@@ -276,6 +276,14 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   budget; the lines naming a job or a building take their shots first, one welcome per villager shot; the tavern seats 14 with name tags that take turns like the
   caravan's (`overlay.js`), and the one playing the lute always has a name: a named bard, else another named villager
   tagged "Bard tonight" (`musician`).
+- Builders at building sites (owner 2026-10-24): every building shot (going up or completed) shows 3-5 named villagers at
+  work in front of it with name tags, the big building label kept: one reads the plan, the others hammer at a bench, cut
+  stone, saw, lay stones (`crewRoles` in `timeline.js`: their own trade's role first). Picked in `makePlan` (`tg.builders`):
+  nobody already on screen elsewhere in the video, engineers, carpenters and masons first, then those waiting longest
+  (`state.lastShown`). Placed in `main.js` (`crews`) on the line from the camera to the building, low in the narrow frame,
+  stepping out of the building toward the camera (squares are open paving). Spots in front of a lot are on the ground under
+  them (`floorOf`: a foundation's top, a square's sloping side, else the terrain): before 2026-10-24 `atLot` put the
+  woodcutter by the sawmill and his visitor 0.25 m up in the air.
 - Church interior (owner 2026-10-23, `church.js`): the Chapel, or the Cathedral once built, with pews both sides of a red
   carpet, villagers praying on them (hands together, heads bowed), stained glass, candles, the priest blessing from behind
   the altar (in the Cathedral always a bishop with mitre and crozier; another named cleric reads at the lectern). The

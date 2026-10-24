@@ -81,3 +81,10 @@ test('guard scenes vary by day and two guards never share one', async () => {
   }
   assert.equal(seen.size, VARIANTS.guard.length);
 });
+
+test('builders at a building site each get a role, their own trade first', async () => {
+  const { crewRoles } = await import('../src/render/scene/timeline.js');
+  const crew = crewRoles([{ id: 1, trade: 'scholar' }, { id: 2, trade: 'stonemason' }, { id: 3, trade: 'engineer' }, { id: 4, trade: 'stonemason' }]);
+  assert.deepEqual(crew.map((b) => [b.id, b.role]), [[3, 'engineer:site'], [1, 'carpenter:bench'], [2, 'stonemason:block'], [4, 'carpenter:saw']]);
+  assert.deepEqual(crewRoles([{ id: 5, trade: 'carpenter' }, { id: 6, trade: 'farmer' }, { id: 7 }]).map((b) => b.role), ['engineer:site', 'carpenter:bench', 'stonemason:block']);
+});

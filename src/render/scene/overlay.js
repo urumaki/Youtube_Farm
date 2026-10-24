@@ -123,7 +123,9 @@ export function createOverlay(root, data) {
       // after a flight the villager is tiny until the camera has landed in front of them
       const u0 = tg?.kind === 'villager' && !tg.cut && !tg.cutIn ? 0.4 : 0.12;
       // a shot of two villagers has a second label, for the guest, once they have walked in
-      const bigLabels = tg && !tg.labels ? [[tg, tg.label, tg.labelPos, u0], [tg.label2, tg.label2, tg.labelPos2, Math.max(u0, 0.22)]].filter((l) => l[1]) : [];
+      // a building going up keeps its big label over the builders' name tags (owner 2026-10-24)
+      const site = tg?.kind === 'building';
+      const bigLabels = tg && (!tg.labels || site) ? [[tg, tg.label, tg.labelPos, u0], [tg.label2, tg.label2, tg.labelPos2, Math.max(u0, 0.22)]].filter((l) => l[1]) : [];
       let first = null;
       for (const [key, label, pos, from] of bigLabels) {
         if (!(ev.activeU > from && ev.activeU < 0.97)) continue;
@@ -144,7 +146,7 @@ export function createOverlay(root, data) {
         let cy = Math.min(sh - 260, Math.max(hEl + 10, y - 30));
         // the two labels never cover each other: the second one moves below the first
         if (first && Math.abs(first.x - cx) < (first.w + wEl) / 2 && Math.abs(first.y - cy) < hEl + 6) cy = first.y + hEl + 8;
-        first ??= { x: cx, y: cy, w: wEl };
+        first ??= { x: cx, y: cy, w: wEl, h: hEl };
         el.style.left = `${cx}px`; el.style.top = `${cy}px`;
         el.style.opacity = Math.min(1, (ev.activeU - from) * 8, (0.97 - ev.activeU) * 12);
         // the name label pops in with a small overshoot
@@ -156,7 +158,9 @@ export function createOverlay(root, data) {
       // many small name tags (the caravan): nearest first, hidden when they would overlap
       for (const el of tagEls) el.style.display = 'none';
       banner.style.opacity = 0;
-      if (tg && tg.labels && ev.activeU > 0.08 && ev.activeU < 0.97) {
+      // the builders' tags wait for the flight into the shot to end
+      const tagFrom = site ? 0.3 : 0.08;
+      if (tg && tg.labels && ev.activeU > tagFrom && ev.activeU < 0.97) {
         banner.textContent = tg.banner || '';
         // when the caravan opens the video, the banner waits for the counter to leave the top of the frame
         banner.style.opacity = hook ? 0 : Math.max(0, Math.min(1, (ev.activeU - 0.08) * 6, (t - 2.2) * 6, (0.97 - ev.activeU) * 12));
@@ -183,9 +187,10 @@ export function createOverlay(root, data) {
           const wEl = el.offsetWidth, hEl = el.offsetHeight;
           const cx = Math.min(sw - wEl / 2, Math.max(wEl / 2, it.x));
           if (placed.some((p) => Math.abs(p.x - cx) < (p.w + wEl) / 2 - 6 && Math.abs(p.y - it.y) < hEl - 4)) { el.style.display = 'none'; return; }
+          if (first && Math.abs(first.x - cx) < (first.w + wEl) / 2 && it.y > first.y - first.h - 4 && it.y - hEl < first.y + 4) { el.style.display = 'none'; return; }
           placed.push({ x: cx, y: it.y, w: wEl });
           el.style.left = `${cx}px`; el.style.top = `${it.y}px`;
-          el.style.opacity = Math.min(1, (ev.activeU - 0.08) * 6, (0.97 - ev.activeU) * 12);
+          el.style.opacity = Math.min(1, (ev.activeU - tagFrom) * 6, (0.97 - ev.activeU) * 12);
         });
       }
       // captions: the current phrase, the spoken word highlighted

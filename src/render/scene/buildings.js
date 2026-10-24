@@ -779,6 +779,9 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     for (const bt of ctx.boats) boats.push({ pos: toWorld([bt.x, 0, bt.z]), rot: lot.rot + bt.r, len: bt.len, sail: bt.sail });
     const item = {
       group: root, body, site: siteGroup, focus: toWorld([0, out.focusH, 0]), lot, base: frame.base, toWorld,
+      // the paved foundation under the lot (its top 0.05 m over `base`, 0.5 m wider than the lot, `padH` deep; a square's
+      // sides slope out `flare` metres at the bottom); stalls on a square stand on the square's
+      pad: !lot.onWater && !parent && bd.id !== 'quarry', padH, flare: lot.plaza ? padH * 1.8 : 0,
       setProgress(p) {
         body.scale.y = Math.max(0.02, Math.min(1, 0.1 + 0.9 * p));
         siteGroup.visible = p < 0.999;

@@ -45,7 +45,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     targets.push({
       kind: 'building', id, pos: it.focus.clone(), radius: big ? 70 : SMALL.includes(id) ? 13 : 30, front: (it.lot?.rot ?? 0) + Math.PI / 2,
       label: { title: BUILDINGS[id].label.replace(/^the /, 'The '), sub: diff.buildingsCompleted.includes(id) ? 'Completed!' : 'Construction begins' },
-      completed: diff.buildingsCompleted.includes(id),
+      completed: diff.buildingsCompleted.includes(id), crew: big ? 5 : SMALL.includes(id) ? 3 : 4,
       weight: people ? 0.9 : 1, // "a few seconds" each when the caravan and the workers share the video
     });
   }
@@ -150,8 +150,8 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     targets.push({
       kind: 'tavern', id: 'tavern', pos: buildings.items.tavern.focus.clone(), radius: 10, front: 0, label: null, labels: [],
       weight: 1.8, cut: true, // a hard cut inside (and out again): the camera never flies through the walls
-      patrons: patrons.map((n) => ({ name: n.name, job: n.job })), keepers: keepers.map((n) => ({ name: n.name, job: n.job })),
-      musician: musician && { name: musician.name, job: musician.job },
+      patrons: patrons.map((n) => ({ id: n.id, name: n.name, job: n.job })), keepers: keepers.map((n) => ({ name: n.name, job: n.job })),
+      musician: musician && { id: musician.id, name: musician.name, job: musician.job },
     });
   }
   if (church) {
@@ -160,7 +160,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     targets.push({
       kind: 'church', id: church, pos: buildings.items[church].focus.clone(), radius: 10, front: 0, label: null, labels: [],
       weight: 1.8, cut: true, // a hard cut inside and out, as for the tavern
-      clergy: clergy.map((n) => ({ name: n.name, job: n.job })), worshippers: worshippers.map((n) => ({ name: n.name, job: n.job })),
+      clergy: clergy.map((n) => ({ name: n.name, job: n.job })), worshippers: worshippers.map((n) => ({ id: n.id, name: n.name, job: n.job })),
     });
   }
   // 3) new or rebuilt houses fill the rest (a spread of them), only on days without named villagers
@@ -210,6 +210,22 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   }
   if (targets.length < 2) targets.push({ kind: 'castle', pos: castle.keep.clone(), radius: 62, front: 0.6, label: null });
   if (targets.length < 2) targets.push({ kind: 'gate', pos: castle.signPos.clone(), radius: 30, front: 0, label: null });
+  // builders at every building going up (owner 2026-10-24): named villagers in front of it, one reading the plan, the
+  // others hammering, sawing, cutting and laying stone, each with a name tag. Not anyone already on screen elsewhere;
+  // engineers, carpenters and masons first, then those who have waited longest to be shown
+  const onScreen = new Set([...atWork, ...keepers, ...clergy].map((n) => n.id));
+  for (const tg of targets) {
+    if (tg.hero) onScreen.add(tg.hero.id);
+    for (const p of [...(tg.patrons || []), ...(tg.worshippers || []), ...(tg.clergy || []), tg.musician].filter(Boolean)) if (p.id !== undefined) onScreen.add(p.id);
+  }
+  const trade = (n) => BUILDER_JOBS.indexOf(n.job === 'apprentice' ? n.wants : n.job);
+  const last = (n) => state.lastShown?.[n.id] ?? -1;
+  const pool = named.filter((n) => !onScreen.has(n.id))
+    .sort((a, b) => (trade(a) < 0) - (trade(b) < 0) || last(a) - last(b) || a.id - b.id);
+  for (const tg of targets) {
+    if (tg.kind !== 'building' || !pool.length) continue;
+    tg.builders = crewRoles(pool.splice(0, tg.crew ?? 4).map((n) => ({ id: n.id, name: n.name, job: n.job, sub: jobSub(n), trade: n.job === 'apprentice' ? n.wants : n.job })));
+  }
 
   // kingdom extent for the wide shot
   const box = new THREE.Box3(new THREE.Vector3(-60, 0, -60), new THREE.Vector3(80, 30, 60));
@@ -233,6 +249,23 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   // overcast days keep more light at the end so the wide shot stays readable
   const dusk = ['fog', 'rain', 'snow', 'cloudy'].includes(diff.weather) ? 0.55 : 0.8;
   return { targets, center, extent: Math.max(size.x, size.z), story, dusk, start };
+}
+
+// the work at a building site, in the order the builders stand along its front (work.js scenes): the plan, the hammer,
+// the mallet, the saw, laying stones
+export const BUILDER_JOBS = ['engineer', 'carpenter', 'stonemason'];
+const ROLES = ['engineer:site', 'carpenter:bench', 'stonemason:block', 'carpenter:saw', 'stonemason:stack'];
+/** Each builder gets a role: their own trade's when it is free, else the next one free. */
+export function crewRoles(crew) {
+  const roles = ROLES.slice(0, Math.max(crew.length, 1)), out = [];
+  const free = new Set(roles);
+  const left = [];
+  for (const b of crew) {
+    const own = roles.find((r) => free.has(r) && r.startsWith(`${b.trade}:`));
+    if (own) { free.delete(own); out.push({ ...b, role: own }); } else left.push(b);
+  }
+  for (const b of left) { const r = roles.find((x) => free.has(x)); free.delete(r); out.push({ ...b, role: r }); }
+  return out.sort((a, b) => roles.indexOf(a.role) - roles.indexOf(b.role));
 }
 
 function pickSpread(n, k) {
