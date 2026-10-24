@@ -21,9 +21,13 @@ function houseStage(houses, id) {
   return { sh, group, toWorld, W: sh.W, D: sh.D, wallH, roofH: sh.D * 0.5 };
 }
 
-/** High over the street, above the roofs across it, looking down at the roof and the people in front. */
+/**
+ * Down the street in front of the house, at first-floor height, looking along the front at the people and up at the roof.
+ * (Owner 2026-10-25: from high over the roofs across the street, the house opposite hid the bucket chain and the
+ * carpenters with their name tags; inside the walls the houses stand in rows.)
+ */
 function streetCam(st, u) {
-  return { pos: st.toWorld(st.W / 2 + 4 - 6 * u, st.wallH + 7, -st.D / 2 - 17), look: st.toWorld(1, st.wallH * 0.75, -st.D / 2) };
+  return { pos: st.toWorld(st.W / 2 + 6 - 3 * u, st.wallH + 5, -st.D / 2 - 3.8), look: st.toWorld(-1, st.wallH * 0.4, -st.D / 2 - 0.6) };
 }
 
 function particles(n, color, size, opacity) {
@@ -76,15 +80,19 @@ export function buildFire({ story, M, houses, seed, lang }) {
   water.position.set(x0 + 1.3, 0.55, lineZ);
   group.add(water);
   const cast = story.cast || [];
+  // the named neighbours passing buckets along the chain (owner 2026-10-25), from the trough end
+  const chainCast = story.chain || [];
+  const passerOf = (i) => chainCast[5 - i] || null;
   const chain = Array.from({ length: 6 }, (_, i) => {
     const c = i < cast.length ? cast[i] : null;
-    const P = person(M, c ? JOBS[c.job]?.color || '#7a6a55' : NEIGHBOURS[i]);
+    const n = c || passerOf(i);
+    const P = person(M, n ? JOBS[n.job]?.color || '#7a6a55' : NEIGHBOURS[i]);
     // the heroes throw the water, at the house end of the line
     const x = c ? -W * 0.15 + i * 1.1 : x0 - (5 - i) * 1.0;
     P.root.position.set(x, 0, c ? lineZ + 0.9 : lineZ);
     P.root.rotation.y = c ? Math.PI : Math.PI / 2; // throwers face the house, the chain faces along the street
     group.add(P.root);
-    return { P, c, x };
+    return { P, c, x, n };
   });
   const throwers = chain.filter((m) => m.c);
   if (!throwers.length) { // no named villagers: the first two neighbours throw
@@ -95,6 +103,7 @@ export function buildFire({ story, M, houses, seed, lang }) {
   const splash = particles(60, '#cfe6f2', 0.12, 0.85);
   group.add(splash);
   const labels = throwers.filter((m) => m.c).map((m) => ({ m, ...castTag(m.c, lang, lang === 'it' ? 'Eroe del giorno' : 'Hero of the day') }));
+  for (const m of chain) if (!m.c && m.n && !throwers.includes(m)) labels.push({ m, ...castTag(m.n, lang) });
   const tmp = new THREE.Vector3();
   return {
     group,

@@ -50,7 +50,11 @@ export function buildWolves({ story, w, M, seed, yFn, lang }) {
     return W;
   });
   const heroes = (story.cast || []).map((c) => ({ c, P: person(M, JOBS[c.job]?.color || FOLK[0]) }));
-  const folk = Array.from({ length: Math.max(2, 4 - heroes.length) }, (_, i) => ({ c: null, P: person(M, FOLK[i % FOLK.length]) }));
+  // the folk with torches: named farmers and peasants when there are some (owner 2026-10-25)
+  const folk = Array.from({ length: Math.max(2, 4 - heroes.length) }, (_, i) => {
+    const f = story.folk?.[i] || null;
+    return { c: null, f, P: person(M, f ? JOBS[f.job]?.color || FOLK[i % FOLK.length] : FOLK[i % FOLK.length]) };
+  });
   const people = [...heroes, ...folk];
   people.forEach((d, i) => {
     d.flame = torch(M, d.P.r.hand);
@@ -63,6 +67,8 @@ export function buildWolves({ story, w, M, seed, yFn, lang }) {
   const moon = new THREE.HemisphereLight('#8fa6d6', '#1c1a16', 1.0);
   group.add(torchLight, moon);
   const labels = heroes.map((h) => castTag(h.c, lang, lang === 'it' ? 'Eroe del giorno' : 'Hero of the day'));
+  const folkTags = folk.filter((d) => d.f).map((d) => ({ d, tag: castTag(d.f, lang) }));
+  labels.push(...folkTags.map((x) => x.tag));
   const P = new THREE.Vector3();
   const place = (obj, s, lateral, back) => {
     const [x, z, ang] = pl.at(Math.max(0, Math.min(pl.total, s)));
@@ -121,6 +127,7 @@ export function buildWolves({ story, w, M, seed, yFn, lang }) {
       });
       torchLight.position.set(cx / people.length, M0.y + 2.8, cz / people.length);
       heroes.forEach((h, k) => labels[k].pos.copy(h.P.root.position).add(new THREE.Vector3(0, 2.3 + k * 0.5, 0)));
+      folkTags.forEach(({ d, tag }) => tag.pos.copy(d.P.root.position).add(new THREE.Vector3(0, 2.3, 0)));
     },
   };
 }

@@ -72,6 +72,16 @@ function castMember(state, r, pool, exclude = []) {
   return { id: v.id, name: v.name ?? null, job: v.job };
 }
 
+/**
+ * Named villagers of these jobs for the other people in a role (owner 2026-10-25: the guards beside the heroes, the escort,
+ * the folk with torches...): up to n, not already in the cast, picked among the newest; fewer when there are not enough.
+ */
+function roleCast(state, r, jobs, n, exclude = []) {
+  const pool = namedVillagers(state).filter((v) => jobs.includes(v.job) && !exclude.some((e) => e.id === v.id)).slice(0, 12), out = [];
+  while (out.length < n && pool.length) out.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+  return out;
+}
+
 const BUILD = {
   halloween(state, r) {
     const named = namedVillagers(state).slice(0, 8);
@@ -81,7 +91,8 @@ const BUILD = {
     const named = namedVillagers(state);
     const heroes = named.filter((n) => HEROES.includes(n.job)).slice(0, 2);
     if (!heroes.length && named.length) heroes.push(r.pick(named.slice(0, 12))); // a brave villager steps in
-    return { cast: heroes, bandits: r.int(5, 7), guards: r.int(2, 3) };
+    const guards = r.int(2, 3);
+    return { cast: heroes, bandits: r.int(5, 7), guards, guardCast: roleCast(state, r, ['guard', 'knight'], guards, heroes) };
   },
   quarrel(state, r, arc) {
     if (arc?.data) return { cast: arc.data.cast, over: arc.data.over }; // the same two make up
@@ -105,13 +116,16 @@ const BUILD = {
     const heroes = named.length ? [r.pick(named.slice(0, 12))] : [];
     const other = named.filter((n) => !heroes.includes(n));
     if (other.length) heroes.push(r.pick(other.slice(0, 12)));
-    return { cast: heroes, house: r.pick(houses.slice(0, 200)).id };
+    // the neighbours passing the buckets along the chain, named too (owner 2026-10-25)
+    const chain = named.filter((n) => !heroes.includes(n)).slice(0, 12), passers = [];
+    while (passers.length < 4 && chain.length) passers.push(chain.splice(r.int(0, chain.length - 1), 1)[0]);
+    return { cast: heroes, chain: passers, house: r.pick(houses.slice(0, 200)).id };
   },
   rebuild(state, r, arc) {
     const house = arc?.house ?? BUILD.fire(state, r)?.house;
     if (house === undefined) return null;
     const named = namedVillagers(state);
-    const crew = named.filter((n) => BUILDERS.includes(n.job)).slice(0, 2);
+    const crew = named.filter((n) => BUILDERS.includes(n.job)).slice(0, 3);
     if (!crew.length && named.length) crew.push(r.pick(named.slice(0, 12)));
     return { cast: crew, house };
   },
@@ -119,14 +133,15 @@ const BUILD = {
     const named = namedVillagers(state);
     const heroes = named.filter((n) => HEROES.includes(n.job) || n.job === 'farmer' || n.job === 'peasant').slice(0, 2);
     if (!heroes.length && named.length) heroes.push(r.pick(named.slice(0, 12)));
-    return { cast: heroes, wolves: r.int(4, 6) };
+    // the folk with torches behind them: farmers, peasants, shepherds, woodcutters
+    return { cast: heroes, wolves: r.int(4, 6), folk: roleCast(state, r, ['farmer', 'peasant', 'shepherd', 'woodcutter'], Math.max(2, 4 - heroes.length), heroes) };
   },
   newyear(state) {
     return { cast: namedVillagers(state).slice(0, 8) };
   },
   flood(state, r) {
     const pool = namedVillagers(state).slice(0, 12), cast = [];
-    while (cast.length < 3 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    while (cast.length < 5 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
     return { cast };
   },
   pig(state, r) {
@@ -148,7 +163,8 @@ const BUILD = {
     // (a new crowd in the front row, or at the feast table, every day)
     const pool = namedVillagers(state).slice(0, 16), cast = [];
     while (cast.length < 6 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
-    return { cast };
+    // the King's two banner guards, named guards or knights
+    return { cast, escort: roleCast(state, r, ['guard', 'knight'], 2, cast) };
   },
   storm(state, r) {
     const pool = namedVillagers(state).slice(0, 12), cast = [];

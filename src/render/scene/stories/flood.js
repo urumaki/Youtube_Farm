@@ -69,7 +69,7 @@ export function buildFlood({ story, w, state, M, houses, yFn, seed, lang, water 
   group.add(cart.g);
   const pickup = (x) => ground(x, -4.2);
   // the carriers: named villagers first
-  const cast = [...(story.cast || [])].slice(0, 3);
+  const cast = [...(story.cast || [])].slice(0, 5);
   while (cast.length < 5) cast.push(null);
   const carriers = cast.map((c, i) => {
     const P = person(M, c ? JOBS[c.job]?.color || '#7a6a55' : HELPERS[i % HELPERS.length]);

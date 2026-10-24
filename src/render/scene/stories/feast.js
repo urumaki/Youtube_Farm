@@ -69,6 +69,8 @@ export function buildFeast({ story, M, buildings, seed, lang }) {
   }
   const labels = [{ pos: new THREE.Vector3(), title: lang === 'it' ? 'Il Re' : 'The King', sub: lang === 'it' ? 'Alla salute!' : 'Cheers!' }];
   for (const g of guests) if (g.c) labels.push({ g, ...castTag(g.c, lang), pos: new THREE.Vector3() });
+  // the King's banner guards behind his chair: named guards or knights when there are some (owner 2026-10-25)
+  guards.forEach((g, k) => { if (story.escort?.[k]) labels.push({ ...castTag(story.escort[k], lang), pos: g.P.root.position.clone().add(new THREE.Vector3(0, 2.6, 0)) }); });
   const tmp = new THREE.Vector3();
   return {
     group,

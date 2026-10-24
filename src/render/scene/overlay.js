@@ -170,7 +170,8 @@ export function createOverlay(root, data) {
         // that every newcomer's tag shows for a while; the turn changes a few times in the shot
         // the church (owner 2026-10-23) too: many names in the pews
         // and the tavern (owner 2026-10-23: more names at the tables)
-        const caravan = tg.kind === 'caravan' || tg.kind === 'church' || tg.kind === 'tavern';
+        // and story events with many named people (owner 2026-10-25: the guards, the escort, the bucket chain are named too)
+        const caravan = tg.kind === 'caravan' || tg.kind === 'church' || tg.kind === 'tavern' || (tg.kind === 'event' && tg.labels.length > 4);
         const n = tg.labels.length, turns = caravan ? Math.min(6, Math.max(1, Math.ceil(n / 11))) : 1;
         const turn = Math.min(turns - 1, Math.floor(((ev.activeU - 0.08) / 0.89) * turns));
         const lead = Math.round((turn * n) / turns); // the first newcomer whose tag comes first this turn

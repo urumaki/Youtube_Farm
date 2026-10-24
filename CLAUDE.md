@@ -75,6 +75,13 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   Owner: medieval only, nothing magic
   (no wizards, witches, spells; the alchemist became the Apothecary, "speziale"). Tone rule (owner): named villagers are heroes or comic, never
   villains or victims; nobody gets hurt. Test one with `npm run render -- --real --subs N --story bandits`.
+  The people in a role are named villagers of that job when the kingdom has them (owner 2026-10-25, `roleCast` in
+  `stories.js`): the guards beside the heroes against the bandits (`guardCast`) and the King's banner guards in the
+  procession and at the feast (`escort`) are named guards or knights, the folk with torches against the wolves named
+  farmers, peasants, shepherds or woodcutters (`folk`), the neighbours passing buckets in the fire's chain named villagers
+  (`chain`), up to three named carpenters and masons rebuild, five named villagers carry sandbags. An event with more than
+  four name tags shows them small, taking turns (`overlay.js`). The fire and the rebuilding are seen from high over the
+  street in front of the house (the old camera over the roofs across the street hid the people in the terraced rows).
 - Owner rules 2026-10-21: (1) a commenter who writes they could not find themselves in the last short
   ("can't see myself", "my name wasn't there", "non mi vedo"; `complainsFromText` in `requests.js`) gets
   `complainDay` and comes first in the next video (`featured.js`). (2) Dropped 2026-10-22 (owner): there was no
