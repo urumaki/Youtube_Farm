@@ -717,3 +717,15 @@ test("the guards' tournament: a knockout of eight named guards over three days, 
   for (const id of [7, 8, 9]) few.villagers[id].job = 'farmer';
   assert.equal(storyFor(few, 'tourney'), null);
 });
+
+test('comment words of 2026-10-25: typos and synonyms reach the jobs, six new jobs by request, ordinary words stay ordinary', async () => {
+  const { wantsFromText } = await import('../src/sim/requests.js');
+  const cases = {
+    'I want to be a solider': 'guard', 'make me a soilder': 'guard', 'can I be a crusader': 'knight', 'reserve calvary': 'knight',
+    'apocethary please': 'apothecary', 'homeless guy': 'beggar', 'vegetable seller': 'merchant', 'university professor': 'scholar',
+    'newspaper seller': 'crier', 'announcer for the king': 'crier', 'craftsman': 'carpenter', 'a citizen': 'peasant', 'nitwit': 'jester',
+    'teacher': 'teacher', 'philosopher': 'philosopher', 'barber': 'barber', 'astrologer': 'astronomer', 'stable keeper': 'stablehand', 'royal adviser': 'adviser',
+  };
+  for (const [text, job] of Object.entries(cases)) assert.deepEqual(wantsFromText(text), [job], text);
+  for (const text of ['I go to school', '5 stars video', 'I love horses', 'good advice', 'nice shave']) assert.deepEqual(wantsFromText(text), [], text);
+});

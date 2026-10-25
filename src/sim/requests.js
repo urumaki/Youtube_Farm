@@ -12,15 +12,15 @@ const KEYWORDS = [
   [/\bbrew|\bmead\b|\bale\b|\bbeer|\bbirr|idromele/, 'brewer'],
   [/tavern|\binn\b|innkeeper|bar\s*keep|bartender|taverna|\boste\b|\bpub\b/, 'innkeeper'],
   [/warrior|\bfighter|\bsword|\bwarlord|guerrier|combattent|spadaccin/, 'guard'],
-  [/\bbeggar|\bdrunk|\bdrink|sit all day|mendicant|ubriac/, 'beggar'],
-  [/weirdo|\bweird\b|\bfool\b|crazy|lunatic|\bscemo|\bmatto|\bidiot/, 'jester'],
+  [/\bbeggar|\bdrunk|\bdrink|sit all day|mendicant|ubriac|homeless|senza\s*tetto|vagabond|\btramp\b/, 'beggar'],
+  [/weirdo|\bweird\b|\bfool\b|crazy|lunatic|\bscemo|\bmatto|\bidiot|nitwit/, 'jester'],
   [/jester|\bclown|juggl|giullare|buffone/, 'jester'],
   [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b|frecce|arciere/, 'fletcher'],
-  [/\bknight|\bsir\b|cavaliere|commander|general|\barmy|captain|\bofficer|\bufficiale|lieutenant|\bcavalry/, 'knight'],
-  [/\bguard|watchman|soldier|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
+  [/\bknight|\bsir\b|cavaliere|commander|general|\barmy|captain|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'knight'],
+  [/\bguard|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
   [/chapel|church|cathedral|cappella|chiesa/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
-  [/carpenter|\bbuilder|falegname|carpentiere/, 'carpenter'],
+  [/carpenter|\bbuilder|falegname|carpentiere|craftsman|craftsmen|artisan|artigian/, 'carpenter'],
   [/\bbishop|vescovo/, 'bishop'],
   [/\bpriest|\bmonk|\bfriar|prete|frate|monaco/, 'priest'],
   [/\bbaker|\bbread|\bbake|fornaio|\bpane\b/, 'baker'],
@@ -28,15 +28,15 @@ const KEYWORDS = [
   [/fisher|\bfish|pescator|\bpesca|harbou?r|\bdocks?\b|\bporto\b/, 'fisherman'],
   [/wood\s*cutter|lumber|\baxe\b|\bwood\b|taglialegna|boscaiolo/, 'woodcutter'],
   [/\bfarm(?!ing tools?)|\bcrops?\b|contadin|agricolt/, 'farmer'],
-  [/\bpeasant|bracciant|gardener|grounds?\s*keeper|groudnskeeper|giardinier/, 'peasant'],
-  [/merchant|\btrader|\bshop|mercante|negozi|head of trade|\btrade\b/, 'merchant'],
+  [/\bpeasant|bracciant|\bcitizen|cittadin|commoner|gardener|grounds?\s*keeper|groudnskeeper|giardinier/, 'peasant'],
+  [/merchant|\btrader|\bshop|mercante|negozi|head of trade|\btrade\b|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
   [/\bsailor|\bpirate|marinaio|pirata/, 'fisherman'],
   [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
-  [/scholar|\bscribe|librar|studioso|scientist|scienziat|inventor/, 'scholar'],
+  [/scholar|\bscribe|librar|studioso|scientist|scienziat|inventor|professor|professore/, 'scholar'],
   [/doctor|healer|physician|medico|guaritore/, 'physician'],
-  [/apothecar|alchemist|alchimista|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
+  [/apothecar|\bapo\w*th\w*ry|alchemist|alchimista|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
   // running the town was the reeve's job (the council, politics, the law); owner 2026-10-23: the tax collector's now
-  [/\breeve\b|council|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice|consiglier/, 'taxcollector'],
+  [/\breeve\b|\bcouncil\b|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice/, 'taxcollector'],
   // jobs folded into another (owner 2026-10-23): the weaver into the tailor, the chronicler into the scholar, the admiral into the sailor
   [/\bweaver|\bweav(e|ing)\b|\bloom\b|tessitor|telaio/, 'tailor'],
   [/chronicler|historian|\bhistory\b|cronista|\bstorico/, 'scholar'],
@@ -62,7 +62,14 @@ const KEYWORDS = [
   [/\bcook|\bchef\b|\bcuoc[oa]|\bkitchen|\bcucina\b/, 'cook'],
   [/\bmayor|sindaco/, 'taxcollector'],
   [/executioner|headsman|\bboia\b|carnefice|giustiziere/, 'executioner'],
-  [/town\s*crier|\bcrier\b|\bherald|banditore|araldo|messaggero|messenger|courier|doomsayer/, 'crier'],
+  [/town\s*crier|\bcrier\b|\bherald|banditore|araldo|messaggero|messenger|courier|doomsayer|announcer|annunciator|news\s*(paper|boy|seller)|giornal/, 'crier'],
+  // new jobs asked for in the comments up to 2026-10-25 (owner 2026-10-25, by request only)
+  [/teacher|\btutor|school\s*master|insegnant|\bmaestr[oa]\b/, 'teacher'],
+  [/philosoph|\bthinker|filosof/, 'philosopher'],
+  [/\bbarber|barbiere|hair\s*(cutter|dresser)/, 'barber'],
+  [/astronom|astrolog|stargaz|star\s*gaz/, 'astronomer'],
+  [/stable\s*(hand|boy|keeper|master|man)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom)/, 'stablehand'],
+  [/advis[eo]r|counsell?or|consiglier/, 'adviser'],
 ];
 
 // "maybe later, when there are proper guards" is a wish for the kingdom, not a job request

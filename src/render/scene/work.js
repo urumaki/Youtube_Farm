@@ -120,6 +120,7 @@ function jesterCap(M) {
 
 // a soft round dot, so particles are not drawn as squares (made once, in the browser only)
 let dotTexture = null;
+let horseCoat = null; // the stablehand's brown horse
 function roundDot() {
   if (dotTexture || typeof document === 'undefined') return dotTexture;
   const c = document.createElement('canvas');
@@ -226,6 +227,15 @@ const JOB_SCENES = {
   engineer: { period: 0.7, hit: 0.75, raise: -1.9, down: -1.0, bend: 0.2, fx: 'chips', sound: 'chop', tool: 'mallet', props: 'trebuchet', left: -0.9 },
   shepherd: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'crook', props: 'flock', left: -0.6, look: true },
   tanner: { period: 1.1, hit: 0.5, raise: -1.25, down: -0.95, bend: 0.35, fx: null, sound: 'none', tool: null, props: 'hide', push: true, both: true },
+  // asked for in the comments up to 2026-10-25 (owner 2026-10-25): the teacher points at a slate for two children on a bench,
+  // the philosopher paces by a stone seat with his scrolls, gesturing; the barber shaves a customer on a stool; the astronomer
+  // turns an armillary sphere beside a star chart; the stablehand brushes a horse; the royal adviser leans over a map
+  teacher: { period: 2.4, raise: -2.2, down: -0.6, bend: 0, sound: 'none', tool: null, props: 'school', smooth: true, left: -0.4, turn: 0.9 },
+  philosopher: { period: 3.2, raise: -2.0, down: -0.5, bend: -0.05, sound: 'none', tool: null, props: 'ponder', smooth: true, left: -1.0 },
+  barber: { period: 1.4, raise: -1.45, down: -1.2, bend: 0.2, sound: 'none', tool: null, props: 'barberchair', stir: true, left: -1.1 },
+  astronomer: { period: 3.0, raise: -2.6, down: -1.1, bend: -0.1, sound: 'none', tool: null, props: 'armillary', smooth: true, left: -0.9 },
+  stablehand: { period: 1.1, raise: -1.25, down: -1.0, bend: 0.1, sound: 'none', tool: null, props: 'stable', push: true, left: -0.3 },
+  adviser: { period: 2.2, raise: -1.3, down: -1.08, bend: 0.25, sound: 'none', tool: null, props: 'mapdesk', smooth: true, left: -1.05 },
 };
 const DEFAULT_SCENE = { period: 2.4, hit: 0.5, raise: -2.6, down: -0.2, bend: 0, fx: null, sound: 'none', tool: null, props: 'market', wave: true };
 // Other scenes of the same jobs, 'job:variant' (owner 2026-10-20: a job is not always shown the same way;
@@ -1052,6 +1062,90 @@ function buildProps(kind, M, add, anim = [], holder = null) {
         P.body.rotation.z = 0.04 * Math.sin(t * 2.2 + i * 2);
       }));
       return new THREE.Vector3(0, 1.2, 0.4);
+    }
+    case 'school': { // a slate on an easel beside the teacher, two children on a bench in front, looking at it
+      for (const s of [-1, 1]) add(boxGeo(0.06, 1.5, 0.06).rotateX(s * 0.15).translate(0.9, 0.75, 0.55 + s * 0.12), M.woodDark);
+      add(boxGeo(0.9, 0.65, 0.04).rotateY(-0.5).translate(0.95, 1.35, 0.6), M.stoneDark);
+      for (const [x, y] of [[0.8, 1.45], [1.0, 1.3], [0.9, 1.2]]) add(boxGeo(0.18, 0.02, 0.01).rotateY(-0.5).translate(x, y, 0.58), M.clothIvory);
+      add(boxGeo(0.3, 0.08, 1.4).translate(2.1, 0.4, 0.9), M.wood);
+      for (const z of [0.3, 1.5]) add(boxGeo(0.28, 0.4, 0.08).translate(2.1, 0.2, z), M.woodDark);
+      const kids = [[0.55, '#c85a3a'], [1.25, '#4a7ac2']].map(([z, color], i) => {
+        const P = rig(M, color, { seated: true });
+        P.root.scale.setScalar(0.62);
+        P.root.position.set(2.05, 0.12, z);
+        P.root.rotation.y = -Math.PI / 2 - 0.3;
+        holder.add(P.root);
+        return { P, i };
+      });
+      anim.push((t) => kids.forEach(({ P, i }) => { P.r.g.rotation.set(i === 0 && Math.sin(t * 0.9) > 0.6 ? -2.8 : -0.4, 0, 0); P.head.rotation.x = 0.1 * Math.sin(t * 1.3 + i); }));
+      return new THREE.Vector3(0.9, 1.3, 0.6);
+    }
+    case 'ponder': { // a stone seat with scrolls and an oil lamp on it, a scroll open on the ground
+      add(boxGeo(1.0, 0.45, 0.5).translate(0.2, 0.22, 1.2), M.stone);
+      for (const [x, r0] of [[0.0, 0.07], [0.2, 0.06], [0.42, 0.065]]) add(cylGeo(r0, r0, 0.4, 8).rotateZ(Math.PI / 2).translate(x, 0.52, 1.15), M.clothIvory);
+      add(cylGeo(0.06, 0.08, 0.08, 8).translate(0.55, 0.5, 1.3), M.clay);
+      add(new THREE.ConeGeometry(0.025, 0.07, 6).translate(0.55, 0.58, 1.3), M.flame);
+      add(boxGeo(0.5, 0.01, 0.35).translate(-0.7, 0.01, 0.9), M.clothIvory);
+      return new THREE.Vector3(0, 1.2, 0.5);
+    }
+    case 'barberchair': { // a customer on a stool facing away, a cloth round the shoulders; a basin on a stand, a mirror
+      add(cylGeo(0.22, 0.24, 0.45, 10).translate(0, 0.22, 0.75), M.wood);
+      const C = rig(M, '#6f7d4a', { seated: true });
+      C.root.position.set(0, 0.0, 0.85);
+      holder.add(C.root);
+      add(cylGeo(0.24, 0.3, 0.28, 12, 1, true).translate(0, 0.9, 0.85), M.clothIvory); // the cloth
+      add(cylGeo(0.05, 0.05, 0.85, 6).translate(0.85, 0.42, 0.6), M.woodDark);
+      add(cylGeo(0.25, 0.18, 0.12, 12).translate(0.85, 0.9, 0.6), M.iron); // the basin
+      add(boxGeo(0.45, 0.6, 0.04).translate(0, 1.25, 1.5), M.iron); // the mirror, on a post
+      add(boxGeo(0.06, 1.0, 0.06).translate(0, 0.5, 1.52), M.woodDark);
+      anim.push((t) => { C.head.rotation.y = 0.15 * Math.sin(t * 0.7); });
+      return new THREE.Vector3(0, 1.35, 0.75);
+    }
+    case 'armillary': { // an armillary sphere on a stand turning slowly, a table with a star chart
+      add(cylGeo(0.05, 0.08, 1.0, 8).translate(0.2, 0.5, 0.75), M.woodDark);
+      const sphere = new THREE.Group();
+      sphere.position.set(0.2, 1.3, 0.75);
+      holder.add(sphere);
+      for (const [rx, rz] of [[0, 0], [Math.PI / 2, 0], [0.4, Math.PI / 2], [Math.PI / 2, 0.41]]) {
+        const ring = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.015, 6, 28), M.gold);
+        ring.rotation.set(rx, 0, rz);
+        sphere.add(ring);
+      }
+      sphere.add(new THREE.Mesh(new THREE.SphereGeometry(0.06, 10, 8), M.clothBlue));
+      anim.push((t) => { sphere.rotation.y = t * 0.6; });
+      add(boxGeo(1.0, 0.06, 0.6).translate(-0.8, 0.78, 0.9), M.wood);
+      for (const x of [-1.2, -0.4]) add(boxGeo(0.06, 0.76, 0.5).translate(x, 0.38, 0.9), M.woodDark);
+      add(boxGeo(0.7, 0.01, 0.45).translate(-0.8, 0.82, 0.9), M.clothBlue); // the chart
+      for (let i = 0; i < 9; i++) add(new THREE.SphereGeometry(0.012, 5, 4).translate(-1.08 + (i * 0.37) % 0.6, 0.83, 0.72 + ((i * 0.23) % 0.38)), M.gold);
+      return new THREE.Vector3(0.2, 1.3, 0.6);
+    }
+    case 'stable': { // a brown horse side on, being brushed; a hay bale and a bucket
+      const horse = new THREE.Group();
+      horse.position.set(0.6, 0, 0.2);
+      holder.add(horse);
+      const coat = (horseCoat ??= new THREE.MeshStandardMaterial({ color: '#6b4226', roughness: 0.85 }));
+      const part = (geo, m) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; horse.add(o); return o; };
+      part(boxGeo(0.55, 0.62, 1.55).translate(0, 1.3, 0), coat);
+      part(boxGeo(0.3, 0.7, 0.36).rotateX(-0.55).translate(0, 1.78, 0.78), coat);
+      const head = part(boxGeo(0.24, 0.26, 0.58).rotateX(0.35).translate(0, 2.08, 1.07), coat);
+      part(boxGeo(0.06, 0.55, 0.3).rotateX(-0.55).translate(0, 1.95, 0.66), M.woodDark); // mane
+      part(boxGeo(0.1, 0.6, 0.1).rotateX(0.5).translate(0, 1.25, -0.9), M.woodDark); // tail
+      for (const [x, z] of [[-0.18, -0.58], [0.18, -0.58], [-0.18, 0.58], [0.18, 0.58]]) part(boxGeo(0.13, 1.0, 0.14).translate(x, 0.5, z), coat);
+      anim.push((t) => { head.rotation.x = 0.06 * Math.sin(t * 0.8); });
+      add(boxGeo(0.9, 0.45, 0.5).translate(-1.4, 0.22, 1.3), M.hay);
+      add(cylGeo(0.18, 0.15, 0.3, 10).translate(1.3, 0.15, 0.3), M.wood);
+      return new THREE.Vector3(0, 1.3, 0.5);
+    }
+    case 'mapdesk': { // a table with a map of the kingdom, a candle, a little stack of letters with a seal
+      add(boxGeo(1.3, 0.07, 0.75).translate(0, 0.8, 0.65), M.wood);
+      for (const x of [-0.55, 0.55]) add(boxGeo(0.08, 0.8, 0.65).translate(x, 0.4, 0.65), M.woodDark);
+      add(boxGeo(0.9, 0.01, 0.55).translate(-0.05, 0.84, 0.62), M.clothIvory);
+      for (const [x, z, w] of [[-0.3, 0.55, 0.4], [0.1, 0.7, 0.3], [-0.1, 0.48, 0.25]]) add(boxGeo(w, 0.005, 0.015).translate(x, 0.85, z), M.clothBlue);
+      add(new THREE.SphereGeometry(0.04, 8, 6).translate(0.15, 0.86, 0.55), M.clothRed);
+      add(cylGeo(0.03, 0.03, 0.2, 6).translate(0.5, 0.94, 0.85), M.clothIvory);
+      add(new THREE.ConeGeometry(0.025, 0.07, 6).translate(0.5, 1.08, 0.85), M.flame);
+      add(boxGeo(0.25, 0.06, 0.18).translate(-0.48, 0.87, 0.85), M.clothIvory);
+      return new THREE.Vector3(0, 0.88, 0.55);
     }
     case 'shrine': { // a wayside cross under a little roof, a candle and flowers at its foot
       add(boxGeo(0.14, 2.1, 0.14).translate(0, 1.05, 1.3), M.woodDark);

@@ -234,6 +234,17 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   beam). The same day more comment words were added for jobs the kingdom has (typos like "gaurd", weaponsmith,
   pub, harbour, herbalist, messenger, bishop, politician/lawyer for the reeve, architect for the mason...), and a
   name asked for ("call me Hunter") is never read as a job request.
+- More comment words and six new jobs (owner 2026-10-25, from the 802 public comments, `requests.js`): typos and synonyms that
+  found no job now reach one (soldier misspelt solider/soilder/solder: guard; crusader, jouster, cavalry/calvary, hussar:
+  knight; "apocethary": apothecary; homeless: beggar; seller, vendor, grocer, store manager: merchant; professor: scholar;
+  announcer, newspaper seller: crier; craftsman, artisan: carpenter; citizen: peasant; nitwit: jester). New jobs by request
+  only, each with a croft scene (`work.js`): Teacher (points at a slate for two children on a bench, `school`), Philosopher
+  (gestures by a stone seat with scrolls and a lamp, `ponder`), Barber (shaves a customer on a stool before a mirror,
+  `barberchair`), Astronomer (an armillary sphere turning beside a star chart; astrologer asks for it, `armillary`),
+  Stablehand (brushes a brown horse, `stable`), Royal Adviser (leans over a map of the kingdom, `mapdesk`; "consigliere"
+  now asks for it, no longer the tax collector). Their keywords stay narrow ("school", "stars", "horses", "advice" alone
+  ask for nothing). Not made, by the owner's rules: king, queen, royalty, pope (titles), wizard, witch (magic), and the
+  rude or villainous ones.
 - Buildings begin only when the video can show them (owner 2026-10-23): at most 2 a day once villagers have
   names (3 before), as `timeline.js` shows them (`SHOWN_STARTS` in `simulate.js`); the others wait in
   `s.buildQueue` (in tier order, commissions last) and begin on the next days (`diff.buildingsWaiting`). The

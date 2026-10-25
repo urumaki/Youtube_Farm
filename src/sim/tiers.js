@@ -68,6 +68,13 @@ export const JOBS = {
   engineer: { label: 'Engineer', color: '#6d5a3a' }, // unlocked at 2500 (owner 2026-10-23), asked for before that: apprentice
   shepherd: { label: 'Shepherd', color: '#8a7b54', requestOnly: true },
   tanner: { label: 'Tanner', color: '#7a4f2c', requestOnly: true },
+  // asked for in the comments up to 2026-10-25 (owner 2026-10-25), by request only
+  teacher: { label: 'Teacher', color: '#5a6e8c', requestOnly: true },
+  philosopher: { label: 'Philosopher', color: '#9a8f7a', requestOnly: true },
+  barber: { label: 'Barber', color: '#b23a3a', requestOnly: true },
+  astronomer: { label: 'Astronomer', color: '#2e3a6e', requestOnly: true },
+  stablehand: { label: 'Stablehand', color: '#7a6a3a', requestOnly: true },
+  adviser: { label: 'Royal Adviser', color: '#4a2e5e', requestOnly: true },
 };
 
 export const BUILDINGS = {
