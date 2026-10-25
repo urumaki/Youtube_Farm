@@ -526,4 +526,3 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
   return file;
 }
 
-export const SFX_NAMES = Object.keys(GEN);

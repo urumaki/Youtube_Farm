@@ -81,7 +81,8 @@ export function lastKnownCount({ dir = STATE_DIR } = {}) {
 }
 
 export function saveDay(state, diff, { dir = STATE_DIR } = {}) {
-  writeAtomic(path.join(dir, 'kingdom.json'), JSON.stringify(state, null, 1));
+  // without the villagers (owner 2026-10-25: a smaller file in the public repo): migrate derives them again on load
+  writeAtomic(path.join(dir, 'kingdom.json'), JSON.stringify(snapshot(state), null, 1));
   writeAtomic(path.join(dir, 'history', `${state.date}.json`), JSON.stringify({ diff, state: snapshot(state) }));
 }
 

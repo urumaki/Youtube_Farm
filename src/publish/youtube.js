@@ -3,8 +3,6 @@
 // A 1080x1920 clip of 30 s is classified as a Short by YouTube automatically.
 import fs from 'node:fs';
 
-export const UPLOAD_SCOPE = 'https://www.googleapis.com/auth/youtube.upload';
-
 export async function accessToken({ clientId, clientSecret, refreshToken, fetchImpl = fetch }) {
   if (!clientId || !clientSecret || !refreshToken) throw new Error('YT_OAUTH_CLIENT_ID / YT_OAUTH_CLIENT_SECRET / YT_OAUTH_REFRESH_TOKEN not set');
   const res = await fetchImpl('https://oauth2.googleapis.com/token', {

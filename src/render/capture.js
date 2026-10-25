@@ -85,22 +85,6 @@ export async function renderGallery(data, items, times, outDir) {
   }
 }
 
-/** Debug views: [{name, pos:[x,y,z], look:[x,y,z], t, phase}] -> PNG files. */
-export async function renderShots(data, shots, outDir) {
-  const { browser, page, errors } = await openPage();
-  try {
-    const stats = await setupScene(page, data);
-    fs.mkdirSync(outDir, { recursive: true });
-    for (const s of shots) {
-      await page.evaluate((a) => window.SK.shot(a.pos, a.look, a.t ?? 10, a.phase), s);
-      fs.writeFileSync(path.join(outDir, s.name + '.png'), await page.screenshot({ type: 'png' }));
-    }
-    return { stats, errors };
-  } finally {
-    await browser.close();
-  }
-}
-
 /** Render the full video. audioFile (optional) is muxed; output is exactly 30.0 s, 30 fps, H.264 + AAC.
  * Frames are split across `workers` browser processes (each with its own software-GL process), written
  * as numbered JPEGs, then encoded in order. Every frame depends only on its time, so splitting is exact. */

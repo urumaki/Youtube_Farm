@@ -2,8 +2,8 @@
 
 A medieval kingdom that grows with a YouTube channel. Every subscriber is one villager.
 Each day the system reads the subscriber count, advances a deterministic simulation, saves the
-new state, and renders a 30-second vertical video (YouTube Shorts / Instagram Reels / TikTok)
-with narration, captions and a medieval soundtrack.
+new state, and renders a 30-second vertical video (a YouTube Short) with narration, captions and a
+medieval soundtrack.
 
 Channel: [@Subscriber_Kingdom](https://www.youtube.com/@Subscriber_Kingdom)
 
@@ -27,12 +27,17 @@ npm test                         # simulation, fetch and audio tests
 - **Houses** are detailed procedural variants: timber-framed (posts, rails, braces, jettied upper
   floors with joist ends), stone houses with quoins, thatched cottages; framed windows with
   shutters, plank doors with hoods, thick roofs with eaves, ridges and bargeboards, chimneys with
-  pots, dormers; crofts with vegetable beds, sheds, woodpiles, barrels, carts and wattle fences.
+  pots, dormers; a woodpile and barrels beside them, no gardens. Inside the Second Wall the houses stand in terraced
+  rows, some with a gable to the street, a shop on the ground floor or crow-stepped brick gables, and grow up to three
+  storeys before the town spreads further out.
 - **Tiers** unlock jobs and buildings: 1 hamlet (farmers, well, fields) · 5 woodcutter, fisherman
   (sawmill, dock) · 10 blacksmith, baker · 25 guards on the walls, quarry · 50 market, tavern ·
-  100 chapel, windmill · 250 second wall, town hall · 500 harbor, cathedral, tournament ground ·
-  1,000 town charter, East Ward · 2,500 North Ward · 5,000 university · 10,000 royal palace ·
-  100,000 lighthouse · 1,000,000 the Colossus. Big buildings take days to build.
+  100 chapel, windmill · 175 town crier · 250 second wall, town hall, counting house, tax collector ·
+  500 harbor, cathedral, tournament ground · 750 executioner, pillory · 850 potter · 1,000 university,
+  East Ward · 1,250 tailor · 1,500 physician · 1,750 cobbler · 2,000 cooper · 2,500 North Ward, engineer ·
+  3,000 beekeeper, apiary · 4,000 bell foundry · 5,000 South Ward, apothecary, bard · 7,500 clock tower ·
+  10,000 royal palace, great bridge · 100,000 lighthouse · 1,000,000 the Colossus. Big buildings take days
+  to build, at most two begin a day (the video shows each one).
 - **Names come from comments.** Villagers have no name until someone comments on a channel video:
   each new commenter (one villager per person, oldest comment first) names the unnamed villager with
   the lowest number, keeping that villager's job. Names are read with the same API key
@@ -42,14 +47,19 @@ npm test                         # simulation, fetch and audio tests
   welcomes them by job only ("Welcome our new blacksmith!"). Test with
   `npm run render -- --subs 80 --names "Mario,Luca"`. Each day the newly named villagers arrive in a
   **caravan** along the east road, every one with a name tag, plus one covered wagon of belongings per
-  50 people; then up to three named villagers (one per job) are shown **at work** in their croft:
-  hoeing, hammering at the anvil with sparks, chopping wood, fishing, baking, carving stone, on guard,
-  with sound effects on every strike. YouTube's automatic handle suffixes (`-l6p1m`) are dropped.
+  50 people; then named villagers (one per job) are shown **at work**, each job with two or three scenes,
+  at its own building once it stands (the smith at the forge, the baker inside the bakery, merchants at
+  a market stall, knights in the lists, fishermen on the dock...) or in their croft, sometimes with a
+  neighbour dropping by; some days inside the tavern or the church instead, with named patrons, and
+  builders with name tags at every building site. Sound effects follow every strike. YouTube's automatic
+  handle suffixes (`-l6p1m`) are dropped.
 - **Job requests.** A comment that asks for a job ("let me work at the tavern", "make me a knight",
-  "can I be the town weirdo") gives that villager the job (`src/sim/requests.js`, English and Italian
+  "can I be the jester") gives that villager the job (`src/sim/requests.js`, English and Italian
   keywords; the text itself is never stored). Jobs the kingdom has not unlocked yet make them an
   apprentice, promoted when the tier arrives; first choices that are locked fall back to a later one in
-  the same comment. Request-only jobs: fletcher, town weirdo, beggar, jester, warrior, toolsmith, brewer.
+  the same comment. Request-only jobs: fletcher, beggar, jester, brewer, rat catcher, chimney sweep,
+  falconer, cook, hunter, butcher, shepherd, tanner, teacher, philosopher, barber, astronomer, stablehand,
+  royal adviser. Kings, queens and noble titles are not jobs; nothing magic either.
   The next video shows them at work first, and the narrator counts the granted requests. Wishes for the
   kingdom ("when there are proper guards") are not requests.
 - **Chosen names.** "call me Violet", "a carpenter named henry", "a villager called sopita" use that name
@@ -58,8 +68,10 @@ npm test                         # simulation, fetch and audio tests
 - **Unsubscribes** remove the newest villagers first. Empty houses are *abandoned* (dark, broken
   roof, no smoke) for 7 days, then become *ruins*. When the count grows again, abandoned houses
   are re-occupied and ruins rebuilt before any new plot is used. History is never deleted.
-- **Every day has a story**: weather, festivals, harvests, market days, traders, a villager
-  spotlight or construction progress — the video is never empty.
+- **Story events** on about half the days (always on Halloween and New Year's Eve): a quarrel in the
+  square, merchants camping, bandits or wolves chased off, a house fire and its rebuilding, a flood held
+  back, the King's visit and feast, an archery contest, the guards' tournament. Named villagers are the
+  heroes or the comic ones; nobody gets hurt. Some last several days.
 - **Deterministic**: a seeded PRNG drives everything (no `Math.random()`); re-running a day gives
   the identical state, diff and video frames.
 
@@ -212,9 +224,8 @@ in real time.
 `.github/workflows/daily.yml` runs every day at 03:17 UTC (and on demand): install, tests, daily
 cycle, commit `state/`, upload the MP4 as a workflow artifact. Add `YOUTUBE_API_KEY` (and the
 optional OAuth / ElevenLabs secrets) under *Settings → Secrets and variables → Actions*.
-With `PUBLISH_TARGETS=youtube` the video is uploaded as a Short (see above). Instagram/TikTok are
-not implemented: `src/publish/index.js` is the extension point; `legacy/uploaders/` contains earlier
-Python upload scripts.
+With `PUBLISH_TARGETS=youtube` the video is uploaded as a Short (see above). Other platforms are
+not implemented: `src/publish/index.js` is the extension point.
 
 ## Layout
 
@@ -224,10 +235,9 @@ src/fetch/    YouTube Data API (public) and Analytics API (exact) with fallback
 src/render/   Three.js scene (scene/*), deterministic frame capture (capture.js)
 src/audio/    narration templates, TTS providers, procedural music/ambience, ffmpeg mix
 src/publish/  YouTube upload (resumable, OAuth refresh token), metadata
-scripts/      daily, render, viewer, build, setup-piper, verify-video, watermark tools
+scripts/      daily, render, preview-day, replan-day, republish-day, map, viewer, build, TTS setup, verify-video, watermark tools
 tests/        node:test suites
 assets/audio/ optional custom music/ambience + LICENSES.md
-legacy/       the earlier Blender pipeline and Python uploaders
 ```
 
 Progress and verification notes: [PROGRESS.md](PROGRESS.md).

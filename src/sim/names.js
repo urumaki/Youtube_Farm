@@ -37,10 +37,6 @@ export function nameFor(seed, index) {
   return `${given} ${EPITHETS[(h >>> 13) % EPITHETS.length]}`;
 }
 
-export function genderFor(seed, index) {
-  return (hash(seed, 'name', index) & 1) === 1 ? 'f' : 'm';
-}
-
 // ------------------------------------------------------------------ names from YouTube comments
 // Villagers have no name until a commenter gives them one (see simulate.js). Display names are
 // cleaned for the video: no "@", only letters, digits and . _ - (emoji and symbols render badly),

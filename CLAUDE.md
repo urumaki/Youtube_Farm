@@ -364,9 +364,14 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (`overlay.js`). Owner does not want royal family or noble titles (prince, princess) as jobs for now. Done: tavern interior with named patrons.
   Ideas not done: narrator jokes for refused requests ("clone me", "landlord").
 
-## Status (2026-10-24)
-- Daily upload works (first videos 74VLgbuvzGU, YQjmBQNZlo4, 2mydn7mgvjU; 2026-10-23 is bb3qhk45GRw). Day 8 (2026-10-23):
-  1350 subscribers, 371 named villagers, ~150 new commenters a day.
-- More story events the owner may pick: wedding, tournament, villager leaving with a bundle on unsubscribe, Christmas, New Year fireworks.
+## Status (2026-10-25)
+- Daily upload works (first videos 74VLgbuvzGU, YQjmBQNZlo4, 2mydn7mgvjU; 2026-10-23 is bb3qhk45GRw, 2026-10-24 is
+  aUC-A_Qbiyg; all ids in `state/published.json`). Day 9 (2026-10-24): 1880 subscribers, 508 named villagers, ~150 new
+  commenters a day.
+- More story events the owner may pick: wedding, villager leaving with a bundle on unsubscribe, Christmas, New Year fireworks
+  (the guards' tournament is done).
 - Voice still `am_adam`; owner may switch after listening to the Voice samples action.
 - Owner pinned (or will pin) a comment: "call me <name>" + a job, "watch the end credits".
+- Clean-up of 2026-10-25: the old Blender pipeline and Python uploaders (`legacy/`) are gone (in git history), unused exports
+  removed, `state/kingdom.json` no longer stores the villagers (derived again on load, like the history snapshots),
+  `.gitattributes` keeps text files LF.

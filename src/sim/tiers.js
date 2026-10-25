@@ -168,10 +168,6 @@ export function tiersReached(population) {
   return TIERS.filter((t) => population >= t.at);
 }
 
-export function nextTier(population) {
-  return TIERS.find((t) => population < t.at) || null;
-}
-
 /** Job for villager #index (0-based). Depends only on seed and index. */
 export function jobFor(seed, index) {
   if (UNIQUE.has(index)) return mergedJob(UNIQUE.get(index));

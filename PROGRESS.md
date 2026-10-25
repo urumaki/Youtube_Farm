@@ -8,7 +8,7 @@ Legend: [x] done and verified · [~] partly verified · [ ] todo · [!] blocked 
 - [x] Tiers 1 → 1,000,000 with unique jobs at thresholds, buildings with construction days
 - [x] World: terrain, river, moat, roads, reserved lots, second wall, fields, 5,006 non-overlapping plots (`world.js`)
 - [x] Daily step: grow/shrink, newest leave first, abandoned → ruin after 7 days, re-occupy abandoned → rebuild ruins → new plots, house capacity 1/2/4/8 (`simulate.js`)
-- [x] Weather + at least one story event every day (`events.js`)
+- [x] Weather and daily events (`events.js`); story events on about half the days (`stories.js`, see CLAUDE.md)
 - [x] JSON schema + validator, migrations (v0 bootstrap → v1), atomic writes, daily history snapshots, re-running a day reproduces it (`state.js`)
 - [x] Tests: determinism, 0 → 10,000 growth, shrinking/ruins/rebuild order, no plot overlaps (and vs roads/lots/walls/fields/river/moat), unlocks, construction, migration, events
 
@@ -20,7 +20,7 @@ Legend: [x] done and verified · [~] partly verified · [ ] todo · [!] blocked 
 - [x] Chunked terrain with road/plaza overlay, river + moat with animated normals, procedural textures
 - [x] Castle: four different corner towers, gate towers, gatehouse with "SUBSCRIBER KINGDOM" sign and arms, barbican, working drawbridge with chains, stone bridge on piers, keep with floors, external stair to the first-floor door, balcony, courtyard stairs to the wall walk
 - [x] Heraldry: "the Crown of Many" (azure, crown whose points are heads, pyramid of ten bezants, motto *Ex multis unum regnum*) on banners, shields and the gate
-- [x] Instanced houses with seeded variation (size, roof color/thatch, timber/plaster, chimney, garden, fence), abandoned and ruin variants, chunked far LOD; houses sit on leveled plinths
+- [x] Instanced houses with seeded variation (size, roof color/thatch, timber/plaster, chimney; no gardens since 2026-10-22), abandoned and ruin variants, chunked far LOD; houses sit on leveled plinths
 - [x] All tier buildings (well, fields, sawmill, dock, forge, bakery, quarry, market, tavern, chapel, windmill, second wall, town hall, harbor, cathedral, tournament, wards, university, palace, lighthouse, colossus)
 - [x] Forests that never overlap plots/lots/roads, rocks, far LOD for trees
 
@@ -35,7 +35,7 @@ Legend: [x] done and verified · [~] partly verified · [ ] todo · [!] blocked 
 
 ## 6. Narration, TTS, captions, music
 - [x] Template narration with seeded variation, 54-75 words, EN and IT (`--lang`)
-- [x] TTS interface: Piper (local, default), ElevenLabs (cloud, word alignment), silent fallback; captions from word timings
+- [x] TTS interface: Kokoro (default), Piper (local fallback), ElevenLabs (cloud, word alignment), silent fallback; captions from word timings
 - [x] Procedural music bed + ambience (CC0, generated), ducked under the voice, loudness-normalized, licenses in `assets/audio/LICENSES.md`
 - [x] Kokoro-82M narration (default `am_adam`, Italian `im_nicola`), Piper fallback; script capped at 68 words and re-synthesized faster if it would overrun 28.3 s
 - [x] Camera-driven sound effects (`src/audio/sfx.js`): hammer/saw on houses, anvil+fire at the forge, water+oars at the dock, bells, chisel, chains; quiet birds/breeze bed; CC0 recordings in `assets/audio/sfx/` override the synthesized ones

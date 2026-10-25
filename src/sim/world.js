@@ -7,7 +7,6 @@ import {
 
 export const WATER_LEVEL = 0.4;
 export const CASTLE = { half: 28, island: 46, moatInner: 47, moatOuter: 58, ground: 4.5 };
-export const GATE = { x: CASTLE.half, z: 0 };
 export const ROAD_WIDTH = { main: 8, street: 6, track: 4 };
 export const RIVER_HALF_WIDTH = 13;
 const PLOT_SETBACK = 1.6;
