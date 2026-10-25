@@ -27,7 +27,7 @@ function rowboat(M) {
  * The fisherman in a boat on the river, near their house: casts, waits for a bite, pulls a fish out.
  * @param home  {x, z} of the villager's house
  */
-export function buildBoat({ w, M, hero, home, heightAt }) {
+export function buildBoat({ w, M, hero, home, heightAt, shift = 0 }) {
   // the stretch of river closest to home, the boat a few metres out from that bank
   let bi = 0, bd = Infinity;
   w.riverPts.forEach((p, i) => { const d = Math.hypot(p[0] - home.x, p[1] - home.z); if (d < bd) { bd = d; bi = i; } });
@@ -35,7 +35,8 @@ export function buildBoat({ w, M, hero, home, heightAt }) {
   const along = new THREE.Vector3(q[0] - p[0], 0, q[1] - p[1]).normalize();
   let toLand = new THREE.Vector3(-along.z, 0, along.x);
   if (toLand.x * (home.x - p[0]) + toLand.z * (home.z - p[1]) < 0) toLand.negate();
-  const at = new THREE.Vector3(p[0], WATER_LEVEL, p[1]).addScaledVector(toLand, RIVER_HALF_WIDTH * 0.35);
+  // `shift` metres along the river: off the end of the town's dock (owner 2026-10-25), clear of its pier
+  const at = new THREE.Vector3(p[0], WATER_LEVEL, p[1]).addScaledVector(toLand, RIVER_HALF_WIDTH * 0.35).addScaledVector(along, shift);
   const group = new THREE.Group();
   group.visible = false;
   const boat = new THREE.Group();
@@ -162,16 +163,19 @@ function jetty(M, length) {
  * The fisherman on a jetty at the river bank near their house (owner 2026-10-22: fishing is on the river):
  * 'rod' casts a line, waits for a bite and pulls a fish out; 'net' throws a round net and hauls it in.
  * @param home  {x, z} of the villager's house
+ * @param dock  once the town's dock stands (owner 2026-10-25), its pier instead of a jetty of his own: `origin` on the deck
+ *              at its land end, `out` along it over the water, `along` the river, `reach` to where he stands
  */
-export function buildRiverbank({ w, M, hero, home, heightAt, mode = 'rod', guest = null }) {
-  const B = riverBank(w, home, heightAt);
-  const reach = B.land - B.edge + 2.6; // from the dry bank out to 2.6 m over the water
-  const base = B.at(B.land).setY(B.deckY);
-  const out = B.toLand.clone().negate();
+export function buildRiverbank({ w, M, hero, home, heightAt, mode = 'rod', guest = null, dock = null }) {
+  const B = dock ? { along: dock.along, deckY: dock.origin.y } : riverBank(w, home, heightAt);
+  const reach = dock ? dock.reach : B.land - B.edge + 2.6; // from the dry bank out to 2.6 m over the water
+  const base = dock ? dock.origin.clone() : B.at(B.land).setY(B.deckY);
+  const out = dock ? dock.out.clone() : B.toLand.clone().negate();
   const group = new THREE.Group();
   group.visible = false;
-  const pier = jetty(M, reach + 0.4);
-  pier.position.copy(base).addScaledVector(B.toLand, 0.4);
+  const pier = dock ? new THREE.Group() : jetty(M, reach + 0.4);
+  pier.position.copy(base);
+  if (!dock) pier.position.addScaledVector(B.toLand, 0.4);
   pier.rotation.y = Math.atan2(out.x, out.z);
   group.add(pier);
   const P = rig(M, JOBS[hero.job]?.color || JOBS.fisherman.color);

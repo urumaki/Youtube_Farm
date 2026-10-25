@@ -103,7 +103,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const apprentice = n.job === 'apprentice' && n.wants;
     const sceneJob = apprentice ? n.wants : n.job;
     // a host with a guest stays at home (the castle scenes have no croft to walk into)
-    const variant = scenes && n.id in scenes.variants ? scenes.variants[n.id] : pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g, ready: (v) => sceneReady(state, v) });
+    const variant = scenes && n.id in scenes.variants ? scenes.variants[n.id] : pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g, ready: (v) => sceneReady(state, v, sceneJob) });
     if (variant) usedVariants.add(variant);
     const castleShot = AWAY_VARIANTS.has(variant);
     const indoor = indoorScene(sceneJob, variant) || barScene(variant);

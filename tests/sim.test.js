@@ -555,6 +555,15 @@ test('scenes away from the croft of 2026-10-23: the market, the tavern, a buildi
   assert.ok(picks('carpenter', town).has('cart') && !picks('carpenter', town, true).has('cart'));
 });
 
+test('knights train in the lists once the Tournament Ground stands, no longer on the castle walls', async () => {
+  const { pickVariant, sceneReady } = await import('../src/sim/scenes.js');
+  const picks = (job, state) => new Set(Array.from({ length: 60 }, (_, id) => pickVariant(job, SEED, 9, id, new Set(), { ready: (v) => sceneReady(state, v, job) })));
+  const lists = { buildings: [{ id: 'tournament', status: 'done' }], pendingConstruction: [] };
+  assert.ok(picks('knight', { buildings: [], pendingConstruction: [] }).has('walls'));
+  assert.deepEqual([...picks('knight', lists)].sort(), ['dummy', 'sparring']);
+  assert.ok(picks('guard', lists).has('walls'), 'the guards still keep the walls');
+});
+
 test('the Second Wall never stands on a house: planned round the town, houses in its way move, new ones keep off it', async () => {
   const { wallBlockers } = await import('../src/sim/wall.js');
   const { obbOverlap } = await import('../src/sim/geometry.js');

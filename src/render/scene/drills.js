@@ -53,10 +53,14 @@ export function attackArm(u) {
   return lerp(-1.8, -1.1, ease((u - HIT) / (1 - HIT)));
 }
 
-/** Two guards sparring in the castle courtyard, circling each other; the camera circles with them. */
-export function buildSparring({ M, seed, hero, lang, tag = true }) {
-  const G = CASTLE.ground + 0.15;
-  const center = new THREE.Vector3(14, G, 4); // between the well and the barracks, off the courtyard path
+/**
+ * Two guards sparring in the castle courtyard, circling each other; the camera circles with them. Knights spar in the
+ * lists of the Tournament Ground once it stands (`at`, owner 2026-10-25).
+ */
+export function buildSparring({ M, seed, hero, lang, tag = true, at = null }) {
+  // between the well and the barracks, off the courtyard path
+  const center = at ? at.clone() : new THREE.Vector3(14, CASTLE.ground + 0.15, 4);
+  const G = center.y;
   const group = new THREE.Group();
   group.visible = false;
   const pair = new THREE.Group();
@@ -86,7 +90,7 @@ export function buildSparring({ M, seed, hero, lang, tag = true }) {
     group,
     labels,
     labelPos,
-    banner: lang === 'it' ? 'Allenamento nel cortile' : 'Training in the yard',
+    banner: at ? (lang === 'it' ? 'Allenamento nella lizza' : 'Training in the lists') : lang === 'it' ? 'Allenamento nel cortile' : 'Training in the yard',
     focus: center.clone().setY(G + 1.2),
     work: { strikeTimes, sound: 'clang' },
     cam(u) {

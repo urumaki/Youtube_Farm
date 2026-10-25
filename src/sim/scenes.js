@@ -52,13 +52,17 @@ const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall
   square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth' };
 // croft scenes no longer used once the building stands (the innkeeper's barrel in the croft, once the tavern is open)
 const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
+// the same for one job only (owner 2026-10-25): knights train in the lists of the Tournament Ground once it stands, no
+// longer on the castle walls
+const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tournament' } };
 // scenes with no room for a visitor (on a platform, on the move, inside a house): a host with a guest stays in the croft
 const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless']);
 // buildings with no shot of their own: no engineer stands in front of them
 const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');
 /** False for a scene whose place is not built yet (the Second Wall's wall walk, the Counting House...) or no longer used. */
-export const sceneReady = (state, variant) => (!NEEDS[variant] || built(state, NEEDS[variant])) && !(UNTIL[variant] && built(state, UNTIL[variant]))
+export const sceneReady = (state, variant, job = null) => (!NEEDS[variant] || built(state, NEEDS[variant])) && !(UNTIL[variant] && built(state, UNTIL[variant]))
+  && !(JOB_UNTIL[job]?.[variant] && built(state, JOB_UNTIL[job][variant]))
   && (variant !== 'site' || !!state?.pendingConstruction?.some((p) => !NO_SITE.has(p.building)))
   && !(SUMMER.has(variant) && winter(state));
 const winter = (state) => { const m = Number(state?.date?.slice(5, 7)); return m === 12 || m <= 2; };
@@ -97,7 +101,7 @@ export function churchToday(state, tavern) {
 
 /** The everyday scene a villager introduced today is shown in (INTRO), or null: ready today, not shown in the last days. */
 export function introVariant(state, job, used = new Set()) {
-  return INTRO[job]?.find((v) => !used.has(v) && sceneReady(state, v) && !recentScene(state, sceneKey(job, v))) ?? null;
+  return INTRO[job]?.find((v) => !used.has(v) && sceneReady(state, v, job) && !recentScene(state, sceneKey(job, v))) ?? null;
 }
 
 /**
@@ -128,7 +132,7 @@ export function planScenes(state, { featured, tavern, church = null, avoidJobs =
     const n = state.names[f.id];
     const job = f.job === 'apprentice' && n?.wants ? n.wants : f.job;
     // no innkeeper or bard shot inside the tavern on the day the tavern interior closes the video
-    const v = (f.today && !f.with && introVariant(state, job, used)) || pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), ready: (x) => sceneReady(state, x) && !(tavern && (x === 'inside' || x === 'inn')) });
+    const v = (f.today && !f.with && introVariant(state, job, used)) || pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), ready: (x) => sceneReady(state, x, job) && !(tavern && (x === 'inside' || x === 'inn')) });
     if (v) used.add(v);
     variants[f.id] = v;
   }

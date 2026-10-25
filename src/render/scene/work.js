@@ -285,6 +285,8 @@ Object.assign(JOB_SCENES, {
   'priest:preach': { period: 2.8, raise: -2.6, down: -0.8, bend: -0.05, sound: 'none', tool: null, props: 'crowd', smooth: true, left: -1.0, turn: 0.45, radius: 6.8 },
 });
 JOB_SCENES.warrior = JOB_SCENES.knight;
+// at the Apiary (owner 2026-10-25): its own bench of skeps, so only the bees (main.js puts him at the bench's end)
+JOB_SCENES['beekeeper:apiary'] = { ...JOB_SCENES.beekeeper, props: 'bees' };
 for (const [from, to] of [['toolsmith', 'blacksmith'], ['brewer', 'innkeeper'], ['bishop', 'priest']]) {
   for (const k of Object.keys(JOB_SCENES)) if (k === to || k.startsWith(to + ':')) JOB_SCENES[from + k.slice(to.length)] ??= JOB_SCENES[k];
 }
@@ -782,6 +784,17 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       for (const y of [0.15, 0.75]) add(new THREE.TorusGeometry(0.36, 0.02, 4, 18).rotateX(Math.PI / 2).translate(0, y, 0.75), M.iron);
       for (let i = 0; i < 3; i++) add(cylGeo(0.36, 0.36, 0.9, 14).rotateZ(Math.PI / 2).translate(1.2, 0.36 + i * 0.0, 0.2 + i * 0.75), M.wood); // finished barrels
       return new THREE.Vector3(0, 0.9, 0.75);
+    }
+    case 'bees': { // bees circling the Apiary's skeps in front of him (lot x 1.6, 0.8, 0)
+      const bees = [];
+      for (const z of [1.0, 1.8, 2.6]) for (let k = 0; k < 4; k++) bees.push({ m: add(new THREE.SphereGeometry(0.03, 6, 4), M.iron), z, k });
+      anim.push((t) => {
+        for (const b of bees) {
+          const a = t * (2.5 + b.k * 0.4) + b.k * 1.6 + b.z * 3;
+          b.m.position.set(Math.cos(a) * (0.35 + 0.1 * b.k), 0.85 + 0.15 * Math.sin(a * 1.7), b.z + Math.sin(a) * (0.3 + 0.08 * b.k));
+        }
+      });
+      return new THREE.Vector3(0, 0.95, 0.9); // the smoke over the nearest skep
     }
     case 'hives': { // straw skeps on a bench, bees circling them
       add(boxGeo(2.0, 0.5, 0.6).translate(0, 0.25, 0.9), M.woodDark);

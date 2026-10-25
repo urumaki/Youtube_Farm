@@ -16,7 +16,7 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   a change; render full videos only when asked.
 
 ## Commands
-- `npm test` — must stay green (node:test, ~60 tests).
+- `npm test` — must stay green (node:test, ~63 tests).
 - `npm run render -- --subs 118 --from 72 [--names "A,B"] [--stills 4,15,24]` — test render, never
   touches `state/`. `--names` fakes commenters. `--real` starts from the real `state/` (next day, read
   only) instead of a fresh two-day test kingdom: needed to test anything that exists only later (tavern).
@@ -322,6 +322,13 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   and the cobbler work in front of their stalls on the market square, the scholar on the University's lawn, the cooper,
   the bell founder and the clockmaker in front of their workshops (`PLACES`), once those stand. Test with
   `npm run render -- --real --subs 1900 --built physician_booth,tailor_stall,university,cobbler_stall --gallery "taxcollector:rounds,merchant:cart,physician:booth,executioner:grind,jester:kids,crier:proclaim,priest:bless,priest:preach,priest,bishop:preach,potter,tailor,scholar,cobbler"`.
+- At their own buildings too (owner 2026-10-25): the baker bakes inside the town's Bakery once it stands (the bakehouse room of
+  `bakery.js` built inside its walls, door to the front, `workPlace` in `main.js`); the beekeeper tends the Apiary's skeps from
+  the end of its bench (`beekeeper:apiary`, only the bees as props); knights spar and cut at the straw dummy in the lists of the
+  Tournament Ground (`buildSparring(..., { at })`, banner "Training in the lists") and no longer go on the castle walls once it
+  stands (`JOB_UNTIL` in `scenes.js`; `sceneReady` takes the job); fishermen fish from the far end of the town's dock
+  (`buildRiverbank(..., { dock })`, no jetty of their own) and row out a little downriver of it (`buildBoat(..., { shift })`).
+  Test with `npm run render -- --real --subs 3100 --built tournament,apiary --gallery "baker:oven,beekeeper,knight:dummy,knight:sparring,fisherman:rod,fisherman:boat"`.
 - Church interior (owner 2026-10-23, `church.js`): the Chapel, or the Cathedral once built, with pews both sides of a red
   carpet, villagers praying on them (hands together, heads bowed), stained glass, candles, the priest blessing from behind
   the altar (in the Cathedral always a bishop with mitre and crozier; another named cleric reads at the lectern). The
