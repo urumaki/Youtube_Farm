@@ -7,6 +7,7 @@
 // the fire at night, then leave (`steps`). (The rule of no story on days with 15 or more new commenters was
 // dropped by the owner on 2026-10-22.)
 import { rng } from './prng.js';
+import { TIERS } from './tiers.js';
 
 export const PLACES = ['Ashford', 'the Northern Marches', 'Kingsbridge', 'the Salt Coast', 'Ravenscar', 'the Amber Vale', 'Dunmoor', 'the Eastern Isles'];
 export const GOODS = ['spices', 'wool', 'salt', 'silk', 'amber', 'wine', 'iron tools', 'honey', 'dyed cloth'];
@@ -52,7 +53,27 @@ export const STORIES = {
   // the guards' tournament (owner 2026-10-25): a knockout over three days among eight named guards, the winner becomes
   // Captain of the Guard (state.guardCaptain)
   tourney: { minPop: 60, cooldown: 30, weight: 2, needs: (s) => namedVillagers(s).filter((n) => n.job === 'guard').length >= 8 && !['rain', 'snow'].includes(s.weather), steps: ['round1', 'semis', 'final'] },
+  // owner 2026-10-25: St Martin's Day, the new wine opened in the square; Christmas Eve round the Yule fire in the snow (the
+  // day turns to snow, simulate.js)
+  martinmas: { date: '11-11', minPop: 1 },
+  christmas: { date: '12-24', minPop: 1 },
+  // on the day the kingdom reaches a new goal the crier reads the proclamation to the square (before any other story)
+  proclaim: { onUnlock: true, minPop: 1 },
+  // the fisherman's huge catch carried into the square on a pole, roasted for everyone the next quiet day
+  bigfish: { minPop: 10, cooldown: 14, weight: 2, steps: ['catch', 'roast'] },
+  // a hen loose in the tavern, the drinkers chasing it between the tables until it flies out of the window
+  chicken: { minPop: 50, cooldown: 10, weight: 2, needs: (s) => built(s, 'tavern') },
+  // a gale spins the windmill's sails far too fast; the miller and two helpers haul on the brake rope
+  windmill: { minPop: 100, cooldown: 14, weight: 2, needs: (s) => built(s, 'windmill') },
+  // guards against farmers at the rope over a mud puddle; the losers slide into the mud
+  tugofwar: { minPop: 50, cooldown: 12, weight: 2, needs: (s) => teamOf(s, GUARDS).length >= 2 && teamOf(s, LAND).length >= 2 && !['rain', 'snow'].includes(s.weather) },
+  // a hay cart stuck in the mud of a gate of the Second Wall, pushed out by named villagers (the hay comes down on them)
+  haycart: { minPop: 250, cooldown: 12, weight: 2, needs: (s) => built(s, 'wall2') && s.weather !== 'snow' },
+  // a snowball fight in the square, two teams of named villagers; only on snowy days
+  snowballs: { minPop: 20, cooldown: 5, weight: 3, needs: (s) => s.weather === 'snow' },
 };
+const GUARDS = ['guard', 'knight'], LAND = ['farmer', 'peasant', 'shepherd'];
+const teamOf = (s, jobs) => namedVillagers(s).filter((n) => jobs.includes(n.job));
 const STORY_CHANCE = 0.5;
 
 function built(state, id) {
@@ -202,19 +223,82 @@ const BUILD = {
     while (cast.length < 4 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
     return { cast };
   },
+  martinmas(state, r) {
+    // a named innkeeper or brewer opens the barrel; the newest named villagers raise their cups
+    const keeper = roleCast(state, r, ['innkeeper', 'brewer'], 1)[0] || castMember(state, r, namedVillagers(state));
+    if (!keeper) return null;
+    return { cast: [keeper, ...namedVillagers(state).filter((n) => n.id !== keeper.id).slice(0, 6)] };
+  },
+  christmas(state, r) {
+    // a named priest or bishop blesses the crowd (when the kingdom has one), the newest named villagers sing round the fire
+    const priest = roleCast(state, r, ['priest', 'bishop'], 1)[0] || null;
+    return { priest, cast: [...(priest ? [priest] : []), ...namedVillagers(state).filter((n) => n.id !== priest?.id).slice(0, 8)] };
+  },
+  proclaim(state, r, arc, tier) {
+    const t = TIERS.find((x) => x.id === tier);
+    if (!t) return null;
+    // the crier reads it out (a named one when there is one), five named villagers cheer in front
+    const crier = roleCast(state, r, ['crier'], 1)[0] || null;
+    const crowd = roleCast(state, r, Object.keys(JOB_COUNT(state)), 5, crier ? [crier] : []);
+    return { tier: t.id, title: t.title, crier, cast: [...(crier ? [crier] : []), ...crowd] };
+  },
+  bigfish(state, r, arc) {
+    // the next day the same fisherman roasts it for the newest named villagers
+    if (arc?.data) return { ...arc.data, cast: [arc.data.cast[0], ...namedVillagers(state).filter((n) => n.id !== arc.data.cast[0].id).slice(0, 5)] };
+    const named = namedVillagers(state);
+    const fisher = roleCast(state, r, ['fisherman'], 1)[0] || castMember(state, r, named);
+    if (!fisher) return null;
+    return { cast: [fisher, ...roleCast(state, r, named.map((n) => n.job), 2, [fisher])] };
+  },
+  chicken(state, r) {
+    const named = namedVillagers(state), cast = [];
+    const pool = named.slice(0, 12);
+    while (cast.length < 3 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    return cast.length ? { cast } : null;
+  },
+  windmill(state, r) {
+    const named = namedVillagers(state);
+    const miller = roleCast(state, r, ['miller'], 1)[0] || castMember(state, r, named);
+    if (!miller) return null;
+    return { cast: [miller, ...roleCast(state, r, named.map((n) => n.job), 2, [miller])] };
+  },
+  tugofwar(state, r) {
+    // up to four on each side; the side that wins is drawn now
+    const guards = roleCast(state, r, GUARDS, 4), farmers = roleCast(state, r, LAND, 4, guards);
+    if (guards.length < 2 || farmers.length < 2) return null;
+    return { guards, farmers, winner: r.chance(0.5) ? 'guards' : 'farmers', cast: [...guards, ...farmers] };
+  },
+  haycart(state, r) {
+    const named = namedVillagers(state);
+    const carter = roleCast(state, r, LAND, 1)[0] || castMember(state, r, named);
+    if (!carter) return null;
+    return { cast: [carter, ...roleCast(state, r, named.map((n) => n.job), 4, [carter])] };
+  },
+  snowballs(state, r) {
+    const pool = namedVillagers(state).slice(0, 16), cast = [];
+    while (cast.length < 8 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    return cast.length >= 2 ? { cast } : null;
+  },
 };
+// every job some named villager has (anyone may cheer)
+const JOB_COUNT = (state) => Object.fromEntries(namedVillagers(state).map((n) => [n.job, 1]));
 
 /**
  * Today's story, or null. Records it in state.storyLog (id -> last day) for the cooldowns.
  * Call after the population and names of the day are settled.
  */
-export function pickStory(state) {
+export function pickStory(state, { unlocked = [] } = {}) {
   state.storyLog ??= {};
   const r = rng(state.seed, 'story', state.date);
   const pop = state.subscriberCount;
   const mmdd = state.date.slice(5);
   const possible = (id, s) => pop >= (s.minPop ?? 1) && (!s.needs || s.needs(state));
   let id = Object.keys(STORIES).find((k) => STORIES[k].date === mmdd && possible(k, STORIES[k]));
+  // a new goal reached today: the proclamation (the highest tier when several came at once)
+  if (!id && unlocked.length) {
+    const story = BUILD.proclaim(state, r, null, unlocked[unlocked.length - 1]);
+    if (story) { state.storyLog.proclaim = state.day; return { id: 'proclaim', ...story }; }
+  }
   // then a story that continues from an earlier day (the next step, or the house rebuilt after a fire)
   const arc = state.storyArc;
   if (!id && arc && arc.day <= state.day) {
@@ -230,7 +314,7 @@ export function pickStory(state) {
   }
   if (!id) {
     if (!r.chance(STORY_CHANCE)) return null;
-    const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && possible(k, s)
+    const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && !s.onUnlock && possible(k, s)
       && (state.storyLog[k] === undefined || state.day - state.storyLog[k] >= s.cooldown));
     if (!options.length) return null;
     id = r.weighted(options, ([, s]) => s.weight)[0];
@@ -254,7 +338,7 @@ export function storyFor(state, id) {
   const r = rng(state.seed, 'story', state.date);
   const steps = STORIES[name].steps;
   if (step && !steps?.includes(step)) throw new Error(`story "${name}" has no step "${step}" (${(steps || []).join(', ') || 'one step only'})`);
-  let story = BUILD[name](state, r);
+  let story = BUILD[name](state, r, null, name === 'proclaim' ? state.unlockedTiers[state.unlockedTiers.length - 1] : undefined);
   if (story && step && step !== steps[0]) story = BUILD[name](state, r, { id: name, step, data: story });
   return story && { id: name, ...(steps ? { step: step || steps[0] } : {}), ...story };
 }

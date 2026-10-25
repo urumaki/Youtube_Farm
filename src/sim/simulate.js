@@ -217,14 +217,17 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
  * day again (scripts/replan-day.js): `s` must then hold yesterday's storyLog, storyArc, lastShown and sceneLog.
  */
 export function planDay(s, prev, diff) {
-  diff.story = pickStory(s);
+  diff.story = pickStory(s, { unlocked: diff.unlocked || [] });
   s.story = diff.story;
-  if (diff.story?.id === 'storm') { // the storm brings the rain to the whole video
-    s.weather = diff.weather = 'rain';
-    diff.events[0].weather = 'rain';
+  // the storm brings the rain to the whole video, Christmas Eve the snow
+  const sky = { storm: 'rain', christmas: 'snow' }[diff.story?.id];
+  if (sky) {
+    s.weather = diff.weather = sky;
+    diff.events[0].weather = sky;
   }
   diff.avoidJobs = prev.day > 0 ? shownJobs(prev) : [];
-  const tavern = tavernToday(s), church = churchToday(s, tavern);
+  // (the hen in the tavern is the tavern's shot that day)
+  const tavern = diff.story?.id !== 'chicken' && tavernToday(s), church = churchToday(s, tavern);
   diff.featured = pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, church, stale: (job) => staleJob(s, job), intro: (job) => !!introVariant(s, job) });
   s.featured = diff.featured;
   markShown(s, diff.featured);

@@ -727,6 +727,41 @@ test("the guards' tournament: a knockout of eight named guards over three days, 
   assert.equal(storyFor(few, 'tourney'), null);
 });
 
+test('more story events of 2026-10-25: feast days on their date, the proclamation on a new goal, snow and teams when needed', async () => {
+  const { pickStory, storyFor, STORIES } = await import('../src/sim/stories.js');
+  const jobs = ['innkeeper', 'priest', 'fisherman', 'miller', 'guard', 'guard', 'farmer', 'peasant', 'crier', 'baker'];
+  const kingdom = (date, weather = 'clear', extra = {}) => ({
+    seed: SEED, date, day: 30, subscriberCount: 400, weather, storyLog: {}, unlockedTiers: ['hamlet', 'walled'],
+    buildings: ['market', 'tavern', 'windmill', 'wall2'].map((id) => ({ id, status: 'done' })), houses: [],
+    villagers: jobs.map((job, id) => ({ id, job })),
+    names: Object.fromEntries(jobs.map((_, id) => [id, { name: `V${id}`, day: 1 + id }])), ...extra,
+  });
+  assert.equal(pickStory(kingdom('2026-11-11')).id, 'martinmas');
+  const xmas = pickStory(kingdom('2026-12-24'));
+  assert.equal(xmas.id, 'christmas');
+  assert.equal(xmas.priest.job, 'priest', 'a named priest blesses them');
+  assert.equal(storyFor(kingdom('2026-11-11'), 'martinmas').cast[0].job, 'innkeeper', 'a named innkeeper opens the barrel');
+  // a new goal reached today: the crier proclaims it, before any other story
+  const pr = pickStory(kingdom('2026-11-02'), { unlocked: ['walled'] });
+  assert.equal(pr.id, 'proclaim');
+  assert.equal(pr.title, 'Walled Town');
+  assert.equal(pr.crier.job, 'crier');
+  // never drawn on an ordinary day
+  for (let d = 1; d <= 28; d++) assert.notEqual(pickStory(kingdom(`2026-11-${String(d).padStart(2, '0')}`))?.id, 'proclaim');
+  // snowballs only on snowy days; the tug of war needs two named of each side and no rain or snow
+  assert.ok(!STORIES.snowballs.needs(kingdom('2027-01-05')) && STORIES.snowballs.needs(kingdom('2027-01-05', 'snow')));
+  assert.ok(STORIES.tugofwar.needs(kingdom('2026-11-05')) && !STORIES.tugofwar.needs(kingdom('2026-11-05', 'rain')));
+  const tug = storyFor(kingdom('2026-11-05'), 'tugofwar');
+  assert.ok(tug.guards.every((c) => c.job === 'guard') && tug.farmers.every((c) => ['farmer', 'peasant', 'shepherd'].includes(c.job)));
+  assert.ok(['guards', 'farmers'].includes(tug.winner));
+  // the big catch: the same fisherman on both days
+  const fish = storyFor(kingdom('2026-11-05'), 'bigfish'), roast = storyFor(kingdom('2026-11-05'), 'bigfish:roast');
+  assert.equal(fish.cast[0].job, 'fisherman');
+  assert.equal(roast.cast[0].id, fish.cast[0].id);
+  assert.equal(storyFor(kingdom('2026-11-05'), 'windmill').cast[0].job, 'miller');
+  assert.ok(!STORIES.chicken.needs(kingdom('2026-11-05', 'clear', { buildings: [] })), 'no tavern, no hen in it');
+});
+
 test('comment words of 2026-10-25: typos and synonyms reach the jobs, six new jobs by request, ordinary words stay ordinary', async () => {
   const { wantsFromText } = await import('../src/sim/requests.js');
   const cases = {

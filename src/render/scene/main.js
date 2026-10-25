@@ -411,7 +411,7 @@ async function setup(data) {
       tg.cam = church.cam;
       tg.banner = data.lang === 'it' ? (tg.id === 'cathedral' ? 'La Cattedrale' : 'La Cappella') : tg.id === 'cathedral' ? 'The Cathedral' : 'The Chapel';
     } else if (tg.kind === 'event') {
-      const st = buildStory({ story: tg.story, w, state, M, buildings, houses, yFn, seed: state.seed, lang: data.lang, water });
+      const st = buildStory({ story: tg.story, w, state, M, buildings, houses, nature, yFn, seed: state.seed, lang: data.lang, water });
       if (!st) continue;
       scene.add(st.group);
       st.setWindow?.(tg.t0, tg.t1);
@@ -419,6 +419,7 @@ async function setup(data) {
       tg.cam = st.cam;
       tg.banner = st.banner;
       if (st.phase !== undefined) tg.phase = st.phase;
+      if (st.interior) tg.interior = true; // inside a building (the hen in the tavern): its own lamps, no ground clamp
       if (st.work) tg.work = st.work; // arrows hitting the targets
       if (st.focus) tg.pos.copy(st.focus);
       stories.push({ st, tg });

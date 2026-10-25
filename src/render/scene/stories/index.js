@@ -16,11 +16,21 @@ import { buildCamp } from './camp.js';
 export { storyCue } from '../../../sim/stories.js';
 import { buildFeast } from './feast.js';
 import { buildTourney } from './tourney.js';
+import { buildMartinmas } from './martinmas.js';
+import { buildChristmas } from './christmas.js';
+import { buildProclaim } from './proclaim.js';
+import { buildBigFish } from './bigfish.js';
+import { buildChicken } from './chicken.js';
+import { buildWindmill } from './windmill.js';
+import { buildTugOfWar } from './tugofwar.js';
+import { buildHayCart } from './haycart.js';
+import { buildSnowballs } from './snowballs.js';
 
 const BUILDERS = {
   quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween,
   fire: buildFire, rebuild: buildRebuild, wolves: buildWolves, storm: buildStorm, royal: buildRoyal, pig: buildPig, archery: buildArchery, flood: buildFlood, newyear: buildNewYear,
-  tourney: buildTourney,
+  tourney: buildTourney, martinmas: buildMartinmas, christmas: buildChristmas, proclaim: buildProclaim, bigfish: buildBigFish,
+  chicken: buildChicken, windmill: buildWindmill, tugofwar: buildTugOfWar, haycart: buildHayCart, snowballs: buildSnowballs,
 };
 
 // later steps of a story told over several days (src/sim/stories.js) with a scene of their own; the other
@@ -34,4 +44,4 @@ export function buildStory(args) {
 }
 
 /** Scenes that play at dusk: the shot cuts in and out instead of flying (the light changes). */
-export const NIGHT_STORIES = new Set(['bandits', 'halloween', 'wolves', 'newyear']);
+export const NIGHT_STORIES = new Set(['bandits', 'halloween', 'wolves', 'newyear', 'christmas']);

@@ -148,7 +148,7 @@ export function buildNature(w, state, M, { season = 'summer' } = {}) {
   group.add(rockIm);
 
   return {
-    group, count: trees.length,
+    group, count: trees.length, trees, // (the trees: story cameras keep clear of them)
     updateLod(camera, nearDist = 240) {
       for (const c of chunkList) {
         const d = Math.hypot(camera.position.x - c.cx, camera.position.z - c.cz);

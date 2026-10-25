@@ -382,7 +382,7 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
     }
     hub.add(sails);
     group.add(hub);
-    updaters.push((t) => { sails.rotation.z = -t * 0.9; });
+    updaters.push((t) => { sails.rotation.z = -t * 0.9 - (s.extra?.(t) ?? 0); }); // `extra`: a gale (stories/windmill.js)
   }
   for (const b of buildings.boats) {
     const { g, float } = ship(M, b.len, b.sail);

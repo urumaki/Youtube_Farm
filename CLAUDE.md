@@ -16,7 +16,7 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   a change; render full videos only when asked.
 
 ## Commands
-- `npm test` — must stay green (node:test, ~63 tests).
+- `npm test` — must stay green (node:test, ~64 tests).
 - `npm run render -- --subs 118 --from 72 [--names "A,B"] [--stills 4,15,24]` — test render, never
   touches `state/`. `--names` fakes commenters. `--real` starts from the real `state/` (next day, read
   only) instead of a fresh two-day test kingdom: needed to test anything that exists only later (tavern).
@@ -83,6 +83,22 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   the last day the champion becomes Captain of the Guard (`state.guardCaptain`; the tag reads "Captain of the Guard" in
   the final and on that guard's work shots, `jobSub` in `timeline.js`). Needs 8 named guards, no rain or snow on the first
   day, cooldown 30 days. Test a day with `--story tourney`, `--story tourney:semis`, `--story tourney:final`.
+  More stories (owner 2026-10-25, one scene file each in `stories/`): St Martin's Day on 11/11 (`martinmas`: the new wine
+  opened from a barrel on trestles under bunting, a named innkeeper at the tap, named villagers raising their tankards
+  together); Christmas Eve on 24/12 (`christmas`, at night, the day turns to snow: the Yule fire, a decked evergreen tree,
+  named villagers singing round the fire with candles, a named priest blessing them); the proclamation (`proclaim`, on the
+  day a new goal is reached, before any other story, never drawn otherwise: the crier rings the bell on a draped dais, reads
+  the scroll, the named crowd cheers; banner "Hear ye! <tier title>!"; `pickStory(state, { unlocked })`); the big catch
+  (`bigfish`, steps `catch`/`roast`: a huge fish carried into the square on a pole beside the named fisherman, roasted on a
+  spit for named villagers with bowls the next quiet day); a hen in the tavern (`chicken`, inside the tavern with its own
+  lamps, `interior` on the shot; never on a tavern day: named villagers chase it between the tables until it flies out of the
+  window); the windmill runs wild (`windmill`: a gale spins the sails, `extra` turns on the sail in `life.js`; the named
+  miller and two helpers haul on the brake rope and sit down hard when it stops); tug of war (`tugofwar`: named guards
+  against named farmers over a mud puddle, the losing side's front two end up sitting in the mud; needs two of each, no
+  rain or snow); the hay cart stuck in a gate of the Second Wall (`haycart`, needs the wall finished: pushed free by named
+  villagers, the top of the load slides off onto them); a snowball fight (`snowballs`, only on snowy days: two teams behind
+  snow walls). Test with `--story martinmas`, `christmas`, `proclaim`, `bigfish`, `bigfish:roast`, `chicken`, `windmill`,
+  `tugofwar`, `haycart --built wall2`, `snowballs` (the test render gives `christmas` and `snowballs` snow).
   The people in a role are named villagers of that job when the kingdom has them (owner 2026-10-25, `roleCast` in
   `stories.js`): the guards beside the heroes against the bandits (`guardCast`) and the King's banner guards in the
   procession and at the feast (`escort`) are named guards or knights, the folk with torches against the wolves named
@@ -368,8 +384,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - Daily upload works (first videos 74VLgbuvzGU, YQjmBQNZlo4, 2mydn7mgvjU; 2026-10-23 is bb3qhk45GRw, 2026-10-24 is
   aUC-A_Qbiyg; all ids in `state/published.json`). Day 9 (2026-10-24): 1880 subscribers, 508 named villagers, ~150 new
   commenters a day.
-- More story events the owner may pick: wedding, villager leaving with a bundle on unsubscribe, Christmas, New Year fireworks
-  (the guards' tournament is done).
+- More story events the owner may pick: wedding, villager leaving with a bundle on unsubscribe, carnival, May Day, harvest
+  festival, a fair, a cooking contest, pilgrims, a visiting ambassador (done: the tournament and the events of 2026-10-25).
 - Voice still `am_adam`; owner may switch after listening to the Voice samples action.
 - Owner pinned (or will pin) a comment: "call me <name>" + a job, "watch the end credits".
 - Clean-up of 2026-10-25: the old Blender pipeline and Python uploaders (`legacy/`) are gone (in git history), unused exports
