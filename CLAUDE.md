@@ -24,6 +24,10 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - `node scripts/preview-day.js 1600 [date]` — render the next real day (real comments since the last saved day, the given
   subscribers) to `output/<date>_en_preview_<subs>.mp4`, read only: nothing saved, nothing published.
 - `node scripts/verify-video.js output/x.mp4` — format checks.
+- `node scripts/thumbnail.js [--job guard] [--title "IS THIS YOU?"] [--sub ...] [--phase 0.25] [--weather clear]` — the video's
+  thumbnail (owner 2026-10-26, `thumb` in `main.js`): the latest saved day, the castle seen from the market square, a
+  villager waving in the foreground cut off at the waist, the name tag above them blurred (nobody can read the name), a
+  short title; `output/thumbnail_<date>.png`, 1080x1920, read only.
 - `node scripts/map.js` — map of the town from above (`output/map.png`): houses by storeys, free plots,
   fields, the Second Wall with gates, buildings standing / going up / still to come with their goal.
 - `npm run auth:youtube -- --save` — one-time OAuth refresh token (owner runs it on their PC).

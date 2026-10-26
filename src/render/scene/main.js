@@ -13,7 +13,7 @@ import { buildLife } from './life.js';
 import { buildEnvironment } from './env.js';
 import { makePlan, evaluate, indoorScene, barScene, AWAY_VARIANTS } from './timeline.js';
 import { createOverlay } from './overlay.js';
-import { buildWorkScene, sceneOf } from './work.js';
+import { buildWorkScene, sceneOf, rig } from './work.js';
 import { buildCaravan } from './caravan.js';
 import { buildTavernInterior } from './tavern.js';
 import { buildChurchInterior } from './church.js';
@@ -672,7 +672,70 @@ function startViewer(ctx) {
   loop();
 }
 
-window.SK = { setup, frame, shot, galleryShot, CASTLE };
+/**
+ * The video's thumbnail (owner 2026-10-26): the castle and the town behind, a villager close in the foreground cut off at the
+ * waist (about 40% of the picture), waving, with the name tag above the head blurred so nobody can read it ("is it me?"),
+ * and a short title on top. opts: { job, title, sub, phase }.
+ */
+async function thumb({ job = 'guard', title = 'IS THIS YOU?', sub = '', phase = 0.45 } = {}) {
+  const ctx = window.__ctx;
+  const { camera, scene, M, castle, buildings } = ctx;
+  applyFrame(ctx, 10);
+  for (const { st } of ctx.stories) st.group.visible = false;
+  for (const ws of [...ctx.works, ...ctx.interiors.map((x) => x.ws)]) { ws.group.visible = false; if (ws.room) ws.room.visible = false; }
+  // from the market square (or the well) back toward the castle, a little above the roofs
+  const from = (buildings.items.market || buildings.items.well).focus.clone();
+  const keep = castle.keep.clone();
+  const away = from.clone().sub(keep).setY(0).normalize();
+  const pos = from.clone().addScaledVector(away, 14).setY(from.y + 7), look = keep.clone().setY(keep.y + 6);
+  setFov(camera, undefined);
+  camera.position.copy(pos);
+  camera.lookAt(look);
+  camera.updateMatrixWorld();
+  // the villager in camera space: from the waist (the bottom edge) to the top of the hat about 55% up the frame,
+  // on the right, facing the camera
+  const tan = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2)), aspect = camera.aspect;
+  const WAIST = 0.95, TOP = 2.05, d = (TOP - WAIST) / (1.08 * tan);
+  const yWaist = -1.0 * tan * d, xc = 0.2 * tan * aspect * d;
+  const P = rig(M, JOBS[job]?.color || JOBS.guard.color);
+  P.root.position.copy(camera.localToWorld(new THREE.Vector3(xc, yWaist - WAIST, -d)));
+  P.root.lookAt(camera.position.x, P.root.position.y, camera.position.z);
+  P.r.g.rotation.set(-2.95, 0, 0.28); // waving, the arm up beside the head
+  P.l.g.rotation.set(-0.15, 0, 0.12);
+  P.body.rotation.z = 0.05;
+  scene.add(P.root);
+  P.root.updateMatrixWorld(true);
+  const night = ctx.env.set(phase, look, 160, 10, 0);
+  M.setNight(night);
+  ctx.houses.updateLod(camera);
+  ctx.nature.updateLod(camera);
+  ctx.env.composer.render();
+  // the overlay: the blurred name tag over the head, the title on top
+  document.getElementById('ov') && (document.getElementById('ov').style.display = 'none');
+  const head = P.root.localToWorld(new THREE.Vector3(0, TOP - 0.02, 0)).project(camera);
+  const W = window.innerWidth, H = window.innerHeight;
+  const box = document.createElement('div');
+  box.id = 'thumb';
+  box.innerHTML = `<style>
+    #thumb{position:absolute;inset:0;pointer-events:none;font-family:'Inter',sans-serif}
+    #thumb .title{position:absolute;left:0;right:0;top:150px;text-align:center;font-family:'Cinzel',serif;font-weight:700;font-size:118px;line-height:1.02;color:#fff4d6;text-shadow:0 7px 0 #6b4a12,0 12px 34px rgba(0,0,0,.85);padding:0 50px}
+    #thumb .sub{position:absolute;left:0;right:0;top:420px;text-align:center;font-family:'Cinzel',serif;font-weight:700;font-size:50px;color:#e3b23c;text-shadow:0 4px 14px rgba(0,0,0,.9)}
+    #thumb .tag{position:absolute;transform:translate(-50%,-100%);padding:10px 26px 12px;border-radius:24px;background:rgba(18,29,71,.85);border:5px solid #e3b23c;white-space:nowrap;text-align:center;line-height:1.05;filter:blur(12px)}
+    #thumb .tag .t{font-family:'Cinzel',serif;font-weight:700;font-size:64px;color:#fff4d6}
+    #thumb .tag .s{font-weight:700;font-size:34px;color:#e3b23c;letter-spacing:2px;text-transform:uppercase}
+  </style><div class="title"></div><div class="sub"></div><div class="tag"><div class="t">Villager 1880</div><div class="s"></div></div>`;
+  box.querySelector('.title').textContent = title;
+  box.querySelector('.sub').textContent = sub;
+  box.querySelector('.tag .s').textContent = JOBS[job]?.label || job;
+  const tag = box.querySelector('.tag');
+  tag.style.left = `${Math.round((head.x * 0.5 + 0.5) * W)}px`;
+  tag.style.top = `${Math.round((-head.y * 0.5 + 0.5) * H)}px`;
+  document.body.appendChild(box);
+  await document.fonts.ready;
+  return true;
+}
+
+window.SK = { setup, frame, shot, galleryShot, thumb, CASTLE };
 if (window.__KINGDOM__) {
   setup(window.__KINGDOM__).then((s) => { window.__ready = s; }).catch((e) => { console.error(e); window.__error = String(e?.stack || e); });
 }
