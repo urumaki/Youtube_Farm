@@ -163,12 +163,12 @@ async function setup(data) {
     return { anchor, ax: -Math.sin(lot.rot) * s, az: Math.cos(lot.rot) * s, floorAt, face: Math.atan2(e.x - o.x, e.z - o.z) };
   };
   const done = (id) => state.buildings.some((b) => b.id === id && b.status === 'done') && buildings.items[id];
-  // the dock's pier (buildings.js: a deck 0.75 m up, 15 m long from lot z -4.5 to 10.5), its end over the water
+  // the dock's pier (buildings.js: a deck 0.75 m up, from the bank out over the water, `pier`), its end over the water
   const dockPier = (d) => {
-    const g = (x, z) => { const p = d.toWorld([x, 0, z]); return heightAt(w, p.x, p.z); };
-    const o = d.toWorld([0, 0.75, 0]), s = g(0, 10) < g(0, -4) ? 1 : -1;
-    const out = d.toWorld([0, 0.75, s]).sub(o).normalize(), along = d.toWorld([1, 0.75, 0]).sub(o).normalize();
-    return { origin: d.toWorld([0, 0.75, 3 - 3 * s]), out, along, reach: 10 };
+    const { origin: [ox, oz], dir: [dx, dz], reach } = d.pier;
+    const o = d.toWorld([ox, 0.75, oz]);
+    const out = d.toWorld([ox + dx, 0.75, oz + dz]).sub(o).normalize(), along = d.toWorld([ox + dz, 0.75, oz - dx]).sub(o).normalize();
+    return { origin: o, out, along, reach };
   };
   // owner 2026-10-23: the jobs with a workplace of their own work there once it stands, every scene of the job: the smith in
   // the forge's yard, the woodcutter by the sawmill's log pile, the mason on the quarry's top terrace by the cut blocks, the

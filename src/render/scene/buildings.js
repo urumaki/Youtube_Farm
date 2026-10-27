@@ -113,13 +113,31 @@ const BUILD = {
     out.focusH = 6;
   },
   dock(b, lot, out, ctx) {
-    // pier from the bank out over the river on piles
-    const len = 15;
-    for (let i = 0; i <= 5; i++) for (const x of [-1.4, 1.4]) b.add('woodDark', cylGeo(0.18, 0.2, 5, 6), x, -1.8, -4 + i * 3);
-    b.add('wood', boxGeo(3.4, 0.3, len, 2), 0, 0.6, 3);
-    b.add('woodDark', boxGeo(0.12, 0.8, len), -1.6, 1.1, 3); b.add('woodDark', boxGeo(0.12, 0.8, len), 1.6, 1.1, 3);
-    for (const [x, z, r] of [[-3.6, 6, 0.2], [3.7, 2, -0.15]]) ctx.boats.push({ x, z, r, len: 5, sail: false });
-    b.add('wood', boxGeo(1.4, 0.7, 1.0), 0.6, 1.1, -2.5);
+    // owner 2026-10-27 (the pier stood out in the river, cut off from the bank): the pier runs from the bank, where the
+    // ground reaches its deck, straight out over the water, on piles down to the river bed. The lot stays where it was
+    // (plots and roads depend on it); the pier finds the land side from the ground around it
+    const g = (x, z) => { const p = new THREE.Vector3(x, 0, z).applyMatrix4(ctx.frame.m); return heightAt(ctx.w, p.x, p.z); };
+    const sides = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+    const [lx, lz] = sides.reduce((best, s) => (g(s[0] * 14, s[1] * 14) > g(best[0] * 14, best[1] * 14) ? s : best));
+    const dx = -lx, dz = -lz, ry = Math.atan2(dx, dz); // out over the water
+    const at = (u, v = 0) => [u * dx + v * dz, u * dz - v * dx]; // u along the pier (toward the water), v across it
+    const deck = ctx.frame.base + 0.75;
+    let land = 0;
+    while (land > -30 && g(...at(land)) < deck - 0.25) land -= 0.5;
+    const u0 = land - 1.5, u1 = 9, len = u1 - u0, mid = (u0 + u1) / 2;
+    b.add('wood', boxGeo(3.4, 0.3, len, 2), at(mid)[0], 0.6, at(mid)[1], ry);
+    for (const v of [-1.6, 1.6]) b.add('woodDark', boxGeo(0.12, 0.8, len - 1), at(mid + 0.5, v)[0], 1.1, at(mid + 0.5, v)[1], ry);
+    for (let u = u1 - 0.4; u > land; u -= 3) for (const v of [-1.4, 1.4]) {
+      const [x, z] = at(u, v), bed = g(x, z) - ctx.frame.base; // piles from the deck down into the river bed
+      b.add('woodDark', cylGeo(0.18, 0.2, 0.6 - bed + 0.5, 6), x, (0.6 + bed - 0.5) / 2, z);
+    }
+    // a stone abutment where the pier meets the bank, sunk into it
+    const ab = at(land - 0.5);
+    b.add('stone', boxGeo(4.2, 3.0, 2.4), ab[0], 0.6 - 1.5 + 0.15, ab[1], ry);
+    const [cx, cz] = at(u1 - 3, 0.6);
+    b.add('wood', boxGeo(1.4, 0.7, 1.0), cx, 1.1, cz, ry); // a crate on the deck
+    for (const [u, v, r] of [[u1 - 4, -3.7, 0.12], [u1 - 8, 3.8, -0.1]]) { const [x, z] = at(u, v); ctx.boats.push({ x, z, r: -ry + r, len: 5, sail: false }); }
+    out.pier = { origin: at(u1 - 10), dir: [dx, dz], reach: 10 }; // for the fisherman (main.js dockPier): 10 m out to the end
     out.focusH = 3;
   },
   forge(b, lot, out) {
@@ -485,7 +503,7 @@ const BUILD = {
     out.focusH = 14;
   },
   harbor(b, lot, out, ctx) {
-    b.add('stone', boxGeo(72, 2, 6), 0, -0.6, 8);
+    b.add('stone', boxGeo(72, 4.4, 23), 0, -1.8, -0.5); // the quay, from under the warehouses to the piers, down into the water (owner 2026-10-27)
     for (const x of [-24, 0, 24]) {
       for (let i = 0; i < 5; i++) for (const s of [-1, 1]) b.add('woodDark', cylGeo(0.2, 0.22, 5, 6), x + s * 1.8, -1.8, 13 + i * 3);
       b.add('wood', boxGeo(4.2, 0.35, 15, 2), x, 0.55, 18);
@@ -816,7 +834,7 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     const frame = parent ? plazaFrame(w, parent, lot) : lotFrame(w, lot);
     const b = new Builder();
     const out = { smoke: [], lights: [], flags: [], banners: [], focusH: 6 };
-    ctx.boats = []; ctx.sails = []; ctx.lamps = [];
+    ctx.boats = []; ctx.sails = []; ctx.lamps = []; ctx.w = w; ctx.frame = frame;
     fn(b, lot, out, ctx);
     // a leveled foundation pad (skip on water)
     const padH = frame.base - frame.lo + 1.2;
@@ -857,7 +875,7 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     for (const s of ctx.sails) sails.push({ pos: s.at.clone().applyMatrix4(frame.m), len: s.len, rot: lot.rot });
     for (const bt of ctx.boats) boats.push({ pos: toWorld([bt.x, 0, bt.z]), rot: lot.rot + bt.r, len: bt.len, sail: bt.sail });
     const item = {
-      group: root, body, site: siteGroup, focus: toWorld([0, out.focusH, 0]), lot, base: frame.base, toWorld,
+      group: root, body, site: siteGroup, focus: toWorld([0, out.focusH, 0]), lot, base: frame.base, toWorld, pier: out.pier,
       // the paved foundation under the lot (its top 0.05 m over `base`, 0.5 m wider than the lot, `padH` deep; a square's
       // sides slope out `flare` metres at the bottom); stalls on a square stand on the square's
       pad: !lot.onWater && !parent && bd.id !== 'quarry', padH, flare: lot.plaza ? padH * 1.8 : 0,

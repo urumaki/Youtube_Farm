@@ -358,6 +358,10 @@ Add new owner decisions here.
   foundry, clock tower (its door moved to the front), tavern (its back, the side the shots see), town hall, the harbor's
   warehouses, palace, lighthouse. Helpers `door`, `lancet`, `rose` in `buildings.js`, `lancetGeo` in `kit.js`; the
   `stained` glass is blue by day. `node scratch/audit-buildings.js [ids]` (a local script, not in git) rendered each building as its shot sees it.
+- The dock and the harbor reach the land (owner 2026-10-27: the pier stood out in the river): the dock's pier finds the bank
+  from the ground round its lot and runs from a stone abutment in the bank straight out over the water on piles down to the
+  river bed (the lot itself does not move: plots and roads depend on it); the fisherman stands at its end (`pier` on the
+  item, `dockPier` in `main.js`). The harbor's quay is one stone block from under the warehouses down into the water.
 - Commissions (owner 2026-10-23): buildings with no goal, begun on the next day the kingdom runs, whatever its
   size (`COMMISSIONS` in `tiers.js`, saved with tier `commission`). The first is the Fletcher's Workshop: a
   thatched timber workshop with bows on the wall, a fletching bench under a lean-to, a barrel of arrows, staves
