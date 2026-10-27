@@ -239,7 +239,7 @@ export function planDay(s, prev, diff) {
 /**
  * Commenters name villagers: each new commenter (oldest comment first, one villager per person)
  * joins the queue; queued names go to the unnamed villagers with the lowest ids.
- * commenters: [{ author, name, at, wants?, call? }] (call: a name asked for in the comment); blocked: { authors?: [], names?: [] }.
+ * commenters: [{ author, name, at, wants?, call?, complains?, rebel? }] (call: a name asked for in the comment); blocked: { authors?: [], names?: [] }.
  */
 function assignNames(s, commenters, blocked, diff) {
   const blockedAuthors = new Set(blocked.authors || []);
@@ -249,6 +249,7 @@ function assignNames(s, commenters, blocked, diff) {
   diff.promoted = [];
   diff.renamed = [];
   diff.complaints = [];
+  diff.rebels = []; // commenters talking of overthrowing the king (the pillory, stories.js)
   diff.newCommenters = 0; // people commenting for the first time (no story on busy days, stories.js)
   // names are untrusted: cleaned to letters, digits and . _ -, never one that reads like code or an instruction
   const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !looksLikeCode(raw) && !looksLikeCode(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
@@ -281,6 +282,8 @@ function assignNames(s, commenters, blocked, diff) {
       } else if (call && q) q.name = call;
       // "I can't see myself": first in line for the next video (featured.js)
       if (c.complains && id !== undefined) { s.names[id].complainDay = s.day; diff.complaints.push({ id: Number(id), name: s.names[id].name }); }
+      if (c.rebel && id !== undefined) { s.names[id].rebelDay = s.day; diff.rebels.push({ id: Number(id), name: s.names[id].name }); }
+      else if (c.rebel && q) q.rebel = true;
       if (id !== undefined && wants.length) applyRequest(id, wants);
       else if (wants.length && q) q.wants = wants;
       continue;
@@ -290,7 +293,7 @@ function assignNames(s, commenters, blocked, diff) {
     known.add(c.author);
     s.namedAuthors.push(c.author);
     diff.newCommenters += 1;
-    s.nameQueue.push({ name, author: c.author, ...(wants.length ? { wants } : {}) });
+    s.nameQueue.push({ name, author: c.author, ...(wants.length ? { wants } : {}), ...(c.rebel ? { rebel: true } : {}) });
   }
   // names blocked after they were given are taken back
   for (const [id, n] of Object.entries(s.names)) {
@@ -303,8 +306,9 @@ function assignNames(s, commenters, blocked, diff) {
   for (const v of s.villagers) {
     if (!s.nameQueue.length) break;
     if (s.names[v.id]) continue;
-    const { wants, ...n } = s.nameQueue.shift();
-    s.names[v.id] = { ...n, day: s.day };
+    const { wants, rebel, ...n } = s.nameQueue.shift();
+    s.names[v.id] = { ...n, day: s.day, ...(rebel ? { rebelDay: s.day } : {}) };
+    if (rebel) diff.rebels.push({ id: v.id, name: n.name });
     if (n.job) v.job = n.job; // a named villager who left and came back keeps the job they chose
     if (typeof wants === 'string') s.names[v.id].wants = wants; // still an apprentice
     else if (wants?.length) applyRequest(v.id, wants);

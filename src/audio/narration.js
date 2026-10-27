@@ -61,6 +61,7 @@ const T = {
       tugofwar: ['Tug of war over the mud: guards against farmers!', 'Pull! Guards and farmers heave on the rope, and somebody ends up in the mud!'],
       haycart: ['A hay cart is stuck in the gate, and everyone pushes!', 'Push! The hay cart is stuck in the mud of the gate.'],
       snowballs: ['A snowball fight in the square!', 'Snow day! The villagers pelt each other with snowballs.'],
+      rebel: ['Treason! A would-be rebel spends the day in the pillory.', 'Plotting against the king? To the pillory, and here come the tomatoes!'],
     },
     // everyday shots (src/render/scene/ambient.js)
     ambient: {
@@ -169,6 +170,7 @@ T.it = {
     tugofwar: ['Tiro alla fune sul fango: guardie contro contadini!'],
     haycart: ['Un carro di fieno è bloccato nella porta, e tutti spingono!'],
     snowballs: ['Battaglia a palle di neve in piazza!'],
+    rebel: ['Tradimento! Un aspirante ribelle passa la giornata alla gogna, tra i pomodori.'],
     flood_recede: ['L’acqua scende: l’argine di sacchi ha tenuto!'],
     quarrel_peace: ['Ieri litigavano, oggi si stringono la mano. Di nuovo amici!'],
   },

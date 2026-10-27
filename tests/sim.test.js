@@ -773,3 +773,44 @@ test('comment words of 2026-10-25: typos and synonyms reach the jobs, six new jo
   for (const [text, job] of Object.entries(cases)) assert.deepEqual(wantsFromText(text), [job], text);
   for (const text of ['I go to school', '5 stars video', 'I love horses', 'good advice', 'nice shave']) assert.deepEqual(wantsFromText(text), [], text);
 });
+
+test('the would-be rebel (owner 2026-10-27): comments of overthrowing the king are spotted, the pillory at most once in 7 days', async () => {
+  const { rebelFromText, wantsFromText } = await import('../src/sim/requests.js');
+  for (const t of ['Can I start an organization or overthrow the king?', 'kill the king!!', 'down with the king', 'I will be the new king', 'VIVA LA REVOLUTION',
+    'join the rebellion', 'abbasso il re', 'uccidere il re', 'steal the crown', 'dethrone his majesty']) assert.ok(rebelFromText(t), t);
+  for (const t of ['long live the king', 'can I be a knight for the king?', 'I love this kingdom', 'my king please grant my wish', 'call me Violet', 'a coupon']) assert.ok(!rebelFromText(t), t);
+  assert.deepEqual(wantsFromText('overthrow the king'), [], 'not a job request');
+  const { pickStory, storyFor } = await import('../src/sim/stories.js');
+  const jobs = ['executioner', 'farmer', 'guard', 'baker', 'peasant', 'merchant'];
+  const kingdom = (day, extra = {}) => ({
+    seed: SEED, date: `2026-11-${String(day).padStart(2, '0')}`, day, subscriberCount: 900, weather: 'clear', storyLog: {}, unlockedTiers: ['hamlet'],
+    buildings: ['market', 'pillory'].map((id) => ({ id, status: 'done' })), houses: [], villagers: jobs.map((job, id) => ({ id, job })),
+    names: Object.fromEntries(jobs.map((_, id) => [id, { name: `V${id}`, day: 1 }])), ...extra,
+  });
+  const k = kingdom(10);
+  k.names[3].rebelDay = 9;
+  const st = pickStory(k);
+  assert.equal(st.id, 'rebel');
+  assert.equal(st.rebel.id, 3, 'the rebel is in the pillory');
+  assert.equal(st.executioner.job, 'executioner', 'a named executioner');
+  assert.ok(st.throwers.every((c) => c.id !== 3 && c.id !== 0));
+  assert.equal(k.names[3].pilloryDay, 10);
+  // the next rebel waits until 7 days have passed; one already pilloried is not taken again
+  for (let d = 11; d <= 16; d++) { k.day = d; k.date = `2026-11-${d}`; k.names[4].rebelDay = 11; assert.notEqual(pickStory(k)?.id, 'rebel', `day ${d}`); }
+  k.day = 17; k.date = '2026-11-17'; k.storyArc = null; // (a story going on over several days comes first)
+  const again = pickStory(k);
+  assert.equal(again.id, 'rebel');
+  assert.equal(again.rebel.id, 4);
+  // no pillory, no rebel story; nobody waiting, never drawn
+  const none = kingdom(10, { buildings: [{ id: 'market', status: 'done' }] });
+  none.names[3].rebelDay = 9;
+  assert.notEqual(pickStory(none)?.id, 'rebel');
+  for (let d = 1; d <= 28; d++) assert.notEqual(pickStory(kingdom(d))?.id, 'rebel');
+  assert.equal(storyFor(kingdom(10), 'rebel').id, 'rebel', 'test renders show one with nobody waiting');
+  // a new commenter who talks of it is a rebel from the day they get their villager
+  let s = genesis({ seed: SEED, date: '2026-09-30' });
+  const r = advance(s, { subscribers: 30, date: '2026-10-01', commenters: [{ author: 'UCrebel0000000000000000a', name: 'Spartacus', at: '2026-10-01T01:00:00Z', rebel: true }] });
+  const id = Object.keys(r.state.names).find((i) => r.state.names[i].name === 'Spartacus');
+  assert.equal(r.state.names[id].rebelDay, r.state.day);
+  assert.deepEqual(r.diff.rebels.map((x) => x.name), ['Spartacus']);
+});

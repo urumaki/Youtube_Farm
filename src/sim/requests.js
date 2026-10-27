@@ -134,6 +134,22 @@ export function complainsFromText(text) {
   return COMPLAINT_RE.test(plainText(text).replace(/[’‘]/g, "'"));
 }
 
+// "overthrow the king", "kill the king", "down with the king", "revolution!", "abbasso il re": a would-be rebel. Owner
+// (2026-10-27): at most once every 7 days the newest one spends a day in the pillory, pelted with tomatoes (stories.js).
+const KING = String.raw`(the |our |this |that |your |his |my |da |le )?(king|kingdom|crown|throne|monarchy|majesty|ruler)`;
+const REBEL_RE = new RegExp([
+  String.raw`\b(overthrow|over throw|overthrown|overthrowing|kill|killing|murder|assassinate|dethrone|depose|behead|usurp|topple|betray|defeat|destroy|stab|poison|take down|takedown)\s+${KING}\b`,
+  String.raw`\bdown with ${KING}\b`, String.raw`\b(steal|take|seize|claim)\s+(the |your )?(crown|throne)\b`, String.raw`\bi('?ll| will| shall)\s+be (the )?(new )?king\b`,
+  /\b(revolution|revolt|rebellion|rebel|rebels|uprising|insurrection|mutiny|treason|coup|anarchy|regicide|usurper|traitor)\b/.source,
+  /\b(uccidere|uccido|ammazzare|ammazzo|rovesciare|rovescio|detronizzare|spodestare|tradire)\s+(il |del )?re\b/.source,
+  /\babbasso (il )?re\b/.source, /\b(rivoluzione|ribellione|rivolta|ribelle|ribelli|colpo di stato|tradimento|traditore)\b/.source,
+].join('|'), 'i');
+
+/** True when the comment talks of overthrowing the king (a rebel for the pillory). */
+export function rebelFromText(text) {
+  return REBEL_RE.test(plainText(text).replace(/[’‘]/g, "'"));
+}
+
 // "call me Violet", "a carpenter named henry", "can I be a villager called sopita?", "chiamami Pino".
 // Only the chosen name is kept (cleaned and checked like any display name in simulate.js).
 const NAME_RE = /\b(?:call me|called|named|name me|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;

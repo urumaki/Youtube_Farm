@@ -103,6 +103,15 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   villagers, the top of the load slides off onto them); a snowball fight (`snowballs`, only on snowy days: two teams behind
   snow walls). Test with `--story martinmas`, `christmas`, `proclaim`, `bigfish`, `bigfish:roast`, `chicken`, `windmill`,
   `tugofwar`, `haycart --built wall2`, `snowballs` (the test render gives `christmas` and `snowballs` snow).
+  The would-be rebel (owner 2026-10-27, `rebel`, scene `stories/rebel.js`): a comment talking of overthrowing the king
+  ("overthrow / kill / dethrone the king", "down with the king", "revolution", "abbasso il re"...; `rebelFromText` in
+  `requests.js`, only a flag is kept: `names[id].rebelDay`, `diff.rebels`) puts the newest such commenter of the last 7 days
+  in the pillory (needs the Pillory; at most once every 7 days, never drawn otherwise, after calendar days, the proclamation
+  and a story going on; `pilloryDay` so nobody goes twice for one comment). Asked for as an execution; the owner chose this
+  comic version instead (nobody hurt, as the tone rule says): bent in the stocks with head and hands through the board, named
+  villagers pelt them with tomatoes that stick, the hooded executioner brings the axe down on the cabbage on the block as a
+  warning and the rebel flinches. Synced sounds: the axe (a whoosh, then a deep thunk) and each tomato's splat (`hits` on
+  the story's `work`, `makeSfxTrack`). Test with `--story rebel`.
   The people in a role are named villagers of that job when the kingdom has them (owner 2026-10-25, `roleCast` in
   `stories.js`): the guards beside the heroes against the bandits (`guardCast`) and the King's banner guards in the
   procession and at the feast (`escort`) are named guards or knights, the folk with torches against the wolves named

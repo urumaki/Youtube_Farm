@@ -512,7 +512,7 @@ async function setup(data) {
     cues: plan?.targets.map((t, i) => ({
       kind: t.kind, id: t.id ?? null, t0: t.t0, t1: t.t1, completed: t.completed ?? null, rebuilt: !!t.rebuilt, raised: !!t.raised, pan: i % 2 ? 0.25 : -0.25,
       hasChapel: state.buildings.some((b) => (b.id === 'chapel' || b.id === 'cathedral') && b.status === 'done'),
-      job: t.sceneJob ?? t.job ?? null, variant: t.variant ?? null, job2: t.guest?.job ?? null, pair: t.pair ?? null, strikes: t.work ? t.work.strikeTimes(t.t0, t.t1) : [], strikeSound: t.work?.sound ?? null,
+      job: t.sceneJob ?? t.job ?? null, variant: t.variant ?? null, job2: t.guest?.job ?? null, pair: t.pair ?? null, strikes: t.work ? t.work.strikeTimes(t.t0, t.t1) : [], strikeSound: t.work?.sound ?? null, hits: t.work?.hits ? t.work.hits(t.t0, t.t1) : null,
     })) ?? [],
   };
   window.__ctx = ctx;

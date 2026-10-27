@@ -428,6 +428,7 @@ const SCENES = {
   ev_tugofwar: [['chatter', 0.45], ['cheer', 0.4]],
   ev_haycart: [['cart', 0.35], ['chatter', 0.45], ['cheer', 0.2]],
   ev_snowballs: [['chatter', 0.5], ['cheer', 0.25]],
+  ev_rebel: [['chatter', 0.5], ['cheer', 0.3]], // the axe and the tomatoes are synced hits (hits in makeSfxTrack)
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],
@@ -440,8 +441,9 @@ const SCENES = {
 };
 
 /** One impact, synced to a strike in the animation (blacksmith, woodcutter, farmer, mason, guards training). */
+const AXE_LEAD = 0.22; // the axe's whoosh before the blow
 function hit(kind, r) {
-  const o = buf(kind === 'anvil' ? 0.9 : 0.4);
+  const o = buf(kind === 'anvil' ? 0.9 : kind === 'axe' ? 0.8 : 0.4);
   if (kind === 'anvil') {
     const f = r.float(1050, 1180), a = r.float(0.4, 0.5);
     modes(o, 0, [[f, 0.5, 0.45], [f * 2.76, 0.32, 0.22], [f * 5.4, 0.18, 0.1], [f * 8.93, 0.1, 0.05], [f * 0.5, 0.15, 0.3]], a, r);
@@ -459,6 +461,14 @@ function hit(kind, r) {
   } else if (kind === 'straw') { // a blade into the straw dummy: a dull thump and a rustle
     modes(o, 0, [[r.float(110, 150), 0.6, 0.06]], 0.5, r);
     noiseBurst(o, 0, 0.12, 0.5, r, [new Biquad('bp', 2200, 0.8)]);
+  } else if (kind === 'axe') { // the executioner's axe falling on the block: a whoosh, then a deep wooden thunk (owner 2026-10-27)
+    const pre = Math.round(AXE_LEAD * RATE), bp = new Biquad('bp', 900, 0.8);
+    for (let i = 0; i < pre; i++) { const x = i / pre; o[i] += bp.run(r.float(-1, 1)) * 0.9 * x * x; }
+    modes(o, pre, [[r.float(85, 100), 1, 0.16], [r.float(160, 190), 0.7, 0.09], [r.float(380, 440), 0.35, 0.04]], 1, r);
+    noiseBurst(o, pre, 0.05, 0.8, r, [new Biquad('bp', 1200, 1)]);
+  } else if (kind === 'splat') { // a ripe tomato bursting: a wet slap
+    noiseBurst(o, 0, 0.07, 0.6, r, [new Biquad('bp', r.float(600, 900), 0.7)]);
+    modes(o, 0, [[r.float(140, 180), 0.4, 0.03]], 0.35, r);
   } else if (kind === 'chisel') {
     modes(o, 0, [[r.float(2100, 2600), 0.4, 0.03], [r.float(5200, 6000), 0.2, 0.015]], 0.5, r);
     noiseBurst(o, 0, 0.015, 0.4, r, [new Biquad('hp', 2500)]);
@@ -525,6 +535,10 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
     const len = cue.t1 - cue.t0 + 0.4;
     for (const [name, gain] of WORK_BEDS[`${cue.job}:${cue.variant}`] || WORK_BEDS[cue.job] || []) place(sound(name, len, r, workDir), cue.t0 - 0.2, gain, cue.pan ?? 0);
     for (const ts of cue.strikes || []) place(hit(cue.strikeSound, r), ts - 0.005, cue.strikeSound === 'anvil' || cue.strikeSound === 'clang' ? 0.6 : 0.75, cue.pan ?? 0, 0.002, 0.3);
+  }
+  // story shots with hits of their own kinds at their own times (the pillory: tomatoes, the axe on the block)
+  for (const cue of cues.filter((c) => c.kind === 'event' && c.hits?.length)) {
+    for (const [ts, kind] of cue.hits) place(hit(kind, r), ts - 0.005 - (kind === 'axe' ? AXE_LEAD : 0), kind === 'axe' ? 0.95 : 0.5, cue.pan ?? 0, 0.002, 0.3);
   }
   // wide shot: a distant bell if the kingdom has one; chains again as the bridge rises for the loop
   if (cues.some((c) => c.hasChapel)) place(sound('bell', 4.5, r, workDir), 23.9, 0.18, -0.3, 0.2, 1.2);

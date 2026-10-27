@@ -71,6 +71,10 @@ export const STORIES = {
   haycart: { minPop: 250, cooldown: 12, weight: 2, needs: (s) => built(s, 'wall2') && s.weather !== 'snow' },
   // a snowball fight in the square, two teams of named villagers; only on snowy days
   snowballs: { minPop: 20, cooldown: 5, weight: 3, needs: (s) => s.weather === 'snow' },
+  // owner 2026-10-27: a commenter who talks of overthrowing the king ("kill the king", "revolution!") spends a day in the
+  // pillory while named villagers pelt them with tomatoes and the executioner chops a cabbage on the block as a warning.
+  // Comic, nobody hurt; never drawn otherwise, at most once every 7 days, the newest rebel of the last 7 days (rebelDay).
+  rebel: { onComment: true, minPop: 1, cooldown: 7, needs: (s) => built(s, 'pillory') },
 };
 const GUARDS = ['guard', 'knight'], LAND = ['farmer', 'peasant', 'shepherd'];
 const teamOf = (s, jobs) => namedVillagers(s).filter((n) => jobs.includes(n.job));
@@ -274,12 +278,30 @@ const BUILD = {
     if (!carter) return null;
     return { cast: [carter, ...roleCast(state, r, named.map((n) => n.job), 4, [carter])] };
   },
+  rebel(state, r) {
+    // the newest rebel not yet pilloried (test renders with none: the newest named villager), the executioner (a named one when
+    // there is one) and up to four named villagers throwing tomatoes
+    const named = namedVillagers(state);
+    const rebel = rebelsWaiting(state)[0] || named[0];
+    if (!rebel) return null;
+    const executioner = roleCast(state, r, ['executioner'], 1, [rebel])[0] || null;
+    const throwers = roleCast(state, r, Object.keys(JOB_COUNT(state)), 4, [rebel, ...(executioner ? [executioner] : [])]);
+    return { rebel, executioner, throwers, cast: [rebel, ...(executioner ? [executioner] : []), ...throwers] };
+  },
   snowballs(state, r) {
     const pool = namedVillagers(state).slice(0, 16), cast = [];
     while (cast.length < 8 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
     return cast.length >= 2 ? { cast } : null;
   },
 };
+/** Named villagers who talked of overthrowing the king in the last 7 days and were not pilloried since, newest first. */
+function rebelsWaiting(state) {
+  return namedVillagers(state).filter((n) => {
+    const x = state.names[n.id];
+    return x.rebelDay !== undefined && x.rebelDay >= state.day - 7 && !(x.pilloryDay >= x.rebelDay);
+  }).sort((a, b) => state.names[b.id].rebelDay - state.names[a.id].rebelDay || b.day - a.day);
+}
+
 // every job some named villager has (anyone may cheer)
 const JOB_COUNT = (state) => Object.fromEntries(namedVillagers(state).map((n) => [n.job, 1]));
 
@@ -312,9 +334,19 @@ export function pickStory(state, { unlocked = [] } = {}) {
       return { id: arc.id, step: arc.step, ...story };
     }
   }
+  // a rebel waiting for the pillory (no more than once every 7 days)
+  if (!id && rebelsWaiting(state).length && possible('rebel', STORIES.rebel)
+    && (state.storyLog.rebel === undefined || state.day - state.storyLog.rebel >= STORIES.rebel.cooldown)) {
+    const story = BUILD.rebel(state, r);
+    if (story) {
+      state.storyLog.rebel = state.day;
+      state.names[story.rebel.id].pilloryDay = state.day;
+      return { id: 'rebel', ...story };
+    }
+  }
   if (!id) {
     if (!r.chance(STORY_CHANCE)) return null;
-    const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && !s.onUnlock && possible(k, s)
+    const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && !s.onUnlock && !s.onComment && possible(k, s)
       && (state.storyLog[k] === undefined || state.day - state.storyLog[k] >= s.cooldown));
     if (!options.length) return null;
     id = r.weighted(options, ([, s]) => s.weight)[0];
