@@ -418,7 +418,12 @@ test('comments saying they cannot find themselves are spotted, and that villager
   for (const t of ["I can't see myself", 'where am i??', 'my name wasn’t there :(', 'I was not in the video', 'non mi vedo', "non c'è il mio nome", 'dove sono io?', "couldn't find my villager"]) {
     assert.ok(complainsFromText(t), t);
   }
-  for (const t of ['I love this kingdom', 'can I be a baker?', 'I see my house!', 'call me Violet']) assert.ok(!complainsFromText(t), t);
+  // owner 2026-10-27: those asking to be seen too
+  for (const t of ['Day 3 of asking to be a Priest', 'Day, four of asking to be the king’s night', "Day three asking to be the army's general", 'Day 3 for sawbonee?',
+    'Am I a guard 😢', 'I have no idea what job i have', "I'm pretty sure my comments haven't been heard by the king", 'what is my job?', 'sono un fabbro?',
+    'giorno 4 che chiedo di essere fornaio', 'I never got picked']) assert.ok(complainsFromText(t), t);
+  for (const t of ['I love this kingdom', 'can I be a baker?', 'I see my house!', 'call me Violet', 'Another glorious day in the kingdom', 'Day 11 was great',
+    'day 1 of the kingdom was cool', 'I have not seen a better channel', 'I am a hunter.', 'sono un grande fan']) assert.ok(!complainsFromText(t), t);
   let s = genesis({ seed: SEED, date: '2026-09-30' });
   const names = ['Ada', 'Bo', 'Cy', 'Dee', 'Eve', 'Fay', 'Gus', 'Hal', 'Ivy', 'Jo'];
   s = advance(s, { subscribers: 40, date: '2026-10-01', commenters: names.map((n, k) => ({ author: 'a' + k, name: n, at: `2026-10-01T0${k}:00:00Z` })) }).state;

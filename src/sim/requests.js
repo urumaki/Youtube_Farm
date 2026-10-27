@@ -120,16 +120,25 @@ export function tierOfJob(job) {
 
 // "I can't see myself", "my name wasn't there", "dove sono?": the commenter did not find their villager in
 // the last short. Owner (2026-10-21): they come first in the next one (src/sim/featured.js).
+// Owner (2026-10-27): so do those asking to be seen, "Day 3 of asking to be a baker", "am I a guard?", "what job do I have",
+// "my comments haven't been heard".
+const NUM = String.raw`(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty)`;
 const COMPLAINT_RE = new RegExp([
+  String.raw`\bday\W{0,3}${NUM}\W{0,3}((of|for)\s+)?(asking|begging|requesting|waiting|trying|wanting|commenting)\b`, String.raw`\bday\W{0,3}${NUM}\W{0,3}for\b[^.!?]*\?`, String.raw`\b(giorno|day)\s*${NUM}\s+(che|di|in cui)\s+(chiedo|aspetto)\b`,
+  /\bam i (a|an|the|still a|still an|in|on|here|there|real|alive|named|shown|even)\b/.source, /\bdo i (exist|have a (job|house|name|villager))\b/.source,
+  /\b(what|which)('?s| is| was)? my (job|villager|house|name|role)\b/.source, /\b(what|which) (job|role|work) (do|did|have|am) i\b/.source,
+  /\b(no idea|don'?t know|do not know|not sure) (what|which) (job|role|villager)\b/.source,
+  /\b(haven'?t|have not|hasn'?t|has not|wasn'?t|was not|weren'?t|were not|not) been (heard|seen|noticed|read|answered|picked|chosen|granted)\b/.source, /\bnever (got |been )?(picked|chosen|granted|answered|noticed)\b/.source, /\bnotice me\b/.source,
+  /\b(che|quale) lavoro (ho|faccio|mi)\b/.source, /\bsono (un|una|uno|ancora)\b[^.!?]*\?/.source,
   /\b(can'?t|cannot|can not|couldn'?t|could not|didn'?t|did not|don'?t|do not|never)\s+(see|find|spot)\s+(me|myself|my\b)/,
   /\bwhere\s+(am i|is my|'?s my|are my)\b/, /\bwhere'?s my\b/, /\bwhere('?s| is| was) (me|i)\b/,
   /\bi'?m not (in|there|on)\b/, /\bi (wasn'?t|was not|am not) (in|there|shown|on)\b/, /\bnot (in )?(the|this) (video|short)\b/,
   /\b(no|not|without|missing)\s+my\s+(name|villager)\b/, /\bmy (name|villager)\s+(isn'?t|wasn'?t|is not|was not|never|didn'?t|did not)\b/,
   /\bforgot (about )?me\b/, /\bwhere did my\b/,
   /\bnon mi (vedo|trovo|avete|hai|si vede)\b/, /\bnon (c'?è|c'?era|vedo|trovo|si vede) (il )?mio\b/, /\bdove sono( io)?\b/, /\bio non (ci )?sono\b/, /\bmi (avete|hai) dimenticat/,
-].map((r) => r.source).join('|'), 'i');
+].map((r) => (typeof r === 'string' ? r : r.source)).join('|'), 'i');
 
-/** True when the comment says the commenter could not find themselves in the video. */
+/** True when the comment says the commenter could not find themselves in the video, or asks to be seen. */
 export function complainsFromText(text) {
   return COMPLAINT_RE.test(plainText(text).replace(/[’‘]/g, "'"));
 }

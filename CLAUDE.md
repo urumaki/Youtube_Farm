@@ -121,7 +121,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   street in front of the house (the old camera over the roofs across the street hid the people in the terraced rows).
 - Owner rules 2026-10-21: (1) a commenter who writes they could not find themselves in the last short
   ("can't see myself", "my name wasn't there", "non mi vedo"; `complainsFromText` in `requests.js`) gets
-  `complainDay` and comes first in the next video (`featured.js`). (2) Dropped 2026-10-22 (owner): there was no
+  `complainDay` and comes first in the next video (`featured.js`). Owner 2026-10-27: so does one asking to be seen, "Day 3
+  of asking to be a baker", "am I a guard?", "what job do I have", "my comments haven't been heard" (same regex). (2) Dropped 2026-10-22 (owner): there was no
   story event on days with 15 or more new commenters; now a story can happen on any day. (3) No scene
   again within 3 days (`src/sim/scenes.js`, `state.sceneLog`): the simulation now picks the tavern yes/no,
   each villager's scene variant and the everyday shot, and saves them as `diff.scenes` (the renderer uses
