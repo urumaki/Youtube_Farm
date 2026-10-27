@@ -732,6 +732,38 @@ test("the guards' tournament: a knockout of eight named guards over three days, 
   assert.equal(storyFor(few, 'tourney'), null);
 });
 
+test('the games at the Tournament Ground: a race, the quintain, then the joust; the champion is knighted', async () => {
+  const { storyFor, STORIES } = await import('../src/sim/stories.js');
+  assert.deepEqual(STORIES.joust.steps, ['race', 'quintain', 'final']);
+  const jobs = ['stablehand', 'guard', 'guard', 'farmer', 'hunter', 'baker', 'priest', 'knight', 'peasant', 'shepherd', 'cook', 'miller', 'potter'];
+  const kingdom = (date, weather = 'clear') => ({
+    seed: SEED, date, day: 20, subscriberCount: 600, weather, storyLog: {}, guardCaptain: 1,
+    buildings: [{ id: 'tournament', status: 'done' }], houses: [],
+    villagers: jobs.map((job, id) => ({ id, job })),
+    names: Object.fromEntries(jobs.map((_, id) => [id, { name: `V${id}`, day: 1 + id }])),
+  });
+  assert.ok(STORIES.joust.needs(kingdom('2026-11-03')) && !STORIES.joust.needs(kingdom('2026-11-03', 'rain')));
+  const noGround = kingdom('2026-11-03');
+  noGround.buildings = [];
+  assert.ok(!STORIES.joust.needs(noGround), 'only once the Tournament Ground stands');
+  for (let d = 1; d <= 40; d++) {
+    const s = kingdom(`2026-12-${String(1 + (d % 28)).padStart(2, '0')}-${d}`);
+    const race = storyFor(s, 'joust');
+    const all = [...race.race.riders, ...race.quintain.riders];
+    assert.equal(new Set(all.map((c) => c.id)).size, 8, 'eight different riders');
+    assert.ok(all.every((c) => !['knight', 'priest'].includes(c.job) && c.id !== 1), 'no knight, cleric or Captain of the Guard rides');
+    assert.equal(race.riders.length, 4);
+    assert.ok(race.crowd.every((c) => !race.riders.some((x) => x.id === c.id)), 'the stands hold others');
+    assert.ok([race.final.a.id, race.final.b.id].includes(race.champion));
+    assert.equal(race.final.a.id, race.race.winner);
+    assert.equal(race.final.b.id, race.quintain.winner);
+    const fin = storyFor(s, 'joust:final');
+    assert.equal(fin.riders.length, 2);
+    assert.equal(s.villagers[race.champion].job, 'knight', 'the champion is knighted');
+    assert.equal(s.names[race.champion].job, 'knight');
+  }
+});
+
 test('more story events of 2026-10-25: feast days on their date, the proclamation on a new goal, snow and teams when needed', async () => {
   const { pickStory, storyFor, STORIES } = await import('../src/sim/stories.js');
   const jobs = ['innkeeper', 'priest', 'fisherman', 'miller', 'guard', 'guard', 'farmer', 'peasant', 'crier', 'baker'];

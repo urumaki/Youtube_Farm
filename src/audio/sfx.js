@@ -190,6 +190,20 @@ const GEN = {
     }
     return o;
   },
+  hooves(sec, r) { // horses galloping on packed earth: three-beat thuds, two or three horses a little out of step
+    const o = buf(sec);
+    for (let h = 0; h < 3; h++) {
+      const stride = r.float(0.36, 0.42), base = r.float(70, 95);
+      for (let t = r.float(0, stride); t < sec - 0.1; t += stride) {
+        for (const d of [0, 0.07, 0.15]) {
+          const at = Math.round((t + d) * RATE), a = r.float(0.35, 0.55) * Math.min(1, t / 0.5) * Math.min(1, (sec - t) / 0.5);
+          modes(o, at, [[base, 0.6, 0.04], [base * 2.4, 0.25, 0.02]], a, r);
+          noiseBurst(o, at, 0.03, a * 0.5, r, [new Biquad('lp', 900)]);
+        }
+      }
+    }
+    return o;
+  },
   cart(sec, r) { // a cart rolling on packed earth
     const o = buf(sec);
     const lp = new Biquad('lp', 220);
@@ -429,6 +443,10 @@ const SCENES = {
   ev_haycart: [['cart', 0.35], ['chatter', 0.45], ['cheer', 0.2]],
   ev_snowballs: [['chatter', 0.5], ['cheer', 0.25]],
   ev_rebel: [['chatter', 0.5], ['cheer', 0.3]], // the axe and the tomatoes are synced hits (hits in makeSfxTrack)
+  // the games at the Tournament Ground: hooves and the crowd; the lances striking are synced hits (hits in makeSfxTrack)
+  ev_joust: [['hooves', 0.55], ['chatter', 0.3], ['cheer', 0.35]],
+  ev_joust_quintain: [['hooves', 0.4], ['chatter', 0.35], ['cheer', 0.3]],
+  ev_joust_final: [['fanfare', 0.35], ['hooves', 0.45], ['chatter', 0.3], ['cheer', 0.5]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],
@@ -469,6 +487,9 @@ function hit(kind, r) {
   } else if (kind === 'splat') { // a ripe tomato bursting: a wet slap
     noiseBurst(o, 0, 0.07, 0.6, r, [new Biquad('bp', r.float(600, 900), 0.7)]);
     modes(o, 0, [[r.float(140, 180), 0.4, 0.03]], 0.35, r);
+  } else if (kind === 'lance') { // a lance striking a shield: a sharp wooden crack and splintering
+    modes(o, 0, [[r.float(240, 300), 0.6, 0.05], [r.float(620, 720), 0.4, 0.03], [r.float(1500, 1800), 0.25, 0.015]], 0.85, r);
+    noiseBurst(o, 0, 0.09, 0.8, r, [new Biquad('bp', 2600, 0.9)]);
   } else if (kind === 'chisel') {
     modes(o, 0, [[r.float(2100, 2600), 0.4, 0.03], [r.float(5200, 6000), 0.2, 0.015]], 0.5, r);
     noiseBurst(o, 0, 0.015, 0.4, r, [new Biquad('hp', 2500)]);

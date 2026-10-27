@@ -46,7 +46,7 @@ export function makeMaterials(seed) {
     sign: (() => { const t = signTexture(); return std({ map: t, emissiveMap: t, roughness: 0.55, emissive: new THREE.Color('#ffffff'), emissiveIntensity: 0.12 }); })(),
     window: glow('#1d2026', '#ffb357', 1.6),
     windowWarm: glow('#262019', '#ff9a3c', 1.8),
-    stained: glow('#3a2a4a', '#ffcf7a', 2.0),
+    stained: glow('#45588c', '#ffcf7a', 2.0), // blue glass, so the windows read as windows by day (owner 2026-10-27)
     flame: glow('#ffb04a', '#ffc25c', 2.6),
     ember: glow('#7a2a10', '#ff6a1c', 2.2),
     lamp: glow('#c9b48a', '#ffd27a', 2.4),

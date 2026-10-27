@@ -72,6 +72,24 @@ export function archGeo(w, h, depth, tile = 3) {
   return g;
 }
 
+/**
+ * A pointed (gothic) opening: w wide, h tall to the point (straight sides up to h - 0.87 w, then two arcs), from y = 0,
+ * `depth` thick along z (centred on z = 0). For church windows and doors; turn it with the Builder's ry.
+ */
+export function lancetGeo(w, h, depth, tile = 3) {
+  const r = w / 2, hs = Math.max(0, h - w * 0.866);
+  const s = new THREE.Shape();
+  s.moveTo(-r, 0); s.lineTo(r, 0); s.lineTo(r, hs);
+  s.absarc(-r, hs, w, 0, Math.PI / 3, false);
+  s.absarc(r, hs, w, (2 * Math.PI) / 3, Math.PI, false);
+  s.lineTo(-r, 0);
+  const g = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: false, curveSegments: 6 });
+  g.translate(0, 0, -depth / 2);
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) / tile, uv.getY(i) / tile);
+  return g;
+}
+
 /** Four-sided pyramid / hip roof. */
 export function pyramidGeo(w, d, h) {
   const g = new THREE.ConeGeometry(Math.SQRT1_2, 1, 4, 1);

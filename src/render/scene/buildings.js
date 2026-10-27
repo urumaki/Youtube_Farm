@@ -1,7 +1,7 @@
 // Unlockable buildings on their reserved lots. Each builder works in lot-local coordinates
 // (x along the lot, z across, y up from the leveled foundation) and returns focus/smoke/light points.
 import * as THREE from 'three';
-import { Builder, boxGeo, cylGeo, gableGeo, pyramidGeo, merlonLine, merlonRing } from './kit.js';
+import { Builder, boxGeo, cylGeo, gableGeo, pyramidGeo, lancetGeo, merlonLine, merlonRing } from './kit.js';
 import { heightAt, WATER_LEVEL, CASTLE } from '../../sim/world.js';
 import { rand01 } from '../../sim/prng.js';
 import { planWall2, wallLayout } from '../../sim/wall.js';
@@ -42,6 +42,27 @@ function windowsRow(b, x0, x1, y, z, n, key = 'window', ry = 0, size = [1, 1.3])
     b.add(key, boxGeo(size[0], size[1], 0.2), lx * c + z * s, y, -lx * s + z * c, ry);
   }
 }
+// Owner 2026-10-27 (the Cathedral had no door or windows on the side the shots see): doors and pointed windows with a
+// frame round them. (x, z) is the middle of the opening on the wall's face, ry the way the wall faces (0: +z, PI/2: +x).
+function door(b, x, z, w, h, ry = 0, { pointed = false, frame = 'stoneDark' } = {}) {
+  const shape = (ww, hh, d) => (pointed ? lancetGeo(ww, hh, d) : boxGeo(ww, hh, d).translate(0, hh / 2, 0));
+  b.add(frame, shape(w + 0.45, h + 0.3, 0.26), x, 0, z, ry);
+  b.add('woodDark', shape(w, h, 0.34), x, 0, z, ry);
+  for (const y of [h * 0.28, h * 0.62]) b.add('iron', boxGeo(w * 0.8, 0.08, 0.38), x, y, z, ry); // the iron straps
+}
+function lancet(b, x, y, z, w, h, ry = 0, key = 'stained') {
+  b.add('stoneDark', lancetGeo(w + 0.4, h + 0.3, 0.3), x, y - 0.15, z, ry);
+  b.add(key, lancetGeo(w, h, 0.36), x, y, z, ry);
+  b.add('stoneDark', boxGeo(0.1, h * 0.75, 0.4).translate(0, h * 0.375, 0), x, y, z, ry); // the mullion up the middle
+}
+/** A round (rose) window of stained glass in a stone ring with spokes, on a wall facing ry. */
+function rose(b, x, y, z, r, ry = 0) {
+  b.add('stained', cylGeo(r, r, 0.36, 24).rotateX(Math.PI / 2), x, y, z, ry);
+  b.add('stoneDark', new THREE.TorusGeometry(r + 0.12, 0.2, 6, 28), x, y, z, ry);
+  b.add('stoneDark', cylGeo(r * 0.22, r * 0.22, 0.42, 12).rotateX(Math.PI / 2), x, y, z, ry);
+  for (let k = 0; k < 8; k++) b.add('stoneDark', boxGeo(0.1, r * 2, 0.4).rotateZ((k * Math.PI) / 8), x, y, z, ry);
+}
+
 // drop: how far the ground falls below the lot's level, so poles always reach the earth
 function scaffoldAround(b, hw, hd, h, drop = 0) {
   const pole = cylGeo(0.1, 0.1, h + drop, 6);
@@ -79,6 +100,8 @@ const BUILD = {
   },
   sawmill(b, lot, out) {
     house(b, -2.5, 0, 10, 7, 4.2, { roof: 'roofRed', wall: 'timber' });
+    door(b, -3.6, 3.52, 2.2, 2.8, 0, { frame: 'woodDark' }); // the wide door for the logs (owner 2026-10-27: doors, windows)
+    for (const z of [3.56, -3.56]) windowsRow(b, -6.4, -0.6, 2.4, z, z > 0 ? 2 : 3);
     b.add('woodDark', boxGeo(6, 0.3, 6), 6, 3.6, 0);
     for (const [x, z] of [[3.3, -2.7], [8.7, -2.7], [3.3, 2.7], [8.7, 2.7]]) b.add('woodDark', boxGeo(0.3, 3.6, 0.3), x, 1.8, z);
     b.add('thatch', gableGeo(6.8, 7, 1.6), 6, 3.7, 0);
@@ -104,6 +127,9 @@ const BUILD = {
     b.add('slate', gableGeo(10.8, 9, 3.4), 0, 5, 0);
     b.add('stone', boxGeo(1.8, 10, 1.8), 3.2, 5, -1.5);
     b.add('ember', boxGeo(3.2, 2.6, 0.2), -1.5, 1.5, 4.05);
+    door(b, 1.9, 4.02, 1.2, 2.3); // the smith's door beside the hearth
+    windowsRow(b, -3, 2.5, 2.6, -4.06, 2);
+    windowsRow(b, -2.2, 2.2, 2.6, 5.06, 2, 'window', Math.PI / 2);
     b.add('iron', boxGeo(1.0, 0.6, 0.5), -1.5, 0.95, 5.6); b.add('stoneDark', boxGeo(0.5, 0.6, 0.5), -1.5, 0.3, 5.6);
     // the awning over the yard: a slate lean-to from the wall down onto a beam on two posts
     b.add('slate', boxGeo(4.4, 0.15, 2.3).rotateX(0.28), 1.6, 3.45, 5.05);
@@ -116,6 +142,8 @@ const BUILD = {
   bakery(b, lot, out) {
     house(b, -1.5, -0.5, 9, 7, 5, { roof: 'roofTileWarm', wall: 'plaster' });
     windowsRow(b, -5, 1.5, 2.2, 3.06, 2, 'windowWarm');
+    door(b, -1.75, 3.02, 1.3, 2.4, 0, { frame: 'woodDark' });
+    windowsRow(b, -4.5, 1.5, 2.2, -4.06, 2, 'windowWarm');
     b.add('stone', new THREE.SphereGeometry(2.0, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), 4.8, 0, 1.5);
     b.add('ember', boxGeo(1.0, 0.8, 0.2), 4.8, 0.5, 3.5);
     b.add('stone', boxGeo(0.8, 3.2, 0.8), 4.8, 3.2, 0.9);
@@ -353,6 +381,8 @@ const BUILD = {
   bell_foundry(b, lot, out) {
     // a stone workshop with a tall furnace chimney, and a new bell hanging in a timber frame outside
     house(b, 0, 0.6, 6.4, 3.8, 3.4, { roof: 'slate', wall: 'stone' });
+    door(b, -1.3, 2.52, 1.4, 2.4);
+    windowsRow(b, 0.7, 0.7, 2.0, 2.56, 1, 'windowWarm');
     b.add('stone', boxGeo(1.2, 7.5, 1.2), 2.4, 3.75, 1.3);
     out.smoke.push([2.4, 7.8, 1.3, 'dark']);
     for (const x of [-1.6, 1.6]) b.add('woodDark', boxGeo(0.25, 3.6, 0.25), x, 1.8, -2.2);
@@ -373,7 +403,11 @@ const BUILD = {
       b.add('iron', boxGeo(0.12, 1.1, 0.04).translate(0, 0.5, 0).rotateZ(-0.5), dx * 1.02, H - 3, dz * 1.02, ry); // the hands at ten past ten
       b.add('iron', boxGeo(0.14, 0.8, 0.04).translate(0, 0.38, 0).rotateZ(0.9), dx * 1.02, H - 3, dz * 1.02, ry);
     }
-    b.add('woodDark', boxGeo(1.4, 2.4, 0.2), 0, 1.2, -2.55);
+    door(b, 0, 2.52, 1.4, 2.6, 0, { pointed: true });
+    for (let k = 0; k < 4; k++) for (const y of [6, 9.5]) {
+      const ry = (k * Math.PI) / 2;
+      b.add('window', lancetGeo(0.45, 1.5, 0.2), Math.sin(ry) * 2.52, y, Math.cos(ry) * 2.52, ry);
+    }
     out.flags.push([0, H + 7.2, 0, 1.4, 0.9]);
     out.focusH = 12;
   },
@@ -396,6 +430,9 @@ const BUILD = {
   tavern(b, lot, out, ctx) {
     house(b, 0, 0, 13, 9, 7, { roof: 'thatch', wall: 'timber', roofH: 5 });
     windowsRow(b, -5, 5, 2.2, -4.56, 3, 'windowWarm'); windowsRow(b, -5, 5, 5.2, -4.56, 4, 'windowWarm');
+    windowsRow(b, -5, 2, 2.2, 4.56, 3, 'windowWarm'); windowsRow(b, -5, 5, 5.2, 4.56, 4, 'windowWarm'); // the back, the side the shots see
+    door(b, 4.6, 4.52, 1.3, 2.4, 0, { frame: 'woodDark' });
+    for (const x of [-6.56, 6.56]) windowsRow(b, -2, 2, 3.8, x, 2, 'windowWarm', Math.PI / 2);
     b.add('woodDark', boxGeo(1.6, 2.6, 0.25), 1.5, 1.3, -4.6);
     b.add('iron', boxGeo(0.1, 0.1, 1.6), 5.5, 4.5, -5.3);
     b.add('woodDark', boxGeo(0.12, 1.1, 1.3), 5.5, 3.8, -5.9);
@@ -436,6 +473,10 @@ const BUILD = {
     for (let i = -4; i <= 4; i++) { b.add('stoneDark', boxGeo(0.9, 4.2, 0.9), i * 2.4, 2.1, 8.4); }
     b.add('stone', boxGeo(22, 1, 1.6), 0, 4.6, 8.4);
     windowsRow(b, -9, 9, 6.6, 8.05, 6);
+    door(b, 0, 8.02, 2.6, 3.6, 0, { pointed: true }); // the door behind the arcade, windows either side
+    for (const x of [-8.4, -6, -3.6, 3.6, 6, 8.4]) b.add('window', boxGeo(1.0, 1.6, 0.2), x, 2.2, 8.05); // between the arcade's pillars
+    windowsRow(b, -9, 9, 6.6, -8.05, 6); windowsRow(b, -9, 9, 2.4, -8.05, 6);
+    for (const x of [-11.05, 11.05]) windowsRow(b, -5, 5, 6.6, x, 3, 'window', Math.PI / 2);
     b.add('stone', boxGeo(5, 22, 5), 0, 11, -3);
     b.add('ivory', cylGeo(1.5, 1.5, 0.2, 20).rotateX(Math.PI / 2), 0, 17.5, -0.45);
     b.add('iron', boxGeo(0.12, 1.2, 0.1), 0, 17.8, -0.3); b.add('iron', boxGeo(0.9, 0.12, 0.1), 0.35, 17.5, -0.3);
@@ -449,29 +490,62 @@ const BUILD = {
       for (let i = 0; i < 5; i++) for (const s of [-1, 1]) b.add('woodDark', cylGeo(0.2, 0.22, 5, 6), x + s * 1.8, -1.8, 13 + i * 3);
       b.add('wood', boxGeo(4.2, 0.35, 15, 2), x, 0.55, 18);
     }
-    for (const x of [-30, -10, 12]) house(b, x, -4, 14, 7, 6, { roof: 'roofRed', wall: 'stone' });
+    for (const x of [-30, -10, 12]) {
+      house(b, x, -4, 14, 7, 6, { roof: 'roofRed', wall: 'stone' });
+      door(b, x, -0.48, 3.0, 3.4, 0, { frame: 'woodDark' }); // the warehouse doors toward the quay
+      windowsRow(b, x - 4.5, x + 4.5, 4.2, -0.44, 2);
+      windowsRow(b, x - 5, x + 5, 3.6, -7.56, 3);
+    }
     ctx.boats.push({ x: -12, z: 21, r: 0.05, len: 16, sail: true }, { x: 12, z: 24, r: -0.08, len: 13, sail: true }, { x: 36, z: 18, r: 0.2, len: 6, sail: false });
     out.focusH = 8;
   },
   cathedral(b, lot, out) {
-    b.add('stone', boxGeo(14, 18, 40), 0, 9, 4);
-    b.add('slate', gableGeo(41, 15, 9).rotateY(Math.PI / 2), 0, 18, 4);
+    // owner 2026-10-27: the west front with its two towers, the three portals and the rose faces +z, the side the building
+    // shots look from (before, the plain east end did, with no door or window); the apse with its tall windows at -z.
+    // The nave (z -24..16) and aisles match the interior (church.js)
+    b.add('stone', boxGeo(14, 18, 40), 0, 9, -4);
+    b.add('slate', gableGeo(41, 15, 9).rotateY(Math.PI / 2), 0, 18, -4);
     for (const s of [-1, 1]) {
-      b.add('stone', boxGeo(6, 10, 34), s * 10, 5, 6);
-      b.add('slate', gableGeo(34.5, 6.6, 3).rotateY(Math.PI / 2), s * 10, 10, 6);
-      for (let z = -8; z <= 20; z += 5) {
-        b.add('stoneDark', boxGeo(1.2, 12, 1.4), s * 13.6, 6, z);
+      const ry = (s * Math.PI) / 2;
+      b.add('stone', boxGeo(6, 10, 34), s * 10, 5, -6);
+      b.add('slate', gableGeo(34.5, 6.6, 3).rotateY(Math.PI / 2), s * 10, 10, -6);
+      for (let z = -20; z <= 10; z += 5) {
+        b.add('stoneDark', boxGeo(1.2, 12, 1.4), s * 13.6, 6, z); // buttresses and the flying buttresses over the aisles
         b.add('stoneDark', boxGeo(4.8, 1.0, 1.0), s * 10.6, 15.5, z, 0, 0, s * 0.5);
-        b.add('stained', boxGeo(0.2, 6, 1.8), s * 7.06, 13, z + 2.5);
+        if (z < 10 && Math.abs(z + 2.5 + 12) > 4.5) { // not where the transept stands
+          lancet(b, s * 7.02, 11, z + 2.5, 1.5, 5.2, ry); // clerestory
+          lancet(b, s * 13.02, 2.6, z + 2.5, 1.3, 4.2, ry); // aisle
+        }
       }
-      b.add('stone', boxGeo(6.5, 34, 6.5), s * 5.5, 17, -18);
-      b.add('slate', pyramidGeo(7, 7, 14), s * 5.5, 34, -18);
-      b.add('gold', boxGeo(0.3, 2.4, 0.3), s * 5.5, 49, -18);
+      // the west towers: tall belfry openings, lancets lower down, a spire with a gold cross
+      b.add('stone', boxGeo(6.5, 34, 6.5), s * 5.5, 17, 18);
+      b.add('stoneDark', boxGeo(7.1, 0.8, 7.1), s * 5.5, 34.2, 18);
+      b.add('slate', pyramidGeo(7, 7, 14), s * 5.5, 34.6, 18);
+      b.add('gold', boxGeo(0.3, 2.4, 0.3), s * 5.5, 49.6, 18); b.add('gold', boxGeo(1.2, 0.3, 0.3), s * 5.5, 50.2, 18);
+      for (const x of [-1.3, 1.3]) lancet(b, s * 5.5 + x, 25.5, 21.27, 1.0, 5, 0, 'window');
+      lancet(b, s * 8.77, 25.5, 18, 1.0, 5, ry, 'window');
+      lancet(b, s * 5.5, 13, 21.27, 1.3, 4.2);
+      door(b, s * 5.5, 21.3, 1.9, 4.4, 0, { pointed: true }); // the side portals
+      // the transept's ends: a rose over a portal
+      rose(b, s * 15.02, 10.5, -12, 2.4, ry);
+      door(b, s * 15.05, -12, 2.2, 4.8, ry, { pointed: true });
     }
-    b.add('stone', boxGeo(30, 16, 8), 0, 8, 12); // transept
-    b.add('slate', gableGeo(31, 9, 6), 0, 16, 12);
-    b.add('stained', cylGeo(3, 3, 0.2, 24).rotateX(Math.PI / 2), 0, 15, -15.95);
-    b.add('woodDark', boxGeo(4, 6.5, 0.3), 0, 3.25, -16.1);
+    // the west front between the towers, flush with them: the great portal, a string course, the rose
+    b.add('stone', boxGeo(4.6, 18, 5.4), 0, 9, 18.6);
+    b.add('stone', gableGeo(5.4, 15, 9).rotateY(Math.PI / 2), 0, 18, 18.6); // the stone gable over the front
+    b.add('stoneDark', boxGeo(17.6, 0.6, 0.4), 0, 8.6, 21.4);
+    door(b, 0, 21.32, 2.9, 6.8, 0, { pointed: true });
+    rose(b, 0, 13, 21.27, 1.85);
+    // the transept
+    b.add('stone', boxGeo(30, 16, 8), 0, 8, -12);
+    b.add('slate', gableGeo(31, 9, 6), 0, 16, -12);
+    // the apse at the east end: a half round with tall windows under a half cone
+    const apse = new THREE.CylinderGeometry(7, 7, 16, 20, 1, false, Math.PI / 2, Math.PI);
+    const auv = apse.attributes.uv;
+    for (let i = 0; i < auv.count; i++) auv.setXY(i, (auv.getX(i) * Math.PI * 7) / 3, (auv.getY(i) * 16) / 3);
+    b.add('stone', apse, 0, 8, -24);
+    b.add('slate', new THREE.ConeGeometry(7.6, 7, 20, 1, false, Math.PI / 2, Math.PI), 0, 19.5, -24);
+    for (const a of [Math.PI * 0.68, Math.PI, Math.PI * 1.32]) lancet(b, Math.sin(a) * 7.02, 4, -24 + Math.cos(a) * 7.02, 1.5, 7.5, a);
     out.focusH = 22;
   },
   tournament(b, lot, out, ctx) {
@@ -570,11 +644,16 @@ const BUILD = {
     b.add('gold', new THREE.SphereGeometry(7, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), 0, 24, 10);
     for (const s of [-1, 1]) tower(b, s * 30, -10, 5, 30, 12);
     windowsRow(b, -26, 26, 6, 13.05, 14); windowsRow(b, -26, 26, 11.5, 13.05, 14);
+    door(b, 0, 19.02, 4, 6.5, 0, { pointed: true, frame: 'gold' }); // the great door under the dome
+    for (const y of [10, 16]) windowsRow(b, -5, 5, y, 19.05, 3);
+    windowsRow(b, -26, 26, 6, -13.05, 14); windowsRow(b, -26, 26, 11.5, -13.05, 14);
     out.banners.push([-6, 20, 19.25, 3, 8], [6, 20, 19.25, 3, 8]);
     out.focusH = 20;
   },
   lighthouse(b, lot, out, ctx) {
     b.add('stone', cylGeo(3.2, 4.4, 26, 16), 0, 13, 0);
+    door(b, 0, 4.32, 1.3, 2.4, 0, { pointed: true });
+    for (const y of [10, 18]) b.add('window', boxGeo(0.7, 1.2, 0.3), 0, y, 4.36 - y * 0.046);
     for (const y of [6, 14, 22]) b.add('clothRed', cylGeo(3.6 - y * 0.03, 3.7 - y * 0.03, 2, 16), 0, y, 0);
     b.add('lamp', cylGeo(2.2, 2.2, 3, 12), 0, 27.5, 0);
     b.add('slate', cylGeo(0.1, 3, 3, 12, 2), 0, 30.5, 0);

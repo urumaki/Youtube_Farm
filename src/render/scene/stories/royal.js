@@ -24,17 +24,18 @@ function mat(M, color, opts = {}) {
   return m;
 }
 
-/** A white horse with a blue saddle cloth and a red plume, facing +z; legs trot with `gait(ph)`. */
-function horse(M) {
+/** A white horse with a blue saddle cloth and a red plume, facing +z; legs trot with `gait(ph)`. The games at the
+ * Tournament Ground (stories/joust.js) give it another coat and cloth. */
+export function horse(M, { coat: coatColor = '#eeeae2', cloth = ROYAL.blue } = {}) {
   const g = new THREE.Group();
-  const coat = mat(M, '#eeeae2');
+  const coat = mat(M, coatColor);
   const add = (geo, m, parent = g) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; parent.add(o); return o; };
   add(boxGeo(0.55, 0.62, 1.55).translate(0, 1.3, 0), coat);
   add(boxGeo(0.3, 0.7, 0.36).rotateX(-0.55).translate(0, 1.78, 0.78), coat);
   add(boxGeo(0.24, 0.26, 0.58).rotateX(0.35).translate(0, 2.08, 1.07), coat);
   add(boxGeo(0.06, 0.55, 0.3).rotateX(-0.55).translate(0, 1.95, 0.66), M.gear); // mane
   add(boxGeo(0.1, 0.6, 0.1).rotateX(0.5).translate(0, 1.25, -0.9), M.gear); // tail
-  add(boxGeo(0.6, 0.5, 0.9).translate(0, 1.42, -0.05), mat(M, ROYAL.blue));
+  add(boxGeo(0.6, 0.5, 0.9).translate(0, 1.42, -0.05), mat(M, cloth));
   add(boxGeo(0.62, 0.06, 0.92).translate(0, 1.18, -0.05), M.gold);
   add(new THREE.ConeGeometry(0.08, 0.35, 8).translate(0, 2.42, 0.95), M.clothRed); // plume
   const legs = [];

@@ -1,8 +1,8 @@
 // Inside the Chapel or the Cathedral (owner 2026-10-23): pews in rows with villagers praying on them, the priest (or the
 // bishop, with mitre and crozier) blessing them from the altar, candles and stained glass. A way to show many names at
 // once: named villagers sit in the front pews with name tags. Everything is in the church's own frame (x across the
-// nave, z along it with the altar at -z, y up from the floor), which is the chapel's lot frame, or the cathedral's
-// turned round (its door is at -z). A pure function of t.
+// nave, z along it with the altar at -z, y up from the floor), which is the church's lot frame (since 2026-10-27 the
+// Cathedral's west front and door face +z too, like the Chapel's). A pure function of t.
 import * as THREE from 'three';
 import { rand01 } from '../../sim/prng.js';
 import { JOBS } from '../../sim/tiers.js';
@@ -48,9 +48,8 @@ function glassWindow(b, cx, cy, cz, w, h, alongX, seed, k) {
 export function buildChurchInterior({ item, kind, M, seed, clergy = [], worshippers = [] }) {
   const K = KINDS[kind];
   const group = new THREE.Group();
-  if (kind === 'cathedral') group.rotation.y = Math.PI; // its door is at the lot's -z, the altar at +z
   item.group.add(group);
-  const frame = item.group.matrix.clone().multiply(new THREE.Matrix4().makeRotationY(group.rotation.y));
+  const frame = item.group.matrix.clone();
   const toWorld = (x, y, z) => new THREE.Vector3(x, y, z).applyMatrix4(frame);
   const mats = { ...M, candle: new THREE.MeshStandardMaterial({ color: '#efe3c4', roughness: 0.6 }) };
   GLASS.forEach((c, i) => { mats['glass' + i] = new THREE.MeshBasicMaterial({ color: c }); });

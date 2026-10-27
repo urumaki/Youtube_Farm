@@ -86,6 +86,15 @@ Add new owner decisions here.
   villagers pelt them with tomatoes that stick, the hooded executioner brings the axe down on the cabbage on the block as a
   warning and the rebel flinches. Synced sounds: the axe (a whoosh, then a deep thunk) and each tomato's splat (`hits` on
   the story's `work`, `makeSfxTrack`). Test with `--story rebel`.
+  The games at the Tournament Ground (owner 2026-10-27, `joust`, scene `stories/joust.js`): over three quiet days once the
+  Tournament Ground stands (no rain or snow, eight named riders, cooldown 30 days), a chariot race on the far straight (four
+  named drivers), tilting at the quintain (four named riders; a slow one gets the sandbag in the back, the winner hits clean),
+  then the joust over the tilt between the two winners: the winner's lance breaks on the shield, the loser rocks in the
+  saddle (nobody falls or gets hurt). The champion is knighted: their job becomes Knight (`knight` in `stories.js`,
+  `names[id].knightDay`). Riders are named villagers who are not knights, clergy or the Captain of the Guard, stablehands,
+  guards, hunters and the land's folk first; seven other named villagers sit in the front rows of the far stand with name
+  tags, new ones each day. Before this the Tournament Ground had only the knights' training in the lists. Synced lance
+  sounds (`lance` hit, `hooves` bed in `sfx.js`). Test with `--story joust`, `joust:quintain`, `joust:final`.
   The people in a role are named villagers of that job when the kingdom has them (owner 2026-10-25, `roleCast` in
   `stories.js`): the guards beside the heroes against the bandits (`guardCast`) and the King's banner guards in the
   procession and at the feast (`escort`) are named guards or knights, the folk with torches against the wolves named
@@ -342,6 +351,13 @@ Add new owner decisions here.
   only shown there (`pickFeatured`); on the other days they are out at work (below). The building's outside is hidden while the camera is in (the
   Cathedral's transept and aisles are solid boxes across the nave). Test with `npm run render -- --real --subs 775 --church
   [--built cathedral] --stills 19,21,23`.
+- Doors and windows (owner 2026-10-27: the Cathedral had none on the side the building shots see, from the lot's +z): the
+  Cathedral was turned round, its west front with two towers, three pointed portals and a rose window now faces +z, the
+  apse with tall windows -z, pointed windows along the aisles and clerestory, roses over the transept doors (the interior
+  in `church.js` is no longer turned). Doors and windows added where they were missing: sawmill, forge, bakery, bell
+  foundry, clock tower (its door moved to the front), tavern (its back, the side the shots see), town hall, the harbor's
+  warehouses, palace, lighthouse. Helpers `door`, `lancet`, `rose` in `buildings.js`, `lancetGeo` in `kit.js`; the
+  `stained` glass is blue by day. `node scratch/audit-buildings.js [ids]` (a local script, not in git) rendered each building as its shot sees it.
 - Commissions (owner 2026-10-23): buildings with no goal, begun on the next day the kingdom runs, whatever its
   size (`COMMISSIONS` in `tiers.js`, saved with tier `commission`). The first is the Fletcher's Workshop: a
   thatched timber workshop with bows on the wall, a fletching bench under a lean-to, a barrel of arrows, staves
