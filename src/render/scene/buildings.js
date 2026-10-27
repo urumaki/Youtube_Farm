@@ -21,11 +21,12 @@ function lotFrame(w, lot) {
   return { base, lo, m };
 }
 
-// structures inside a square stand on the square's paving: the square's frame moved to the spot
+// structures inside a square stand on the square's paving: the square's frame moved to the spot (and turned by the lot's own
+// rot: the Bank faces the fountain)
 function plazaFrame(w, parent, lot) {
   const f = lotFrame(w, parent);
   const c = Math.cos(-parent.rot), s = Math.sin(-parent.rot), dx = lot.x - parent.x, dz = lot.z - parent.z;
-  const m = f.m.clone().multiply(new THREE.Matrix4().makeTranslation(dx * c - dz * s, 0.05, dx * s + dz * c));
+  const m = f.m.clone().multiply(new THREE.Matrix4().makeTranslation(dx * c - dz * s, 0.05, dx * s + dz * c)).multiply(new THREE.Matrix4().makeRotationY(-((lot.rot ?? 0) - parent.rot)));
   return { base: f.base + 0.05, lo: f.base, m };
 }
 
@@ -387,6 +388,43 @@ const BUILD = {
     out.lights.push([0.3, 2.6, 1.2]);
     out.smoke.push([-3, 7.6, -3]);
     out.focusH = 3;
+  },
+  bank(b, lot, out) {
+    // owner 2026-10-27: the Bank, a stone palazzo with a loggia of three round arches at the front (+z); under it the money
+    // changers' bench with its green cloth, piles of coins and a pair of scales, an iron-bound strongbox; the upper floor with
+    // its windows and the banners, a gold coin on the sign
+    b.add('stone', boxGeo(9.6, 4.0, 3.6), 0, 2.0, -1.4); // the hall behind the loggia
+    b.add('stone', boxGeo(10.2, 3.0, 6.4), 0, 5.5, 0); // the upper floor over hall and loggia
+    b.add('stoneDark', boxGeo(10.5, 0.35, 6.7), 0, 4.15, 0); // the string course
+    b.add('slate', pyramidGeo(11.0, 7.2, 2.4), 0, 7.0, 0);
+    b.add('stoneDark', boxGeo(10.8, 0.3, 7.0), 0, 7.05, 0); // the cornice
+    for (const x of [-4.75, -1.6, 1.6, 4.75]) b.add('stoneDark', boxGeo(0.6, 4.0, 0.6), x, 2.0, 2.9); // the loggia's piers
+    for (const x of [-3.18, 0, 3.18]) { // the round arches between them
+      b.add('stone', new THREE.TorusGeometry(1.28, 0.24, 6, 14, Math.PI), x, 2.3, 2.9);
+      b.add('stone', boxGeo(2.6, 0.6, 0.6), x, 3.7, 2.9);
+    }
+    b.add('cobble', boxGeo(9.6, 0.12, 2.6), 0, 0.06, 1.9); // the loggia's floor
+    door(b, 2.6, 0.42, 1.5, 2.6, 0); // the door into the hall
+    for (const x of [-3.0, -0.4]) b.add('window', boxGeo(1.0, 1.3, 0.12), x, 2.3, 0.42);
+    windowsRow(b, -3.6, 3.6, 5.6, 3.24, 4, 'windowWarm');
+    windowsRow(b, -3.6, 3.6, 5.6, -3.24, 4);
+    for (const x of [-5.14, 5.14]) windowsRow(b, -1.6, 1.6, 5.6, x, 2, 'window', Math.PI / 2);
+    // the money changers' bench: green cloth, coin piles, the scales
+    b.add('woodDark', boxGeo(3.4, 0.9, 0.9), -1.7, 0.45, 1.6);
+    b.add('greens', boxGeo(3.5, 0.06, 1.0), -1.7, 0.93, 1.6);
+    for (const [x, n] of [[-3.0, 5], [-2.6, 3], [-2.2, 6], [-0.8, 4]]) b.add('gold', cylGeo(0.09, 0.09, 0.04 * n, 10), x, 0.96 + 0.02 * n, 1.55);
+    b.add('iron', cylGeo(0.02, 0.02, 0.5, 5), -1.4, 1.2, 1.5); // the scales: a post, a beam, two pans
+    b.add('iron', boxGeo(0.6, 0.03, 0.03), -1.4, 1.45, 1.5);
+    for (const x of [-1.68, -1.12]) b.add('gold', cylGeo(0.1, 0.07, 0.04, 10), x, 1.2, 1.5);
+    b.add('woodDark', boxGeo(1.1, 0.7, 0.7), 2.9, 0.35, 1.7); // the strongbox
+    for (const x of [2.55, 3.25]) b.add('iron', boxGeo(0.08, 0.74, 0.74), x, 0.37, 1.7);
+    b.add('wood', boxGeo(1.6, 0.45, 0.4), -1.7, 0.22, 2.7); // a bench for the ones waiting
+    // the sign: a gold coin on an iron arm at the corner of the loggia
+    b.add('iron', boxGeo(0.06, 0.06, 1.0), 4.75, 3.3, 3.6);
+    b.add('gold', cylGeo(0.45, 0.45, 0.08, 18).rotateX(Math.PI / 2), 4.75, 2.8, 3.95);
+    out.banners.push([-2.6, 6.9, 3.3, 1.2, 2.0], [2.6, 6.9, 3.3, 1.2, 2.0]);
+    out.lights.push([0, 3.4, 1.9]);
+    out.focusH = 4;
   },
   apiary(b, lot, out) {
     // straw skeps in a row on a long bench, a small shelter roof over them

@@ -378,6 +378,8 @@ function buildLots(w, r) {
   lots.physician_booth = { id: 'physician_booth', x: MARKET.x + 12, z: 14.2, hw: 2.2, hd: 1.6, rot: 0, virtual: true, onPlaza: 'market' };
   // workshops on the ward squares (built after their ward): beside the fountain, clear of the banner poles
   lots.cooperage = { id: 'cooperage', x: lots.district_east.x, z: lots.district_east.z - 12, hw: 3.6, hd: 2.4, rot: 0, virtual: true, onPlaza: 'district_east' };
+  // owner 2026-10-27: the Bank across the fountain from the Cooperage, its loggia toward the fountain (rot: turned round)
+  lots.bank = { id: 'bank', x: lots.district_east.x, z: lots.district_east.z + 11.5, hw: 4.8, hd: 3.2, rot: Math.PI, virtual: true, onPlaza: 'district_east' };
   lots.bell_foundry = { id: 'bell_foundry', x: lots.district_north.x, z: lots.district_north.z - 11.5, hw: 3.6, hd: 2.6, rot: 0, virtual: true, onPlaza: 'district_north' };
   lots.clock_tower = { id: 'clock_tower', x: lots.district_south.x, z: lots.district_south.z - 11, hw: 3, hd: 3, rot: 0, virtual: true, onPlaza: 'district_south' };
   lots.potter_stall = { id: 'potter_stall', x: MARKET.x - 18, z: -13.8, hw: 1.6, hd: 1.6, rot: 0, virtual: true, onPlaza: 'market' };

@@ -263,7 +263,7 @@ const BUILDING_IT = {
   tournament: 'il Campo del torneo', district_east: 'il Quartiere Est', charter_stone: 'la Pietra della Carta', district_north: 'il Quartiere Nord',
   university: "l'Università", district_south: 'il Quartiere Sud', palace: 'il Palazzo Reale', district_far: 'il Quartiere Lontano',
   lighthouse: 'il Faro', colossus: 'il Colosso degli Iscritti', crier_stand: 'il Palco del Banditore', pillory: 'la Gogna', tailor_stall: 'la Bottega del Sarto', physician_booth: 'il Banco del Medico',
-  potter_stall: 'la Bottega del Vasaio', cobbler_stall: 'il Banco del Calzolaio', cooperage: 'la Bottega del Bottaio', apiary: 'le Arnie',
+  potter_stall: 'la Bottega del Vasaio', cobbler_stall: 'il Banco del Calzolaio', cooperage: 'la Bottega del Bottaio', apiary: 'le Arnie', bank: 'la Banca',
   bell_foundry: 'la Fonderia di Campane', clock_tower: "la Torre dell'Orologio", stone_bridge: 'il Grande Ponte',
   fletcher_workshop: "la Bottega dell'Arcaio", counting_house: 'la Casa delle Tasse', apothecary_shop: 'la Bottega dello Speziale',
 };
@@ -500,6 +500,6 @@ function sentenceCues(sentences, cues = []) {
 }
 
 function goalIt(next) {
-  const b = { woodfolk: 'arriva il Taglialegna', crafts: 'arriva il Fabbro', guard: 'la Guardia sale sulle mura', market: 'apre il Mercato', crier: 'il Banditore suona la campana', justice: 'il Boia prende la scure', cloth: 'il Sarto apre bottega', healers: 'arriva il Medico', pottery: 'il Vasaio monta il tornio', shoes: 'il Calzolaio apre bottega', barrels: 'apre la Bottega del Bottaio', honey: 'arrivano le prime arnie', bells: 'la Fonderia fonde la prima campana', clock: "la Torre dell'Orologio batte l'ora", bridge: 'il Grande Ponte attraversa il fiume', faith: 'suona la campana della Cappella', walled: 'sorge la Seconda cinta', harbor: 'apre il Porto', charter: "apre l'Università", north: 'nasce il Quartiere Nord', learned: 'nasce il Quartiere Sud', royal: 'si costruisce il Palazzo Reale', maritime: 'si accende il Faro', legend: 'si innalza il Colosso' };
+  const b = { woodfolk: 'arriva il Taglialegna', crafts: 'arriva il Fabbro', guard: 'la Guardia sale sulle mura', market: 'apre il Mercato', crier: 'il Banditore suona la campana', justice: 'il Boia prende la scure', cloth: 'il Sarto apre bottega', healers: 'arriva il Medico', pottery: 'il Vasaio monta il tornio', shoes: 'il Calzolaio apre bottega', barrels: 'apre la Bottega del Bottaio', honey: 'arrivano le prime arnie', coin: 'la Banca apre i battenti', bells: 'la Fonderia fonde la prima campana', clock: "la Torre dell'Orologio batte l'ora", bridge: 'il Grande Ponte attraversa il fiume', faith: 'suona la campana della Cappella', walled: 'sorge la Seconda cinta', harbor: 'apre il Porto', charter: "apre l'Università", north: 'nasce il Quartiere Nord', learned: 'nasce il Quartiere Sud', royal: 'si costruisce il Palazzo Reale', maritime: 'si accende il Faro', legend: 'si innalza il Colosso' };
   return b[next.tier] || next.goal;
 }

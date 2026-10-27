@@ -103,6 +103,7 @@ export const BUILDINGS = {
   cobbler_stall: { label: "the Cobbler's Stall", days: 1 },
   cooperage: { label: 'the Cooperage', days: 2 },
   apiary: { label: 'the Beehives', days: 1, plural: true },
+  bank: { label: 'the Bank', days: 3 }, // owner 2026-10-27: the money changers' bench under a loggia, on the East Ward's square
   bell_foundry: { label: 'the Bell Foundry', days: 3 },
   clock_tower: { label: 'the Clock Tower', days: 10 },
   stone_bridge: { label: 'the Great Bridge', days: 30 },
@@ -146,6 +147,7 @@ export const TIERS = [
   // the Engineer took the Weaver's place here (owner 2026-10-23: the Weaver already comes at 1000)
   { id: 'north', at: 2500, title: 'Growing City', unique: ['engineer'], pool: { engineer: 0.2 }, buildings: ['district_north'], goal: 'the North Ward is founded' },
   { id: 'honey', at: 3000, title: 'Town of Honey', unique: ['beekeeper'], pool: { beekeeper: 0.3 }, buildings: ['apiary'], goal: 'the first beehives arrive' },
+  { id: 'coin', at: 3500, title: 'Town of Coin', unique: [], pool: {}, buildings: ['bank'], goal: 'the Bank opens its doors' }, // owner 2026-10-27
   { id: 'bells', at: 4000, title: 'Town of Bells', unique: ['bellfounder'], pool: { bellfounder: 0.2 }, buildings: ['bell_foundry'], goal: 'the Bell Foundry casts its first bell' },
   { id: 'learned', at: 5000, title: 'City of Song', unique: ['apothecary', 'bard'], pool: { apothecary: 0.3, bard: 0.6 }, buildings: ['district_south', 'apothecary_shop'], goal: 'the South Ward is founded' },
   { id: 'clock', at: 7500, title: 'Town of the Clock', unique: ['clockmaker'], pool: { clockmaker: 0.2 }, buildings: ['clock_tower'], goal: 'the Clock Tower strikes the hour' },

@@ -257,6 +257,11 @@ Add new owner decisions here.
   250,000) crosses the river where the Noble Quarter's avenue ends, so a road can run on to it. The Royal Palace
   stands on the free ground beside the University (`placePalace` in `world.js`, after the plots; its first lot in
   the east stays reserved so the streets there do not move).
+  The Bank (owner 2026-10-27, tier `coin` "Town of Coin" at 3500, no new job): a stone palazzo on the East Ward's
+  square across the fountain from the Cooperage, its loggia of three round arches facing the fountain (`rot: Math.PI`;
+  `plazaFrame` now turns a lot on a square by its own `rot`), the money changers' bench with green cloth, coin piles and
+  scales under the loggia, a strongbox, a gold coin sign, banners on the upper floor. Italian: "la Banca", goal "la Banca
+  apre i battenti". Check with `node scratch/audit-buildings.js bank` (scratch, not in git) or `--built bank`.
 - University and Noble Quarter (owner 2026-10-22): the open ground below the castle (between it and the
   river) is kept for them. The University is the 1000 goal (moved from 5000, which is now the South Ward)
   with its scholars (work scene `desk`: writing in a book at a sloped desk): a quadrangle with a cloister,
