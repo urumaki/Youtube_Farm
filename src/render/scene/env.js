@@ -123,9 +123,10 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
     sun, composer, bloom, grade,
     /**
      * phase 0 = afternoon, 1 = dusk; focus = point the shadows should cover; radius = shadow extent;
-     * interior 1 = the camera is inside a building lit by its own lamps (the tavern)
+     * interior 1 = the camera is inside a building lit by its own lamps (the tavern); fog: a thicker fog for one shot (the
+     * boat lost in the fog, stories/fogboat.js), as an exponential density
      */
-    set(phase, focus, radius, t, interior = 0) {
+    set(phase, focus, radius, t, interior = 0, fog = 0) {
       const el = THREE.MathUtils.degToRad(THREE.MathUtils.lerp(33, 1.5, phase));
       const az = THREE.MathUtils.lerp(0.95, 0.35, phase); // from the south-east toward the south-west
       sunDir.set(Math.cos(el) * Math.sin(az + 0.6), Math.sin(el), Math.cos(el) * Math.cos(az + 0.6)).normalize();
@@ -151,6 +152,7 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
       // high wide shots look through much less haze, so the whole town stays readable on foggy days
       const high = THREE.MathUtils.smoothstep(alt, 70, 220);
       scene.fog.density = Math.min(baseFog * THREE.MathUtils.clamp(140 / alt, 0.25, 1), THREE.MathUtils.lerp(0.9, 0.45, high) / Math.max(300, alt * 2.2));
+      if (fog) scene.fog.density = Math.max(scene.fog.density, fog);
       sun.position.copy(focus).addScaledVector(sunDir, 700);
       sun.target.position.copy(focus);
       const sc = sun.shadow.camera;

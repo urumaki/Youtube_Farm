@@ -391,6 +391,7 @@ export function buildLife(w, state, M, castle, houses, buildings, opts = {}) {
     g.rotation.y = -b.rot + Math.PI; // the bow along the lot's length, as before
     g.traverse((o) => { o.castShadow = true; });
     group.add(g);
+    b.mesh = g; // a story can clear the water for a while (stories/ship.js)
     const ph = b.pos.x * 0.1;
     updaters.push((t) => { g.position.y = y0 + Math.sin(t * 1.3 + ph) * 0.06; g.rotation.z = Math.sin(t * 0.9 + ph) * 0.025; g.rotation.x = Math.sin(t * 0.7 + ph) * 0.01; });
   }

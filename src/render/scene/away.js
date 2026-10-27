@@ -10,7 +10,7 @@ import { rig, toolGeo } from './work.js';
 import { person, stride, flameMaterial, flicker, ease, clamp01 } from './stories/common.js';
 
 /** A small rowing boat, bow at +z. */
-function rowboat(M) {
+export function rowboat(M) {
   const g = new THREE.Group();
   const add = (geo, m) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; o.receiveShadow = true; g.add(o); return o; };
   add(boxGeo(0.9, 0.12, 2.6).translate(0, 0.06, -0.1), M.woodDark); // bottom

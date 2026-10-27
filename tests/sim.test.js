@@ -764,6 +764,61 @@ test('the games at the Tournament Ground: a race, the quintain, then the joust; 
   }
 });
 
+test('stories of 2026-10-27: the ship, the new bell, the fog, the census, the pies and the regatta', async () => {
+  const { storyFor, STORIES } = await import('../src/sim/stories.js');
+  const { buildScript } = await import('../src/audio/narration.js');
+  const jobs = ['bellfounder', 'sailor', 'fisherman', 'reeve', 'merchant', 'baker', 'guard', 'farmer', 'cooper', 'potter', 'miller', 'peasant'];
+  const kingdom = (weather = 'clear', built = ['harbor', 'bell_foundry', 'cathedral', 'dock', 'counting_house', 'tavern']) => ({
+    seed: SEED, date: '2026-11-04', day: 40, subscriberCount: 4321, weather, storyLog: {},
+    buildings: built.map((id) => ({ id, status: 'done' })), houses: [],
+    villagers: jobs.map((job, id) => ({ id, job })),
+    names: Object.fromEntries(jobs.map((_, id) => [id, { name: `V${id}`, day: 1 + id }])),
+  });
+  assert.deepEqual(STORIES.ship.steps, ['arrive', 'unload', 'leave']);
+  assert.deepEqual(STORIES.bell.steps, ['pour', 'cool', 'raise']);
+  // each one only where it can happen
+  const none = kingdom('clear', []);
+  for (const id of ['ship', 'bell', 'fogboat', 'census', 'pies', 'regatta']) assert.ok(!STORIES[id].needs(none), `${id} needs its building`);
+  assert.ok(STORIES.fogboat.needs(kingdom('fog')) && !STORIES.fogboat.needs(kingdom('clear')), 'the boat in the fog only on foggy days');
+  assert.ok(STORIES.regatta.needs(kingdom('clear')) && !STORIES.regatta.needs(kingdom('fog')) && !STORIES.regatta.needs(kingdom('rain')));
+  assert.ok(STORIES.bell.needs(kingdom('clear', ['bell_foundry', 'chapel'])), 'the Chapel tower will do');
+  // the ship keeps her name and cargo over the three days, a new crowd each day
+  const ship = storyFor(kingdom(), 'ship'), unload = storyFor(kingdom(), 'ship:unload');
+  assert.ok(ship.name && ship.from && ship.goods);
+  assert.equal(unload.name, ship.name);
+  assert.equal(unload.goods, ship.goods);
+  assert.equal(unload.cast.length, 4);
+  // the bell: the named bellfounder leads all three days
+  const bell = storyFor(kingdom(), 'bell'), raise = storyFor(kingdom(), 'bell:raise');
+  assert.equal(bell.founder.job, 'bellfounder');
+  assert.equal(raise.founder.id, bell.founder.id);
+  assert.ok(raise.cast.length > bell.cast.length, 'more hands on the rope');
+  // the fisherman in the fog, the census count, a winner among the contestants and the rowers
+  assert.equal(storyFor(kingdom('fog'), 'fogboat').fisher.job, 'fisherman');
+  const census = storyFor(kingdom(), 'census');
+  assert.equal(census.count, 4321);
+  assert.equal(census.clerk.job, 'reeve');
+  for (let d = 1; d <= 20; d++) {
+    const s = { ...kingdom(), date: `2026-12-${String(d).padStart(2, '0')}` };
+    const pies = storyFor(s, 'pies'), regatta = storyFor(s, 'regatta');
+    assert.equal(pies.cast.length, 3);
+    assert.ok(pies.cast.some((c) => c.id === pies.winner));
+    assert.equal(regatta.rowers.length, 3);
+    assert.ok(regatta.rowers.some((c) => c.id === regatta.winner));
+    assert.ok(regatta.crowd.every((c) => !regatta.rowers.some((x) => x.id === c.id)), 'the crowd is not in the boats');
+  }
+  // every one of them is narrated, in both languages
+  for (const [id, weather] of [['ship', 'clear'], ['ship:unload', 'clear'], ['ship:leave', 'clear'], ['bell', 'clear'], ['bell:cool', 'clear'], ['bell:raise', 'clear'], ['fogboat', 'fog'], ['census', 'clear'], ['pies', 'clear'], ['regatta', 'clear']]) {
+    const s = kingdom(weather);
+    const story = storyFor(s, id);
+    for (const lang of ['en', 'it']) {
+      const diff = { day: 40, from: 4300, to: 4321, delta: 21, added: [], removed: [], housesBuilt: [], housesRebuilt: [], housesReoccupied: [], housesAbandoned: [], housesRuined: [], unlocked: [], buildingsStarted: [], buildingsCompleted: [], events: [], weather, story, next: null };
+      const lines = buildScript(s, diff, { lang }).sentences.filter((l) => l.role === 'story');
+      assert.equal(lines.length, 1, `${id} (${lang}) has a story line`);
+    }
+  }
+});
+
 test('more story events of 2026-10-25: feast days on their date, the proclamation on a new goal, snow and teams when needed', async () => {
   const { pickStory, storyFor, STORIES } = await import('../src/sim/stories.js');
   const jobs = ['innkeeper', 'priest', 'fisherman', 'miller', 'guard', 'guard', 'farmer', 'peasant', 'crier', 'baker'];

@@ -14,7 +14,7 @@ const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 const PATRON_COLORS = ['#7b3b2a', '#3f5a7a', '#5d6b35', '#8a6a3a', '#6a4a6e', '#9a8a6a', '#4a6a64', '#a0522d', '#56606e', '#7a5a4a'];
 
 // tables (centre x, z); a bench on each long side, two seats per bench
-const TABLES = [[-2.2, -1.2], [1.2, -1.0], [-1.0, 2.2], [1.8, 2.4]];
+export const TABLES = [[-2.2, -1.2], [1.2, -1.0], [-1.0, 2.2], [1.8, 2.4]];
 const BAR_X = 3.5;
 const SITTERS = 14;
 
@@ -28,8 +28,9 @@ const SITTERS = 14;
  *                 name tags, a camera on them
  * @param musician { name, job }: the named villager who plays the lute in the corner when no named bard drinks here
  *                 (owner 2026-10-23: the one playing has a name too)
+ * @param freeTable the index of a table (TABLES) left empty for a story (the pie eating contest, stories/pies.js)
  */
-export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [], bar = false, guest = null, minstrel = null, musician = null }) {
+export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [], bar = false, guest = null, minstrel = null, musician = null, freeTable = -1 }) {
   if (minstrel) patrons = [{ name: minstrel.name, job: 'bard' }];
   const group = new THREE.Group();
   item.group.add(group);
@@ -154,7 +155,7 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [],
   const people = [];
   // seats: far benches (facing the camera) first, then the near ones
   const seats = [];
-  for (const side of [1, -1]) for (const [tx, tz] of TABLES) for (const dx of [-0.45, 0.45]) seats.push({ x: tx + dx, z: tz + side * 0.78, face: side > 0 ? Math.PI : 0 });
+  for (const side of [1, -1]) for (const [k, [tx, tz]] of TABLES.entries()) for (const dx of [-0.45, 0.45]) if (k !== freeTable) seats.push({ x: tx + dx, z: tz + side * 0.78, face: side > 0 ? Math.PI : 0 });
   // a bard plays in the corner by the fireplace: a named bard when one is among the patrons, else `musician`, else a
   // travelling one
   const bardIdx = patrons.findIndex((p) => p.job === 'bard');

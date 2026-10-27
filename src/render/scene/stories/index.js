@@ -27,13 +27,19 @@ import { buildHayCart } from './haycart.js';
 import { buildSnowballs } from './snowballs.js';
 import { buildRebel } from './rebel.js';
 import { buildJoust } from './joust.js';
+import { buildShip } from './ship.js';
+import { buildBell } from './bell.js';
+import { buildFogBoat } from './fogboat.js';
+import { buildCensus } from './census.js';
+import { buildPies } from './pies.js';
+import { buildRegatta } from './regatta.js';
 
 const BUILDERS = {
   quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween,
   fire: buildFire, rebuild: buildRebuild, wolves: buildWolves, storm: buildStorm, royal: buildRoyal, pig: buildPig, archery: buildArchery, flood: buildFlood, newyear: buildNewYear,
   tourney: buildTourney, martinmas: buildMartinmas, christmas: buildChristmas, proclaim: buildProclaim, bigfish: buildBigFish,
   chicken: buildChicken, windmill: buildWindmill, tugofwar: buildTugOfWar, haycart: buildHayCart, snowballs: buildSnowballs,
-  rebel: buildRebel, joust: buildJoust,
+  rebel: buildRebel, joust: buildJoust, ship: buildShip, bell: buildBell, fogboat: buildFogBoat, census: buildCensus, pies: buildPies, regatta: buildRegatta,
 };
 
 // later steps of a story told over several days (src/sim/stories.js) with a scene of their own; the other

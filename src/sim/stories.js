@@ -78,6 +78,23 @@ export const STORIES = {
   // owner 2026-10-27: the games at the Tournament Ground over three quiet days, named riders and named villagers in the
   // stands: a chariot race, tilting at the quintain, then the joust between the two winners; the champion is knighted
   joust: { minPop: 100, cooldown: 30, weight: 3, needs: (s) => built(s, 'tournament') && jousters(s).length >= 8 && !['rain', 'snow'].includes(s.weather), steps: ['race', 'quintain', 'final'] },
+  // owner 2026-10-27 (stories with a beginning and an end keep viewers watching): six more.
+  // A merchant ship sails into the harbor with named villagers waving on the quay, the next day named porters unload it,
+  // then it sails away
+  ship: { minPop: 500, cooldown: 14, weight: 3, needs: (s) => built(s, 'harbor') && !['rain', 'snow'].includes(s.weather), steps: ['arrive', 'unload', 'leave'] },
+  // a new bell for the church: the bronze poured into the mould at the Bell Foundry, the mould broken open and the bell
+  // rung for the first time, then hauled up into the bell tower by named villagers on the rope
+  bell: { minPop: 4000, cooldown: 40, weight: 3, needs: (s) => built(s, 'bell_foundry') && (built(s, 'cathedral') || built(s, 'chapel')), steps: ['pour', 'cool', 'raise'] },
+  // only on foggy days: a fisherman lost in the fog on the river; named villagers light a beacon fire at the end of the
+  // pier and ring a hand bell until the boat comes home
+  fogboat: { minPop: 10, cooldown: 10, weight: 4, needs: (s) => s.weather === 'fog' && built(s, 'dock') },
+  // the census at the Counting House: named villagers queue at the clerk's table, and the count reaches the kingdom's
+  // number (1 subscriber = 1 villager)
+  census: { minPop: 250, cooldown: 21, weight: 2, needs: (s) => built(s, 'counting_house') },
+  // a pie eating contest in the tavern: three named villagers, stacks of pies, one winner
+  pies: { minPop: 50, cooldown: 12, weight: 2, needs: (s) => built(s, 'tavern') },
+  // a rowing race on the river past the dock, three boats with named rowers, the crowd on the pier
+  regatta: { minPop: 30, cooldown: 14, weight: 2, needs: (s) => built(s, 'dock') && !['rain', 'snow', 'fog'].includes(s.weather) },
 };
 const GUARDS = ['guard', 'knight'], LAND = ['farmer', 'peasant', 'shepherd'];
 const teamOf = (s, jobs) => namedVillagers(s).filter((n) => jobs.includes(n.job));
@@ -320,6 +337,59 @@ const BUILD = {
     const a = race.riders.find((x) => x.id === race.winner), b = quintain.riders.find((x) => x.id === quintain.winner);
     return day({ race, quintain, final: { a, b }, champion: (r.chance(0.5) ? a : b).id }, race.riders);
   },
+  ship(state, r, arc) {
+    // a new crowd every day: waving on the quay as it comes and goes, carrying crates and sacks when it is unloaded
+    const unload = arc?.step === 'unload';
+    const cast = unload ? roleCast(state, r, ['sailor', 'merchant', 'peasant', 'farmer', 'carpenter', 'cooper', 'woodcutter', 'fisherman'], 4) : [];
+    const pool = namedVillagers(state).filter((n) => !cast.some((c) => c.id === n.id)).slice(0, 16);
+    while (cast.length < (unload ? 4 : 6) && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    if (arc?.data) return { ...arc.data, cast };
+    return { from: r.pick(PLACES), goods: r.pick(GOODS), name: r.pick(SHIPS), cast };
+  },
+  bell(state, r, arc) {
+    // the bellfounder (a named one when there is one) leads all three days; named helpers, new ones every day
+    const founder = arc?.data?.founder ?? (roleCast(state, r, ['bellfounder'], 1)[0] || castMember(state, r, namedVillagers(state)));
+    if (!founder) return null;
+    const helpers = roleCast(state, r, Object.keys(JOB_COUNT(state)), arc?.step === 'raise' ? 5 : 3, [founder]);
+    return { founder, cast: [founder, ...helpers] };
+  },
+  fogboat(state, r) {
+    // the fisherman out on the water (a named one when there is one); named villagers on the pier: one rings the bell,
+    // the others hold torches by the beacon fire
+    const named = namedVillagers(state);
+    const fisher = roleCast(state, r, ['fisherman'], 1)[0] || castMember(state, r, named);
+    if (!fisher) return null;
+    const pier = roleCast(state, r, Object.keys(JOB_COUNT(state)), 4, [fisher]);
+    return { fisher, cast: [fisher, ...pier] };
+  },
+  census(state, r) {
+    // the clerk at the table (a named reeve, tax collector or teacher when there is one), five named villagers in the queue;
+    // the count: the kingdom's number on the day
+    const clerk = roleCast(state, r, ['taxcollector', 'reeve', 'teacher', 'philosopher'], 1)[0] || null;
+    const queue = roleCast(state, r, Object.keys(JOB_COUNT(state)), 5, clerk ? [clerk] : []);
+    return { clerk, count: state.subscriberCount, cast: [...(clerk ? [clerk] : []), ...queue] };
+  },
+  pies(state, r) {
+    // three named villagers at the table; the winner drawn now
+    const pool = namedVillagers(state).slice(0, 14), cast = [];
+    while (cast.length < 3 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    if (cast.length < 2) return null;
+    return { cast, winner: r.pick(cast).id };
+  },
+  regatta(state, r) {
+    // three boats, a named rower in each (fishermen and sailors first), four named villagers cheering on the pier
+    const named = namedVillagers(state);
+    const rowers = roleCast(state, r, ['fisherman', 'sailor'], 3);
+    rowers.push(...roleCast(state, r, Object.keys(JOB_COUNT(state)), 3 - rowers.length, rowers));
+    if (rowers.length < 2) return null;
+    const crowd = roleCast(state, r, named.map((n) => n.job), 4, rowers);
+    return { rowers, crowd, winner: r.pick(rowers).id, cast: [...rowers, ...crowd] };
+  },
+};
+const SHIPS = ['the Sea Swallow', 'the Golden Gull', 'the Saint Brendan', 'the Merry Otter', 'the Northern Star', 'the Fair Wind'];
+export const SHIPS_IT = {
+  'the Sea Swallow': 'la Rondine di Mare', 'the Golden Gull': 'il Gabbiano d’Oro', 'the Saint Brendan': 'la San Brendano',
+  'the Merry Otter': 'la Lontra Allegra', 'the Northern Star': 'la Stella del Nord', 'the Fair Wind': 'il Buon Vento',
 };
 
 // the riders of the games at the Tournament Ground: named villagers who are not knights already, nor clergy, nor the Captain

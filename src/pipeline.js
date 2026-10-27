@@ -177,7 +177,7 @@ export async function testRender(args, log = console) {
   if (args.church) diff.scenes = state.scenes = { ...(diff.scenes || { variants: {}, ambient: null }), tavern: false, church: churchScene(state) };
   if (args.story) diff.story = state.story = storyFor(state, args.story);
   // the weather the story brings or needs, as the daily simulation does
-  const sky = { storm: 'rain', christmas: 'snow', snowballs: 'snow' }[args.story?.split(':')[0]];
+  const sky = { storm: 'rain', christmas: 'snow', snowballs: 'snow', fogboat: 'fog' }[args.story?.split(':')[0]];
   if (sky) diff.weather = state.weather = sky;
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));
   if (args.gallery) {

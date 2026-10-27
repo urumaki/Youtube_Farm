@@ -95,6 +95,35 @@ Add new owner decisions here.
   guards, hunters and the land's folk first; seven other named villagers sit in the front rows of the far stand with name
   tags, new ones each day. Before this the Tournament Ground had only the knights' training in the lists. Synced lance
   sounds (`lance` hit, `hooves` bed in `sfx.js`). Test with `--story joust`, `joust:quintain`, `joust:final`.
+  Six more stories (owner 2026-10-27, after the YouTube stats: the days with a story kept more viewers to the end):
+  - The ship (`ship`, `stories/ship.js`, from 500 subscribers once the Harbor stands, no rain or snow, cooldown 14): a
+    merchant cog with a name (`SHIPS`, Italian `SHIPS_IT`) and a port sails along the quay and comes alongside the end of
+    the middle pier while six named villagers wave; the next day four named porters (sailors, merchants and the land's folk
+    first) carry crates and sacks down the gangplank to a pile by the quay; then she sails away. The harbor's own moored
+    ships (`life.js`, `boats[].mesh`) are hidden during these shots. Test with `--story ship`, `ship:unload`,
+    `ship:leave` (`--built harbor` on a kingdom without one).
+  - The new bell (`bell`, `stories/bell.js`, from 4000 subscribers once the Bell Foundry stands, and a Cathedral or a
+    Chapel, cooldown 40): the bellfounder (a named one when there is one, the same all three days) knocks out the furnace's
+    tap and the bronze runs down a clay channel into the mould; the mould broken open, the bell rung three times in a timber
+    frame; then hauled up the face of the Cathedral's south-west tower (else the Chapel's) by five named villagers on the
+    rope. Test with `--story bell`, `bell:cool`, `bell:raise` (`--built bell_foundry,cathedral`).
+  - Lost in the fog (`fogboat`, `stories/fogboat.js`, only on foggy days, once the dock stands, cooldown 10): a fisherman
+    rows home up the river out of a thick fog (the shot's own fog density, `fog` on the story, `env.set(..., fog)`); on the
+    end of the pier named villagers keep a beacon fire burning, ring a hand bell and wave torches, and cheer when the boat
+    comes alongside. The Lighthouse (100000 subscribers) is not needed. Test with `--story fogboat` (the test render makes
+    the day foggy).
+  - The census (`census`, `stories/census.js`, from 250 subscribers once the Counting House stands, cooldown 21): a clerk
+    (a named reeve, tax collector, teacher or philosopher when there is one) writes in a ledger at a table by the door while
+    five named villagers step up one by one; the title counts up to the kingdom's number (`count`, the subscribers), and the
+    narration says it. Test with `--story census`.
+  - The pie eating contest (`pies`, `stories/pies.js`, from 50 subscribers once the tavern stands, cooldown 12): three
+    named villagers at the far table of the tavern (`freeTable` in `tavern.js`), a stack of six pies each; the winner
+    (`story.winner`) clears the stack and throws up their arms, the other two slump over their last pie. Test with
+    `--story pies`.
+  - The regatta (`regatta`, `stories/regatta.js`, from 30 subscribers once the dock stands, no rain, snow or fog, cooldown
+    14): three rowing boats in red, blue and gold race down the river to the end of the pier, a named rower in each
+    (fishermen and sailors first), four named villagers cheering by the finish pennant; the winner crosses first and raises
+    an arm. Test with `--story regatta`.
   The people in a role are named villagers of that job when the kingdom has them (owner 2026-10-25, `roleCast` in
   `stories.js`): the guards beside the heroes against the bandits (`guardCast`) and the King's banner guards in the
   procession and at the feast (`escort`) are named guards or knights, the folk with torches against the wolves named

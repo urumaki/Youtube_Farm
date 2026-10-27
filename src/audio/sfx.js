@@ -447,6 +447,17 @@ const SCENES = {
   ev_joust: [['hooves', 0.55], ['chatter', 0.3], ['cheer', 0.35]],
   ev_joust_quintain: [['hooves', 0.4], ['chatter', 0.35], ['cheer', 0.3]],
   ev_joust_final: [['fanfare', 0.35], ['hooves', 0.45], ['chatter', 0.3], ['cheer', 0.5]],
+  // owner 2026-10-27: the ship, the new bell, the fog, the census, the pies, the regatta
+  ev_ship: [['water', 0.5], ['chatter', 0.3], ['cheer', 0.35]],
+  ev_ship_unload: [['water', 0.4], ['chatter', 0.45], ['creak', 0.3]],
+  ev_ship_leave: [['water', 0.5], ['breeze', 0.4], ['cheer', 0.35]],
+  ev_bell: [['fire', 0.7], ['chatter', 0.3]],
+  ev_bell_cool: [['bell', 0.7], ['cheer', 0.4]],
+  ev_bell_raise: [['creak', 0.5], ['chatter', 0.4], ['cheer', 0.3]],
+  ev_fogboat: [['water', 0.5], ['bell', 0.35], ['fire', 0.3], ['cheer', 0.25]],
+  ev_census: [['chatter', 0.5]],
+  ev_pies: [['chatter', 0.55], ['cheer', 0.4]],
+  ev_regatta: [['water', 0.55], ['oars', 0.4], ['cheer', 0.45]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],
