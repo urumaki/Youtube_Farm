@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   daily:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # pinned (2026-10-27): ubuntu-latest moved to Ubuntu 26, where Playwright 1.56 cannot install its browser deps
     timeout-minutes: 340 # software rendering on a 4-core runner takes ~2-2.5 h
     steps:
       - uses: actions/checkout@v4
