@@ -827,6 +827,7 @@ test('the decree (owner 2026-10-28): the crier proclaims once that Knights and C
 
 test('stories of 2026-10-27: the ship, the new bell, the fog, the census, the pies and the regatta', async () => {
   const { storyFor, STORIES } = await import('../src/sim/stories.js');
+  const { buildScript } = await import('../src/audio/narration.js');
   const jobs = ['bellfounder', 'sailor', 'fisherman', 'reeve', 'merchant', 'baker', 'guard', 'farmer', 'cooper', 'potter', 'miller', 'peasant'];
   const kingdom = (weather = 'clear', built = ['harbor', 'bell_foundry', 'cathedral', 'dock', 'counting_house', 'tavern']) => ({
     seed: SEED, date: '2026-11-04', day: 40, subscriberCount: 4321, weather, storyLog: {},
