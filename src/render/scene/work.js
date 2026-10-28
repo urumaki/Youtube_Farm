@@ -356,8 +356,8 @@ export function toolGeo(kind, M) {
   } else if (kind === 'net') {
     add(new THREE.SphereGeometry(0.12, 8, 6).scale(1.4, 0.8, 1).translate(-0.28, -0.06, 0.1), M.hay); // the folded net
   } else if (kind === 'paddle') {
-    add(cylGeo(0.025, 0.025, 1.5, 6).translate(-0.28, -0.4, 0.15), wood);
-    add(boxGeo(0.12, 0.35, 0.03).translate(-0.28, -1.2, 0.15), M.wood);
+    add(cylGeo(0.025, 0.025, 1.5, 6).translate(-0.12, -0.4, 0.03), wood); // between the hands, both on the shaft
+    add(boxGeo(0.12, 0.35, 0.03).translate(-0.12, -1.2, 0.03), M.wood);
   } else if (kind === 'loaf') {
     add(new THREE.SphereGeometry(0.13, 10, 8).scale(1.5, 0.75, 1).translate(0, -0.03, 0.1), M.hay);
   } else if (kind === 'fish') {
@@ -370,8 +370,8 @@ export function toolGeo(kind, M) {
   } else if (kind === 'logs') {
     for (let i = 0; i < 3; i++) add(cylGeo(0.1, 0.1, 0.9, 8).rotateZ(Math.PI / 2).translate(-0.28, 0.05 + (i === 2 ? 0.17 : 0), 0.15 + (i % 2) * 0.17 - (i === 2 ? 0.08 : 0)), M.wood);
   } else if (kind === 'basket') {
-    add(cylGeo(0.24, 0.18, 0.24, 10).translate(-0.28, -0.05, 0.25), M.wood);
-    for (let i = 0; i < 3; i++) add(new THREE.SphereGeometry(0.06, 6, 5).scale(3, 0.8, 0.6).translate(-0.33 + i * 0.05, 0.1, 0.22 + i * 0.03), M.iron);
+    add(cylGeo(0.24, 0.18, 0.24, 10).translate(-0.28, -0.05, 0.08), M.wood); // carried between both hands, by its sides
+    for (let i = 0; i < 3; i++) add(new THREE.SphereGeometry(0.06, 6, 5).scale(3, 0.8, 0.6).translate(-0.33 + i * 0.05, 0.1, 0.05 + i * 0.03), M.iron);
   } else if (kind === 'smoker') { // a small tin can with a spout, smoke comes out of it
     add(cylGeo(0.08, 0.08, 0.2, 10).rotateX(Math.PI / 2).translate(0, -0.05, 0.12), iron);
     add(new THREE.ConeGeometry(0.06, 0.12, 8).rotateX(Math.PI / 2).translate(0, -0.05, 0.28), iron);
@@ -387,7 +387,8 @@ export function toolGeo(kind, M) {
     add(cylGeo(0.025, 0.025, 1.9, 6).translate(0, 0.35, 0.08), wood);
     add(new THREE.TorusGeometry(0.1, 0.022, 5, 10, Math.PI * 1.2).rotateY(Math.PI / 2).translate(0, 1.38, 0.18), wood);
   } else if (kind === 'bow') {
-    add(new THREE.TorusGeometry(0.5, 0.018, 5, 18, Math.PI * 0.8).rotateZ(Math.PI * 0.1).rotateY(Math.PI / 2).translate(0, 0.3, 0.05), M.woodDark);
+    // held by the grip, the middle of the stave, the tips curving back toward the shoulder
+    add(new THREE.TorusGeometry(0.5, 0.018, 5, 18, Math.PI * 0.8).rotateZ(Math.PI * 1.1).rotateY(Math.PI / 2).translate(0, 0.5, 0.05), M.woodDark);
   }
   return g;
 }

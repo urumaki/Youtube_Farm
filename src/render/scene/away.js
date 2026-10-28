@@ -372,13 +372,19 @@ export function buildNightWatch({ w, M, hero, home, heightAt }) {
   helm.castShadow = true;
   P.body.add(helm);
   P.r.hand.add(toolGeo('spear', M));
-  // the lantern hangs from the raised left hand: an iron frame, a candle flame, warm light
+  // the lantern hangs from the raised left hand by its ring, straight down whatever the arm does: an iron frame, a candle
+  // flame, warm light
+  const hang = new THREE.Group();
+  hang.rotation.order = 'ZYX'; // undoes the arm: its x turn, then its z turn
+  P.l.hand.add(hang);
   const lantern = new THREE.Group();
-  lantern.position.set(0, -0.2, 0.06);
-  P.l.hand.add(lantern);
+  lantern.position.set(0, -0.19, 0);
+  hang.add(lantern);
   lantern.add(new THREE.Mesh(boxGeo(0.16, 0.22, 0.16).translate(0, -0.12, 0), new THREE.MeshBasicMaterial({ color: '#ffd38a', transparent: true, opacity: 0.55 })));
   for (const [x, z] of [[-0.08, -0.08], [0.08, -0.08], [-0.08, 0.08], [0.08, 0.08]]) lantern.add(new THREE.Mesh(boxGeo(0.02, 0.24, 0.02).translate(x, -0.12, z), M.iron));
   lantern.add(new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.08, 4).rotateY(Math.PI / 4).translate(0, 0.03, 0), M.iron));
+  lantern.add(new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.01, 4, 10, Math.PI).translate(0, 0.14, 0), M.iron)); // the ring in the hand
+  lantern.add(new THREE.Mesh(cylGeo(0.01, 0.01, 0.08, 4).translate(0, 0.1, 0), M.iron));
   const flame = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.08, 6).translate(0, -0.12, 0), flameMaterial('#ffb347'));
   lantern.add(flame);
   const light = new THREE.PointLight('#ffb867', 0, 9, 1.8);
@@ -415,7 +421,7 @@ export function buildNightWatch({ w, M, hero, home, heightAt }) {
       stride(P, (t - t0) * 3.6, 0.42, { arms: false });
       P.r.g.rotation.set(-0.35, 0, 0); // spear upright
       P.l.g.rotation.set(-1.1 + 0.05 * Math.sin(t * 3.6), 0, 0.15); // lantern held out in front
-      lantern.rotation.x = 1.1; // hangs straight down whatever the arm does
+      hang.rotation.set(-P.l.g.rotation.x, 0, -P.l.g.rotation.z); // hangs straight down whatever the arm does
       flicker(flame, t, 1);
       light.intensity = 6 * (1 + 0.08 * Math.sin(t * 13) + 0.05 * Math.sin(t * 31));
       P.root.getWorldPosition(tmp);

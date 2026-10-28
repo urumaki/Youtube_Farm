@@ -116,7 +116,7 @@ export function buildLaundry({ w, M, hero }) {
     const P = person(M, c);
     P.root.position.copy(i < 2 ? ground([-1.3, 0.9][i], -0.05) : ground(-0.4, LZ + 0.45));
     P.root.rotation.y = frame.rotation.y + (i < 2 ? 0 : Math.PI);
-    if (i < 2) { const cloth = new THREE.Mesh(boxGeo(0.3, 0.04, 0.22), M.clothIvory); cloth.position.set(-0.3, 0, 0.1); P.r.hand.add(cloth); }
+    if (i < 2) { const cloth = new THREE.Mesh(boxGeo(0.3, 0.04, 0.22), M.clothIvory); cloth.position.set(-0.12, -0.02, 0.06); P.r.hand.add(cloth); }
     group.add(P.root);
     return P;
   });

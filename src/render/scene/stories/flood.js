@@ -74,7 +74,7 @@ export function buildFlood({ story, w, state, M, houses, yFn, seed, water }) {
   const carriers = cast.map((c, i) => {
     const P = person(M, c ? JOBS[c.job]?.color || '#7a6a55' : HELPERS[i % HELPERS.length]);
     const sack = toolGeo('sack', M);
-    sack.position.set(-0.3, 0.4, 0.05);
+    sack.position.set(-0.1, 0, -0.06); // hugged in front, the hand under it
     P.r.hand.add(sack);
     group.add(P.root);
     return { P, c, sack, off: (i / cast.length) * LOOP + rand01(seed, 'fl', i) * 0.4, x: (i - (cast.length - 1) / 2) * 1.2 };

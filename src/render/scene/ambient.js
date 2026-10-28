@@ -80,7 +80,7 @@ export function buildWheat({ w, M, seed, hero, month }) {
     for (const [lx, lz, a, ph] of [[-4.2, 2.6, 0.6, 0], [-0.6, 3.4, -0.4, 1.7]]) {
       const P = rig(M, ['#8b6b3e', '#6f7d4a'][people.length]);
       P.root.position.copy(at(lx, edge + lz)); P.root.rotation.y = face(a);
-      const sheaf = new THREE.Mesh(sheafGeo, straw); sheaf.scale.setScalar(0.8); sheaf.rotation.x = 0.5; sheaf.position.set(-0.2, -0.35, 0.2); P.r.hand.add(sheaf);
+      const sheaf = new THREE.Mesh(sheafGeo, straw); sheaf.scale.setScalar(0.8); sheaf.rotation.x = 0.5; sheaf.position.set(-0.08, -0.32, -0.17); P.r.hand.add(sheaf); // gripped at the band
       group.add(P.root);
       people.push({ P, ph, kind: 'bind' });
     }
@@ -99,7 +99,7 @@ export function buildWheat({ w, M, seed, hero, month }) {
     group.add(cart);
     const L = rig(M, '#7a5a3a');
     L.root.position.copy(at(4.0, Math.min(edge + 3.4, f.hd - 1.5))); L.root.rotation.y = face(Math.PI / 2);
-    const lifted = new THREE.Mesh(sheafGeo, straw); lifted.scale.setScalar(0.8); lifted.position.set(-0.2, -0.3, 0.2); L.r.hand.add(lifted);
+    const lifted = new THREE.Mesh(sheafGeo, straw); lifted.scale.setScalar(0.8); lifted.position.set(-0.08, -0.36, 0); L.r.hand.add(lifted);
     group.add(L.root);
     people.push({ P: L, ph: 0.6, kind: 'load', sheaf: lifted });
   } else {
