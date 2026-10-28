@@ -104,8 +104,13 @@ Add new owner decisions here.
   `names[id].cavalierDay` / `knightDay`. The throne room is a closed hall of its own under the castle (pillars,
   banners, the royal arms over the throne, torches with their own lights). The quintain is gone. A saved arc of the old
   three-day games is dropped (`pickStory`: a step that no longer exists). Seven named villagers sit in the far stand with
-  name tags. The Cavalier is never drawn or asked for and fights like a knight (sparring and the straw dummy in the
-  lists). The lists are bare earth (the Tournament Ground's pad is `dirt`, not paving). Synced lance sounds (`lance` hit, `hooves` bed, the fanfare in the throne room). Test with
+  name tags. The Cavalier fights like a knight (sparring and the straw dummy in the lists).
+  Earned titles (owner 2026-10-28): the Knight, the Cavalier and the Captain of the Guard are only won at their tournaments
+  (the joust, the chariot race, the guards' tourney). Both jobs are `earned` in `tiers.js`: never drawn for a villager
+  (`jobFor` makes the Harbor tier's knights guards), never in `availableJobs`. Asking for a knight, captain, commander,
+  cavalry and the like makes a guard (`requests.js`). The 80 or so villagers who had asked to be knights before became
+  guards on the next day (`assignNames`: an earned job with no `knightDay` / `cavalierDay`, or an apprentice waiting for one).
+  Test with `npm test` ("a Knight and a Cavalier are only won"). The lists are bare earth (the Tournament Ground's pad is `dirt`, not paving). Synced lance sounds (`lance` hit, `hooves` bed, the fanfare in the throne room). Test with
   `--story race`, `race:results`, `joust`, `joust:results` (`--built tournament` on a kingdom without one).
   Six more stories (owner 2026-10-27, after the YouTube stats: the days with a story kept more viewers to the end):
   - The ship (`ship`, `stories/ship.js`, from 500 subscribers once the Harbor stands, no rain or snow, cooldown 14): a
@@ -297,7 +302,7 @@ Add new owner decisions here.
   name asked for ("call me Hunter") is never read as a job request.
 - More comment words and six new jobs (owner 2026-10-25, from the 802 public comments, `requests.js`): typos and synonyms that
   found no job now reach one (soldier misspelt solider/soilder/solder: guard; crusader, jouster, cavalry/calvary, hussar:
-  knight; "apocethary": apothecary; homeless: beggar; seller, vendor, grocer, store manager: merchant; professor: scholar;
+  knight, a guard since 2026-10-28; "apocethary": apothecary; homeless: beggar; seller, vendor, grocer, store manager: merchant; professor: scholar;
   announcer, newspaper seller: crier; craftsman, artisan: carpenter; citizen: peasant; nitwit: jester). New jobs by request
   only, each with a croft scene (`work.js`): Teacher (points at a slate for two children on a bench, `school`), Philosopher
   (gestures by a stone seat with scrolls and a lamp, `ponder`), Barber (shaves a customer on a stool before a mirror,

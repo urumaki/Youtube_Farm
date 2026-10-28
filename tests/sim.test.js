@@ -123,7 +123,7 @@ test('tiers unlock at their thresholds with their unique jobs and buildings', ()
     assert.ok(!below.unlockedTiers.includes(t.id), `${t.id} locked below ${t.at}`);
     assert.ok(at.state.unlockedTiers.includes(t.id), `${t.id} unlocked at ${t.at}`);
     assert.ok(at.diffs[1].unlocked.includes(t.id));
-    t.unique.forEach((job, k) => assert.equal(jobFor(SEED, t.at - 1 + k), mergedJob(job)));
+    t.unique.forEach((job, k) => assert.equal(jobFor(SEED, t.at - 1 + k), job === 'knight' ? 'guard' : mergedJob(job))); // a Knight is won (owner 2026-10-28)
     // begun, or waiting for a day the video can show it (s.buildQueue)
     for (const b of t.buildings) assert.ok([...at.state.buildings, ...at.state.buildQueue].some((x) => x.id === b), `${b} started or queued`);
   }
@@ -275,23 +275,25 @@ test('comment job requests: granted when unlocked, apprentice (then promoted) wh
   let { state: s } = run([60]);
   let r = advance(s, { subscribers: 60, date: dateOf(5), commenters: [
     W('a', 'Pilot', 'Yo lemme work at the local tavern', '1'),
-    W('b', 'Sir', 'make me a knight or smth', '2'),
-    W('c', 'Balint', 'commander of the army? if not, a fletcher', '3'),
+    W('b', 'Sir', 'make me a bishop or smth', '2'),
+    W('c', 'Balint', 'a bishop? if not, a fletcher', '3'),
     W('d', 'Weird', 'can i be the town weirdo', '4'),
+    W('e', 'Lance', 'make me a knight', '5'),
   ] });
   const job = (n) => r.state.villagers.find((v) => v.name === n).job;
   assert.equal(job('Pilot'), 'innkeeper');
   assert.equal(job('Sir'), 'apprentice');
   assert.equal(job('Balint'), 'apprentice', 'the first job named is locked: apprentice, never a later one (owner 2026-10-23)');
   assert.equal(job('Weird'), 'jester', 'the weirdo is folded into the jester');
-  assert.deepEqual(r.diff.requests.map((q) => q.granted), [true, false, false, true]);
+  assert.equal(job('Lance'), 'guard', 'a Knight is won at the joust, asking makes a guard (owner 2026-10-28)');
+  assert.deepEqual(r.diff.requests.map((q) => q.granted), [true, false, false, true, true]);
   checkInvariants(r.state);
   // an existing villager asks for another job later
   r = advance(r.state, { subscribers: 60, date: dateOf(6), commenters: [W('a', 'Pilot', 'actually let me be a blacksmith', '5')] });
   assert.equal(job('Pilot'), 'blacksmith');
-  // the knight tier arrives at 500: the apprentice is promoted
+  // the bishop's tier arrives at 500: the apprentice is promoted
   r = advance(r.state, { subscribers: 500, date: dateOf(7) });
-  assert.equal(job('Sir'), 'knight');
+  assert.equal(job('Sir'), 'bishop');
   assert.deepEqual(r.diff.promoted.map((p) => p.name), ['Sir', 'Balint']);
   // history snapshots keep the chosen jobs
   assert.equal(deriveVillagers(r.state).find((v) => v.name === 'Pilot').job, 'blacksmith');
@@ -671,7 +673,7 @@ test('comment words of 2026-10-22: typos and synonyms reach the jobs, the new jo
     'i wanna be a gaurd': 'guard', 'THANK YOU FIR ADDINF ME AS A GAAurd': 'guard', 'I subscribed can i be a mercenary': 'guard',
     'May i be the Bishop of this great kingdom': 'bishop', 'Can I be a weaponsmith?': 'blacksmith', 'Can I own my own pub': 'innkeeper',
     'yo can i work on the harbour': 'fisherman', 'i want to be the herbalist': 'apothecary', 'I subbed can I be a messenger?': 'crier',
-    'May I be town idiot': 'jester', 'Can I be a military officer': 'knight', 'May I Be A Architect': 'stonemason', 'Subbed Can I be a politician': 'taxcollector',
+    'May I be town idiot': 'jester', 'Can I be a military officer': 'guard', 'May I Be A Architect': 'stonemason', 'Subbed Can I be a politician': 'taxcollector',
     'May I be a lawyer': 'taxcollector', 'Can i be the head of trade?': 'merchant', 'Can I be a scientist': 'scholar', 'can i be a groudnskeeper or gardener': 'peasant',
     'can I be a Hunter?': 'hunter', 'can i be a butcher': 'butcher', 'I request to be an egineer': 'engineer', 'May I be a Shepard tending to sheep?': 'shepherd',
     'Can I be a rancher? I like goats': 'shepherd', 'i want to be a tanner please': 'tanner', 'loyal military engineer': 'engineer',
@@ -787,6 +789,21 @@ test('the games at the Tournament Ground (owner 2026-10-28): announced, guards w
   assert.ok(!STORIES.joust.needs(few) && !STORIES.race.needs(few));
 });
 
+test('a Knight and a Cavalier are only won at the games (owner 2026-10-28): never drawn, asking makes a guard, old ones become guards', () => {
+  for (let i = 0; i < 4000; i++) assert.ok(!['knight', 'cavalier'].includes(jobFor(SEED, i)), `villager ${i}`);
+  const { state } = run([600]);
+  const named = (id, n) => { state.names[id] = { name: `V${id}`, author: `a${id}`, day: 1, ...n }; state.namedAuthors.push(`a${id}`); state.villagers[id].job = n.job; };
+  named(10, { job: 'knight', requestDay: 1 }); // asked for it before
+  named(11, { job: 'knight', requestDay: 1, knightDay: 2 }); // won the joust
+  named(12, { job: 'cavalier', cavalierDay: 2 }); // won the chariot race
+  named(13, { job: 'apprentice', wants: 'knight', requestDay: 1 });
+  named(14, { job: 'cavalier' });
+  const r = advance(state, { subscribers: 600, date: dateOf(2) });
+  const job = (id) => r.state.villagers[id].job;
+  assert.deepEqual([10, 11, 12, 13, 14].map(job), ['guard', 'knight', 'cavalier', 'guard', 'guard']);
+  assert.equal(r.state.names[13].wants, undefined);
+});
+
 test('stories of 2026-10-27: the ship, the new bell, the fog, the census, the pies and the regatta', async () => {
   const { storyFor, STORIES } = await import('../src/sim/stories.js');
   const { buildScript } = await import('../src/audio/narration.js');
@@ -880,7 +897,7 @@ test('more story events of 2026-10-25: feast days on their date, the proclamatio
 test('comment words of 2026-10-25: typos and synonyms reach the jobs, six new jobs by request, ordinary words stay ordinary', async () => {
   const { wantsFromText } = await import('../src/sim/requests.js');
   const cases = {
-    'I want to be a solider': 'guard', 'make me a soilder': 'guard', 'can I be a crusader': 'knight', 'reserve calvary': 'knight',
+    'I want to be a solider': 'guard', 'make me a soilder': 'guard', 'can I be a crusader': 'guard', 'reserve calvary': 'guard',
     'apocethary please': 'apothecary', 'homeless guy': 'beggar', 'vegetable seller': 'merchant', 'university professor': 'scholar',
     'newspaper seller': 'crier', 'announcer for the king': 'crier', 'craftsman': 'carpenter', 'a citizen': 'peasant', 'nitwit': 'jester',
     'teacher': 'teacher', 'philosopher': 'philosopher', 'barber': 'barber', 'astrologer': 'astronomer', 'stable keeper': 'stablehand', 'royal adviser': 'adviser',

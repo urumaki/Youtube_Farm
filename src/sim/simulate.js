@@ -260,13 +260,22 @@ function assignNames(s, commenters, blocked, diff) {
   // only the first job named counts (owner 2026-10-23: never a later one in its place)
   const applyRequest = (id, wants) => {
     const n = s.names[id];
-    const pick = avail.has(wants[0]) ? wants[0] : null;
+    const want = JOBS[wants[0]].earned ? 'guard' : wants[0]; // a Knight or a Cavalier is won, not asked for (a request saved before)
+    const pick = avail.has(want) ? want : null;
     n.job = pick || 'apprentice';
-    if (pick) delete n.wants; else n.wants = wants[0];
+    if (pick) delete n.wants; else n.wants = want;
     n.requestDay = s.day;
     if (s.villagers[id]) s.villagers[id].job = n.job;
-    diff.requests.push({ id: Number(id), name: n.name, job: n.job, wanted: wants[0], granted: !!pick });
+    diff.requests.push({ id: Number(id), name: n.name, job: n.job, wanted: want, granted: !!pick });
   };
+  // owner 2026-10-28: a Knight or a Cavalier is only won at the Tournament Ground's games (names[id].knightDay, cavalierDay);
+  // the villagers who asked to be one before are guards
+  for (const [id, n] of Object.entries(s.names)) {
+    if (JOBS[n.wants]?.earned) n.wants = 'guard';
+    if (!JOBS[n.job]?.earned || n[n.job + 'Day']) continue;
+    n.job = 'guard';
+    if (s.villagers[id]) s.villagers[id].job = 'guard';
+  }
   for (const c of [...commenters].sort((a, b) => String(a.at).localeCompare(String(b.at)))) {
     if (c.at && (!s.commentsSeen || c.at > s.commentsSeen)) s.commentsSeen = c.at;
     if (!c.author || blockedAuthors.has(c.author)) continue;

@@ -16,7 +16,8 @@ const KEYWORDS = [
   [/weirdo|\bweird\b|\bfool\b|crazy|lunatic|\bscemo|\bmatto|\bidiot|nitwit/, 'jester'],
   [/jester|\bclown|juggl|giullare|buffone/, 'jester'],
   [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b|frecce|arciere/, 'fletcher'],
-  [/\bknight|\bsir\b|cavaliere|commander|general|\barmy|captain|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'knight'],
+  // owner 2026-10-28: a Knight, a Cavalier and the Captain of the Guard are only won at the tournaments, so asking makes a guard
+  [/\bknight|\bsir\b|cavaliere|commander|general|\barmy|captain|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
   [/\bguard|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
   [/chapel|church|cathedral|cappella|chiesa/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
@@ -103,13 +104,14 @@ export function wantsFromText(text) {
   return [...new Set(hits.sort((a, b) => a[0] - b[0]).map((h) => h[1]))];
 }
 
-/** Jobs a villager can take today: everything unlocked by the reached tiers, plus the request-only ones. */
+/** Jobs a villager can take today: everything unlocked by the reached tiers, plus the request-only ones; never an earned one. */
 export function availableJobs(population) {
   const out = new Set(Object.entries(JOBS).filter(([id, j]) => j.requestOnly && id !== 'apprentice' && !MERGED[id]).map(([id]) => id));
   for (const t of tiersReached(Math.max(1, population))) {
     t.unique.forEach((j) => out.add(mergedJob(j)));
     Object.keys(t.pool).forEach((j) => out.add(mergedJob(j)));
   }
+  for (const j of out) if (JOBS[j].earned) out.delete(j);
   return out;
 }
 

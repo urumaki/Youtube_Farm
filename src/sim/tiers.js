@@ -12,6 +12,8 @@ export const MERGED = {
   mayor: 'taxcollector', reeve: 'taxcollector', weaver: 'tailor', chronicler: 'scholar', admiral: 'fisherman',
 };
 export const mergedJob = (job) => MERGED[job] || job;
+// an earned job (a Knight, a Cavalier) is never drawn: the villager is a guard
+const drawnJob = (job) => (JOBS[mergedJob(job)]?.earned ? 'guard' : mergedJob(job));
 
 export const JOBS = {
   peasant: { label: 'Peasant', color: '#8a7a5c' },
@@ -29,8 +31,9 @@ export const JOBS = {
   carpenter: { label: 'Carpenter', color: '#9c6b3c' },
   reeve: { label: 'Reeve', color: '#4b3a6b' },
   sailor: { label: 'Sailor', color: '#1f4e79' },
-  knight: { label: 'Knight', color: '#b0b7c0' },
-  // owner 2026-10-28: the winner of the chariot race at the Tournament Ground's games; never drawn, never asked for
+  // earned (owner 2026-10-28): only the winners at the Tournament Ground's games hold these, the joust's a Knight, the chariot
+  // race's a Cavalier. Never drawn for a villager, never given on request: both are a guard instead (jobFor, requests.js)
+  knight: { label: 'Knight', color: '#b0b7c0', earned: true },
   cavalier: { label: 'Cavalier', color: '#9b6b3a', earned: true },
   bishop: { label: 'Bishop', color: '#f2e9c9' },
   scholar: { label: 'Scholar', color: '#3a5a40' },
@@ -174,7 +177,7 @@ export function tiersReached(population) {
 
 /** Job for villager #index (0-based). Depends only on seed and index. */
 export function jobFor(seed, index) {
-  if (UNIQUE.has(index)) return mergedJob(UNIQUE.get(index));
+  if (UNIQUE.has(index)) return drawnJob(UNIQUE.get(index));
   const pool = new Map();
   for (const t of tiersReached(index + 1)) {
     for (const [job, w] of Object.entries(t.pool)) pool.set(job, (pool.get(job) || 0) + w);
@@ -184,7 +187,7 @@ export function jobFor(seed, index) {
   let r = (hash(seed, 'job', index) / 4294967296) * total;
   for (const [job, w] of pool) {
     r -= w;
-    if (r < 0) return mergedJob(job);
+    if (r < 0) return drawnJob(job);
   }
   return 'peasant';
 }
