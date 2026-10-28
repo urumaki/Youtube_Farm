@@ -7,6 +7,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { rand01 } from '../../sim/prng.js';
 import { JOBS } from '../../sim/tiers.js';
 import { cylGeo, boxGeo, gableGeo, sheep } from './kit.js';
+import { dress } from './outfits.js';
 
 const ease = (x) => x * x * (3 - 2 * x);
 const flat = (g) => { const q = g.index ? g.toNonIndexed() : g; q.deleteAttribute('uv'); return q; };
@@ -55,7 +56,10 @@ export function rig(M, color, { seated = false, walk = false, ground = false } =
   add(body, merged([cylGeo(0.19, 0.33, 0.9, 12).translate(0, 0.36, 0),
     new THREE.SphereGeometry(0.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.25, 0.5, 0.85).translate(0, 0.8, 0)]), tunic);
   add(body, cylGeo(0.235, 0.24, 0.07, 12).translate(0, 0.46, 0), M.gear); // the belt
-  const hat = add(body, merged([cylGeo(0.215, 0.2, 0.09, 12).translate(0, 1.17, 0), new THREE.ConeGeometry(0.2, 0.26, 12).translate(0, 1.34, 0)]), M.gear);
+  // the head piece is a group: the plain cap, or the hat of the job's outfit (outfits.js)
+  const hat = new THREE.Group();
+  body.add(hat);
+  add(hat, merged([cylGeo(0.215, 0.2, 0.09, 12).translate(0, 1.17, 0), new THREE.ConeGeometry(0.2, 0.26, 12).translate(0, 1.34, 0)]), M.gear);
   const head = add(body, merged([new THREE.SphereGeometry(0.17, 12, 10).scale(1, 1.1, 1).translate(0, 1.04, 0), cylGeo(0.07, 0.08, 0.12, 8).translate(0, 0.88, 0)]), M.skin);
   const arm = (side) => {
     const g = new THREE.Group();
@@ -69,54 +73,10 @@ export function rig(M, color, { seated = false, walk = false, ground = false } =
     return { g, hand };
   };
   const P = { root, body, r: arm(1), l: arm(-1), legs: walkLegs, tunic, hat, head };
-  dress(P, color, M);
+  dress(P, color, M, { seated, ground });
   return P;
 }
 
-// Owner 2026-10-23: every jester wears a jester's cap (two-coloured horns with bells) and every chimney sweep has a
-// face black with soot, in every scene (at work, in the caravan, the tavern, the church...). The rig only gets the
-// tunic colour, which is the job's own (JOBS[job].color, unique to each job), so it tells them by that.
-let soot = null;
-function dress(P, color, M) {
-  if (color === JOBS.jester.color) {
-    P.hat.visible = false;
-    P.body.add(jesterCap(M));
-  } else if (color === JOBS.chimneysweep.color) {
-    soot ??= new THREE.MeshStandardMaterial({ color: '#3a312c', roughness: 0.95 });
-    P.head.material = soot;
-  } else if (color === JOBS.priest.color || color === JOBS.bishop.color) {
-    // clergy (owner 2026-10-25, shown at work too): a red stole; the bishop a mitre with a gold band
-    const stole = new THREE.Mesh(boxGeo(0.16, 0.85, 0.04), M.clothRed);
-    stole.position.set(0, 0.42, 0.29);
-    P.body.add(stole);
-    if (color === JOBS.bishop.color) {
-      P.hat.visible = false;
-      const mitre = new THREE.Mesh(new THREE.ConeGeometry(0.23, 0.62, 4).scale(1, 1, 0.7).translate(0, 1.47, 0), M.clothIvory);
-      const band = new THREE.Mesh(cylGeo(0.215, 0.225, 0.07, 12), M.gold);
-      band.position.y = 1.2;
-      mitre.castShadow = true;
-      P.body.add(mitre, band);
-    }
-  }
-}
-function jesterCap(M) {
-  const g = new THREE.Group();
-  const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m); return m; };
-  add(cylGeo(0.215, 0.2, 0.1, 12).translate(0, 1.17, 0), M.gold);
-  // three floppy horns (left, right, back), each going up and out and then drooping, a bell at each tip
-  const horn = (dir, mat) => {
-    const seg = (from, a, h, r0, r1) => {
-      const geo = cylGeo(r1, r0, h, 8).translate(0, h / 2, 0);
-      if (dir[2]) geo.rotateX(-a * dir[2]); else geo.rotateZ(a * dir[0]);
-      add(geo.translate(from.x, from.y, from.z), mat);
-      return from.clone().add(new THREE.Vector3(-Math.sin(a) * h * dir[0], Math.cos(a) * h, -Math.sin(a) * h * dir[2]));
-    };
-    const tip = seg(seg(new THREE.Vector3(0, 1.2, 0), 0.75, 0.26, 0.11, 0.06), 2.1, 0.2, 0.06, 0.025);
-    add(new THREE.SphereGeometry(0.045, 8, 6).translate(tip.x, tip.y, tip.z), M.gold);
-  };
-  horn([1, 0, 0], M.clothRed); horn([-1, 0, 0], M.greens); horn([0, 0, 1], M.clothRed);
-  return g;
-}
 
 // a soft round dot, so particles are not drawn as squares (made once, in the browser only)
 let dotTexture = null;

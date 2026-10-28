@@ -51,11 +51,7 @@ export function buildRebel({ story, M, buildings, seed }) {
   });
 
   // the executioner, hooded, behind the block facing the square, the axe in both hands
-  const E = person(M, JOBS.executioner.color);
-  const hood = new THREE.Mesh(new THREE.ConeGeometry(0.27, 0.62, 12).translate(0, 1.14, 0), M.people.clone());
-  hood.material.color.set('#151214');
-  hood.castShadow = true;
-  E.body.add(hood);
+  const E = person(M, JOBS.executioner.color); // hooded by the executioner's outfit (outfits.js)
   const axe = toolGeo('axe', M);
   E.r.hand.add(axe);
   const EBEND = 0.25;

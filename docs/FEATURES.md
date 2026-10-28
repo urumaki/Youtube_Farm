@@ -363,8 +363,23 @@ Add new owner decisions here.
   picture (`falconer:meadow`, own side camera, one flight from the shot's start); the shepherd at the gate of a sheep pen on the grass beyond the fields
   (`shepherd:pen`); the tanner with a long rack of hides drying behind him; the engineer checks a plan on a parchment in front
   of a building going up (`engineer:site`, only while something other than the wall is under construction). Every jester
-  wears a jester's cap and every chimney sweep has a face black with soot, in every scene (`dress` in `work.js`, by the
-  job's own tunic colour). Test with `--gallery "carpenter:cart,bard:square,bard:inn,jester:square,ratcatcher:alley,chimneysweep:house,cook:stall,butcher:stall,hunter:boar,shepherd:pen,tanner,engineer:site"`.
+  wears a jester's cap and every chimney sweep has a face black with soot, in every scene (`dress`, by the
+  job's own tunic colour; since 2026-10-28 every job has its outfit, see below). Test with `--gallery "carpenter:cart,bard:square,bard:inn,jester:square,ratcatcher:alley,chimneysweep:house,cook:stall,butcher:stall,hunter:boar,shepherd:pen,tanner,engineer:site"`.
+- Outfits for every job (owner 2026-10-28, like the jester's cap; `src/render/scene/outfits.js`, put on by `rig` in every
+  scene). The head piece replaces the plain cap in `P.hat` (now a group, so a scene that takes the hat off still does):
+  straw hat (farmer, stablehand; the beekeeper's with a veil), steel kettle hat and mail collar (guard), bascinet, mail
+  collar and blue tabard (knight), plumed steel cap and red tabard (cavalier), white toque and apron (baker, cook), knitted
+  cap (woodcutter, fisherman, cooper, brewer), linen coif (peasant, innkeeper, miller, apprentice, stonemason, potter,
+  butcher, barber, apothecary), beret with a feather (bard, tailor with a measuring tape, fletcher with a quiver, crier
+  with a blue tabard, falconer with a leather glove on the left arm), hood with a short cape (beggar, rat catcher, hunter
+  with a quiver, shepherd, astronomer), wide felt hat and a purse (merchant), flat cap (carpenter, cobbler, bellfounder,
+  engineer, chimney sweep with the soot), round scholar's cap and a long robe (scholar, physician, teacher; the
+  clockmaker with spectacles and no robe), chaperon and robe (tax collector; the adviser with a gold chain), the
+  executioner's black hood (no longer added by the pillory scene), bare head and leather apron (blacksmith, tanner), a
+  long linen robe and bare head (philosopher). Aprons: leather, canvas, clay or white by trade (the tavern's barkeepers
+  get theirs from the innkeeper's outfit now). Long robes only standing (sitting, the tunic is enough). Clergy, jester and
+  sweep as before. Medieval only, no pointed wizard hats. A crowd colour that happens to be a job's colour gets that
+  job's outfit. Test with `npm run render -- --real --subs 2310 --gallery "<jobs, comma-separated>" --gallery-times 1.2`.
 - Fixes of 2026-10-23 (owner, after the day's re-render): roofs are closed underneath (`gableGeo` has a bottom face; seen
   from below the eaves the forge's roof looked as if it floated) and the forge's awning is a slate lean-to on a beam and two
   posts; neighbouring houses that ran into each other give up half the overlap (`fitNeighbours` in `houses.js`: side walls

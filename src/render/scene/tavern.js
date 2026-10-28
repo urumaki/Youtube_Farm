@@ -198,10 +198,6 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [],
     P.root.rotation.y = -Math.PI / 2;
     if (spot.kind === 'pour') P.r.hand.add(toolGeo('tankard', M));
     else P.r.hand.add(new THREE.Mesh(boxGeo(0.22, 0.04, 0.16), M.clothIvory)); // the rag
-    // apron
-    const apron = new THREE.Mesh(boxGeo(0.42, 0.6, 0.04), M.clothIvory);
-    apron.position.set(0, 0.35, 0.27);
-    P.body.add(apron);
     group.add(P.root);
     people.push({ P, kind: spot.kind });
     if (k && !bar) labels.push({ pos: toWorld(BAR_X + 0.75, F + 2.45, spot.z), title: k.name, sub: JOBS[k.job]?.label || k.job });
