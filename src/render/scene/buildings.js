@@ -630,7 +630,10 @@ const BUILD = {
   district(b, lot, out) {
     b.add('cobble', boxGeo(lot.hw * 2, 0.2, lot.hd * 2, 3), 0, 0.1, 0);
     b.add('stone', cylGeo(4.5, 4.8, 0.9, 24), 0, 0.45, 0);
-    b.add('water', cylGeo(4.0, 4.0, 0.1, 24), 0, 0.85, 0);
+    // the water a little over the basin's floor, under a stone lip (owner 2026-10-28: the water and the stone shared one
+    // plane and flickered)
+    b.add('water', cylGeo(4.0, 4.0, 0.08, 24), 0, 0.96, 0);
+    b.add('stone', new THREE.TorusGeometry(4.25, 0.24, 6, 32).rotateX(Math.PI / 2), 0, 1.0, 0);
     b.add('stone', cylGeo(0.5, 0.7, 3, 10), 0, 2, 0);
     b.add('stone', cylGeo(1.5, 0.5, 0.5, 14), 0, 3.6, 0);
     b.add('gold', new THREE.SphereGeometry(0.4, 10, 8), 0, 4.2, 0);
@@ -886,7 +889,8 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
       }
       padGeo.computeVertexNormals();
     }
-    const foundation = new THREE.Mesh(padGeo, M.cobble);
+    // the Tournament Ground's lists are bare earth, not paving (owner 2026-10-28)
+    const foundation = new THREE.Mesh(padGeo, bd.id === 'tournament' ? M.dirt : M.cobble);
     foundation.position.y = -padH / 2 + 0.05;
     foundation.receiveShadow = true;
     const inner = b.build(mats);

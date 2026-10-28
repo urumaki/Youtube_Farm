@@ -285,6 +285,7 @@ Object.assign(JOB_SCENES, {
   'priest:preach': { period: 2.8, raise: -2.6, down: -0.8, bend: -0.05, sound: 'none', tool: null, props: 'crowd', smooth: true, left: -1.0, turn: 0.45, radius: 6.8 },
 });
 JOB_SCENES.warrior = JOB_SCENES.knight;
+JOB_SCENES.cavalier = JOB_SCENES.knight;
 // at the Apiary (owner 2026-10-25): its own bench of skeps, so only the bees (main.js puts him at the bench's end)
 JOB_SCENES['beekeeper:apiary'] = { ...JOB_SCENES.beekeeper, props: 'bees' };
 for (const [from, to] of [['toolsmith', 'blacksmith'], ['brewer', 'innkeeper'], ['bishop', 'priest']]) {

@@ -63,7 +63,7 @@ const T = {
       snowballs: ['A snowball fight in the square!', 'Snow day! The villagers pelt each other with snowballs.'],
       rebel: ['Treason! A would-be rebel spends the day in the pillory.', 'Plotting against the king? To the pillory, and here come the tomatoes!'],
       // the games at the Tournament Ground: the race, the quintain, the joust whose champion is knighted
-      joust: ['The games begin at the Tournament Ground: a chariot race!', 'Chariots thunder round the Tournament Ground!'],
+      joust: ['The games begin at the Tournament Ground: a chariot race, and the winner becomes a cavalier!', 'Chariots thunder round the Tournament Ground!'],
       joust_quintain: ['Tilting at the quintain: hit the shield, and mind the sandbag!', 'Lances down! The riders charge the quintain.'],
       joust_final: ['The joust! The champion will be made a knight.', 'Two riders, one tilt, and a knighthood for the winner!'],
       // owner 2026-10-27: six more stories
@@ -186,7 +186,7 @@ T.it = {
     haycart: ['Un carro di fieno è bloccato nella porta, e tutti spingono!'],
     snowballs: ['Battaglia a palle di neve in piazza!'],
     rebel: ['Tradimento! Un aspirante ribelle passa la giornata alla gogna, tra i pomodori.'],
-    joust: ['Iniziano i giochi al Campo del torneo: la corsa dei carri!'],
+    joust: ['Iniziano i giochi al Campo del torneo: la corsa dei carri, e il vincitore diventa cavalleggero!'],
     joust_quintain: ['La giostra della quintana: colpisci lo scudo, e attento al sacco!'],
     joust_final: ['La giostra! Il campione sarà nominato cavaliere.'],
     ship: [(e) => `Una nave ${FROM_IT[e.from] || 'da terre lontane'} entra nel porto!`],
@@ -271,7 +271,7 @@ const BUILDING_IT = {
 const JOB_IT = {
   peasant: 'contadino', farmer: 'agricoltore', woodcutter: 'taglialegna', fisherman: 'pescatore', blacksmith: 'fabbro', baker: 'fornaio',
   guard: 'guardia', stonemason: 'scalpellino', merchant: 'mercante', innkeeper: 'oste', priest: 'prete', miller: 'mugnaio',
-  carpenter: 'carpentiere', reeve: 'balivo', sailor: 'marinaio', knight: 'cavaliere', bishop: 'vescovo', scholar: 'studioso',
+  carpenter: 'carpentiere', reeve: 'balivo', sailor: 'marinaio', knight: 'cavaliere', cavalier: 'cavalleggero', bishop: 'vescovo', scholar: 'studioso',
   mayor: 'sindaco', weaver: 'tessitore', physician: 'medico', apothecary: 'speziale', bard: 'bardo', taxcollector: 'esattore delle tasse', tailor: 'sarto',
   potter: 'vasaio', cobbler: 'calzolaio', cooper: 'bottaio', beekeeper: 'apicoltore', bellfounder: 'fonditore di campane', clockmaker: 'orologiaio',
   ratcatcher: 'acchiappatopi', chimneysweep: 'spazzacamino', falconer: 'falconiere', cook: 'cuoco',

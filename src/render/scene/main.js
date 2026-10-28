@@ -127,7 +127,7 @@ async function setup(data) {
     }
     // owner 2026-10-25: knights spar in the lists of the Tournament Ground once it stands, fishermen fish from the town's
     // dock (the pier's far end) or row out off its end
-    const lists = (hero.job === 'knight' || hero.job === 'warrior') && done('tournament');
+    const lists = ['knight', 'warrior', 'cavalier'].includes(hero.job) && done('tournament');
     const dock = done('dock'), pier = dock && dockPier(dock);
     return variant === 'sparring' ? buildSparring({ M, seed: state.seed, hero, lang: data.lang, tag: false, at: lists ? atLot(lists, -12, -7).anchor : null })
         : variant === 'boat' ? buildBoat({ w, M, hero, home: pier ? pier.origin : home, heightAt: ground, shift: pier ? 9 : 0 })
@@ -253,7 +253,7 @@ async function setup(data) {
       const e = apiary.toWorld([1, 0, 0]).sub(apiary.toWorld([0, 0, 0]));
       return { ...atLot(apiary, 2.55, 0.1), face: Math.atan2(-e.x, -e.z), as: 'apiary' };
     }
-    const lists = variant === 'dummy' && (job === 'knight' || job === 'warrior') && done('tournament');
+    const lists = variant === 'dummy' && ['knight', 'warrior', 'cavalier'].includes(job) && done('tournament');
     if (lists) return { ...atLot(lists, 12, -7), face: undefined };
     const place = PLACES[job] && done(PLACES[job][0]);
     if (place) return { ...atLot(place, ...PLACES[job].slice(1)), face: undefined };

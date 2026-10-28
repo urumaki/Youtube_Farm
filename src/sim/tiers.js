@@ -30,6 +30,8 @@ export const JOBS = {
   reeve: { label: 'Reeve', color: '#4b3a6b' },
   sailor: { label: 'Sailor', color: '#1f4e79' },
   knight: { label: 'Knight', color: '#b0b7c0' },
+  // owner 2026-10-28: the winner of the chariot race at the Tournament Ground's games; never drawn, never asked for
+  cavalier: { label: 'Cavalier', color: '#9b6b3a', earned: true },
   bishop: { label: 'Bishop', color: '#f2e9c9' },
   scholar: { label: 'Scholar', color: '#3a5a40' },
   mayor: { label: 'Mayor', color: '#c9a227' },

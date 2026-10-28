@@ -91,9 +91,12 @@ Add new owner decisions here.
   named drivers), tilting at the quintain (four named riders; a slow one gets the sandbag in the back, the winner hits clean),
   then the joust over the tilt between the two winners: the winner's lance breaks on the shield, the loser rocks in the
   saddle (nobody falls or gets hurt). The champion is knighted: their job becomes Knight (`knight` in `stories.js`,
-  `names[id].knightDay`). Riders are named villagers who are not knights, clergy or the Captain of the Guard, stablehands,
-  guards, hunters and the land's folk first; seven other named villagers sit in the front rows of the far stand with name
-  tags, new ones each day. Before this the Tournament Ground had only the knights' training in the lists. Synced lance
+  `names[id].knightDay`). Owner 2026-10-28: only named guards ride (never the Captain of the Guard; the games need eight),
+  and the winner of the chariot race is made a Cavalier the same day (job `cavalier`, Italian "Cavalleggero",
+  `names[id].cavalierDay`, `promote` in `stories.js`; never drawn or asked for, it fights like a knight: sparring and the
+  straw dummy in the lists); if the Cavalier then wins the joust they become a Knight. Seven other named villagers sit in
+  the front rows of the far stand with name tags, new ones each day. The lists are bare earth (the Tournament Ground's
+  pad is `dirt`, not paving). Before this the Tournament Ground had only the knights' training in the lists. Synced lance
   sounds (`lance` hit, `hooves` bed in `sfx.js`). Test with `--story joust`, `joust:quintain`, `joust:final`.
   Six more stories (owner 2026-10-27, after the YouTube stats: the days with a story kept more viewers to the end):
   - The ship (`ship`, `stories/ship.js`, from 500 subscribers once the Harbor stands, no rain or snow, cooldown 14): a
@@ -257,6 +260,8 @@ Add new owner decisions here.
   250,000) crosses the river where the Noble Quarter's avenue ends, so a road can run on to it. The Royal Palace
   stands on the free ground beside the University (`placePalace` in `world.js`, after the plots; its first lot in
   the east stays reserved so the streets there do not move).
+  The ward squares' fountains (owner 2026-10-28): the water sits a little above the basin's stone top under a stone lip
+  (they shared one plane and flickered).
   The Bank (owner 2026-10-27, tier `coin` "Town of Coin" at 3500, no new job): a stone palazzo on the East Ward's
   square across the fountain from the Cooperage, its loggia of three round arches facing the fountain (`rot: Math.PI`;
   `plazaFrame` now turns a lot on a square by its own `rot`), the money changers' bench with green cloth, coin piles and

@@ -10,7 +10,7 @@ import { tavernScene, churchScene } from './tiers.js';
 
 // jobs with the most to see when two candidates are otherwise equal
 const INTEREST = ['blacksmith', 'toolsmith', 'woodcutter', 'baker', 'stonemason', 'fisherman', 'carpenter', 'fletcher', 'miller', 'farmer', 'peasant', 'guard', 'knight'];
-const FIGHTERS = ['guard', 'knight', 'warrior'];
+const FIGHTERS = ['guard', 'knight', 'warrior', 'cavalier'];
 
 // Two villagers in one shot: the guest walks into the host's croft. First match wins.
 export const PAIRS = [

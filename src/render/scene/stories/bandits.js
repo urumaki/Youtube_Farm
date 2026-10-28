@@ -40,7 +40,7 @@ export function buildBandits({ story, w, M, seed, yFn, lang }) {
   const guards = Array.from({ length: story.guards || 2 }, (_, i) => ({ c: null, g: story.guardCast?.[i] || null, P: person(M, GUARD) }));
   const defenders = [...heroes, ...guards];
   defenders.forEach((d, i) => {
-    const sword = ['knight', 'warrior'].includes(d.c?.job);
+    const sword = ['knight', 'warrior', 'cavalier'].includes(d.c?.job);
     d.P.r.hand.add(toolGeo(sword ? 'sword' : 'spear', M));
     // the heroes in the middle of the line, the guards on its ends
     const k = d.c ? i : i - heroes.length;

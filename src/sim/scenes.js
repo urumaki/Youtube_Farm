@@ -17,7 +17,7 @@ export const SCENE_GAP = 3;
 // once it is finished ('wall2', 'wall2night', 'wall2change').
 const FIGHTER_SCENES = ['walls', 'sparring', 'dummy'];
 export const VARIANTS = {
-  guard: [...FIGHTER_SCENES, 'night', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'],
+  guard: [...FIGHTER_SCENES, 'night', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change'], knight: ['sparring', 'dummy', 'walls'], warrior: ['sparring', 'dummy', 'walls'], cavalier: ['sparring', 'dummy', 'walls'],
   farmer: ['hoe', 'sow', 'scythe', 'fields', 'wheat'], peasant: ['spade', 'sow', 'laundry'], woodcutter: ['chop', 'fell'], stonemason: ['block', 'stack'],
   blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw', 'cart'],
   baker: ['oven', 'knead'], fisherman: ['rod', 'net', 'boat'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
@@ -54,7 +54,7 @@ const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall
 const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
 // the same for one job only (owner 2026-10-25): knights train in the lists of the Tournament Ground once it stands, no
 // longer on the castle walls
-const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tournament' } };
+const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tournament' }, cavalier: { walls: 'tournament' } };
 // scenes with no room for a visitor (on a platform, on the move, inside a house): a host with a guest stays in the croft
 const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless']);
 // buildings with no shot of their own: no engineer stands in front of them
@@ -68,7 +68,7 @@ export const sceneReady = (state, variant, job = null) => (!NEEDS[variant] || bu
 const winter = (state) => { const m = Number(state?.date?.slice(5, 7)); return m === 12 || m <= 2; };
 // the guards' everyday shots are the same scenes as a guard's own walls and sparring shots
 const AMBIENT_KEY = { patrol: 'guard:walls', sparring: 'guard:sparring', change: 'guard:change' };
-const FIGHTERS = ['guard', 'knight', 'warrior'];
+const FIGHTERS = ['guard', 'knight', 'warrior', 'cavalier'];
 
 export const sceneKey = (job, variant) => (variant ? `${job}:${variant}` : job);
 export const ambientKey = (id) => AMBIENT_KEY[id] || `ambient:${id}`;

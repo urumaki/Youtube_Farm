@@ -732,10 +732,10 @@ test("the guards' tournament: a knockout of eight named guards over three days, 
   assert.equal(storyFor(few, 'tourney'), null);
 });
 
-test('the games at the Tournament Ground: a race, the quintain, then the joust; the champion is knighted', async () => {
+test('the games at the Tournament Ground: guards only; the race winner is made a Cavalier, the joust champion a Knight', async () => {
   const { storyFor, STORIES } = await import('../src/sim/stories.js');
   assert.deepEqual(STORIES.joust.steps, ['race', 'quintain', 'final']);
-  const jobs = ['stablehand', 'guard', 'guard', 'farmer', 'hunter', 'baker', 'priest', 'knight', 'peasant', 'shepherd', 'cook', 'miller', 'potter'];
+  const jobs = ['guard', 'guard', 'guard', 'farmer', 'guard', 'baker', 'guard', 'knight', 'guard', 'guard', 'guard', 'guard', 'potter'];
   const kingdom = (date, weather = 'clear') => ({
     seed: SEED, date, day: 20, subscriberCount: 600, weather, storyLog: {}, guardCaptain: 1,
     buildings: [{ id: 'tournament', status: 'done' }], houses: [],
@@ -747,20 +747,25 @@ test('the games at the Tournament Ground: a race, the quintain, then the joust; 
   noGround.buildings = [];
   assert.ok(!STORIES.joust.needs(noGround), 'only once the Tournament Ground stands');
   for (let d = 1; d <= 40; d++) {
-    const s = kingdom(`2026-12-${String(1 + (d % 28)).padStart(2, '0')}-${d}`);
+    const date = `2026-12-${String(1 + (d % 28)).padStart(2, '0')}-${d}`;
+    const s = kingdom(date);
     const race = storyFor(s, 'joust');
     const all = [...race.race.riders, ...race.quintain.riders];
     assert.equal(new Set(all.map((c) => c.id)).size, 8, 'eight different riders');
-    assert.ok(all.every((c) => !['knight', 'priest'].includes(c.job) && c.id !== 1), 'no knight, cleric or Captain of the Guard rides');
+    assert.ok(all.every((c) => c.job === 'guard' && c.id !== 1), 'only guards ride, never the Captain of the Guard');
+    assert.equal(s.villagers[race.race.winner].job, 'cavalier', 'the race winner is made a Cavalier');
+    assert.equal(s.names[race.race.winner].cavalierDay, 20);
     assert.equal(race.riders.length, 4);
     assert.ok(race.crowd.every((c) => !race.riders.some((x) => x.id === c.id)), 'the stands hold others');
     assert.ok([race.final.a.id, race.final.b.id].includes(race.champion));
     assert.equal(race.final.a.id, race.race.winner);
     assert.equal(race.final.b.id, race.quintain.winner);
-    const fin = storyFor(s, 'joust:final');
+    // (a test render of the last day draws the same games again on a fresh kingdom)
+    const s2 = kingdom(date), fin = storyFor(s2, 'joust:final');
     assert.equal(fin.riders.length, 2);
-    assert.equal(s.villagers[race.champion].job, 'knight', 'the champion is knighted');
-    assert.equal(s.names[race.champion].job, 'knight');
+    assert.equal(fin.champion, race.champion);
+    assert.equal(s2.villagers[race.champion].job, 'knight', 'the champion is knighted (from Cavalier, when the race winner wins)');
+    assert.equal(s2.names[race.champion].job, 'knight');
   }
 });
 

@@ -125,7 +125,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   } else if (people && flexible <= (tavern ? 3 : 4)) {
     // not a job the previous video or today's workers already showed (diff.avoidJobs: yesterday's jobs)
     const seen = new Set([...(diff.avoidJobs || []), ...atWork.map((n) => n.job), ...atWork.map((n) => n.wants).filter(Boolean)]);
-    const wallsOk = state.unlockedTiers.includes('guard') && !['guard', 'knight', 'warrior'].some((j) => seen.has(j));
+    const wallsOk = state.unlockedTiers.includes('guard') && !['guard', 'knight', 'warrior', 'cavalier'].some((j) => seen.has(j));
     const fieldsOk = !winter && !seen.has('farmer') && !seen.has('peasant');
     // the guards either walk the walls or spar in the courtyard; on the other days, life around town:
     // farmers in the fields, a shepherd with the flock, washing day at the river
@@ -136,7 +136,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     ambient = id && makeAmbient(id);
   }
   function makeAmbient(id) {
-    const jobs = id === 'fields' || id === 'wheat' ? ['farmer', 'peasant'] : id === 'pasture' || id === 'laundry' ? ['peasant', 'farmer'] : ['guard', 'knight', 'warrior'];
+    const jobs = id === 'fields' || id === 'wheat' ? ['farmer', 'peasant'] : id === 'pasture' || id === 'laundry' ? ['peasant', 'farmer'] : ['guard', 'knight', 'warrior', 'cavalier'];
     const hero = named.find((n) => jobs.includes(n.job) && !atWork.includes(n) && !keepers.includes(n)) || null;
     return { kind: 'ambient', id, pos: castle.keep.clone(), radius: 8, front: 0, label: null, labels: [], weight: 1.1, cut: true,
       hero: hero && { id: hero.id, name: hero.name, job: hero.job }, sceneJob: id === 'fields' || id === 'wheat' ? 'farmer' : null };

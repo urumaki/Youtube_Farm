@@ -17,7 +17,7 @@ export const FROM_IT = {
   'Ravenscar': 'da Ravenscar', 'the Amber Vale': "dalla Valle d'Ambra", 'Dunmoor': 'da Dunmoor', 'the Eastern Isles': "dalle Isole d'Oriente",
 };
 export const GOODS_IT = { spices: 'spezie', wool: 'lana', salt: 'sale', silk: 'seta', amber: 'ambra', wine: 'vino', 'iron tools': 'attrezzi di ferro', honey: 'miele', 'dyed cloth': 'stoffe colorate' };
-const HEROES = ['knight', 'warrior', 'guard', 'fletcher'];
+const HEROES = ['knight', 'cavalier', 'warrior', 'guard', 'fletcher'];
 // the guards' tournament: the chance that the guard named first (the older name) wins a bout
 export const TOURNEY_ODDS = 0.85;
 const BUILDERS = ['carpenter', 'stonemason'];
@@ -76,7 +76,8 @@ export const STORIES = {
   // Comic, nobody hurt; never drawn otherwise, at most once every 7 days, the newest rebel of the last 7 days (rebelDay).
   rebel: { onComment: true, minPop: 1, cooldown: 7, needs: (s) => built(s, 'pillory') },
   // owner 2026-10-27: the games at the Tournament Ground over three quiet days, named riders and named villagers in the
-  // stands: a chariot race, tilting at the quintain, then the joust between the two winners; the champion is knighted
+  // stands: a chariot race, tilting at the quintain, then the joust between the two winners; the champion is knighted.
+  // Owner 2026-10-28: only guards ride, and the winner of the chariot race becomes a Cavalier
   joust: { minPop: 100, cooldown: 30, weight: 3, needs: (s) => built(s, 'tournament') && jousters(s).length >= 8 && !['rain', 'snow'].includes(s.weather), steps: ['race', 'quintain', 'final'] },
   // owner 2026-10-27 (stories with a beginning and an end keep viewers watching): six more.
   // A merchant ship sails into the harbor with named villagers waving on the quay, the next day named porters unload it,
@@ -323,11 +324,11 @@ const BUILD = {
     const day = (data, riders) => { const crowd = stands(riders); return { ...data, riders, crowd, cast: [...riders, ...crowd] }; };
     if (arc?.data) {
       const { race, quintain, final, champion } = arc.data;
-      if (arc.step === 'final') knight(state, champion);
+      if (arc.step === 'final') promote(state, champion, 'knight');
       return day({ race, quintain, final, champion }, arc.step === 'final' ? [final.a, final.b] : quintain.riders);
     }
-    // eight riders, those used to horses first: four race the chariots, four tilt at the quintain; each winner rides in the
-    // joust, decided now (50/50) so the three days agree
+    // eight named guards: four race the chariots (the winner is made a Cavalier today), four tilt at the quintain; each
+    // winner rides in the joust, decided now (50/50) so the three days agree
     const pool = jousters(state).slice(0, 16), entrants = [];
     while (entrants.length < 8 && pool.length) entrants.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
     if (entrants.length < 8) return null;
@@ -335,6 +336,7 @@ const BUILD = {
     const heat = (list) => { const riders = list.map(rider); return { riders, winner: r.pick(riders).id }; };
     const race = heat(entrants.slice(0, 4)), quintain = heat(entrants.slice(4));
     const a = race.riders.find((x) => x.id === race.winner), b = quintain.riders.find((x) => x.id === quintain.winner);
+    promote(state, race.winner, 'cavalier');
     return day({ race, quintain, final: { a, b }, champion: (r.chance(0.5) ? a : b).id }, race.riders);
   },
   ship(state, r, arc) {
@@ -392,21 +394,18 @@ export const SHIPS_IT = {
   'the Merry Otter': 'la Lontra Allegra', 'the Northern Star': 'la Stella del Nord', 'the Fair Wind': 'il Buon Vento',
 };
 
-// the riders of the games at the Tournament Ground: named villagers who are not knights already, nor clergy, nor the Captain
-// of the Guard; stablehands, guards, hunters and the land's folk first, then the newest
-const RIDERS = ['stablehand', 'guard', 'hunter', 'falconer', 'farmer', 'shepherd', 'peasant', 'woodcutter'];
+// the riders of the games at the Tournament Ground: named guards only (owner 2026-10-28), not the Captain of the Guard
 function jousters(state) {
-  const pool = namedVillagers(state).filter((n) => !['knight', 'priest', 'bishop'].includes(n.job) && n.id !== state.guardCaptain);
-  return [...pool.filter((n) => RIDERS.includes(n.job)), ...pool.filter((n) => !RIDERS.includes(n.job))];
+  return namedVillagers(state).filter((n) => n.job === 'guard' && n.id !== state.guardCaptain);
 }
 
-/** The champion of the games becomes a Knight (owner 2026-10-27). */
-function knight(state, id) {
+/** The champion of the games becomes a Knight (owner 2026-10-27), the winner of the chariot race a Cavalier (2026-10-28). */
+function promote(state, id, job) {
   const n = state.names?.[id];
   if (!n) return;
-  n.job = 'knight';
-  n.knightDay = state.day;
-  if (state.villagers[id]) state.villagers[id].job = 'knight';
+  n.job = job;
+  n[job + 'Day'] = state.day;
+  if (state.villagers[id]) state.villagers[id].job = job;
 }
 /** Named villagers who talked of overthrowing the king in the last 7 days and were not pilloried since, newest first. */
 function rebelsWaiting(state) {

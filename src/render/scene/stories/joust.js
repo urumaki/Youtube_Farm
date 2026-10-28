@@ -197,7 +197,7 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
     return {
       winner,
       banner: it ? 'La corsa dei carri!' : 'The chariot race!',
-      winSub: it ? 'Vince la corsa!' : 'Wins the race!',
+      winSub: it ? 'Ora è Cavalleggero!' : 'Now a Cavalier!', // owner 2026-10-28: the race's winner is made a Cavalier
       hits: () => [],
       cam: (u) => {
         const x = mid(u);

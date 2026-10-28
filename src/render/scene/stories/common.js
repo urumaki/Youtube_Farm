@@ -81,7 +81,7 @@ export function stage(buildings) {
 
 export const jobLabel = (job, lang) => (lang === 'it' ? JOB_IT[job] : null) || JOBS[job]?.label || job;
 const JOB_IT = {
-  guard: 'Guardia', knight: 'Cavaliere', warrior: 'Guerriero', fletcher: 'Arcaio', farmer: 'Agricoltore', peasant: 'Contadino',
+  guard: 'Guardia', knight: 'Cavaliere', cavalier: 'Cavalleggero', warrior: 'Guerriero', fletcher: 'Arcaio', farmer: 'Agricoltore', peasant: 'Contadino',
   woodcutter: 'Taglialegna', fisherman: 'Pescatore', blacksmith: 'Fabbro', baker: 'Fornaio', stonemason: 'Scalpellino',
   merchant: 'Mercante', innkeeper: 'Oste', priest: 'Prete', miller: 'Mugnaio', brewer: 'Birraio', apprentice: 'Apprendista',
   tailor: 'Sarto', physician: 'Medico', taxcollector: 'Esattore', potter: 'Vasaio', cobbler: 'Calzolaio', cooper: 'Bottaio',

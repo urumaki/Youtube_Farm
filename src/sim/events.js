@@ -11,7 +11,7 @@ const ACTIVITIES = {
   guard: 'spots a fox on the walls and sounds a tiny alarm', stonemason: 'carves a new step for the gate', merchant: 'haggles over a crate of spices',
   innkeeper: 'opens a fresh barrel of cider', priest: 'rings the bell at dawn', miller: 'grinds the first flour of the week',
   carpenter: 'raises a new roof beam', reeve: 'counts the tax sheaves twice', sailor: 'ties knots faster than anyone in port',
-  knight: 'polishes armor for the tournament', bishop: 'blesses the new bells', scholar: 'copies an ancient map',
+  knight: 'polishes armor for the tournament', cavalier: 'rides a lap of honour round the lists', bishop: 'blesses the new bells', scholar: 'copies an ancient map',
   mayor: 'reads the town charter aloud', weaver: 'finishes a banner in the royal colors', physician: 'brews a remedy of sage and mint',
   apothecary: 'grinds sage and mint into a cough remedy', bard: 'writes a song about the newest villagers', taxcollector: 'counts the coins in the tax chest twice', tailor: 'sews a new cloak for the night watch',
   potter: 'throws a jug on the wheel, and it only wobbles a little', cobbler: 'mends the boots of the whole watch', cooper: 'hammers the last hoop onto a new barrel',
