@@ -86,18 +86,27 @@ Add new owner decisions here.
   villagers pelt them with tomatoes that stick, the hooded executioner brings the axe down on the cabbage on the block as a
   warning and the rebel flinches. Synced sounds: the axe (a whoosh, then a deep thunk) and each tomato's splat (`hits` on
   the story's `work`, `makeSfxTrack`). Test with `--story rebel`.
-  The games at the Tournament Ground (owner 2026-10-27, `joust`, scene `stories/joust.js`): over three quiet days once the
-  Tournament Ground stands (no rain or snow, eight named riders, cooldown 30 days), a chariot race on the far straight (four
-  named drivers), tilting at the quintain (four named riders; a slow one gets the sandbag in the back, the winner hits clean),
-  then the joust over the tilt between the two winners: the winner's lance breaks on the shield, the loser rocks in the
-  saddle (nobody falls or gets hurt). The champion is knighted: their job becomes Knight (`knight` in `stories.js`,
-  `names[id].knightDay`). Owner 2026-10-28: only named guards ride (never the Captain of the Guard; the games need eight),
-  and the winner of the chariot race is made a Cavalier the same day (job `cavalier`, Italian "Cavalleggero",
-  `names[id].cavalierDay`, `promote` in `stories.js`; never drawn or asked for, it fights like a knight: sparring and the
-  straw dummy in the lists); if the Cavalier then wins the joust they become a Knight. Seven other named villagers sit in
-  the front rows of the far stand with name tags, new ones each day. The lists are bare earth (the Tournament Ground's
-  pad is `dirt`, not paving). Before this the Tournament Ground had only the knights' training in the lists. Synced lance
-  sounds (`lance` hit, `hooves` bed in `sfx.js`). Test with `--story joust`, `joust:quintain`, `joust:final`.
+  The games at the Tournament Ground (owner 2026-10-27, reworked 2026-10-28): two events of their own, the chariot race
+  (`race`) and the joust (`joust`), each over two days once the Tournament Ground stands (no rain or snow, cooldown 14).
+  Day 1 (`announce`, scene `stories/games.js` on the crier's dais of `proclaim.js`): the town crier reads the
+  proclamation, named guards in front; the title says "Guards: comment JOIN" and the narration says every guard may
+  enter by commenting JOIN. A comment with "join" (or "partecipo", "iscrivimi"; `joinFromText` in `requests.js`, a fixed
+  regex) from a commenter who already has a villager sets `names[id].joinDay` (`simulate.js`, `diff.joins`). Day 2
+  (`results`): the riders are drawn (`drawGuards` in `stories.js`) among the named guards who joined after the
+  announcement, then the other named guards fill the places left (owner: fill with random guards); each draw is weighted
+  by seniority, the guard named longest ago 1.9, the newest 1.0, the rest in proportion. Only named guards, never the
+  Captain of the Guard; the race needs four, the joust two (`GAMES`). The race (four chariots on the far straight) or the
+  joust (two riders over the tilt: the winner's lance breaks on the shield, the loser rocks in the saddle, nobody falls;
+  scene `stories/joust.js`), then a second shot in the new throne room (`stories/throne.js`, step `crown`, added by
+  `timeline.js`): the winner walks up the red carpet between the other riders and named villagers, kneels, the King
+  (the channel's owner, the same King as the royal visit, standing) touches each shoulder with his sword, and the winner
+  becomes a Cavalier (race; job `cavalier`, Italian "Cavalleggero") or a Knight (joust): `promote` sets the job and
+  `names[id].cavalierDay` / `knightDay`. The throne room is a closed hall of its own under the castle (pillars,
+  banners, the royal arms over the throne, torches with their own lights). The quintain is gone. A saved arc of the old
+  three-day games is dropped (`pickStory`: a step that no longer exists). Seven named villagers sit in the far stand with
+  name tags. The Cavalier is never drawn or asked for and fights like a knight (sparring and the straw dummy in the
+  lists). The lists are bare earth (the Tournament Ground's pad is `dirt`, not paving). Synced lance sounds (`lance` hit, `hooves` bed, the fanfare in the throne room). Test with
+  `--story race`, `race:results`, `joust`, `joust:results` (`--built tournament` on a kingdom without one).
   Six more stories (owner 2026-10-27, after the YouTube stats: the days with a story kept more viewers to the end):
   - The ship (`ship`, `stories/ship.js`, from 500 subscribers once the Harbor stands, no rain or snow, cooldown 14): a
     merchant cog with a name (`SHIPS`, Italian `SHIPS_IT`) and a port sails along the quay and comes alongside the end of

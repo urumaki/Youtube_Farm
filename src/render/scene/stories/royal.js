@@ -50,9 +50,12 @@ export function horse(M, { coat: coatColor = '#eeeae2', cloth = ROYAL.blue } = {
   return { g, legs };
 }
 
-/** The King, seated: a red cloak with an ermine collar, a gold crown (a seated rig, see work.js). */
-export function king(M) {
-  const K = rig(M, '#9b1b30', { seated: true });
+/**
+ * The King: a red cloak with an ermine collar, a gold crown (a rig, see work.js); seated in the carriage, standing (with
+ * walking legs) before his throne in the throne room (throne.js).
+ */
+export function king(M, { seated = true } = {}) {
+  const K = rig(M, '#9b1b30', seated ? { seated: true } : { walk: true });
   const add = (geo, m) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; K.body.add(o); return o; };
   add(cylGeo(0.26, 0.42, 0.95, 14, 4, true).translate(0, 0.42, -0.05), mat(M, '#7d1426', { side: THREE.DoubleSide }));
   add(new THREE.TorusGeometry(0.22, 0.07, 8, 16).rotateX(Math.PI / 2).translate(0, 0.86, 0), M.clothIvory);

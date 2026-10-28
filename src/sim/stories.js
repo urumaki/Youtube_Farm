@@ -75,10 +75,14 @@ export const STORIES = {
   // pillory while named villagers pelt them with tomatoes and the executioner chops a cabbage on the block as a warning.
   // Comic, nobody hurt; never drawn otherwise, at most once every 7 days, the newest rebel of the last 7 days (rebelDay).
   rebel: { onComment: true, minPop: 1, cooldown: 7, needs: (s) => built(s, 'pillory') },
-  // owner 2026-10-27: the games at the Tournament Ground over three quiet days, named riders and named villagers in the
-  // stands: a chariot race, tilting at the quintain, then the joust between the two winners; the champion is knighted.
-  // Owner 2026-10-28: only guards ride, and the winner of the chariot race becomes a Cavalier
-  joust: { minPop: 100, cooldown: 30, weight: 3, needs: (s) => built(s, 'tournament') && jousters(s).length >= 8 && !['rain', 'snow'].includes(s.weather), steps: ['race', 'quintain', 'final'] },
+  // owner 2026-10-28: the games at the Tournament Ground are two events of two days each, the chariot race and the joust.
+  // Day 1 ('announce'): the town crier reads the proclamation in the square and every guard may enter by commenting "join"
+  // (names[id].joinDay, simulate.js). Day 2 ('results'): the entrants are drawn among the guards who joined (the others
+  // fill the places left), the longer a guard has had their name the better their chance (`drawGuards`); the race or the
+  // joust, then the King names the winner in the throne room: a Cavalier for the race, a Knight for the joust. Only named
+  // guards ride, never the Captain of the Guard
+  race: { minPop: 100, cooldown: 14, weight: 3, needs: (s) => built(s, 'tournament') && jousters(s).length >= 4 && !['rain', 'snow'].includes(s.weather), steps: ['announce', 'results'] },
+  joust: { minPop: 100, cooldown: 14, weight: 3, needs: (s) => built(s, 'tournament') && jousters(s).length >= 2 && !['rain', 'snow'].includes(s.weather), steps: ['announce', 'results'] },
   // owner 2026-10-27 (stories with a beginning and an end keep viewers watching): six more.
   // A merchant ship sails into the harbor with named villagers waving on the quay, the next day named porters unload it,
   // then it sails away
@@ -314,30 +318,11 @@ const BUILD = {
     while (cast.length < 8 && pool.length) cast.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
     return cast.length >= 2 ? { cast } : null;
   },
+  race(state, r, arc) {
+    return game(state, r, arc, 'race');
+  },
   joust(state, r, arc) {
-    // seven named villagers in the stands, new ones every day (with the riders, few enough tags that all show at once)
-    const stands = (riders) => {
-      const pool = namedVillagers(state).filter((n) => !riders.some((x) => x.id === n.id)).slice(0, 30), out = [];
-      while (out.length < 7 && pool.length) out.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
-      return out;
-    };
-    const day = (data, riders) => { const crowd = stands(riders); return { ...data, riders, crowd, cast: [...riders, ...crowd] }; };
-    if (arc?.data) {
-      const { race, quintain, final, champion } = arc.data;
-      if (arc.step === 'final') promote(state, champion, 'knight');
-      return day({ race, quintain, final, champion }, arc.step === 'final' ? [final.a, final.b] : quintain.riders);
-    }
-    // eight named guards: four race the chariots (the winner is made a Cavalier today), four tilt at the quintain; each
-    // winner rides in the joust, decided now (50/50) so the three days agree
-    const pool = jousters(state).slice(0, 16), entrants = [];
-    while (entrants.length < 8 && pool.length) entrants.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
-    if (entrants.length < 8) return null;
-    const rider = ({ id, name, job, day }) => ({ id, name, job, day });
-    const heat = (list) => { const riders = list.map(rider); return { riders, winner: r.pick(riders).id }; };
-    const race = heat(entrants.slice(0, 4)), quintain = heat(entrants.slice(4));
-    const a = race.riders.find((x) => x.id === race.winner), b = quintain.riders.find((x) => x.id === quintain.winner);
-    promote(state, race.winner, 'cavalier');
-    return day({ race, quintain, final: { a, b }, champion: (r.chance(0.5) ? a : b).id }, race.riders);
+    return game(state, r, arc, 'joust');
   },
   ship(state, r, arc) {
     // a new crowd every day: waving on the quay as it comes and goes, carrying crates and sacks when it is unloaded
@@ -399,6 +384,52 @@ function jousters(state) {
   return namedVillagers(state).filter((n) => n.job === 'guard' && n.id !== state.guardCaptain);
 }
 
+// how many ride in each game, and what the winner is made
+export const GAMES = { race: { riders: 4, title: 'cavalier' }, joust: { riders: 2, title: 'knight' } };
+
+/**
+ * The entrants of a game (owner 2026-10-28): n named guards drawn without replacement, first among those who commented
+ * "join" after the announcement (joinDay > since), then among the other guards for the places left. Each draw is weighted
+ * by seniority among the guards still in that pool: the one named longest ago weighs 1.9, the newest 1.0, the others in
+ * between in proportion to their place in the line (ties: the lower id is the older).
+ */
+export function drawGuards(state, r, n, since) {
+  const guards = jousters(state).map(({ id, name, job, day }) => ({ id, name, job, day }));
+  const joined = guards.filter((g) => (state.names[g.id].joinDay ?? -1) > since);
+  const rest = guards.filter((g) => !joined.includes(g));
+  const out = [];
+  for (const pool of [joined, rest]) {
+    const line = [...pool].sort((a, b) => a.day - b.day || a.id - b.id); // the oldest first
+    const w = new Map(line.map((g, i) => [g.id, 1 + 0.9 * (line.length > 1 ? (line.length - 1 - i) / (line.length - 1) : 1)]));
+    const left = [...line];
+    while (out.length < n && left.length) {
+      const g = r.weighted(left, (x) => w.get(x.id));
+      out.push({ ...g, joined: pool === joined });
+      left.splice(left.indexOf(g), 1);
+    }
+  }
+  return out;
+}
+
+/** The chariot race or the joust: the announcement, then the results (and the title) the next day. */
+function game(state, r, arc, id) {
+  if (arc?.step !== 'results') {
+    // the town crier (a named one when there is one) reads it; named guards in front of the dais, hoping to ride
+    const crier = roleCast(state, r, ['crier'], 1)[0] || null;
+    const guards = roleCast(state, r, ['guard'], 5, crier ? [crier] : []);
+    return { game: id, day: state.day, crier, cast: [...(crier ? [crier] : []), ...guards] };
+  }
+  const since = arc.data?.day ?? state.day - 1;
+  const riders = drawGuards(state, r, GAMES[id].riders, since);
+  if (riders.length < 2) return null;
+  const winner = r.pick(riders).id;
+  promote(state, winner, GAMES[id].title);
+  // seven named villagers in the stands (with the riders, few enough tags that all show at once)
+  const pool = namedVillagers(state).filter((n) => !riders.some((x) => x.id === n.id)).slice(0, 30), crowd = [];
+  while (crowd.length < 7 && pool.length) crowd.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+  return { game: id, day: since, riders, crowd, winner, joined: riders.filter((x) => x.joined).length, cast: [...riders, ...crowd] };
+}
+
 /** The champion of the games becomes a Knight (owner 2026-10-27), the winner of the chariot race a Cavalier (2026-10-28). */
 function promote(state, id, job) {
   const n = state.names?.[id];
@@ -438,6 +469,7 @@ export function pickStory(state, { unlocked = [] } = {}) {
   const arc = state.storyArc;
   if (!id && arc && arc.day <= state.day) {
     state.storyArc = null;
+    if (arc.step !== undefined && !STORIES[arc.id]?.steps?.includes(arc.step)) return null; // a step that no longer exists
     const story = BUILD[arc.id](state, r, arc);
     if (story) {
       state.storyLog[arc.id] = state.day;

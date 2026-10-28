@@ -70,6 +70,14 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
       // a hard cut in and out ("meanwhile..."): no high flight over the town, and dusk scenes change the light
       radius: 12, front: 0, label: null, labels: [], weight: 2, cut: true, phase: night ? 1 : undefined,
     });
+    // the results of a game at the Tournament Ground: right after it, the King gives the winner their title in the throne
+    // room (owner 2026-10-28, stories/throne.js)
+    if (diff.story.step === 'results' && ['race', 'joust'].includes(diff.story.id)) {
+      targets.splice(today.length ? 2 : 1, 0, {
+        kind: 'event', id: `${diff.story.id}_crown`, story: { ...diff.story, step: 'crown' }, pos: castle.keep.clone(),
+        radius: 12, front: 0, label: null, labels: [], weight: 1.8, cut: true,
+      });
+    }
   }
   const INTEREST = ['blacksmith', 'toolsmith', 'woodcutter', 'baker', 'stonemason', 'fisherman', 'carpenter', 'miller', 'guard', 'knight', 'farmer', 'peasant'];
   // requests granted today come first ("you asked, the Lord granted"), then the newest names

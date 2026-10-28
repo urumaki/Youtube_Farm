@@ -443,10 +443,14 @@ const SCENES = {
   ev_haycart: [['cart', 0.35], ['chatter', 0.45], ['cheer', 0.2]],
   ev_snowballs: [['chatter', 0.5], ['cheer', 0.25]],
   ev_rebel: [['chatter', 0.5], ['cheer', 0.3]], // the axe and the tomatoes are synced hits (hits in makeSfxTrack)
-  // the games at the Tournament Ground: hooves and the crowd; the lances striking are synced hits (hits in makeSfxTrack)
-  ev_joust: [['hooves', 0.55], ['chatter', 0.3], ['cheer', 0.35]],
-  ev_joust_quintain: [['hooves', 0.4], ['chatter', 0.35], ['cheer', 0.3]],
-  ev_joust_final: [['fanfare', 0.35], ['hooves', 0.45], ['chatter', 0.3], ['cheer', 0.5]],
+  // the games at the Tournament Ground: the crier's bell, hooves and the crowd (the lances striking are synced hits, hits in
+  // makeSfxTrack), the fanfare in the throne room
+  ev_race: [['bell', 0.4], ['chatter', 0.35], ['cheer', 0.4]],
+  ev_race_results: [['hooves', 0.55], ['chatter', 0.3], ['cheer', 0.4]],
+  ev_race_crown: [['fanfare', 0.5], ['cheer', 0.45]],
+  ev_joust: [['bell', 0.4], ['chatter', 0.35], ['cheer', 0.4]],
+  ev_joust_results: [['hooves', 0.45], ['chatter', 0.3], ['cheer', 0.5]],
+  ev_joust_crown: [['fanfare', 0.5], ['cheer', 0.45]],
   // owner 2026-10-27: the ship, the new bell, the fog, the census, the pies, the regatta
   ev_ship: [['water', 0.5], ['chatter', 0.3], ['cheer', 0.35]],
   ev_ship_unload: [['water', 0.4], ['chatter', 0.45], ['creak', 0.3]],

@@ -1,7 +1,7 @@
 // Commenters for villager names: public comment threads on the channel's videos (YouTube Data API v3,
 // commentThreads.list with the same API key as the subscriber count). Never throws.
 import { DEFAULT_HANDLE } from './youtube.js';
-import { wantsFromText, nameFromText, complainsFromText, rebelFromText, plainText } from '../sim/requests.js';
+import { wantsFromText, nameFromText, complainsFromText, rebelFromText, joinFromText, plainText } from '../sim/requests.js';
 
 const API = 'https://www.googleapis.com/youtube/v3';
 // Everything in a comment is untrusted: the author id and time are checked for their shape, the display name
@@ -18,7 +18,7 @@ async function getJson(url, fetchImpl) {
 /**
  * Commenters since `since` (ISO time), oldest first: [{ author, name, at, wants, call?, complains? }] (wants:
  * requested jobs, call: the name they asked for, complains: they could not find themselves in the video, rebel: they talk of
- * overthrowing the king).
+ * overthrowing the king, join: they enter the games at the Tournament Ground).
  * Only top-level comments count; the channel's own comments are skipped. At most `pages` x 100 threads.
  */
 export async function fetchCommenters({ apiKey, handle = DEFAULT_HANDLE, channelId, since = null, pages = 5, fetchImpl = fetch, log = console }) {
@@ -48,8 +48,8 @@ export async function fetchCommenters({ apiKey, handle = DEFAULT_HANDLE, channel
         // the text is only scanned for a job request and a chosen name here, and never kept
         const text = plainText(c.textOriginal ?? c.textDisplay);
         const call = nameFromText(text);
-        const complains = complainsFromText(text), rebel = rebelFromText(text);
-        out.push({ author, name: String(c.authorDisplayName ?? '').slice(0, 100), at, wants: wantsFromText(text), ...(call ? { call } : {}), ...(complains ? { complains } : {}), ...(rebel ? { rebel } : {}) });
+        const complains = complainsFromText(text), rebel = rebelFromText(text), join = joinFromText(text);
+        out.push({ author, name: String(c.authorDisplayName ?? '').slice(0, 100), at, wants: wantsFromText(text), ...(call ? { call } : {}), ...(complains ? { complains } : {}), ...(rebel ? { rebel } : {}), ...(join ? { join } : {}) });
       }
       pageToken = body.nextPageToken;
       if (older || !pageToken) break;

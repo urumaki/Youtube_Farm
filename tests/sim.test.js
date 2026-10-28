@@ -732,41 +732,59 @@ test("the guards' tournament: a knockout of eight named guards over three days, 
   assert.equal(storyFor(few, 'tourney'), null);
 });
 
-test('the games at the Tournament Ground: guards only; the race winner is made a Cavalier, the joust champion a Knight', async () => {
-  const { storyFor, STORIES } = await import('../src/sim/stories.js');
-  assert.deepEqual(STORIES.joust.steps, ['race', 'quintain', 'final']);
-  const jobs = ['guard', 'guard', 'guard', 'farmer', 'guard', 'baker', 'guard', 'knight', 'guard', 'guard', 'guard', 'guard', 'potter'];
+test('the games at the Tournament Ground (owner 2026-10-28): announced, guards who comment "join" ride, drawn by seniority; the King gives the title', async () => {
+  const { storyFor, STORIES, drawGuards, GAMES } = await import('../src/sim/stories.js');
+  const { joinFromText } = await import('../src/sim/requests.js');
+  const { rng } = await import('../src/sim/prng.js');
+  for (const id of ['race', 'joust']) assert.deepEqual(STORIES[id].steps, ['announce', 'results']);
+  assert.deepEqual([GAMES.race.riders, GAMES.joust.riders], [4, 2]);
+  // guards 0-11 named on days 1-12 (0 the oldest); 1 is the Captain of the Guard; 12 a farmer
   const kingdom = (date, weather = 'clear') => ({
     seed: SEED, date, day: 20, subscriberCount: 600, weather, storyLog: {}, guardCaptain: 1,
     buildings: [{ id: 'tournament', status: 'done' }], houses: [],
-    villagers: jobs.map((job, id) => ({ id, job })),
-    names: Object.fromEntries(jobs.map((_, id) => [id, { name: `V${id}`, day: 1 + id }])),
+    villagers: Array.from({ length: 13 }, (_, id) => ({ id, job: id === 12 ? 'farmer' : 'guard' })),
+    names: Object.fromEntries(Array.from({ length: 13 }, (_, id) => [id, { name: `V${id}`, day: 1 + id }])),
   });
-  assert.ok(STORIES.joust.needs(kingdom('2026-11-03')) && !STORIES.joust.needs(kingdom('2026-11-03', 'rain')));
+  assert.ok(STORIES.race.needs(kingdom('2026-11-03')) && !STORIES.race.needs(kingdom('2026-11-03', 'rain')));
   const noGround = kingdom('2026-11-03');
   noGround.buildings = [];
   assert.ok(!STORIES.joust.needs(noGround), 'only once the Tournament Ground stands');
-  for (let d = 1; d <= 40; d++) {
-    const date = `2026-12-${String(1 + (d % 28)).padStart(2, '0')}-${d}`;
-    const s = kingdom(date);
-    const race = storyFor(s, 'joust');
-    const all = [...race.race.riders, ...race.quintain.riders];
-    assert.equal(new Set(all.map((c) => c.id)).size, 8, 'eight different riders');
-    assert.ok(all.every((c) => c.job === 'guard' && c.id !== 1), 'only guards ride, never the Captain of the Guard');
-    assert.equal(s.villagers[race.race.winner].job, 'cavalier', 'the race winner is made a Cavalier');
-    assert.equal(s.names[race.race.winner].cavalierDay, 20);
-    assert.equal(race.riders.length, 4);
-    assert.ok(race.crowd.every((c) => !race.riders.some((x) => x.id === c.id)), 'the stands hold others');
-    assert.ok([race.final.a.id, race.final.b.id].includes(race.champion));
-    assert.equal(race.final.a.id, race.race.winner);
-    assert.equal(race.final.b.id, race.quintain.winner);
-    // (a test render of the last day draws the same games again on a fresh kingdom)
-    const s2 = kingdom(date), fin = storyFor(s2, 'joust:final');
-    assert.equal(fin.riders.length, 2);
-    assert.equal(fin.champion, race.champion);
-    assert.equal(s2.villagers[race.champion].job, 'knight', 'the champion is knighted (from Cavalier, when the race winner wins)');
-    assert.equal(s2.names[race.champion].job, 'knight');
+  // "join" in a comment
+  assert.ok(joinFromText('JOIN!') && joinFromText('i want to join the race') && joinFromText('partecipo') && !joinFromText('joined the kingdom yesterday, love it'));
+  // day 1: the crier and named guards in front of him
+  const ann = storyFor(kingdom('2026-11-03'), 'race');
+  assert.equal(ann.step, 'announce');
+  assert.ok(ann.cast.every((c) => c.job === 'guard'));
+  // day 2: those who joined after the announcement ride first, the places left go to other guards; never the Captain
+  for (let d = 1; d <= 30; d++) {
+    const s = kingdom(`2026-12-${String(1 + (d % 28)).padStart(2, '0')}-${d}`);
+    s.names[9].joinDay = 20; s.names[10].joinDay = 20; s.names[3].joinDay = 19; // 3 joined before the announcement (day 19)
+    const riders = drawGuards(s, rng(SEED, 'g', d), 4, 19);
+    assert.equal(riders.length, 4);
+    assert.ok(riders.some((x) => x.id === 9) && riders.some((x) => x.id === 10), 'both who joined ride');
+    assert.equal(riders.filter((x) => x.joined).length, 2);
+    assert.ok(riders.every((x) => x.id !== 1 && x.id !== 12), 'guards only, not the Captain');
   }
+  // the older a guard's name, the better the chance: the oldest weighs 1.9, the newest 1.0
+  const counts = new Map();
+  for (let d = 0; d < 6000; d++) for (const x of drawGuards(kingdom('2026-11-03'), rng(SEED, 'w', d), 1, 99)) counts.set(x.id, (counts.get(x.id) || 0) + 1);
+  const ratio = counts.get(0) / counts.get(11);
+  assert.ok(ratio > 1.65 && ratio < 2.2, `oldest vs newest ${ratio.toFixed(2)}`);
+  // the results: the winner gets the title of the game
+  for (const [id, title, n] of [['race', 'cavalier', 4], ['joust', 'knight', 2]]) {
+    const s = kingdom('2026-11-04');
+    const res = storyFor(s, `${id}:results`);
+    assert.equal(res.step, 'results');
+    assert.equal(res.riders.length, n);
+    assert.ok(res.riders.some((x) => x.id === res.winner));
+    assert.equal(s.villagers[res.winner].job, title);
+    assert.equal(s.names[res.winner][`${title}Day`], 20);
+    assert.ok(res.crowd.every((c) => !res.riders.some((x) => x.id === c.id)), 'the stands hold others');
+  }
+  // too few guards: no games
+  const few = kingdom('2026-11-03');
+  for (let id = 2; id < 12; id++) few.villagers[id].job = 'farmer';
+  assert.ok(!STORIES.joust.needs(few) && !STORIES.race.needs(few));
 });
 
 test('stories of 2026-10-27: the ship, the new bell, the fog, the census, the pies and the regatta', async () => {

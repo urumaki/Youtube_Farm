@@ -27,6 +27,8 @@ import { buildHayCart } from './haycart.js';
 import { buildSnowballs } from './snowballs.js';
 import { buildRebel } from './rebel.js';
 import { buildJoust } from './joust.js';
+import { buildGamesAnnounce } from './games.js';
+import { buildThrone } from './throne.js';
 import { buildShip } from './ship.js';
 import { buildBell } from './bell.js';
 import { buildFogBoat } from './fogboat.js';
@@ -39,12 +41,17 @@ const BUILDERS = {
   fire: buildFire, rebuild: buildRebuild, wolves: buildWolves, storm: buildStorm, royal: buildRoyal, pig: buildPig, archery: buildArchery, flood: buildFlood, newyear: buildNewYear,
   tourney: buildTourney, martinmas: buildMartinmas, christmas: buildChristmas, proclaim: buildProclaim, bigfish: buildBigFish,
   chicken: buildChicken, windmill: buildWindmill, tugofwar: buildTugOfWar, haycart: buildHayCart, snowballs: buildSnowballs,
-  rebel: buildRebel, joust: buildJoust, ship: buildShip, bell: buildBell, fogboat: buildFogBoat, census: buildCensus, pies: buildPies, regatta: buildRegatta,
+  rebel: buildRebel, race: buildJoust, joust: buildJoust, ship: buildShip, bell: buildBell, fogboat: buildFogBoat, census: buildCensus, pies: buildPies, regatta: buildRegatta,
 };
 
 // later steps of a story told over several days (src/sim/stories.js) with a scene of their own; the other
 // steps are told by the story's own scene (story.step)
-const STEP_BUILDERS = { 'merchants:camp': buildCamp, 'royal:feast': buildFeast };
+// (the games at the Tournament Ground: the announcement in the square, the results, then the title in the throne room as a
+// second shot of the results day, step 'crown', timeline.js)
+const STEP_BUILDERS = {
+  'merchants:camp': buildCamp, 'royal:feast': buildFeast,
+  'race:announce': buildGamesAnnounce, 'joust:announce': buildGamesAnnounce, 'race:crown': buildThrone, 'joust:crown': buildThrone,
+};
 
 export function buildStory(args) {
   const { id, step } = args.story || {};

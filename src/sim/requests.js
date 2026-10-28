@@ -154,6 +154,15 @@ const REBEL_RE = new RegExp([
   /\babbasso (il )?re\b/.source, /\b(rivoluzione|ribellione|rivolta|ribelle|ribelli|colpo di stato|tradimento|traditore)\b/.source,
 ].join('|'), 'i');
 
+// "join", "I join!", "partecipo": the commenter's villager, if a guard, enters the games announced at the Tournament Ground
+// (owner 2026-10-28, stories.js)
+const JOIN_RE = /\b(join|joining|partecipo|iscrivimi)\b/i;
+
+/** True when the comment asks to enter the games. */
+export function joinFromText(text) {
+  return JOIN_RE.test(plainText(text));
+}
+
 /** True when the comment talks of overthrowing the king (a rebel for the pillory). */
 export function rebelFromText(text) {
   return REBEL_RE.test(plainText(text).replace(/[’‘]/g, "'"));

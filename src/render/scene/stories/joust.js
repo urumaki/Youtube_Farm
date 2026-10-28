@@ -1,8 +1,8 @@
-// The games at the Tournament Ground (owner 2026-10-27), over three quiet days (src/sim/stories.js, `joust`): a chariot
-// race on the far straight, tilting at the quintain, then the joust over the tilt between the two winners. Every rider has
-// a name tag, and named villagers sit in the front rows of the far stand with theirs. Nobody gets hurt: in the joust the
-// winner's lance breaks on the loser's shield and the loser rocks in the saddle; at the quintain a slow rider gets the
-// sandbag in the back. The champion of the joust is knighted (their tag reads "Now a Knight!").
+// The games at the Tournament Ground (owner 2026-10-27; two events since 2026-10-28, src/sim/stories.js `race` and
+// `joust`): on the results day of the race, four guards drive chariots down the far straight; on the results day of the
+// joust, two guards charge each other over the tilt. Every rider has a name tag, and named villagers sit in the front rows
+// of the far stand with theirs. Nobody gets hurt: in the joust the winner's lance breaks on the loser's shield and the
+// loser rocks in the saddle. The King gives the winner their title in the throne room right after (throne.js).
 // Everything is in the Tournament Ground's lot frame (buildings.js `tournament`: the tilt along x at z = 0, the stands
 // at z = +-24..29, four rows of benches, the oval rail rx 40, rz 21); the camera always looks across toward -z, so the
 // far stand is behind the action.
@@ -17,7 +17,7 @@ import { castTag, ease, clamp01 } from './common.js';
 const CROWD = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d', '#a0522d', '#56606e', '#c2a15a', '#4a6a64', '#b5476b'];
 const COLORS = ['#9b1b30', '#1d2f6f', '#2f6b3a', '#c27a1d']; // each rider's colours (cloth, shield, chariot)
 const COATS = ['#6b4226', '#2a2522', '#9a9590', '#a0582c']; // bay, black, grey, chestnut
-const WIN = { race: 0.8, quintain: 0.82, final: 0.74 }; // the share of the shot when the winner is known
+const WIN = { race: 0.8, joust: 0.74 }; // the share of the shot when the winner is known
 const lerp = THREE.MathUtils.lerp;
 
 function mat(M, color) {
@@ -82,26 +82,10 @@ function chariot(M, color, coat) {
   return { g, h, wheels, D };
 }
 
-/** The quintain: a post with a turning arm, a shield at one end and a sandbag at the other. */
-function quintain(M, group, x, z) {
-  const add = (geo, m, parent = group) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; parent.add(o); return o; };
-  add(cylGeo(0.13, 0.16, 2.5, 10).translate(0, 1.25, 0), M.woodDark).position.set(x, 0, z);
-  add(boxGeo(0.7, 0.2, 0.7), M.woodDark).position.set(x, 0.1, z);
-  const arm = new THREE.Group();
-  arm.position.set(x, 2.5, z);
-  group.add(arm);
-  add(boxGeo(0.1, 0.1, 1.9), M.wood, arm);
-  add(boxGeo(0.07, 0.78, 0.62).translate(0, -0.2, 0.95), M.clothRed, arm); // the shield, facing the riders (they come along x)
-  add(boxGeo(0.09, 0.2, 0.2).translate(0, -0.2, 0.95), M.gold, arm);
-  add(cylGeo(0.012, 0.012, 0.45, 4).translate(0, -0.22, -0.92), M.gear, arm); // the rope
-  add(new THREE.SphereGeometry(0.24, 10, 8).scale(1, 1.25, 1).translate(0, -0.6, -0.92), M.hay, arm); // the sandbag
-  return arm;
-}
-
 export function buildJoust({ story, M, buildings, seed, lang }) {
   const it0 = buildings.items.tournament;
   if (!it0) return null;
-  const step = story.step || 'race';
+  const kind = story.id === 'race' ? 'race' : 'joust';
   const it = lang === 'it';
   const group = new THREE.Group();
   group.matrixAutoUpdate = false;
@@ -142,10 +126,7 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
   const riders = story.riders || [];
   if (!riders.length) return null;
 
-  let scene;
-  if (step === 'race') scene = race();
-  else if (step === 'quintain') scene = tilt();
-  else scene = joust();
+  const scene = kind === 'race' ? race() : joust();
   const { cam, play, banner } = scene;
   const focus = toWorld(0, 1.6, -10);
   return {
@@ -161,7 +142,7 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
       group.visible = on;
       if (!on) return;
       const v = clamp01((t - t0) / (t1 - t0));
-      const won = v > WIN[step];
+      const won = v > WIN[kind];
       play(t, v, t0, t1);
       group.updateMatrixWorld(true);
       for (const l of labels) {
@@ -172,9 +153,9 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
     },
   };
 
-  // ------------------------------------------------------------------ day 1: the chariot race (toward -x on the far straight)
+  // ------------------------------------------------------------------ the chariot race (toward -x on the far straight)
   function race() {
-    const winner = story.race?.winner;
+    const winner = story.winner;
     // finishing order: the winner first, the others in the order drawn
     const order = [...riders].sort((a, b) => (b.id === winner) - (a.id === winner));
     const cars = riders.map((c, k) => {
@@ -197,7 +178,7 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
     return {
       winner,
       banner: it ? 'La corsa dei carri!' : 'The chariot race!',
-      winSub: it ? 'Ora è Cavalleggero!' : 'Now a Cavalier!', // owner 2026-10-28: the race's winner is made a Cavalier
+      winSub: it ? 'Vince la corsa!' : 'Wins the race!',
       hits: () => [],
       cam: (u) => {
         const x = mid(u);
@@ -218,63 +199,9 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
     };
   }
 
-  // ------------------------------------------------------------------ day 2: tilting at the quintain (toward +x)
-  function tilt() {
-    const winner = story.quintain?.winner;
-    const Q = { x: 0, z: -8 };
-    const arm = quintain(M, group, Q.x, Q.z);
-    const RZ = Q.z + 1.25; // the riders' line: the lance on their right reaches the shield
-    // the runs: a loser first (slow: the sandbag swings round into the back), then the winner (fast: it misses him)
-    const loser = riders.find((c) => c.id !== winner);
-    const REACH = 3.3; // the lance tip ahead of the horse's middle
-    const runs = [{ c: loser, start: 0.04, speed: 4.6, half: REACH / 4.6 }, { c: riders.find((c) => c.id === winner), start: 0.5, speed: 7.2, half: 0.75, stop: 3.4 }];
-    const mounts = riders.map((c, k) => {
-      const m = mount(M, COLORS[k], COATS[k]);
-      group.add(m.h.g);
-      tagOf(c, m.R, 1.55);
-      return { m, c, run: runs.find((r) => r.c.id === c.id) };
-    });
-    // the two still waiting sit their horses by the rail at the start of the run
-    const waiting = mounts.filter((x) => !x.run);
-    waiting.forEach((x, k) => { x.m.h.g.position.set(-3.0 - k * 1.3, 0, Q.z - 1.6 - k * 0.9); x.m.h.g.rotation.y = Math.PI / 2 - 0.25; });
-    return {
-      winner,
-      banner: it ? 'La giostra della quintana' : 'Tilting at the quintain',
-      winSub: it ? 'Colpo pulito! Vince!' : 'A clean hit! Wins!',
-      hits: (t0, t1) => runs.map((run) => [t0 + run.start * (t1 - t0) + (7 + Q.x - REACH) / run.speed, 'lance']),
-      cam: (u) => ({ pos: toWorld(1.0 - 1.0 * u, 4.6, 3.4), look: toWorld(-0.4, 2.6, -7.6) }),
-      play(t, v, t0, t1) {
-        const T = t1 - t0;
-        let phi = 0, bump = 0;
-        for (const x of mounts) {
-          if (!x.run) { gallop(x.m.h, 0, 0); x.m.h.legs.forEach((l, j) => { l.rotation.x = 0.05 * Math.sin(t * 2 + j); }); continue; }
-          const s = t - t0 - x.run.start * T; // seconds since this run began
-          const hitT = (7 + Q.x - REACH) / x.run.speed; // the lance reaches the shield (the run starts at x = -7)
-          // full gallop past the post; the winner then reins in, the loser rides on out of the picture
-          const pass = 7 / x.run.speed, gone = Math.max(0, s);
-          const px = !x.run.stop || gone < pass ? -7 + gone * x.run.speed : x.run.stop * (1 - Math.exp(-2.2 * (gone - pass) * x.run.speed / x.run.stop));
-          x.m.h.g.position.set(px, 0, RZ);
-          x.m.h.g.rotation.y = Math.PI / 2;
-          gallop(x.m.h, s * x.run.speed * 1.6, s > 0 ? 0.6 : 0);
-          x.m.lance.rotation.y = 0;
-          if (s > hitT) {
-            // the arm turns once round from the blow (back to the shield for the next rider); half a turn takes `half` seconds
-            phi += Math.PI * Math.min(2, (s - hitT) / x.run.half);
-            // the slow rider: the sandbag comes round into the back as the body passes the post
-            if (x.c.id !== winner) bump = Math.exp(-(((s - hitT - x.run.half) / 0.12) ** 2));
-            x.m.R.body.rotation.x = x.c.id !== winner ? 0.55 * bump : 0;
-          } else x.m.R.body.rotation.x = 0;
-          if (x.c.id === winner && v > WIN.quintain) x.m.R.r.g.rotation.set(lerp(-1.25, -2.8, ease((v - WIN.quintain) / 0.08)), 0, 0.15);
-        }
-        arm.rotation.y = phi;
-        cheer(t, v > WIN.quintain ? 1 : 0.3 + 0.4 * bump);
-      },
-    };
-  }
-
-  // ------------------------------------------------------------------ day 3: the joust over the tilt
+  // ------------------------------------------------------------------ the joust over the tilt
   function joust() {
-    const winner = story.champion;
+    const winner = story.winner;
     const [a, b] = riders;
     // A rides toward +x on the far side of the tilt, B toward -x on the near side: the tilt on each rider's left
     const A = mount(M, COLORS[0], COATS[1]), B = mount(M, COLORS[1], COATS[0]);
@@ -294,8 +221,8 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
     };
     return {
       winner,
-      banner: it ? 'La giostra: la finale!' : 'The joust: the final!',
-      winSub: it ? 'Ora è Cavaliere!' : 'Now a Knight!',
+      banner: it ? 'La giostra!' : 'The joust!',
+      winSub: it ? 'Vince la giostra!' : 'Wins the joust!',
       hits: (t0, t1) => [[t0 + MEET * (t1 - t0), 'lance']],
       cam: (u) => ({ pos: toWorld(-0.8 + 1.6 * u, 6, 17), look: toWorld(0, 2.4, -1.5) }),
       play(t, v, t0, t1) {
@@ -315,7 +242,7 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
           m.lance.rotation.x = after ? -0.9 * ease(since / 0.6) : 0;
           m.R.r.g.rotation.set(after ? lerp(-1.25, -1.7, ease(since / 0.6)) : -1.25, 0, 0.15);
         }
-        if (v > WIN.final) W.R.r.g.rotation.set(lerp(-1.7, -2.9, ease((v - WIN.final) / 0.08)), 0, 0.15);
+        if (v > WIN.joust) W.R.r.g.rotation.set(lerp(-1.7, -2.9, ease((v - WIN.joust) / 0.08)), 0, 0.15);
         // splinters fly from the shield
         const arr = splinters.geometry.attributes.position.array;
         for (let i = 0; i < 50; i++) {
