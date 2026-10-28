@@ -36,7 +36,7 @@ function wolf(M, seed, k) {
   return { g, head, tail, legs };
 }
 
-export function buildWolves({ story, w, M, seed, yFn, lang }) {
+export function buildWolves({ story, w, M, seed, yFn }) {
   const track = w.tracks.find((r) => r.id === 'saw') || w.roads[0];
   const pl = polyline(track.pts);
   const sM = pl.total * 0.45; // where they meet, at the forest edge by the sawmill track
@@ -66,8 +66,8 @@ export function buildWolves({ story, w, M, seed, yFn, lang }) {
   const torchLight = new THREE.PointLight('#ffa65a', 110, 28, 2);
   const moon = new THREE.HemisphereLight('#8fa6d6', '#1c1a16', 1.0);
   group.add(torchLight, moon);
-  const labels = heroes.map((h) => castTag(h.c, lang, lang === 'it' ? 'Eroe del giorno' : 'Hero of the day'));
-  const folkTags = folk.filter((d) => d.f).map((d) => ({ d, tag: castTag(d.f, lang) }));
+  const labels = heroes.map((h) => castTag(h.c, 'Hero of the day'));
+  const folkTags = folk.filter((d) => d.f).map((d) => ({ d, tag: castTag(d.f) }));
   labels.push(...folkTags.map((x) => x.tag));
   const P = new THREE.Vector3();
   const place = (obj, s, lateral, back) => {
@@ -82,7 +82,7 @@ export function buildWolves({ story, w, M, seed, yFn, lang }) {
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Lupi nella notte!' : 'Wolves in the night!',
+    banner: 'Wolves in the night!',
     phase: 0.8,
     focus: M0.clone().setY(M0.y + 1),
     cam(u) {

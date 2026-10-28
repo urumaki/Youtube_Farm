@@ -107,8 +107,8 @@ async function setup(data) {
   const yFn = (x, z) => heightAt(w, x, z) + 0.03;
   const interiors = []; // villagers working inside a building (the baker's bakehouse), lit while the camera is in
   const ambientScene = (id, hero) => {
-    const a = { w, M, seed: state.seed, hero, lang: data.lang };
-    const watch = (o) => buildWallWatch({ castle, w, state, M, seed: state.seed, hero, lang: data.lang, ...o });
+    const a = { w, M, seed: state.seed, hero };
+    const watch = (o) => buildWallWatch({ castle, w, state, M, seed: state.seed, hero, ...o });
     return id === 'patrol' ? watch({ mode: 'day' }) : id === 'change' ? watch({ mode: 'change' })
       : id === 'sparring' ? buildSparring(a) : id === 'pasture' ? buildPasture(a) : id === 'laundry' ? buildLaundry(a)
         : id === 'wheat' ? buildWheat({ ...a, month: Number(state.date.slice(5, 7)) }) : buildFields(a);
@@ -117,7 +117,7 @@ async function setup(data) {
     const ground = (x, z) => heightAt(w, x, z);
     // guards on the castle walls or the Second Wall: by day, at night, the changing of the guard
     const WATCH = { walls: ['castle', 'day'], wallnight: ['castle', 'night'], change: ['castle', 'change'], wall2: ['wall2', 'day'], wall2night: ['wall2', 'night'], wall2change: ['wall2', 'change'] };
-    if (WATCH[variant]) return buildWallWatch({ where: WATCH[variant][0], mode: WATCH[variant][1], castle, w, state, M, seed: state.seed, hero, lang: data.lang, tag: false });
+    if (WATCH[variant]) return buildWallWatch({ where: WATCH[variant][0], mode: WATCH[variant][1], castle, w, state, M, seed: state.seed, hero, tag: false });
     // an everyday shot as the villager's own scene (owner 2026-10-23): the big name label where the small tag would be
     if (['fields', 'wheat', 'pasture', 'laundry'].includes(variant)) {
       const st = ambientScene(variant, hero);
@@ -129,7 +129,7 @@ async function setup(data) {
     // dock (the pier's far end) or row out off its end
     const lists = ['knight', 'warrior', 'cavalier'].includes(hero.job) && done('tournament');
     const dock = done('dock'), pier = dock && dockPier(dock);
-    return variant === 'sparring' ? buildSparring({ M, seed: state.seed, hero, lang: data.lang, tag: false, at: lists ? atLot(lists, -12, -7).anchor : null })
+    return variant === 'sparring' ? buildSparring({ M, seed: state.seed, hero, tag: false, at: lists ? atLot(lists, -12, -7).anchor : null })
         : variant === 'boat' ? buildBoat({ w, M, hero, home: pier ? pier.origin : home, heightAt: ground, shift: pier ? 9 : 0 })
           : variant === 'rod' || variant === 'net' ? buildRiverbank({ w, M, hero, home, heightAt: ground, mode: variant, guest, dock: pier })
           : buildNightWatch({ w, M, hero, home, heightAt: ground });
@@ -398,20 +398,20 @@ async function setup(data) {
       scene.add(caravan.group);
       tg.labels = caravan.labels;
       tg.track = (t) => caravan.headAt(t, tg.t0);
-      tg.banner = data.lang === 'it' ? `La carovana: ${caravan.count} nuov${caravan.count === 1 ? 'o arrivo' : 'i arrivi'}` : `The caravan: ${caravan.count} newcomer${caravan.count === 1 ? '' : 's'}`;
+      tg.banner = `The caravan: ${caravan.count} newcomer${caravan.count === 1 ? '' : 's'}`;
       tg.caravan = caravan;
     } else if (tg.kind === 'tavern') {
       tavern = buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, patrons: tg.patrons, keepers: tg.keepers, musician: tg.musician });
       tg.labels = tavern.labels;
       tg.cam = tavern.cam;
-      tg.banner = data.lang === 'it' ? 'La Taverna' : 'The Tavern';
+      tg.banner = 'The Tavern';
     } else if (tg.kind === 'church') {
       church = buildChurchInterior({ item: buildings.items[tg.id], kind: tg.id, M, seed: state.seed, clergy: tg.clergy, worshippers: tg.worshippers });
       tg.labels = church.labels;
       tg.cam = church.cam;
-      tg.banner = data.lang === 'it' ? (tg.id === 'cathedral' ? 'La Cattedrale' : 'La Cappella') : tg.id === 'cathedral' ? 'The Cathedral' : 'The Chapel';
+      tg.banner = tg.id === 'cathedral' ? 'The Cathedral' : 'The Chapel';
     } else if (tg.kind === 'event') {
-      const st = buildStory({ story: tg.story, w, state, M, buildings, houses, nature, yFn, seed: state.seed, lang: data.lang, water });
+      const st = buildStory({ story: tg.story, w, state, M, buildings, houses, nature, yFn, seed: state.seed, water });
       if (!st) continue;
       scene.add(st.group);
       st.setWindow?.(tg.t0, tg.t1);

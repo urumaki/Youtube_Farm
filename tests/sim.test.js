@@ -868,14 +868,14 @@ test('stories of 2026-10-27: the ship, the new bell, the fog, the census, the pi
     assert.ok(regatta.rowers.some((c) => c.id === regatta.winner));
     assert.ok(regatta.crowd.every((c) => !regatta.rowers.some((x) => x.id === c.id)), 'the crowd is not in the boats');
   }
-  // every one of them is narrated, in both languages
+  // every one of them is narrated
   for (const [id, weather] of [['ship', 'clear'], ['ship:unload', 'clear'], ['ship:leave', 'clear'], ['bell', 'clear'], ['bell:cool', 'clear'], ['bell:raise', 'clear'], ['fogboat', 'fog'], ['census', 'clear'], ['pies', 'clear'], ['regatta', 'clear']]) {
     const s = kingdom(weather);
     const story = storyFor(s, id);
-    for (const lang of ['en', 'it']) {
+    {
       const diff = { day: 40, from: 4300, to: 4321, delta: 21, added: [], removed: [], housesBuilt: [], housesRebuilt: [], housesReoccupied: [], housesAbandoned: [], housesRuined: [], unlocked: [], buildingsStarted: [], buildingsCompleted: [], events: [], weather, story, next: null };
-      const lines = buildScript(s, diff, { lang }).sentences.filter((l) => l.role === 'story');
-      assert.equal(lines.length, 1, `${id} (${lang}) has a story line`);
+      const lines = buildScript(s, diff).sentences.filter((l) => l.role === 'story');
+      assert.equal(lines.length, 1, `${id} has a story line`);
     }
   }
 });

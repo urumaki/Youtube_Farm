@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// npm run daily [-- --subs N] [--date YYYY-MM-DD] [--dry-run] [--lang en|it] [--no-video] [--quality low|medium|high] [--tts piper|elevenlabs|none]
+// npm run daily [-- --subs N] [--date YYYY-MM-DD] [--dry-run] [--no-video] [--quality low|medium|high] [--tts piper|elevenlabs|none]
 import { loadEnv } from './env.js';
 import { daily, parseArgs } from '../src/pipeline.js';
 

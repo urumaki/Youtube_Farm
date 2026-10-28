@@ -11,12 +11,6 @@ import { TIERS } from './tiers.js';
 
 export const PLACES = ['Ashford', 'the Northern Marches', 'Kingsbridge', 'the Salt Coast', 'Ravenscar', 'the Amber Vale', 'Dunmoor', 'the Eastern Isles'];
 export const GOODS = ['spices', 'wool', 'salt', 'silk', 'amber', 'wine', 'iron tools', 'honey', 'dyed cloth'];
-// Italian wording shared by the narration and the on-screen tags
-export const FROM_IT = {
-  'Ashford': 'da Ashford', 'the Northern Marches': 'dalle Marche del Nord', 'Kingsbridge': 'da Kingsbridge', 'the Salt Coast': 'dalla Costa del Sale',
-  'Ravenscar': 'da Ravenscar', 'the Amber Vale': "dalla Valle d'Ambra", 'Dunmoor': 'da Dunmoor', 'the Eastern Isles': "dalle Isole d'Oriente",
-};
-export const GOODS_IT = { spices: 'spezie', wool: 'lana', salt: 'sale', silk: 'seta', amber: 'ambra', wine: 'vino', 'iron tools': 'attrezzi di ferro', honey: 'miele', 'dyed cloth': 'stoffe colorate' };
 const HEROES = ['knight', 'cavalier', 'warrior', 'guard', 'fletcher'];
 // the guards' tournament: the chance that the guard named first (the older name) wins a bout
 export const TOURNEY_ODDS = 0.85;
@@ -383,10 +377,6 @@ const BUILD = {
   },
 };
 const SHIPS = ['the Sea Swallow', 'the Golden Gull', 'the Saint Brendan', 'the Merry Otter', 'the Northern Star', 'the Fair Wind'];
-export const SHIPS_IT = {
-  'the Sea Swallow': 'la Rondine di Mare', 'the Golden Gull': 'il Gabbiano d’Oro', 'the Saint Brendan': 'la San Brendano',
-  'the Merry Otter': 'la Lontra Allegra', 'the Northern Star': 'la Stella del Nord', 'the Fair Wind': 'il Buon Vento',
-};
 
 // the riders of the games at the Tournament Ground: named guards only (owner 2026-10-28), not the Captain of the Guard
 function jousters(state) {

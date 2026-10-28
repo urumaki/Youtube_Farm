@@ -14,7 +14,7 @@ const T = 2; // the contest table (TABLES[2]), its far bench facing the door cor
 const PIES = 6;
 const DONE = 0.82; // when the winner's last pie is gone
 
-export function buildPies({ story, M, buildings, seed, lang }) {
+export function buildPies({ story, M, buildings, seed }) {
   const item = buildings.items.tavern;
   if (!item) return null;
   const tav = buildTavernInterior({ item, M, seed, freeTable: T });
@@ -42,7 +42,7 @@ export function buildPies({ story, M, buildings, seed, lang }) {
     bite.scale.set(0.5, 1, 0.5);
     bite.position.set(0, -0.05, 0.1);
     P.r.hand.add(bite);
-    const tag = { ...castTag(c, lang), P };
+    const tag = { ...castTag(c), P };
     labels.push(tag);
     // how fast they eat: the winner clears the stack at DONE, the others get through four or five
     const win = c.id === story.winner;
@@ -56,7 +56,7 @@ export function buildPies({ story, M, buildings, seed, lang }) {
     group,
     labels,
     interior: true,
-    banner: lang === 'it' ? 'Gara di torte!' : 'Pie eating contest!',
+    banner: 'Pie eating contest!',
     focus: toWorld(new THREE.Vector3(tx, 1.1, tz + 0.5)),
     setWindow(t0, t1) { T0 = t0; T1 = t1; },
     cam(u) {
@@ -83,7 +83,7 @@ export function buildPies({ story, M, buildings, seed, lang }) {
           P.r.g.rotation.set(-2.9 + 0.2 * Math.sin(t * 9), 0, -0.4); P.l.g.rotation.set(-2.9 + 0.2 * Math.cos(t * 9), 0, 0.4);
           P.body.rotation.set(-0.15, 0, 0);
           e.bite.visible = false;
-          e.tag.sub = lang === 'it' ? 'Vince!' : 'Winner!';
+          e.tag.sub = 'Winner!';
         } else {
           // too full: slumped forward over the last pie
           P.r.g.rotation.set(-0.9, 0, -0.2); P.l.g.rotation.set(-0.9, 0, 0.2);

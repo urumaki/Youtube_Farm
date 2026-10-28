@@ -130,7 +130,7 @@ export function bannerGuard(M) {
   return { P, flag };
 }
 
-export function buildRoyal({ story, w, M, seed, yFn, lang }) {
+export function buildRoyal({ story, w, M, seed, yFn }) {
   const road = w.roads.find((r) => r.id === 'east') || w.roads[0];
   const pl = polyline(road.pts);
   const group = new THREE.Group();
@@ -169,10 +169,10 @@ export function buildRoyal({ story, w, M, seed, yFn, lang }) {
   });
   // petals thrown from the verges over the carriage
   const petalSets = ['#d23a4c', '#f3e6c4', '#e3b23c'].map((c) => { const pts = particles(40, c, 0.13, false); group.add(pts); return pts; });
-  const labels = [{ pos: new THREE.Vector3(), title: lang === 'it' ? 'Il Re' : 'The King', sub: leave ? (lang === 'it' ? 'Arrivederci!' : 'Farewell!') : lang === 'it' ? 'Viva il Re!' : 'Long live the King!' }];
-  for (const c of crowd) if (c.named) labels.push({ ...castTag(c.named, lang), pos: c.pos.clone().setY(c.pos.y + 2.2) });
+  const labels = [{ pos: new THREE.Vector3(), title: 'The King', sub: leave ? 'Farewell!' : 'Long live the King!' }];
+  for (const c of crowd) if (c.named) labels.push({ ...castTag(c.named), pos: c.pos.clone().setY(c.pos.y + 2.2) });
   // the banner guards behind the carriage are named guards or knights when there are some (owner 2026-10-25)
-  const escortTags = guards.map((g, k) => story.escort?.[k] && { g, tag: castTag(story.escort[k], lang) }).filter(Boolean);
+  const escortTags = guards.map((g, k) => story.escort?.[k] && { g, tag: castTag(story.escort[k]) }).filter(Boolean);
   labels.push(...escortTags.map((x) => x.tag));
   // the lead horses' heads (arriving, the procession goes toward s = 0); leaving, the carriage passes the
   // same stretch of crowd the other way
@@ -182,7 +182,7 @@ export function buildRoyal({ story, w, M, seed, yFn, lang }) {
   return {
     group,
     labels,
-    banner: leave ? (lang === 'it' ? 'Il Re riparte' : 'The King rides home') : lang === 'it' ? 'Passa il Re!' : 'The King rides through town!',
+    banner: leave ? 'The King rides home' : 'The King rides through town!',
     setWindow(t0, t1) { T0 = t0; T1 = t1; },
     focus: (() => { place(null, S0 - 6, 0); return P.clone().setY(P.y + 1.6); })(),
     cam(u) {

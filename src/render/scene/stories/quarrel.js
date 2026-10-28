@@ -32,7 +32,7 @@ function goat(M) {
   return g;
 }
 
-export function buildQuarrel({ story, M, buildings, seed, lang }) {
+export function buildQuarrel({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -69,9 +69,9 @@ export function buildQuarrel({ story, M, buildings, seed, lang }) {
   });
   const peace = story.step === 'peace';
   if (peace) { A.root.position.copy(at(-0.45, 0)); B.root.position.copy(at(0.45, 0)); } // close enough to shake hands
-  const labels = [castTag(ca, lang), castTag(cb, lang)];
+  const labels = [castTag(ca), castTag(cb)];
   const head = new THREE.Vector3();
-  const banner = peace ? (lang === 'it' ? 'Hanno fatto pace!' : 'Friends again!') : st.square ? (lang === 'it' ? 'Lite in piazza!' : 'A quarrel in the square!') : (lang === 'it' ? 'Lite al pozzo!' : 'A quarrel at the well!');
+  const banner = peace ? 'Friends again!' : st.square ? 'A quarrel in the square!' : 'A quarrel at the well!';
   return {
     group,
     labels,

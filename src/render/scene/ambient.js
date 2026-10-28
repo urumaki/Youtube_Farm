@@ -14,7 +14,7 @@ import { castTag } from './stories/common.js';
  * stubble behind them, one loading the sheaves onto a cart, stooks standing to dry. Spring: young green
  * wheat, farmers hoeing between the rows and sowing the last strip. Not in winter.
  */
-export function buildWheat({ w, M, seed, hero, lang, month }) {
+export function buildWheat({ w, M, seed, hero, month }) {
   // a big field near the castle
   const f = [...w.fields].sort((p, q) => Math.hypot(p.x, p.z) - p.hw * p.hd * 0.4 - (Math.hypot(q.x, q.z) - q.hw * q.hd * 0.4))[0];
   if (!f) return null;
@@ -108,7 +108,7 @@ export function buildWheat({ w, M, seed, hero, lang, month }) {
       person(i === 0 && hero?.job === 'peasant' ? 'peasant' : 'farmer', vr === 'sow' ? 'sow' : null, lx, edge + lz, vr === 'sow' ? 0.3 : Math.PI + 0.2 * (i % 2 ? 1 : -1), 9001 + i));
   }
   const lead = crew[0];
-  const labels = hero ? [{ pos: lead.labelPos.clone(), title: hero.name, sub: castTag(hero, lang).sub }] : [];
+  const labels = hero ? [{ pos: lead.labelPos.clone(), title: hero.name, sub: castTag(hero).sub }] : [];
   const focus = at(-1, edge + 2.4, 0.9);
   // the camera beyond the end of the line of reapers, looking along it: the whole crew one behind the
   // other, the cart at the back; it drifts in a little
@@ -117,7 +117,7 @@ export function buildWheat({ w, M, seed, hero, lang, month }) {
     group,
     labels,
     work: lead,
-    banner: harvest ? (lang === 'it' ? 'La mietitura' : 'Harvest time') : (lang === 'it' ? 'Al lavoro nei campi' : 'Work in the fields'),
+    banner: harvest ? 'Harvest time' : 'Work in the fields',
     focus,
     cam(u) {
       return { pos: camAt(u), look: focus.clone().add(new THREE.Vector3(0, -0.3, 0)) };
@@ -145,7 +145,7 @@ export function buildWheat({ w, M, seed, hero, lang, month }) {
 }
 
 /** Two farmers hoeing in the field closest to the castle. */
-export function buildFields({ w, M, seed, hero, lang }) {
+export function buildFields({ w, M, seed, hero }) {
   const f = [...w.fields].sort((p, q) => Math.hypot(p.x, p.z) - Math.hypot(q.x, q.z))[0];
   if (!f) return null;
   const y = (x, z) => heightAt(w, x, z) + 0.03;
@@ -160,13 +160,13 @@ export function buildFields({ w, M, seed, hero, lang }) {
   const group = new THREE.Group();
   group.add(farmer.group, helper.group);
   group.visible = false;
-  const labels = hero ? [{ pos: farmer.labelPos.clone(), title: hero.name, sub: castTag(hero, lang).sub }] : [];
+  const labels = hero ? [{ pos: farmer.labelPos.clone(), title: hero.name, sub: castTag(hero).sub }] : [];
   const focus = farmer.focus.clone().lerp(helper.focus, 0.35);
   return {
     group,
     labels,
     work: farmer,
-    banner: lang === 'it' ? 'Al lavoro nei campi' : 'Work in the fields',
+    banner: 'Work in the fields',
     focus,
     cam(u) {
       const ang = face + 0.9 - 0.7 * u;

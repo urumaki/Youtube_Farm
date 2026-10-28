@@ -11,12 +11,12 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.
 const exe = process.platform === 'win32' ? '.exe' : '';
 const GAP = 0.28; // seconds between sentences
 
-export function piperConfig(lang, env = process.env) {
+export function piperConfig(env = process.env) {
   const dir = path.join(ROOT, 'tools', 'piper');
   return {
     bin: env.PIPER_BIN || path.join(dir, 'piper', 'piper' + exe),
-    model: lang === 'it' ? env.PIPER_VOICE_IT || path.join(dir, 'voices', 'it-riccardo_fasol-x-low.onnx') : env.PIPER_VOICE_EN || path.join(dir, 'voices', 'en-us-libritts-high.onnx'),
-    speaker: lang === 'it' ? env.PIPER_SPEAKER_IT : env.PIPER_SPEAKER_EN ?? '20',
+    model: env.PIPER_VOICE_EN || path.join(dir, 'voices', 'en-us-libritts-high.onnx'),
+    speaker: env.PIPER_SPEAKER_EN ?? '20',
   };
 }
 
@@ -34,20 +34,20 @@ function timeWords(text, start, end) {
   });
 }
 
-export function kokoroConfig(lang, env = process.env) {
+export function kokoroConfig(env = process.env) {
   const dir = path.join(ROOT, 'tools', 'kokoro');
   return {
     python: env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3'),
     model: env.KOKORO_MODEL || path.join(dir, 'kokoro-v1.0.onnx'),
     voices: env.KOKORO_VOICES || path.join(dir, 'voices-v1.0.bin'),
-    voice: lang === 'it' ? env.KOKORO_VOICE_IT || 'im_nicola' : env.KOKORO_VOICE_EN || 'am_adam',
-    lang: lang === 'it' ? 'it' : (env.KOKORO_VOICE_EN || 'am_adam').startsWith('b') ? 'en-gb' : 'en-us',
+    voice: env.KOKORO_VOICE_EN || 'am_adam',
+    lang: (env.KOKORO_VOICE_EN || 'am_adam').startsWith('b') ? 'en-gb' : 'en-us',
     speed: Number(env.KOKORO_SPEED || 1.05),
   };
 }
 
-function kokoro(sentences, { lang, outDir, speed, limit }) {
-  const cfg = kokoroConfig(lang);
+function kokoro(sentences, { outDir, speed, limit }) {
+  const cfg = kokoroConfig();
   if (!fs.existsSync(cfg.model) || !fs.existsSync(cfg.voices)) throw new Error(`kokoro model not found in ${path.dirname(cfg.model)} (run npm run setup:tts)`);
   const script = path.join(ROOT, 'scripts', 'py', 'kokoro_tts.py');
   const r = spawnSync(cfg.python, [script, cfg.model, cfg.voices, cfg.voice, cfg.lang, String(speed ?? cfg.speed), path.resolve(outDir)], {
@@ -97,8 +97,8 @@ function assemble(sentences, parts, outDir, provider, limit) {
   return { file, duration: all.length / rate, speech: lengths.reduce((a, b) => a + b + GAP, 0), words, provider };
 }
 
-function piper(sentences, { lang, outDir, lengthScale = 1, limit }) {
-  const cfg = piperConfig(lang);
+function piper(sentences, { outDir, lengthScale = 1, limit }) {
+  const cfg = piperConfig();
   if (!fs.existsSync(cfg.bin)) throw new Error(`piper binary not found at ${cfg.bin} (run npm run setup:piper)`);
   if (!fs.existsSync(cfg.model)) throw new Error(`piper voice not found at ${cfg.model}`);
   const parts = [];
@@ -113,7 +113,7 @@ function piper(sentences, { lang, outDir, lengthScale = 1, limit }) {
   return assemble(sentences, parts, outDir, 'piper', limit);
 }
 
-async function elevenlabs(sentences, { outDir, lang, env = process.env }) {
+async function elevenlabs(sentences, { outDir, env = process.env }) {
   const key = env.ELEVENLABS_API_KEY;
   if (!key) throw new Error('ELEVENLABS_API_KEY not set');
   const voice = env.ELEVENLABS_VOICE_ID || 'JBFqnCBsd6RMkjVDRZzb';
@@ -121,7 +121,7 @@ async function elevenlabs(sentences, { outDir, lang, env = process.env }) {
   const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voice}/with-timestamps?output_format=mp3_44100_128`, {
     method: 'POST',
     headers: { 'xi-api-key': key, 'content-type': 'application/json' },
-    body: JSON.stringify({ text, model_id: env.ELEVENLABS_MODEL || 'eleven_multilingual_v2', language_code: lang }),
+    body: JSON.stringify({ text, model_id: env.ELEVENLABS_MODEL || 'eleven_multilingual_v2', language_code: 'en' }),
     signal: AbortSignal.timeout(60000),
   });
   if (!res.ok) throw new Error(`ElevenLabs HTTP ${res.status}`);
@@ -158,25 +158,25 @@ function silent(sentences, { outDir, limit }) {
  * Synthesize the script. maxDuration: if the voice runs long, retry faster before giving up.
  * A sentence with `at` (seconds on the narration track) waits until then, to line up with its shot.
  */
-export async function synthesize(sentences, { lang = 'en', outDir, provider = process.env.TTS_PROVIDER || 'kokoro', maxDuration = 28.3, log = console } = {}) {
+export async function synthesize(sentences, { outDir, provider = process.env.TTS_PROVIDER || 'kokoro', maxDuration = 28.3, log = console } = {}) {
   fs.mkdirSync(outDir, { recursive: true });
   const chain = { elevenlabs: ['elevenlabs', 'kokoro', 'piper', 'none'], kokoro: ['kokoro', 'piper', 'none'], piper: ['piper', 'none'], none: ['none'] }[provider] || ['kokoro', 'piper', 'none'];
   for (const p of chain) {
     try {
-      if (p === 'elevenlabs') return await elevenlabs(sentences, { outDir, lang });
+      if (p === 'elevenlabs') return await elevenlabs(sentences, { outDir });
       const limit = maxDuration;
       if (p === 'kokoro') {
-        let speed = kokoroConfig(lang).speed;
-        let out = kokoro(sentences, { lang, outDir, speed, limit });
+        let speed = kokoroConfig().speed;
+        let out = kokoro(sentences, { outDir, speed, limit });
         for (let k = 0; k < 2 && out.speech > maxDuration; k++) {
           speed = Math.min(1.35, speed * (out.speech / maxDuration) * 1.06);
-          out = kokoro(sentences, { lang, outDir, speed, limit });
+          out = kokoro(sentences, { outDir, speed, limit });
         }
         return out;
       }
       if (p === 'piper') {
-        let out = piper(sentences, { lang, outDir, limit });
-        if (out.speech > maxDuration) out = piper(sentences, { lang, outDir, limit, lengthScale: Math.max(0.82, maxDuration / out.speech) });
+        let out = piper(sentences, { outDir, limit });
+        if (out.speech > maxDuration) out = piper(sentences, { outDir, limit, lengthScale: Math.max(0.82, maxDuration / out.speech) });
         return out;
       }
       return silent(sentences, { outDir, limit });

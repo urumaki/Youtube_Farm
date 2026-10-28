@@ -11,7 +11,7 @@ import { person, stride, castTag, ease, clamp01 } from './common.js';
 const CROWD = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a'];
 const FREE = 0.6; // the share of the shot when the cart comes out of the mud
 
-export function buildHayCart({ story, w, state, M, yFn, lang }) {
+export function buildHayCart({ story, w, state, M, yFn }) {
   if (!state.wall2) return null;
   const gates = wall2Layout(w, state).gates;
   const g = [...gates].sort((a, b) => Math.hypot(a.x - 102, a.z) - Math.hypot(b.x - 102, b.z))[0];
@@ -48,12 +48,12 @@ export function buildHayCart({ story, w, state, M, yFn, lang }) {
     group.add(P.root);
     return { P, c, s: [-0.6, 0.6, -0.25, 0.3][i - 1], back: i < 3 ? 1.75 : 2.45 };
   });
-  const labels = [...(cast[0] ? [{ ...castTag(cast[0], lang), P: carter }] : []), ...pushers.filter((p) => p.c).map((p) => ({ ...castTag(p.c, lang), P: p.P }))];
+  const labels = [...(cast[0] ? [{ ...castTag(cast[0]), P: carter }] : []), ...pushers.filter((p) => p.c).map((p) => ({ ...castTag(p.c), P: p.P }))];
   const fwd = (u) => 2.6 * ease(clamp01((u - FREE) / 0.18));
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Il carro di fieno è bloccato!' : 'The hay cart is stuck!',
+    banner: 'The hay cart is stuck!',
     focus: at(0, 0).setY(at(0, 0).y + 1.4),
     cam(u) {
       // outside the wall behind the pushers, a little to one side, the gate and the town beyond

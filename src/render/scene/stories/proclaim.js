@@ -11,7 +11,7 @@ import { person, stage, castTag, ease, clamp01 } from './common.js';
 const CROWD = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d', '#a0522d'];
 const READ = 0.25, DONE = 0.62; // the bell until READ, the scroll read until DONE, then the cheering
 
-export function buildProclaim({ story, M, buildings, seed, lang }) {
+export function buildProclaim({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -52,12 +52,12 @@ export function buildProclaim({ story, M, buildings, seed, lang }) {
     group.add(P.root);
     return { P, c, ph: rand01(seed, 'proc', i) * 6 };
   });
-  const labels = [...(crier ? [{ ...castTag(crier, lang), P: K }] : []), ...crowd.filter((g) => g.c).map((g) => ({ ...castTag(g.c, lang), P: g.P }))];
+  const labels = [...(crier ? [{ ...castTag(crier), P: K }] : []), ...crowd.filter((g) => g.c).map((g) => ({ ...castTag(g.c), P: g.P }))];
   const title = story.title || '';
   return {
     group,
     labels,
-    banner: lang === 'it' ? `Proclama: ${title}!` : `Hear ye! ${title}!`,
+    banner: `Hear ye! ${title}!`,
     focus: st.toWorld(C.x, 1.6, C.z + 1.5),
     cam(u) {
       // low over the crowd's heads, looking up at the crier, drifting in

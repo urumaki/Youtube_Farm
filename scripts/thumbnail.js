@@ -13,7 +13,7 @@ const diff = fs.existsSync(hist) ? JSON.parse(fs.readFileSync(hist, 'utf8')).dif
 const { browser, page, errors } = await openPage();
 try {
   // a clear sky whatever the day's weather (a thumbnail is seen small, grey reads as dull)
-  await setupScene(page, { mode: 'video', state, diff: { ...diff, weather: opt('--weather', 'clear') }, lang: 'en' });
+  await setupScene(page, { mode: 'video', state, diff: { ...diff, weather: opt('--weather', 'clear') } });
   await page.evaluate((o) => window.SK.thumb(o), {
     job: opt('--job', 'guard'), title: opt('--title', 'IS THIS YOU?'), sub: opt('--sub', '1 subscriber = 1 villager'), phase: Number(opt('--phase', 0.25)),
   });

@@ -10,16 +10,12 @@ import { accessToken, publishAtFor, uploadVideo, videoResource } from './youtube
 // Usual advice for Shorts: #shorts once as the format tag (in the title), then the channel's own tag and a
 // few niche ones; the first hashtags of the description show as links above the title.
 export const MAX_HASHTAGS = 5;
-const DESCRIPTION_TAGS = { en: '#subscriberkingdom #medieval #citybuilder #castle', it: '#subscriberkingdom #medioevo #citybuilder #castello' };
+const DESCRIPTION_TAGS = '#subscriberkingdom #medieval #citybuilder #castle';
 
-export function metadata({ state, diff, lang }) {
+export function metadata({ state, diff }) {
   const d = diff.delta;
-  const title = lang === 'it'
-    ? `Giorno ${state.day}: ${d >= 0 ? '+' : ''}${d} abitanti — ${state.subscriberCount} nel regno 👑 #shorts`
-    : `Day ${state.day}: ${d >= 0 ? '+' : ''}${d} villagers — ${state.subscriberCount} in the kingdom 👑 #shorts`;
-  const description = lang === 'it'
-    ? `Ogni iscritto è un abitante di Subscriber Kingdom. Iscriviti per avere la tua casa!\n${DESCRIPTION_TAGS.it}`
-    : `Every subscriber is one villager of Subscriber Kingdom. Subscribe to move in!\n${DESCRIPTION_TAGS.en}`;
+  const title = `Day ${state.day}: ${d >= 0 ? '+' : ''}${d} villagers — ${state.subscriberCount} in the kingdom 👑 #shorts`;
+  const description = `Every subscriber is one villager of Subscriber Kingdom. Subscribe to move in!\n${DESCRIPTION_TAGS}`;
   return { title, description, tags: ['subscriber kingdom', 'medieval', 'kingdom builder', 'castle', 'shorts'] };
 }
 
@@ -27,8 +23,8 @@ function readJson(file) {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return {}; }
 }
 
-export async function publish({ video, state, diff, lang, log = console, env = process.env, stateDir = 'state', fetchImpl = fetch, now = new Date() }) {
-  const meta = metadata({ state, diff, lang });
+export async function publish({ video, state, diff, log = console, env = process.env, stateDir = 'state', fetchImpl = fetch, now = new Date() }) {
+  const meta = metadata({ state, diff });
   fs.writeFileSync(video.replace(/\.mp4$/, '.publish.json'), JSON.stringify({ video, ...meta }, null, 1));
   const targets = (env.PUBLISH_TARGETS || '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
   if (!targets.length) { log.log('[publish] skipped (PUBLISH_TARGETS not set; metadata written next to the video)'); return {}; }
@@ -37,12 +33,12 @@ export async function publish({ video, state, diff, lang, log = console, env = p
     if (t !== 'youtube') { log.log(`[publish] target "${t}" is not implemented`); continue; }
     const ledgerFile = path.join(stateDir, 'published.json');
     const ledger = readJson(ledgerFile);
-    const key = `${state.date}_${lang}`;
+    const key = `${state.date}_en`; // the ledger keys of the days already published end in _en
     if (ledger[key]?.youtube) { log.log(`[publish] youtube: ${key} already uploaded (${ledger[key].youtube})`); continue; }
     try {
       const token = await accessToken({ clientId: env.YT_OAUTH_CLIENT_ID, clientSecret: env.YT_OAUTH_CLIENT_SECRET, refreshToken: env.YT_OAUTH_REFRESH_TOKEN, fetchImpl });
       const publishAt = publishAtFor(env.YT_PUBLISH_AT, now);
-      const resource = videoResource({ ...meta, lang, privacy: env.YT_PRIVACY || 'public', publishAt });
+      const resource = videoResource({ ...meta, privacy: env.YT_PRIVACY || 'public', publishAt });
       const r = await uploadVideo({ file: video, resource, token, fetchImpl, log });
       log.log(`[publish] youtube: https://youtube.com/shorts/${r.id} (${r.privacy}${publishAt ? `, goes public ${publishAt}` : ''})`);
       ledger[key] = { ...ledger[key], youtube: r.id, uploadedAt: now.toISOString() };

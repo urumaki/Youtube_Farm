@@ -32,7 +32,7 @@ export function pigModel(M) {
   return { g, legs };
 }
 
-export function buildPig({ story, M, buildings, seed, lang }) {
+export function buildPig({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -57,7 +57,7 @@ export function buildPig({ story, M, buildings, seed, lang }) {
     group.add(P.root);
     return P;
   });
-  const labels = chaser ? [castTag(chaser, lang)] : [];
+  const labels = chaser ? [castTag(chaser)] : [];
   const tmp = new THREE.Vector3();
   // where the chase is at time t (the pig ahead, the farmer gaining on it until the catch)
   const chase = (t, t0, t1) => {
@@ -69,7 +69,7 @@ export function buildPig({ story, M, buildings, seed, lang }) {
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Il maiale è scappato!' : 'The pig got loose!',
+    banner: 'The pig got loose!',
     focus: st.toWorld(C.x, 1.0, C.z),
     setWindow(t0, t1) { T0 = t0; T1 = t1; },
     cam(u) {

@@ -20,14 +20,13 @@ export function today() {
 }
 
 export function parseArgs(argv) {
-  const a = { lang: 'en' };
+  const a = {};
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i];
     const v = () => argv[++i];
     if (k === '--subs') a.subs = Number(v());
     else if (k === '--from') a.from = Number(v());
     else if (k === '--date') a.date = v();
-    else if (k === '--lang') a.lang = v();
     else if (k === '--out') a.out = v();
     else if (k === '--quality') a.quality = v();
     else if (k === '--tts') a.tts = v();
@@ -46,7 +45,6 @@ export function parseArgs(argv) {
     else if (k === '--names') a.names = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: fake commenters
     else throw new Error(`unknown option ${k}`);
   }
-  if (a.lang !== 'en' && a.lang !== 'it') throw new Error('--lang must be en or it');
   return a;
 }
 
@@ -67,19 +65,19 @@ export function summarizeDiff(diff) {
 }
 
 /** Narration -> TTS -> captions -> soundtrack -> frames -> MP4. */
-export async function produceVideo(state, diff, { lang = 'en', out, quality, tts, log = console, workDir } = {}) {
-  const dir = workDir || path.join('.cache', 'work', `${state.date}_${lang}_${state.subscriberCount}`);
+export async function produceVideo(state, diff, { out, quality, tts, log = console, workDir } = {}) {
+  const dir = workDir || path.join('.cache', 'work', `${state.date}_en_${state.subscriberCount}`);
   fs.mkdirSync(dir, { recursive: true });
   // the shot plan first, so each sentence can wait for the shot it talks about
-  const cues = await sceneCues({ mode: 'video', state, diff, lang, quality }, { log });
-  const script = buildScript(state, diff, { lang, shots: cues });
+  const cues = await sceneCues({ mode: 'video', state, diff, quality }, { log });
+  const script = buildScript(state, diff, { shots: cues });
   log.log(`[audio] script (${script.words} words): ${script.text}`);
   const anchors = sentenceAnchors(script.sentences, cues);
   const sentences = script.sentences.map((s, i) => ({ ...s, at: anchors[i] === null ? null : anchors[i] - VOICE_DELAY }));
-  const voice = await synthesize(sentences, { lang, outDir: dir, provider: tts, log });
+  const voice = await synthesize(sentences, { outDir: dir, provider: tts, log });
   log.log(`[audio] ${voice.provider} narration ${voice.duration.toFixed(2)} s`);
   const captions = captionPhrases(voice.words, VOICE_DELAY);
-  const data = { mode: 'video', state, diff, lang, captions, quality };
+  const data = { mode: 'video', state, diff, captions, quality };
   const audio = async (stats) => {
     const file = mixSoundtrack({ narration: voice.file, outDir: dir, seed: state.seed, date: state.date, weather: diff.weather, cues: stats?.cues || [] });
     log.log(`[audio] soundtrack mixed with ${stats?.cues?.length || 0} camera cues`);
@@ -87,7 +85,7 @@ export async function produceVideo(state, diff, { lang = 'en', out, quality, tts
   };
   const result = await renderVideo(data, out, { audio, log });
   if (result.errors.length) log.error(`[render] browser console errors: ${result.errors.join(' | ')}`);
-  fs.writeFileSync(out.replace(/\.mp4$/, '.json'), JSON.stringify({ date: state.date, subscribers: state.subscriberCount, lang, script: script.text, tts: voice.provider, captions, stats: result.stats, renderSeconds: result.seconds }, null, 1));
+  fs.writeFileSync(out.replace(/\.mp4$/, '.json'), JSON.stringify({ date: state.date, subscribers: state.subscriberCount, script: script.text, tts: voice.provider, captions, stats: result.stats, renderSeconds: result.seconds }, null, 1));
   return { out, script, voice, result };
 }
 
@@ -140,9 +138,9 @@ export async function daily(args, log = console) {
   saveDay(state, diff, { dir });
   log.log(`[state] saved day ${state.day} (${date}) to ${dir}`);
   if (args.noVideo) return { state, diff, saved: true };
-  const out = args.out || path.join('output', `${date}_${args.lang}.mp4`);
-  const video = await produceVideo(state, diff, { lang: args.lang, out, quality: args.quality, tts: args.tts, log });
-  await publish({ video: out, state, diff, lang: args.lang, log, stateDir: dir });
+  const out = args.out || path.join('output', `${date}_en.mp4`);
+  const video = await produceVideo(state, diff, { out, quality: args.quality, tts: args.tts, log });
+  await publish({ video: out, state, diff, log, stateDir: dir });
   return { state, diff, saved: true, video: out };
 }
 
@@ -189,19 +187,19 @@ export async function testRender(args, log = console) {
       return { name: s.trim().replace(/[:+]/g, '_'), job, variant, ...(guest ? { guest: gjob, pair: pair || 'visit' } : {}) };
     });
     const times = (args.galleryTimes || '0.6,1.6,2.4').split(',').map(Number);
-    const r = await renderGallery({ mode: 'video', state, diff, lang: args.lang, quality: args.quality }, items, times, path.join('output', 'gallery'));
+    const r = await renderGallery({ mode: 'video', state, diff, quality: args.quality }, items, times, path.join('output', 'gallery'));
     if (r.errors.length) log.error('[render] browser errors: ' + r.errors.join(' | '));
     log.log(r.files.join('\n'));
     return r;
   }
   if (args.stills) {
     const times = args.stills.split(',').map(Number);
-    const r = await renderStills({ mode: 'video', state, diff, lang: args.lang, quality: args.quality }, times, path.join("output", `stills_${args.day || args.subs}`));
+    const r = await renderStills({ mode: 'video', state, diff, quality: args.quality }, times, path.join("output", `stills_${args.day || args.subs}`));
     log.log('[shots] ' + (r.stats.cues || []).map((c) => `${c.kind}:${c.id ?? ''} ${c.t0.toFixed(1)}-${c.t1.toFixed(1)}`).join(' | '));
     if (r.errors.length) log.error('[render] browser errors: ' + r.errors.join(' | '));
     log.log(r.files.join('\n'));
     return r;
   }
-  const out = args.out || path.join('output', args.day ? `${args.day}_${args.lang}_again.mp4` : `test_${args.subs}_${args.lang}.mp4`);
-  return produceVideo(state, diff, { lang: args.lang, out, quality: args.quality, tts: args.tts, log });
+  const out = args.out || path.join('output', args.day ? `${args.day}_en_again.mp4` : `test_${args.subs}_en.mp4`);
+  return produceVideo(state, diff, { out, quality: args.quality, tts: args.tts, log });
 }

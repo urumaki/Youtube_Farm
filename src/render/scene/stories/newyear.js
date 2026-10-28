@@ -10,7 +10,7 @@ import { person, stage, bonfire, torch, flicker, castTag, ease, clamp01 } from '
 const EXTRAS = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d', '#a0522d', '#56606e', '#b5476b'];
 const COUNT = [[0.32, '3'], [0.46, '2'], [0.6, '1']], MIDNIGHT = 0.74;
 
-export function buildNewYear({ story, state, M, buildings, seed, lang }) {
+export function buildNewYear({ story, state, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -36,9 +36,9 @@ export function buildNewYear({ story, state, M, buildings, seed, lang }) {
   const sparks = particles(160, '#ffcf6a', 0.12, true);
   group.add(sparks);
   const year = Number(state.date.slice(0, 4)) + (state.date.slice(5) === '12-31' ? 1 : 0);
-  const happy = lang === 'it' ? `Buon ${year}!` : `Happy ${year}!`;
-  const banner = lang === 'it' ? 'Notte di San Silvestro' : 'New Year’s Eve';
-  const labels = [...ring.filter((p) => p.c.name).map((p) => ({ p, ...castTag(p.c, lang), pos: new THREE.Vector3() }))];
+  const happy = `Happy ${year}!`;
+  const banner = 'New Year’s Eve';
+  const labels = [...ring.filter((p) => p.c.name).map((p) => ({ p, ...castTag(p.c), pos: new THREE.Vector3() }))];
   const tmp = new THREE.Vector3();
   return {
     group,

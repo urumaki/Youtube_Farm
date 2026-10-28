@@ -22,7 +22,7 @@ function newBell(bronze, iron) {
   return g;
 }
 
-export function buildBell({ story, M, buildings, yFn, lang }) {
+export function buildBell({ story, M, buildings, yFn }) {
   const step = story.step || 'pour';
   const tower = step === 'raise' ? (buildings.items.cathedral ? 'cathedral' : 'chapel') : 'bell_foundry';
   const item = buildings.items[tower];
@@ -45,7 +45,7 @@ export function buildBell({ story, M, buildings, yFn, lang }) {
     P.root.position.set(x, gy(x, z), z);
     P.root.rotation.y = ry;
     group.add(P.root);
-    if (c) labels.push({ ...castTag(c, lang), P });
+    if (c) labels.push({ ...castTag(c), P });
     return P;
   };
   const founder = mk(founderC, 0, 0, 0, 0);
@@ -115,8 +115,8 @@ export function buildBell({ story, M, buildings, yFn, lang }) {
     founder.root.position.set(B.x + 2.6, gy(B.x + 2.6, B.face + 3.5), B.face + 3.5);
     founder.root.rotation.y = Math.PI + 0.9;
   }
-  const banner = step === 'cool' ? (lang === 'it' ? 'La campana nuova suona!' : 'The new bell rings!')
-    : step === 'raise' ? (lang === 'it' ? 'Su la campana!' : 'Up goes the bell!') : lang === 'it' ? 'Si fonde la campana!' : 'Casting the bell!';
+  const banner = step === 'cool' ? 'The new bell rings!'
+    : step === 'raise' ? 'Up goes the bell!' : 'Casting the bell!';
   const focus = step === 'raise' ? toWorld(B.x, B.top * 0.5, B.face + 2) : toWorld(MOULD.x - 0.6, MOULD.y + 1.2, MOULD.z);
   const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
   const stretch = (m, a, b) => {

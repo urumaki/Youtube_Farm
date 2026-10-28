@@ -5,7 +5,7 @@ import { rand01 } from '../../../sim/prng.js';
 import { JOBS } from '../../../sim/tiers.js';
 import { person, stage, bonfire } from './common.js';
 
-const COSTUME = { ghost: ['Ghost', 'Fantasma'], scarecrow: ['Scarecrow', 'Spaventapasseri'], pumpkin: ['Pumpkin', 'Zucca'] };
+const COSTUME = { ghost: 'Ghost', scarecrow: 'Scarecrow', pumpkin: 'Pumpkin' };
 const EXTRAS = ['ghost', 'scarecrow', 'pumpkin', 'scarecrow', 'ghost', 'pumpkin'];
 
 function pumpkinMat(glow) {
@@ -38,7 +38,7 @@ function dress(P, kind, M) {
   }
 }
 
-export function buildHalloween({ story, M, buildings, seed, lang }) {
+export function buildHalloween({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -63,13 +63,12 @@ export function buildHalloween({ story, M, buildings, seed, lang }) {
     group.add(P.root);
     return { P, c, a0: (i / cast.length) * Math.PI * 2 };
   });
-  const it = lang === 'it' ? 1 : 0;
-  const labels = dancers.filter((d) => d.c.name).map((d) => ({ d, pos: new THREE.Vector3(), title: d.c.name, sub: COSTUME[d.c.costume][it] }));
+  const labels = dancers.filter((d) => d.c.name).map((d) => ({ d, pos: new THREE.Vector3(), title: d.c.name, sub: COSTUME[d.c.costume] }));
   const tmp = new THREE.Vector3();
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Buon Halloween!' : 'Happy Halloween!',
+    banner: 'Happy Halloween!',
     phase: 1,
     focus: st.toWorld(C.x, 1.2, C.z),
     cam(u) {

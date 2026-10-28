@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Test render without touching state/: npm run render -- --subs 120 [--from 100] [--lang it] [--stills 1,10,25]
+// Test render without touching state/: npm run render -- --subs 120 [--from 100] [--stills 1,10,25]
 import { loadEnv } from './env.js';
 import { testRender, parseArgs } from '../src/pipeline.js';
 

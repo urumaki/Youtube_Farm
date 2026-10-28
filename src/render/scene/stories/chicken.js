@@ -31,7 +31,7 @@ function hen(M) {
   return { g, wings };
 }
 
-export function buildChicken({ story, M, buildings, seed, lang }) {
+export function buildChicken({ story, M, buildings, seed }) {
   const item = buildings.items.tavern;
   if (!item) return null;
   // the tavern as on a tavern day, its anonymous drinkers at the tables
@@ -50,7 +50,7 @@ export function buildChicken({ story, M, buildings, seed, lang }) {
     room.add(P.root);
     return { P, c, lag: 0.55 + i * 0.5 };
   });
-  const labels = chasers.map(({ P, c }) => ({ ...castTag(c, lang), P }));
+  const labels = chasers.map(({ P, c }) => ({ ...castTag(c), P }));
   let T0 = 0, T1 = 1;
   const kAt = (t) => 0.4 + (t - T0) * 1.7;
   const tmp = new THREE.Vector3();
@@ -59,7 +59,7 @@ export function buildChicken({ story, M, buildings, seed, lang }) {
     group,
     labels,
     interior: true,
-    banner: lang === 'it' ? 'Una gallina in taverna!' : 'A hen in the tavern!',
+    banner: 'A hen in the tavern!',
     focus: toWorld(new THREE.Vector3(-0.4, 1.0, 0.6)),
     setWindow(t0, t1) { T0 = t0; T1 = t1; },
     cam(u) {

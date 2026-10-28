@@ -14,7 +14,7 @@ const ROWS = 3, PER_ROW = 9, BAG_W = 0.62;
 const LOOP = 3.2; // seconds for one trip: cart to wall and back
 const RISE = 0.45; // how far the river comes up during the scene
 
-export function buildFlood({ story, w, state, M, houses, yFn, seed, lang, water }) {
+export function buildFlood({ story, w, state, M, houses, yFn, seed, water }) {
   // the stretch of bank closest to an occupied house
   let best = null;
   for (const h of state.houses) {
@@ -80,13 +80,13 @@ export function buildFlood({ story, w, state, M, houses, yFn, seed, lang, water 
     return { P, c, sack, off: (i / cast.length) * LOOP + rand01(seed, 'fl', i) * 0.4, x: (i - (cast.length - 1) / 2) * 1.2 };
   });
   const recede = story.step === 'recede';
-  const labels = carriers.filter((k) => k.c).map((k) => ({ k, ...castTag(k.c, lang), pos: new THREE.Vector3() }));
+  const labels = carriers.filter((k) => k.c).map((k) => ({ k, ...castTag(k.c), pos: new THREE.Vector3() }));
   const tmp = new THREE.Vector3();
   const focus = ground(0, -1.2).add(new THREE.Vector3(0, 1.0, 0));
   return {
     group,
     labels,
-    banner: recede ? (lang === 'it' ? 'L’argine ha tenuto!' : 'The wall held!') : lang === 'it' ? 'Il fiume è in piena!' : 'The river floods!',
+    banner: recede ? 'The wall held!' : 'The river floods!',
     focus,
     cam(u) {
       // from inland, to one side, looking over the carriers at the wall and the river

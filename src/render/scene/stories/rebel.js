@@ -19,7 +19,7 @@ const CROWD = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d'];
 const HIT = 0.6; // the share of the shot when the axe falls
 const PERIOD = 1.5, FLIGHT = 0.5; // seconds between one villager's throws, a tomato's time in the air
 
-export function buildRebel({ story, M, buildings, seed, lang }) {
+export function buildRebel({ story, M, buildings, seed }) {
   const item = buildings.items.pillory;
   if (!item || !story.rebel) return null;
   const group = new THREE.Group();
@@ -121,16 +121,16 @@ export function buildRebel({ story, M, buildings, seed, lang }) {
     return out.sort((a, b) => a[0] - b[0]);
   };
   const tags = [
-    castTag(story.rebel, lang, lang === 'it' ? 'Aspirante ribelle' : 'Would-be rebel'),
-    ...(story.executioner ? [castTag(story.executioner, lang)] : []),
+    castTag(story.rebel, 'Would-be rebel'),
+    ...(story.executioner ? [castTag(story.executioner)] : []),
   ];
   const labels = [{ ...tags[0], at: () => new THREE.Vector3(head.x, head.y + 0.75, head.z) }, ...(tags[1] ? [{ ...tags[1], at: () => E.root.position.clone().setY(PL + 2.35) }] : []),
-    ...throwers.filter((m) => m.c).slice(0, 4 - tags.length).map((m) => ({ ...castTag(m.c, lang), at: () => m.P.root.position.clone().setY(2.3) }))];
+    ...throwers.filter((m) => m.c).slice(0, 4 - tags.length).map((m) => ({ ...castTag(m.c), at: () => m.P.root.position.clone().setY(2.3) }))];
   const tmp = new THREE.Vector3();
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Tradimento! Alla gogna!' : 'Treason! To the pillory!',
+    banner: 'Treason! To the pillory!',
     focus: toWorld(-0.3, 1.9, -0.6),
     setWindow(t0, t1) {
       T0 = t0; T1 = t1;

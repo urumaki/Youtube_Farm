@@ -82,11 +82,10 @@ function chariot(M, color, coat) {
   return { g, h, wheels, D };
 }
 
-export function buildJoust({ story, M, buildings, seed, lang }) {
+export function buildJoust({ story, M, buildings, seed }) {
   const it0 = buildings.items.tournament;
   if (!it0) return null;
   const kind = story.id === 'race' ? 'race' : 'joust';
-  const it = lang === 'it';
   const group = new THREE.Group();
   group.matrixAutoUpdate = false;
   group.matrix.copy(it0.group.matrix);
@@ -94,7 +93,7 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
   const toWorld = (x, y, z) => new THREE.Vector3(x, y, z).applyMatrix4(group.matrix);
   const tmp = new THREE.Vector3();
   const labels = [];
-  const tagOf = (c, P, k) => labels.push({ ...castTag(c, lang), P, c, sub0: castTag(c, lang).sub, h: k, pos: new THREE.Vector3() });
+  const tagOf = (c, P, k) => labels.push({ ...castTag(c), P, c, sub0: castTag(c).sub, h: k, pos: new THREE.Vector3() });
 
   // ------------------------------------------------------------------ the far stand: named villagers in the front rows
   const spectators = [];
@@ -112,7 +111,7 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
       P.root.position.set(x, 1.2 + 0.9 * k - 0.47, -(24 + 1.6 * k) + 0.45);
       group.add(P.root);
       spectators.push({ P, ph: rand01(seed, 'joust-ph', slot) * 6, k });
-      if (c) labels.push({ ...castTag(c, lang), pos: toWorld(x, 1.2 + 0.9 * k + 1.1, -(24 + 1.6 * k) + 0.45), crowd: true });
+      if (c) labels.push({ ...castTag(c), pos: toWorld(x, 1.2 + 0.9 * k + 1.1, -(24 + 1.6 * k) + 0.45), crowd: true });
     }
   }
   const cheer = (t, loud) => {
@@ -177,8 +176,8 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
     const mid = (v) => lead(v) + 2.2 * (0.4 + 0.6 * v);
     return {
       winner,
-      banner: it ? 'La corsa dei carri!' : 'The chariot race!',
-      winSub: it ? 'Vince la corsa!' : 'Wins the race!',
+      banner: 'The chariot race!',
+      winSub: 'Wins the race!',
       hits: () => [],
       cam: (u) => {
         const x = mid(u);
@@ -221,8 +220,8 @@ export function buildJoust({ story, M, buildings, seed, lang }) {
     };
     return {
       winner,
-      banner: it ? 'La giostra!' : 'The joust!',
-      winSub: it ? 'Vince la giostra!' : 'Wins the joust!',
+      banner: 'The joust!',
+      winSub: 'Wins the joust!',
       hits: (t0, t1) => [[t0 + MEET * (t1 - t0), 'lance']],
       cam: (u) => ({ pos: toWorld(-0.8 + 1.6 * u, 6, 17), look: toWorld(0, 2.4, -1.5) }),
       play(t, v, t0, t1) {

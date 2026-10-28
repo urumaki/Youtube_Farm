@@ -17,4 +17,4 @@ const commenters = await fetchCommenters({ apiKey: process.env.YOUTUBE_API_KEY, 
 console.log(`[names] ${commenters.length} new commenters`);
 const { state, diff } = advance(base, { subscribers: subs, date, source: 'preview', commenters, blocked: loadBlocked(STATE_DIR) });
 console.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));
-await produceVideo(state, diff, { lang: 'en', out: `output/${date}_en_preview_${subs}.mp4` });
+await produceVideo(state, diff, { out: `output/${date}_en_preview_${subs}.mp4` });

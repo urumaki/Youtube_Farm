@@ -1,5 +1,5 @@
 // Downloads the Piper TTS binary and the default voices into tools/piper (git-ignored).
-// Voices: en-us-libritts-high (LibriTTS, CC BY 4.0) and it-riccardo_fasol-x-low (M-AILABS dataset).
+// Voice: en-us-libritts-high (LibriTTS, CC BY 4.0).
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -13,7 +13,7 @@ const BIN = {
   win32: { x64: 'piper_windows_amd64.zip' },
   darwin: { x64: 'piper_macos_x64.tar.gz', arm64: 'piper_macos_aarch64.tar.gz' },
 };
-const VOICES = ['voice-en-us-libritts-high', 'voice-it-riccardo_fasol-x-low'];
+const VOICES = ['voice-en-us-libritts-high'];
 
 async function download(url, file) {
   const res = await fetch(url);

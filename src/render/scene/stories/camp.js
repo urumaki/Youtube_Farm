@@ -13,7 +13,7 @@ const EXTRAS = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d', '#a0522d'
 const RING = 2.9; // the dancers' circle round the fire
 const SPIN = 0.55; // how fast the ring turns (rad/s)
 
-export function buildCamp({ story, M, buildings, seed, lang }) {
+export function buildCamp({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -47,12 +47,12 @@ export function buildCamp({ story, M, buildings, seed, lang }) {
   drum.castShadow = true;
   drummer.root.add(drum);
   group.add(drummer.root);
-  const labels = ring.filter((d) => d.c).map((d) => ({ d, ...castTag(d.c, lang), pos: new THREE.Vector3() }));
+  const labels = ring.filter((d) => d.c).map((d) => ({ d, ...castTag(d.c), pos: new THREE.Vector3() }));
   const tmp = new THREE.Vector3();
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Si balla con i mercanti!' : 'Dancing with the merchants!',
+    banner: 'Dancing with the merchants!',
     phase: 1,
     focus: st.toWorld(C.x, 1.2, C.z),
     cam(u) {

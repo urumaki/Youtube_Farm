@@ -14,7 +14,7 @@ const GUARD_BLUE = '#2f4f8f', GUARD_RED = '#8f2f2f';
 const WIN = 0.68; // the share of the shot when the bouts are decided
 const lerp = THREE.MathUtils.lerp;
 
-export function buildTourney({ story, M, buildings, seed, lang }) {
+export function buildTourney({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -23,7 +23,6 @@ export function buildTourney({ story, M, buildings, seed, lang }) {
   const round = step === 'final' ? 2 : step === 'semis' ? 1 : 0;
   const bouts = story.rounds?.[round] || [];
   if (!bouts.length) return null;
-  const it = lang === 'it';
   // the bouts two abreast (the first round in two rows, so the narrow frame holds them all big enough); one ring round them
   const Z0 = st.square ? 3 : 2, COL = 1.9, ROW = 3.4;
   const spots = bouts.length === 1 ? [[0, 0]] : bouts.map((_, k) => [k % 2 ? COL : -COL, -Math.floor(k / 2) * ROW]);
@@ -52,11 +51,11 @@ export function buildTourney({ story, M, buildings, seed, lang }) {
     return P;
   });
   const final = round === 2;
-  const sub = (c) => castTag(c, lang).sub;
-  const winSub = final ? (it ? 'Capitano delle guardie!' : 'Captain of the Guard!') : it ? 'Passa il turno!' : 'Goes through!';
+  const sub = (c) => castTag(c).sub;
+  const winSub = final ? 'Captain of the Guard!' : 'Goes through!';
   const labels = [];
   for (const p of pairs) {
-    for (const [c, P, wins] of [[p.a, p.A, p.aWins], [p.b, p.B, !p.aWins]]) labels.push({ ...castTag(c, lang), P, wins, sub0: sub(c), pos: new THREE.Vector3() });
+    for (const [c, P, wins] of [[p.a, p.A, p.aWins], [p.b, p.B, !p.aWins]]) labels.push({ ...castTag(c), P, wins, sub0: sub(c), pos: new THREE.Vector3() });
   }
   const tmp = new THREE.Vector3();
   const focus = st.toWorld(0, 1.2, Z);
@@ -64,9 +63,9 @@ export function buildTourney({ story, M, buildings, seed, lang }) {
   return {
     group,
     labels,
-    banner: final ? (it ? 'Torneo: la finale!' : 'Tournament: the final!')
-      : round === 1 ? (it ? 'Torneo: semifinali' : 'Tournament: semi-finals')
-        : it ? 'Torneo delle guardie' : 'The guards’ tournament',
+    banner: final ? 'Tournament: the final!'
+      : round === 1 ? 'Tournament: semi-finals'
+        : 'The guards’ tournament',
     focus,
     cam(u) {
       // in front of the ring, far enough back for every bout, drifting along it

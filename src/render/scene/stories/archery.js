@@ -13,7 +13,7 @@ const WIN = 0.7; // the share of the shot before the winner is cheered (the fina
 const AIM = Math.atan2(-Math.cos(1.3), Math.sin(1.3)); // the archer scene shoots along this heading (work.js, 'butts')
 const TO_CAMERA = 2.3; // yaw (in the archer's frame) that faces the camera behind the line
 
-export function buildArchery({ story, M, buildings, seed, lang }) {
+export function buildArchery({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -47,16 +47,16 @@ export function buildArchery({ story, M, buildings, seed, lang }) {
   rosette.visible = false;
   archers[0].ws.rig.body.add(rosette);
   const heats = story.step === 'heats';
-  const winSub = lang === 'it' ? 'Vincitore!' : 'Winner!';
-  const labels = archers.map(({ c }, k) => (c ? { ...castTag(c, lang), k } : null)).filter(Boolean);
+  const winSub = 'Winner!';
+  const labels = archers.map(({ c }, k) => (c ? { ...castTag(c), k } : null)).filter(Boolean);
   for (const l of labels) l.sub0 = l.sub;
   const focusW = st.toWorld(X0 + 1.4, 1.1, Z0 + GAP);
   return {
     group: (() => { const g = new THREE.Group(); g.add(group, scene); return g; })(),
     labels,
-    banner: heats ? (lang === 'it' ? 'Gara con l’arco: le qualificazioni' : 'Archery contest: the heats')
-      : story.step === 'final' ? (lang === 'it' ? 'Gara con l’arco: la finale!' : 'Archery contest: the final!')
-        : lang === 'it' ? 'Gara di tiro con l’arco!' : 'Archery contest!',
+    banner: heats ? 'Archery contest: the heats'
+      : story.step === 'final' ? 'Archery contest: the final!'
+        : 'Archery contest!',
     focus: focusW,
     work: { strikeTimes: (a, b) => archers[0].ws.strikeTimes(a, b), sound: 'straw' },
     cam(u) {

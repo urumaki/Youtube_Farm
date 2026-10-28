@@ -20,7 +20,7 @@ function candle(M, hand) {
   return flame;
 }
 
-export function buildChristmas({ story, M, buildings, seed, lang }) {
+export function buildChristmas({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -65,11 +65,11 @@ export function buildChristmas({ story, M, buildings, seed, lang }) {
     group.add(P.root);
     return { P, c, flame: candle(M, P.r.hand), ph: rand01(seed, 'xmas', i) * 6 };
   });
-  const labels = [...(priest ? [{ ...castTag(priest, lang), P: Pr }] : []), ...ring.filter((g) => g.c).map((g) => ({ ...castTag(g.c, lang), P: g.P }))];
+  const labels = [...(priest ? [{ ...castTag(priest), P: Pr }] : []), ...ring.filter((g) => g.c).map((g) => ({ ...castTag(g.c), P: g.P }))];
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Vigilia di Natale' : 'Christmas Eve',
+    banner: 'Christmas Eve',
     focus: st.toWorld(C.x, 1.2, C.z),
     phase: 1,
     cam(u) {

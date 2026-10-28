@@ -6,7 +6,6 @@ import * as THREE from 'three';
 import { polyline } from '../../../sim/world.js';
 import { rand01 } from '../../../sim/prng.js';
 import { wagon } from '../caravan.js';
-import { FROM_IT, GOODS_IT } from '../../../sim/stories.js';
 import { JOBS } from '../../../sim/tiers.js';
 import { person, stride, castTag } from './common.js';
 
@@ -15,7 +14,6 @@ const COVERS = ['#b8323a', '#2f5aa0', '#d9a41b', '#3f8a5a'];
 const ROBES = ['#7b2f86', '#1f6f8b', '#b5562b', '#2f7a4f', '#a8326e'];
 const TURBANS = ['#f1e6c8', '#e3b23c', '#c8414b', '#3b5fa8'];
 
-export const fromIt = (p) => FROM_IT[p] || `da ${p}`;
 
 /** A merchant in a long robe and a turban (i picks the colours). */
 export function merchant(M, i) {
@@ -28,7 +26,7 @@ export function merchant(M, i) {
 }
 export { COVERS };
 
-export function buildMerchants({ story, w, M, seed, yFn, lang }) {
+export function buildMerchants({ story, w, M, seed, yFn }) {
   const road = w.roads.find((r) => r.id === 'southeast') || w.roads[0];
   const pl = polyline(road.pts);
   const group = new THREE.Group();
@@ -53,8 +51,8 @@ export function buildMerchants({ story, w, M, seed, yFn, lang }) {
     return ang;
   };
   const headS = (t, t0) => s0 - back * (t - t0 + 1) * SPEED;
-  const title = lang === 'it' ? `Mercanti ${fromIt(story.from)}` : `Merchants from ${story.from}`;
-  const sub = leave ? (lang === 'it' ? 'Arrivederci!' : 'Farewell!') : lang === 'it' ? `Vendono ${GOODS_IT[story.goods] || story.goods}` : `Selling ${story.goods}`;
+  const title = `Merchants from ${story.from}`;
+  const sub = leave ? 'Farewell!' : `Selling ${story.goods}`;
   const labels = [{ pos: new THREE.Vector3(), title, sub }];
   // leaving: named villagers on the verge wave goodbye as the wagons go by
   const wavers = (leave ? story.cast || [] : []).map((c, i) => {
@@ -63,7 +61,7 @@ export function buildMerchants({ story, w, M, seed, yFn, lang }) {
     const side = i % 2 ? 1 : -1;
     const ang = place(W.root, s0 + 4 + i * 2.6, side * 4.6);
     W.root.rotation.y = -ang - Math.PI / 2 - side * Math.PI / 2; // facing the road
-    const tag = castTag(c, lang);
+    const tag = castTag(c);
     tag.pos.copy(P).setY(P.y + 2.2);
     labels.push(tag);
     return W;
@@ -72,7 +70,7 @@ export function buildMerchants({ story, w, M, seed, yFn, lang }) {
   return {
     group,
     labels,
-    banner: leave ? (lang === 'it' ? 'I mercanti ripartono' : 'The merchants move on') : lang === 'it' ? 'Passano i mercanti!' : 'Merchants pass through!',
+    banner: leave ? 'The merchants move on' : 'Merchants pass through!',
     setWindow(t0, t1) { T0 = t0; T1 = t1; },
     cam(u) {
       const s = headS(T0 + u * (T1 - T0), T0);

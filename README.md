@@ -136,9 +136,9 @@ and the video is still rendered with a weather / daily-life event. The daily run
 - **Kokoro** (default, free, local; Kokoro-82M, Apache-2.0 — one of the most used open TTS models
   for narration): `npm run setup:tts` (needs Python 3.10+; installs `kokoro-onnx` with pip and
   downloads the model into `tools/kokoro`). Voices: `KOKORO_VOICE_EN=am_adam` (American male,
-  default) or `bm_george`, `bm_fable`, `am_michael`…; Italian `KOKORO_VOICE_IT=im_nicola` or `if_sara`.
+  default) or `bm_george`, `bm_fable`, `am_michael`…
 - **Piper** (lighter fallback, used automatically if Kokoro is missing): `npm run setup:piper`.
-  English `en-us-libritts-high` (CC BY 4.0 — credit it), Italian `it-riccardo_fasol-x-low`.
+  English `en-us-libritts-high` (CC BY 4.0 — credit it).
 - **ElevenLabs** (optional, cloud): `TTS_PROVIDER=elevenlabs`, `ELEVENLABS_API_KEY`, optional
   `ELEVENLABS_VOICE_ID`. Falls back to Piper, then to silent captions, if it fails.
 
@@ -185,7 +185,7 @@ failed upload is logged and does not fail the daily run. One upload a day fits t
 |---|---|
 | `npm run daily` | Full cycle for today: fetch, simulate, save `state/kingdom.json` + `state/history/<date>.json`, render `output/<date>_en.mp4` |
 | `npm run daily -- --dry-run --subs 42` | Print the diff for 42 subscribers without saving anything |
-| `npm run daily -- --subs 42 --date 2026-11-01 --lang it` | Override count, date and narration language |
+| `npm run daily -- --subs 42 --date 2026-11-01` | Override count and date |
 | `npm run daily -- --no-video` | Advance and save the state only |
 | `npm run render -- --subs 120 [--from 100]` | Test video for a fresh kingdom that grew from 100 to 120 (default: from ~88%) |
 | `npm run render -- --subs 640 --stills 1,10,25` | Only render PNG frames at those seconds |

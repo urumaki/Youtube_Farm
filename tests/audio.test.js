@@ -14,12 +14,10 @@ function days(counts) {
 
 test('narration fits 30 s, mentions the change, ends with the call to action', () => {
   for (const { state, diff } of days([1, 12, 87, 87, 60, 640, 5000])) {
-    for (const lang of ['en', 'it']) {
-      const s = buildScript(state, diff, { lang });
-      assert.ok(s.words >= 40 && s.words <= 75, `${lang} day ${diff.day}: ${s.words} words`);
-      assert.equal(s.sentences.at(-1).role === 'cta' || s.sentences.some((x) => x.role === 'cta'), true);
-      assert.ok(s.sentences.some((x) => x.role === 'delta'));
-    }
+    const s = buildScript(state, diff);
+    assert.ok(s.words >= 40 && s.words <= 75, `day ${diff.day}: ${s.words} words`);
+    assert.equal(s.sentences.at(-1).role === 'cta' || s.sentences.some((x) => x.role === 'cta'), true);
+    assert.ok(s.sentences.some((x) => x.role === 'delta'));
   }
 });
 
@@ -92,7 +90,7 @@ test('sentences follow the shots they talk about, so the narrator never waits ov
     { kind: 'villager', job: 'stonemason', t0: 11.8, t1: 15.7 }, { kind: 'villager', job: 'fisherman', t0: 15.7, t1: 19.6 },
     { kind: 'villager', job: 'knight', t0: 19.6, t1: 23.5 },
   ];
-  const s = buildScript(migrate(state), diff, { lang: 'en', shots: cues });
+  const s = buildScript(migrate(state), diff, { shots: cues });
   const at = sentenceAnchors(s.sentences, cues).filter((x) => x !== null);
   for (let i = 1; i < at.length; i++) assert.ok(at[i] >= at[i - 1], `in shot order: ${at.join(', ')}`);
   assert.ok(s.sentences.some((x) => x.role === 'raised'), 'the raised house is talked about');
@@ -113,7 +111,7 @@ test('each line fits its shot: short lines over the 2.3 s building shots, nothin
     { kind: 'villager', job: 'blacksmith', job2: 'baker', t0: 11.43, t1: 15.16 }, { kind: 'villager', job: 'carpenter', job2: 'farmer', t0: 15.16, t1: 18.88 },
     { kind: 'tavern', id: 'tavern', t0: 18.88, t1: 23.5 },
   ];
-  const s = buildScript(migrate(state), diff, { lang: 'en', shots: cues });
+  const s = buildScript(migrate(state), diff, { shots: cues });
   const len = s.sentences.map((x) => spokenLength(x.text));
   const at = sentenceAnchors(s.sentences, cues);
   const starts = schedule(len, at, 29.5);

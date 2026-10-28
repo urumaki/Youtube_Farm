@@ -37,6 +37,11 @@ Add new owner decisions here.
   tags, its own warm lamps (`env.set(..., interior)`). Days without any named
   villager keep the old order: castle hook → new buildings → new houses → wide shot → call to action.
   Narration sentences follow the same order (`src/audio/narration.js`).
+- English only (owner 2026-10-28: the project will never be in Italian): narration, on-screen titles and tags, the video's
+  title and description, the voices. The Italian templates, word tables and the `--lang` option are gone; file names and
+  `state/published.json` keys keep `_en` (the days already published use them), and the narration's draws still use
+  the `'en'` seed so a saved day reads the same. Comments in Italian are still understood (`requests.js` keywords, the
+  bad-word list): that is input, not output.
 - Story events (`src/sim/stories.js`, scenes in `src/render/scene/stories/`): at most one a day, 4.5 s shot
   right after the caravan, hard cut in and out, own camera, banner and name tags. Calendar events always
   happen on their date (Halloween 31/10); otherwise ~50% of days, each kind with a cooldown
@@ -100,7 +105,7 @@ Add new owner decisions here.
   scene `stories/joust.js`), then a second shot in the new throne room (`stories/throne.js`, step `crown`, added by
   `timeline.js`): the winner walks up the red carpet between the other riders and named villagers, kneels, the King
   (the channel's owner, the same King as the royal visit, standing) touches each shoulder with his sword, and the winner
-  becomes a Cavalier (race; job `cavalier`, Italian "Cavalleggero") or a Knight (joust): `promote` sets the job and
+  becomes a Cavalier (race; job `cavalier`) or a Knight (joust): `promote` sets the job and
   `names[id].cavalierDay` / `knightDay`. The throne room is a closed hall of its own under the castle (pillars,
   banners, the royal arms over the throne, torches with their own lights). The quintain is gone. A saved arc of the old
   three-day games is dropped (`pickStory`: a step that no longer exists). Seven named villagers sit in the far stand with
@@ -119,7 +124,7 @@ Add new owner decisions here.
   `--story race`, `race:results`, `joust`, `joust:results` (`--built tournament` on a kingdom without one).
   Six more stories (owner 2026-10-27, after the YouTube stats: the days with a story kept more viewers to the end):
   - The ship (`ship`, `stories/ship.js`, from 500 subscribers once the Harbor stands, no rain or snow, cooldown 14): a
-    merchant cog with a name (`SHIPS`, Italian `SHIPS_IT`) and a port sails along the quay and comes alongside the end of
+    merchant cog with a name (`SHIPS`) and a port sails along the quay and comes alongside the end of
     the middle pier while six named villagers wave; the next day four named porters (sailors, merchants and the land's folk
     first) carry crates and sacks down the gangplank to a pile by the quay; then she sails away. The harbor's own moored
     ships (`life.js`, `boats[].mesh`) are hidden during these shots. Test with `--story ship`, `ship:unload`,
@@ -219,7 +224,7 @@ Add new owner decisions here.
   requests, never a job the previous video showed (`diff.avoidJobs`), one per job. Saves without
   `featured` use the old rule to know what the previous video showed.
 - `npm run render -- --day 2026-10-20` renders a saved day again with today's code (read only,
-  `output/<day>_<lang>_again.mp4`). Replacing a published video is the owner's call:
+  `output/<day>_en_again.mp4`). Replacing a published video is the owner's call:
   `node scripts/republish-day.js <day>` uploads the re-render (old id kept under `replaced` in
   `state/published.json`; the old video is left as it is). Day 2026-10-21 was replaced (FtbcqR75UUc, then uploaded again as aUlKLkUDX88 at the owner's request).
 - Everyday shots (`ambient.js`, `everyday.js`, owner 2026-10-20): when the update has room, guards
@@ -284,8 +289,7 @@ Add new owner decisions here.
   The Bank (owner 2026-10-27, tier `coin` "Town of Coin" at 3500, no new job): a stone palazzo on the East Ward's
   square across the fountain from the Cooperage, its loggia of three round arches facing the fountain (`rot: Math.PI`;
   `plazaFrame` now turns a lot on a square by its own `rot`), the money changers' bench with green cloth, coin piles and
-  scales under the loggia, a strongbox, a gold coin sign, banners on the upper floor. Italian: "la Banca", goal "la Banca
-  apre i battenti". Check with `node scratch/audit-buildings.js bank` (scratch, not in git) or `--built bank`.
+  scales under the loggia, a strongbox, a gold coin sign, banners on the upper floor. Check with `node scratch/audit-buildings.js bank` (scratch, not in git) or `--built bank`.
 - University and Noble Quarter (owner 2026-10-22): the open ground below the castle (between it and the
   river) is kept for them. The University is the 1000 goal (moved from 5000, which is now the South Ward)
   with its scholars (work scene `desk`: writing in a book at a sloped desk): a quadrangle with a cloister,

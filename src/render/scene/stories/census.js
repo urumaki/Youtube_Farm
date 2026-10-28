@@ -11,7 +11,7 @@ const TABLE = new THREE.Vector3(-1.8, 0, 2.3);
 const STEP = 1.15; // seconds between villagers at the table
 const GAP = 0.95; // between villagers in the queue
 
-export function buildCensus({ story, M, buildings, yFn, lang }) {
+export function buildCensus({ story, M, buildings, yFn }) {
   const item = buildings.items.counting_house;
   if (!item) return null;
   const group = new THREE.Group();
@@ -36,27 +36,27 @@ export function buildCensus({ story, M, buildings, yFn, lang }) {
   group.add(C.root);
   const quill = new THREE.Mesh(cylGeo(0.008, 0.02, 0.32, 5).translate(0, 0.12, 0.05).rotateX(0.5), M.clothIvory);
   C.r.hand.add(quill);
-  const labels = clerkC ? [{ ...castTag(clerkC, lang, lang === 'it' ? 'Lo scrivano' : 'The clerk'), P: C, dy: 1.9 }] : [];
+  const labels = clerkC ? [{ ...castTag(clerkC, 'The clerk'), P: C, dy: 1.9 }] : [];
   // the queue along the front of the house, toward +x: the first at the table, the others behind; one by one they step up,
   // say their name and walk off toward the street
   const queue = story.cast.filter((c) => c.id !== clerkC?.id).slice(0, 5).map((c, i) => {
     const P = person(M, JOBS[c.job]?.color || ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d'][i]);
     group.add(P.root);
-    labels.push({ ...castTag(c, lang), P });
+    labels.push({ ...castTag(c), P });
     return { P, i };
   });
   const spot = (k) => new THREE.Vector3(TABLE.x + 0.15 + Math.max(0, k) * GAP, 0, TABLE.z + 0.95 + Math.max(0, k) * 0.12); // k-th in line
   const count = story.count || 0;
-  const fmt = (n) => n.toLocaleString(lang === 'it' ? 'it-IT' : 'en-US');
+  const fmt = (n) => n.toLocaleString('en-US');
   let T0 = 0, T1 = 1;
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Il censimento' : 'The census',
+    banner: 'The census',
     // the title counts up the villagers, the last second at the kingdom's number
     bannerAt(t, t0, t1) {
       const n = Math.round(count * ease(clamp01((t - t0) / Math.max(0.1, t1 - t0 - 1.0))));
-      return lang === 'it' ? `Censimento: ${fmt(n)} abitanti` : `Census: ${fmt(n)} villagers`;
+      return `Census: ${fmt(n)} villagers`;
     },
     focus: toWorld(TABLE.x + 1.2, y0 + 1.2, TABLE.z + 1),
     setWindow(t0, t1) { T0 = t0; T1 = t1; },

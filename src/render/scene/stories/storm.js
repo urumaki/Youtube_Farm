@@ -27,7 +27,7 @@ function bolt(seed, k) {
   return g;
 }
 
-export function buildStorm({ story, M, buildings, seed, lang }) {
+export function buildStorm({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -51,12 +51,12 @@ export function buildStorm({ story, M, buildings, seed, lang }) {
     const dir = i % 2 ? 1 : -1;
     return { P, c, dir, z: -6 + (i * 12) / Math.max(1, cast.length + 1) + rand01(seed, 'rz', i) * 1.5, x0: -14 * dir + rand01(seed, 'rx', i) * 4 * dir, speed: 4 + rand01(seed, 'rs', i) * 1.5 };
   });
-  const labels = runners.filter((r) => r.c).map((r) => ({ r, ...castTag(r.c, lang) }));
+  const labels = runners.filter((r) => r.c).map((r) => ({ r, ...castTag(r.c) }));
   const tmp = new THREE.Vector3();
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Tempesta sul regno!' : 'Storm over the kingdom!',
+    banner: 'Storm over the kingdom!',
     phase: 0.6,
     focus: st.toWorld(0, 1.2, 0),
     cam(u) {

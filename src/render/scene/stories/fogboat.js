@@ -11,7 +11,7 @@ import { pierFrame } from './regatta.js';
 
 const HOME = 0.82; // the share of the shot the boat takes to reach the pier
 
-export function buildFogBoat({ story, w, M, buildings, lang }) {
+export function buildFogBoat({ story, w, M, buildings }) {
   const d = buildings.items.dock;
   if (!d?.pier) return null;
   // at(a, b): a metres out from the end of the pier, b along the river toward the open water the boat comes from
@@ -40,7 +40,7 @@ export function buildFogBoat({ story, w, M, buildings, lang }) {
   R.root.rotation.y = Math.PI; // rowing faces the stern
   boat.add(R.root);
   const labels = [];
-  if (fisher) labels.push({ ...castTag(fisher, lang), P: R, dy: 1.7 });
+  if (fisher) labels.push({ ...castTag(fisher), P: R, dy: 1.7 });
   // the villagers on the pier: one rings the bell, the others hold torches up
   const crew = story.cast.filter((c) => c.id !== fisher?.id).slice(0, 4).map((c, i) => {
     const P = person(M, JOBS[c.job]?.color || ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a'][i]);
@@ -55,7 +55,7 @@ export function buildFogBoat({ story, w, M, buildings, lang }) {
       bell.add(new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.16, 6).translate(0, -0.06, 0), M.woodDark));
       P.r.hand.add(bell);
     } else flame = torch(M, P.r.hand);
-    labels.push({ ...castTag(c, lang), P });
+    labels.push({ ...castTag(c), P });
     return { P, flame, i };
   });
   // the path: from 38 m up the river, swinging in to lie alongside the end of the pier
@@ -65,7 +65,7 @@ export function buildFogBoat({ story, w, M, buildings, lang }) {
     group,
     labels,
     fog: 0.042,
-    banner: lang === 'it' ? 'Persi nella nebbia!' : 'Lost in the fog!',
+    banner: 'Lost in the fog!',
     focus: at(2, 4, deckY + 1.2),
     cam(u) {
       // over the water beside the pier, behind the villagers, looking up the river the way they look: the boat comes out of

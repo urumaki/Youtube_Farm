@@ -8,7 +8,7 @@ import { boxGeo, cylGeo, sheep } from './kit.js';
 import { person } from './stories/common.js';
 
 /** A shepherd with a crook watches the flock grazing on the open grass beyond the fields. */
-export function buildPasture({ w, M, seed, hero, lang }) {
+export function buildPasture({ w, M, seed, hero }) {
   // open grass just east of the farthest field lots (the lots themselves are bare earth)
   const far = [...w.fields].sort((a, b) => b.z * -1 - a.z * -1 || b.x - a.x).slice(0, 6).sort((a, b) => b.x - a.x)[0];
   if (!far) return null;
@@ -33,12 +33,12 @@ export function buildPasture({ w, M, seed, hero, lang }) {
   at.y = y(at.x, at.z);
   P.root.position.copy(at);
   P.root.rotation.y = Math.atan2(C.x - at.x, C.z - at.z);
-  const labels = hero ? [{ pos: at.clone().setY(at.y + 2.4), title: hero.name, sub: lang === 'it' ? 'Pastore' : 'Shepherd' }] : [];
+  const labels = hero ? [{ pos: at.clone().setY(at.y + 2.4), title: hero.name, sub: 'Shepherd' }] : [];
   const focus = C.clone().add(new THREE.Vector3(-1.4, 0.8, -0.4));
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Le pecore al pascolo' : 'The flock at pasture',
+    banner: 'The flock at pasture',
     focus,
     cam(u) {
       const a = -2.4 + 0.5 * u;
@@ -69,7 +69,7 @@ export function buildPasture({ w, M, seed, hero, lang }) {
  * Washing day at the river: villagers bent over tubs scrubbing linen on the bank, another hanging it on a
  * line between two poles, a basket of washing. On the castle's side of the river, nearest the castle.
  */
-export function buildLaundry({ w, M, hero, lang }) {
+export function buildLaundry({ w, M, hero }) {
   let bi = 0, bd = Infinity;
   w.riverPts.forEach((p, i) => { const d = Math.hypot(p[0], p[1]); if (d < bd) { bd = d; bi = i; } });
   const p = w.riverPts[bi], q = w.riverPts[Math.min(w.riverPts.length - 1, bi + 1)];
@@ -120,12 +120,12 @@ export function buildLaundry({ w, M, hero, lang }) {
     group.add(P.root);
     return P;
   });
-  const labels = hero ? [{ pos: washers[0].root.position.clone().setY(washers[0].root.position.y + 2.2), title: hero.name, sub: lang === 'it' ? 'Bucato al fiume' : 'Washing day' }] : [];
+  const labels = hero ? [{ pos: washers[0].root.position.clone().setY(washers[0].root.position.y + 2.2), title: hero.name, sub: 'Washing day' }] : [];
   const focus = ground(-0.3, -0.6).add(new THREE.Vector3(0, 0.9, 0));
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Giorno di bucato' : 'Washing day',
+    banner: 'Washing day',
     focus,
     cam(u) {
       // from along the bank, the river on one side and the washing line on the other

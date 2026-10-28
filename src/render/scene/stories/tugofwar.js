@@ -9,7 +9,7 @@ import { person, stride, stage, castTag, ease, clamp01 } from './common.js';
 const CROWD = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d', '#a0522d'];
 const WIN = 0.66; // the share of the shot when one side gives way
 
-export function buildTugOfWar({ story, M, buildings, seed, lang }) {
+export function buildTugOfWar({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -32,7 +32,7 @@ export function buildTugOfWar({ story, M, buildings, seed, lang }) {
   });
   const guardsWin = story.winner === 'guards';
   const team = [...side(story.guards || [], -1, JOBS.guard.color), ...side(story.farmers || [], 1, JOBS.farmer.color)];
-  const labels = team.filter((m) => m.c).map((m) => ({ ...castTag(m.c, lang), P: m.P }));
+  const labels = team.filter((m) => m.c).map((m) => ({ ...castTag(m.c), P: m.P }));
   const crowd = CROWD.map((col, i) => {
     const P = person(M, col);
     P.root.position.set(C.x - 3.6 + i * 1.45, 0, C.z + 2.6 + (i % 2) * 0.6);
@@ -43,7 +43,7 @@ export function buildTugOfWar({ story, M, buildings, seed, lang }) {
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Tiro alla fune: guardie contro contadini!' : 'Tug of war: guards against farmers!',
+    banner: 'Tug of war: guards against farmers!',
     focus: st.toWorld(C.x, 1.0, C.z),
     cam(u) {
       // three-quarters on, so the line of pullers runs across the narrow frame on a slant

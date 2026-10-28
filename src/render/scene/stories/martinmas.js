@@ -13,7 +13,7 @@ const FLAGS = ['#b03030', '#e0b040', '#3a6ab0', '#f0ece0'];
 // the two toasts: the share of the shot when the cups go up and come down
 const TOASTS = [[0.3, 0.48], [0.68, 0.88]];
 
-export function buildMartinmas({ story, M, buildings, seed, lang }) {
+export function buildMartinmas({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -62,13 +62,13 @@ export function buildMartinmas({ story, M, buildings, seed, lang }) {
     group.add(P.root);
     return P;
   });
-  const labels = [...(keeper ? [{ ...castTag(keeper, lang), P: K }] : []), ...ring.map((g) => ({ ...castTag(g.c, lang), P: g.P }))];
+  const labels = [...(keeper ? [{ ...castTag(keeper), P: K }] : []), ...ring.map((g) => ({ ...castTag(g.c), P: g.P }))];
   const tmp = new THREE.Vector3();
   const raise = (u) => Math.max(...TOASTS.map(([a, b]) => ease(clamp01((u - a) / 0.06)) * (1 - ease(clamp01((u - b) / 0.08)))));
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'San Martino: il vino nuovo!' : 'St Martin’s Day: the new wine!',
+    banner: 'St Martin’s Day: the new wine!',
     focus: st.toWorld(C.x, 1.1, C.z + 1),
     cam(u) {
       const a = -Math.PI / 2 - 0.35 + 0.5 * u;

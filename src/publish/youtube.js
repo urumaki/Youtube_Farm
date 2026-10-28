@@ -26,11 +26,11 @@ export function publishAtFor(hhmm, now = new Date()) {
   return t.toISOString().replace(/\.\d{3}Z$/, 'Z');
 }
 
-export function videoResource({ title, description, tags, lang, privacy = 'public', publishAt }) {
+export function videoResource({ title, description, tags, privacy = 'public', publishAt }) {
   const status = { privacyStatus: publishAt ? 'private' : privacy, selfDeclaredMadeForKids: false, embeddable: true };
   if (publishAt) status.publishAt = publishAt;
   return {
-    snippet: { title: title.slice(0, 100), description: description.slice(0, 5000), tags, categoryId: '24', defaultLanguage: lang, defaultAudioLanguage: lang },
+    snippet: { title: title.slice(0, 100), description: description.slice(0, 5000), tags, categoryId: '24', defaultLanguage: 'en', defaultAudioLanguage: 'en' },
     status,
   };
 }

@@ -5,7 +5,6 @@
 import * as THREE from 'three';
 import { WATER_LEVEL } from '../../../sim/world.js';
 import { JOBS } from '../../../sim/tiers.js';
-import { FROM_IT, SHIPS_IT } from '../../../sim/stories.js';
 import { Builder, boxGeo, cylGeo } from '../kit.js';
 import { person, stride, castTag, ease, clamp01 } from './common.js';
 
@@ -47,7 +46,7 @@ export function cog(M) {
   return { g, sail, flag };
 }
 
-export function buildShip({ story, M, buildings, seed, lang }) {
+export function buildShip({ story, M, buildings, seed }) {
   const item = buildings.items.harbor;
   if (!item) return null;
   const step = story.step || 'arrive';
@@ -78,7 +77,7 @@ export function buildShip({ story, M, buildings, seed, lang }) {
       load.position.set(0, 1.62, 0.12);
       load.castShadow = true;
       P.body.add(load);
-      labels.push({ ...castTag(c, lang), P });
+      labels.push({ ...castTag(c), P });
       people.push({ P, load, i });
     });
     for (let k = 0; k < 6; k++) { // the pile on the pier by the quay
@@ -94,16 +93,16 @@ export function buildShip({ story, M, buildings, seed, lang }) {
       P.root.position.set(-1.5 + (i % 3) * 1.5, DECK, 24.6 - Math.floor(i / 3) * 1.5);
       P.root.rotation.y = step === 'arrive' ? 0.5 : -0.4; // toward where she comes from or goes
       group.add(P.root);
-      labels.push({ ...castTag(c, lang), P });
+      labels.push({ ...castTag(c), P });
       people.push({ P, i });
     });
   }
   // the ship's own tag: her name and her port
-  const from = lang === 'it' ? FROM_IT[story.from] || '' : `from ${story.from}`;
-  const shipTag = { pos: new THREE.Vector3(), title: lang === 'it' ? SHIPS_IT[story.name] || story.name : story.name, sub: from };
+  const from = `from ${story.from}`;
+  const shipTag = { pos: new THREE.Vector3(), title: story.name, sub: from };
   labels.push(shipTag);
-  const banner = step === 'unload' ? (lang === 'it' ? 'Si scarica la nave!' : 'Unloading the ship!')
-    : step === 'leave' ? (lang === 'it' ? 'La nave riparte' : 'The ship sets sail') : lang === 'it' ? 'Arriva una nave!' : 'A ship comes in!';
+  const banner = step === 'unload' ? 'Unloading the ship!'
+    : step === 'leave' ? 'The ship sets sail' : 'A ship comes in!';
   // the walk of a porter: down the plank, along the pier to the pile, back with empty hands
   const PLANK_TOP = new THREE.Vector3(1.5, wl + 3.14, 27.2), PLANK_FOOT = new THREE.Vector3(1.5, DECK, 24.4), PILE = new THREE.Vector3(0.6, DECK, 14.2);
   const porter = (k) => {

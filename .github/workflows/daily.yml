@@ -8,10 +8,6 @@ on:
       subs:
         description: 'Override subscriber count (blank = fetch from YouTube)'
         required: false
-      lang:
-        description: 'Narration language (en or it)'
-        required: false
-        default: 'en'
 
 permissions:
   contents: write # commit state/ and state/history/
@@ -67,8 +63,8 @@ jobs:
           YT_PRIVACY: ${{ vars.YT_PRIVACY || 'public' }}
           YT_PUBLISH_AT: ${{ vars.YT_PUBLISH_AT }}
         run: |
-          ARGS="--lang ${{ github.event.inputs.lang || 'en' }}"
-          if [ -n "${{ github.event.inputs.subs }}" ]; then ARGS="$ARGS --subs ${{ github.event.inputs.subs }}"; fi
+          ARGS=""
+          if [ -n "${{ github.event.inputs.subs }}" ]; then ARGS="--subs ${{ github.event.inputs.subs }}"; fi
           npm run daily -- $ARGS
 
       - name: Commit state and history

@@ -38,7 +38,7 @@ function particles(n, color, size, opacity) {
   return pts;
 }
 
-export function buildFire({ story, M, houses, seed, lang }) {
+export function buildFire({ story, M, houses, seed }) {
   const st = houseStage(houses, story.house);
   if (!st) return null;
   const { group, W, D, wallH, roofH } = st;
@@ -102,13 +102,13 @@ export function buildFire({ story, M, houses, seed, lang }) {
   for (const m of [...throwers, ...passers]) m.P.r.hand.add(toolGeo('bucket', M));
   const splash = particles(60, '#cfe6f2', 0.12, 0.85);
   group.add(splash);
-  const labels = throwers.filter((m) => m.c).map((m) => ({ m, ...castTag(m.c, lang, lang === 'it' ? 'Eroe del giorno' : 'Hero of the day') }));
-  for (const m of chain) if (!m.c && m.n && !throwers.includes(m)) labels.push({ m, ...castTag(m.n, lang) });
+  const labels = throwers.filter((m) => m.c).map((m) => ({ m, ...castTag(m.c, 'Hero of the day') }));
+  for (const m of chain) if (!m.c && m.n && !throwers.includes(m)) labels.push({ m, ...castTag(m.n) });
   const tmp = new THREE.Vector3();
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Al fuoco!' : 'Fire!',
+    banner: 'Fire!',
     focus: st.toWorld(0, wallH, 0),
     cam: (u) => streetCam(st, u),
     update(t, t0, t1) {
@@ -160,7 +160,7 @@ export function buildFire({ story, M, houses, seed, lang }) {
   };
 }
 
-export function buildRebuild({ story, M, houses, seed, lang }) {
+export function buildRebuild({ story, M, houses, seed }) {
   const st = houseStage(houses, story.house);
   if (!st) return null;
   const { group, W, D, wallH } = st;
@@ -187,13 +187,13 @@ export function buildRebuild({ story, M, houses, seed, lang }) {
     group.add(P.root);
     return { P, c };
   });
-  const labels = crew.filter((m) => m.c).map((m) => ({ m, ...castTag(m.c, lang) }));
+  const labels = crew.filter((m) => m.c).map((m) => ({ m, ...castTag(m.c) }));
   const tmp = new THREE.Vector3();
   const offset = (i) => rand01(seed, 'reb', i) * 0.6;
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Si ricostruisce la casa' : 'Rebuilding the house',
+    banner: 'Rebuilding the house',
     focus: st.toWorld(0, wallH, 0),
     cam: (u) => streetCam(st, u),
     strikePeriod: 0.6,

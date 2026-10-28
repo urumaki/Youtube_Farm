@@ -24,7 +24,7 @@ function hugeFish(M, roast = false) {
   return g;
 }
 
-export function buildBigFish({ story, M, buildings, seed, lang }) {
+export function buildBigFish({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -36,7 +36,7 @@ export function buildBigFish({ story, M, buildings, seed, lang }) {
   group.add(F.root);
   const fish = hugeFish(M, roast);
   group.add(fish);
-  const labels = fisher ? [{ ...castTag(fisher, lang), P: F }] : [];
+  const labels = fisher ? [{ ...castTag(fisher), P: F }] : [];
   let carriers = [], guests = [], fire = null, spit = null;
   const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; group.add(m); return m; };
   if (!roast) {
@@ -44,7 +44,7 @@ export function buildBigFish({ story, M, buildings, seed, lang }) {
     carriers = [0, 1].map((i) => {
       const c = rest[i] || null, P = person(M, c ? JOBS[c.job]?.color || CROWD[i] : CROWD[i]);
       group.add(P.root);
-      if (c) labels.push({ ...castTag(c, lang), P });
+      if (c) labels.push({ ...castTag(c), P });
       return P;
     });
     spit = new THREE.Group();
@@ -67,7 +67,7 @@ export function buildBigFish({ story, M, buildings, seed, lang }) {
       P.root.rotation.y = Math.atan2(C.x - P.root.position.x, C.z + 1 - P.root.position.z);
       P.r.hand.add(toolGeo('bowl', M));
       group.add(P.root);
-      labels.push({ ...castTag(c, lang), P });
+      labels.push({ ...castTag(c), P });
       return { P, ph: rand01(seed, 'fishbowl', i) * 6 };
     });
   }
@@ -84,7 +84,7 @@ export function buildBigFish({ story, M, buildings, seed, lang }) {
   return {
     group,
     labels,
-    banner: roast ? (lang === 'it' ? 'Pesce arrosto per tutti!' : 'Roast fish for everyone!') : lang === 'it' ? 'Che pesca!' : 'What a catch!',
+    banner: roast ? 'Roast fish for everyone!' : 'What a catch!',
     focus: st.toWorld(C.x, 1.2, C.z + 0.6),
     cam(u) {
       if (roast) {

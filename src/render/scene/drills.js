@@ -57,7 +57,7 @@ export function attackArm(u) {
  * Two guards sparring in the castle courtyard, circling each other; the camera circles with them. Knights spar in the
  * lists of the Tournament Ground once it stands (`at`, owner 2026-10-25).
  */
-export function buildSparring({ M, seed, hero, lang, tag = true, at = null }) {
+export function buildSparring({ M, seed, hero, tag = true, at = null }) {
   // between the well and the barracks, off the courtyard path
   const center = at ? at.clone() : new THREE.Vector3(14, CASTLE.ground + 0.15, 4);
   const G = center.y;
@@ -71,7 +71,7 @@ export function buildSparring({ M, seed, hero, lang, tag = true, at = null }) {
   pair.add(A.root, B.root);
   const sparks = particles(28, '#ffd27a', 0.05, true);
   pair.add(sparks);
-  const labels = hero && tag ? [castTag(hero, lang, lang === 'it' ? 'Allenamento' : 'Training')] : [];
+  const labels = hero && tag ? [castTag(hero, 'Training')] : [];
   const labelPos = new THREE.Vector3();
   const lead = 0.15 * PERIOD; // the first clash comes early in the shot
   const strikeTimes = (t0, t1) => {
@@ -90,7 +90,7 @@ export function buildSparring({ M, seed, hero, lang, tag = true, at = null }) {
     group,
     labels,
     labelPos,
-    banner: at ? (lang === 'it' ? 'Allenamento nella lizza' : 'Training in the lists') : lang === 'it' ? 'Allenamento nel cortile' : 'Training in the yard',
+    banner: at ? 'Training in the lists' : 'Training in the yard',
     focus: center.clone().setY(G + 1.2),
     work: { strikeTimes, sound: 'clang' },
     cam(u) {

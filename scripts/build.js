@@ -49,7 +49,7 @@ function viewerState(state) {
 export async function buildViewer(state, diff, { out = path.join(DIST, 'viewer.html') } = {}) {
   const js = await bundle();
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  const data = { mode: 'viewer', state: viewerState(state), diff, lang: 'en' };
+  const data = { mode: 'viewer', state: viewerState(state), diff };
   const pop = state.subscriberCount.toLocaleString('en-US');
   const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Subscriber Kingdom — Day ${state.day}</title>

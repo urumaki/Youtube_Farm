@@ -8,7 +8,7 @@ import { person, stage, castTag, clamp01 } from './common.js';
 
 const PERIOD = 1.7, FLIGHT = 0.55; // seconds between one villager's throws, seconds in the air
 
-export function buildSnowballs({ story, M, buildings, seed, lang }) {
+export function buildSnowballs({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -45,12 +45,12 @@ export function buildSnowballs({ story, M, buildings, seed, lang }) {
     group.add(b, puff);
     return { b, puff };
   });
-  const labels = team.map((m) => ({ ...castTag(m.c, lang), P: m.P }));
+  const labels = team.map((m) => ({ ...castTag(m.c), P: m.P }));
   const tmp = new THREE.Vector3();
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Battaglia a palle di neve!' : 'Snowball fight!',
+    banner: 'Snowball fight!',
     focus: st.toWorld(C.x, 1.0, C.z),
     cam(u) {
       // behind the near team, a little high, the far team facing the camera

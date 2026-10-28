@@ -9,7 +9,7 @@ const CROWD = ['#8a6d4f', '#5f7a8a'];
 const TURNS = 18; // extra radians the gale gives the sails over the shot
 const STOP = 0.82; // the sails are slowed down by then
 
-export function buildWindmill({ story, M, buildings, nature, yFn, lang }) {
+export function buildWindmill({ story, M, buildings, nature, yFn }) {
   const item = buildings.items.windmill, sail = buildings.sails.find((s) => s.len === 9) || buildings.sails[0];
   if (!item || !sail) return null;
   const group = new THREE.Group();
@@ -42,14 +42,14 @@ export function buildWindmill({ story, M, buildings, nature, yFn, lang }) {
   const rope = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#c8b48a' }));
   rope.frustumCulled = false;
   group.add(rope);
-  const labels = team.filter((m) => m.c).map((m) => ({ ...castTag(m.c, lang), P: m.P }));
+  const labels = team.filter((m) => m.c).map((m) => ({ ...castTag(m.c), P: m.P }));
   let T0 = 0, T1 = 1;
   const gale = (t) => { const u = clamp01((t - T0) / (T1 - T0)); return TURNS * ease(Math.min(1, u / STOP)); };
   const tmp = new THREE.Vector3();
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Il mulino impazzito!' : 'The windmill runs wild!',
+    banner: 'The windmill runs wild!',
     focus: item.toWorld([0, 6, 4]),
     setWindow(t0, t1) {
       T0 = t0; T1 = t1;

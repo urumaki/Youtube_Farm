@@ -10,7 +10,7 @@ import { person, stride, torch, flicker, castTag, clamp01, ease } from './common
 const RAGS = ['#3b3026', '#2e2a2a', '#4a3b2a', '#3a3328', '#2f2b33', '#45382c', '#353029'];
 const GUARD = '#7a1f2b';
 
-export function buildBandits({ story, w, M, seed, yFn, lang }) {
+export function buildBandits({ story, w, M, seed, yFn }) {
   const track = w.tracks.find((r) => r.id === 'mill') || w.roads[0];
   const pl = polyline(track.pts);
   const sM = Math.min(55, pl.total * 0.4); // where they meet, among the fields
@@ -53,8 +53,8 @@ export function buildBandits({ story, w, M, seed, yFn, lang }) {
   group.add(light);
   const moon = new THREE.HemisphereLight('#9fb4d8', '#2a2418', 1.1);
   group.add(moon);
-  const labels = heroes.map((h) => castTag(h.c, lang, lang === 'it' ? 'Eroe del giorno' : 'Hero of the day'));
-  const guardTags = guards.filter((d) => d.g).map((d) => ({ d, tag: castTag(d.g, lang) }));
+  const labels = heroes.map((h) => castTag(h.c, 'Hero of the day'));
+  const guardTags = guards.filter((d) => d.g).map((d) => ({ d, tag: castTag(d.g) }));
   labels.push(...guardTags.map((x) => x.tag));
   const P = new THREE.Vector3();
   const place = (obj, s, lateral, back) => {
@@ -69,7 +69,7 @@ export function buildBandits({ story, w, M, seed, yFn, lang }) {
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Arrivano i banditi!' : 'Bandits attack!',
+    banner: 'Bandits attack!',
     phase: 0.75, // at dusk (the timeline's own value for night stories is replaced by this one)
     focus: M0.clone().setY(M0.y + 1),
     cam(u) {

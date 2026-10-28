@@ -79,21 +79,11 @@ export function stage(buildings) {
   return { group, toWorld, square: !!buildings.items.market };
 }
 
-export const jobLabel = (job, lang) => (lang === 'it' ? JOB_IT[job] : null) || JOBS[job]?.label || job;
-const JOB_IT = {
-  guard: 'Guardia', knight: 'Cavaliere', cavalier: 'Cavalleggero', warrior: 'Guerriero', fletcher: 'Arcaio', farmer: 'Agricoltore', peasant: 'Contadino',
-  woodcutter: 'Taglialegna', fisherman: 'Pescatore', blacksmith: 'Fabbro', baker: 'Fornaio', stonemason: 'Scalpellino',
-  merchant: 'Mercante', innkeeper: 'Oste', priest: 'Prete', miller: 'Mugnaio', brewer: 'Birraio', apprentice: 'Apprendista',
-  tailor: 'Sarto', physician: 'Medico', taxcollector: 'Esattore', potter: 'Vasaio', cobbler: 'Calzolaio', cooper: 'Bottaio',
-  beekeeper: 'Apicoltore', bellfounder: 'Fonditore', clockmaker: 'Orologiaio', ratcatcher: 'Acchiappatopi', chimneysweep: 'Spazzacamino',
-  falconer: 'Falconiere', cook: 'Cuoco', hunter: 'Cacciatore', butcher: 'Macellaio', engineer: 'Ingegnere', shepherd: 'Pastore',
-  tanner: 'Conciatore', teacher: 'Maestro', philosopher: 'Filosofo', barber: 'Barbiere', astronomer: 'Astronomo', stablehand: 'Stalliere',
-  adviser: 'Consigliere del Re',
-};
+export const jobLabel = (job) => JOBS[job]?.label || job;
 
 /** A name tag for a cast member: the name when they have one, else their job. */
-export function castTag(c, lang, sub) {
-  return { pos: new THREE.Vector3(), title: c.name || jobLabel(c.job, lang), sub: sub ?? (c.name ? jobLabel(c.job, lang) : '') };
+export function castTag(c, sub) {
+  return { pos: new THREE.Vector3(), title: c.name || jobLabel(c.job), sub: sub ?? (c.name ? jobLabel(c.job) : '') };
 }
 
 export const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));

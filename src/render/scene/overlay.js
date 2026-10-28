@@ -47,13 +47,10 @@ const CSS = `
 #ov .cap span.on{color:#ffd35a}
 `;
 
-const STR = {
-  en: { villagers: 'VILLAGERS', villager: 'VILLAGER', day: 'Day', more: (n) => `+${n} more homes`, until: (n, g) => `<b>${n}</b> more villager${n === 1 ? '' : 's'} until <b>${g}</b>`, cta1: 'Subscribe to', cta2: 'become a villager', btn: 'SUBSCRIBE', cmt: 'Comment to name a villager', credits: 'The villagers', others: (n) => `and ${n} more villager${n === 1 ? '' : 's'}`, realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Clear skies', cloudy: 'Cloudy', fog: 'Fog', rain: 'Rain', snow: 'Snow' }, none: 'No change today' },
-  it: { villagers: 'ABITANTI', villager: 'ABITANTE', day: 'Giorno', more: (n) => `+${n} altre case`, until: (n, g) => `Ancora <b>${n}</b> abitant${n === 1 ? 'e' : 'i'} e <b>${g}</b>`, cta1: 'Iscriviti per', cta2: 'diventare un abitante', btn: 'ISCRIVITI', cmt: 'Commenta per dare il nome a un abitante', credits: 'Gli abitanti', others: (n) => `e altr${n === 1 ? 'o' : 'i'} ${n} abitant${n === 1 ? 'e' : 'i'}`, realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Sereno', cloudy: 'Nuvoloso', fog: 'Nebbia', rain: 'Pioggia', snow: 'Neve' }, none: 'Nessun cambiamento oggi' },
-};
+const STR = { villagers: 'VILLAGERS', villager: 'VILLAGER', day: 'Day', more: (n) => `+${n} more homes`, until: (n, g) => `<b>${n}</b> more villager${n === 1 ? '' : 's'} until <b>${g}</b>`, cta1: 'Subscribe to', cta2: 'become a villager', btn: 'SUBSCRIBE', cmt: 'Comment to name a villager', credits: 'The villagers', others: (n) => `and ${n} more villager${n === 1 ? '' : 's'}`, realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Clear skies', cloudy: 'Cloudy', fog: 'Fog', rain: 'Rain', snow: 'Snow' }, none: 'No change today' };
 
 export function createOverlay(root, data) {
-  const s = STR[data.lang] || STR.en;
+  const s = STR;
   const style = document.createElement('style');
   style.textContent = CSS;
   document.head.appendChild(style);
@@ -78,7 +75,7 @@ export function createOverlay(root, data) {
   day.textContent = `${s.day} ${data.state.day} · ${s.weather[diff.weather] || ''}`;
   unit.textContent = pop === 1 ? s.villager : s.villagers;
   const d = diff.delta;
-  delta.textContent = d > 0 ? `+${d.toLocaleString('en-US')} ${data.lang === 'it' ? (d === 1 ? 'abitante!' : 'abitanti!') : d === 1 ? 'villager!' : 'villagers!'}` : d < 0 ? `${d.toLocaleString('en-US')} ${data.lang === 'it' ? 'abitanti' : 'villagers'}` : s.none;
+  delta.textContent = d > 0 ? `+${d.toLocaleString('en-US')} ${d === 1 ? 'villager!' : 'villagers!'}` : d < 0 ? `${d.toLocaleString('en-US')} villagers` : s.none;
   if (d < 0) delta.classList.add('down');
   if (diff.next) {
     const frac = Math.max(0.03, Math.min(1, pop / diff.next.at));

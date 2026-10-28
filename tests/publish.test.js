@@ -20,22 +20,20 @@ function mockFetch(calls) {
 const quiet = { log() {}, error() {} };
 
 test('at most 5 hashtags per video, none repeated', () => {
-  for (const lang of ['en', 'it']) {
-    const m = metadata({ ...sample(), lang });
-    const tags = `${m.title} ${m.description}`.match(/#\w+/g);
-    assert.ok(tags.length <= MAX_HASHTAGS, `${lang}: ${tags.join(' ')}`);
-    assert.equal(new Set(tags.map((t) => t.toLowerCase())).size, tags.length);
-  }
+  const m = metadata(sample());
+  const tags = `${m.title} ${m.description}`.match(/#\w+/g);
+  assert.ok(tags.length <= MAX_HASHTAGS, tags.join(' '));
+  assert.equal(new Set(tags.map((t) => t.toLowerCase())).size, tags.length);
 });
 const sample = () => ({ state: { day: 3, date: '2026-10-16', subscriberCount: 87 }, diff: { delta: 11 } });
 
-test('publish uploads to YouTube once per day and language', async () => {
+test('publish uploads to YouTube once per day', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pub-'));
   const video = path.join(dir, 'v.mp4');
   fs.writeFileSync(video, Buffer.alloc(1024));
   const env = { PUBLISH_TARGETS: 'youtube', YT_OAUTH_CLIENT_ID: 'id', YT_OAUTH_CLIENT_SECRET: 'sec', YT_OAUTH_REFRESH_TOKEN: 'rt' };
   const calls = [];
-  const r = await publish({ video, ...sample(), lang: 'en', env, stateDir: dir, fetchImpl: mockFetch(calls), log: quiet });
+  const r = await publish({ video, ...sample(), env, stateDir: dir, fetchImpl: mockFetch(calls), log: quiet });
   assert.equal(r.youtube, 'vid123');
   const init = calls.find((c) => c.url.includes('uploadType=resumable'));
   const res = JSON.parse(init.init.body);
@@ -45,7 +43,7 @@ test('publish uploads to YouTube once per day and language', async () => {
   assert.equal(init.init.headers.authorization, 'Bearer AT');
   assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'published.json'), 'utf8'))['2026-10-16_en'].youtube, 'vid123');
   const again = [];
-  await publish({ video, ...sample(), lang: 'en', env, stateDir: dir, fetchImpl: mockFetch(again), log: quiet });
+  await publish({ video, ...sample(), env, stateDir: dir, fetchImpl: mockFetch(again), log: quiet });
   assert.equal(again.length, 0, 'second run must not upload again');
 });
 
@@ -53,7 +51,7 @@ test('publish never throws when credentials are missing', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pub-'));
   const video = path.join(dir, 'v.mp4');
   fs.writeFileSync(video, Buffer.alloc(10));
-  const r = await publish({ video, ...sample(), lang: 'en', env: { PUBLISH_TARGETS: 'youtube' }, stateDir: dir, fetchImpl: mockFetch([]), log: quiet });
+  const r = await publish({ video, ...sample(), env: { PUBLISH_TARGETS: 'youtube' }, stateDir: dir, fetchImpl: mockFetch([]), log: quiet });
   assert.deepEqual(r, {});
   assert.ok(!fs.existsSync(path.join(dir, 'published.json')));
 });
@@ -63,7 +61,7 @@ test('scheduled publishing time', () => {
   assert.equal(publishAtFor('17:00', now), '2026-10-16T17:00:00Z');
   assert.equal(publishAtFor('06:40', now), '2026-10-17T06:40:00Z');
   assert.equal(publishAtFor('', now), undefined);
-  const r = videoResource({ title: 'x', description: 'y', tags: [], lang: 'en', publishAt: '2026-10-16T17:00:00Z' });
+  const r = videoResource({ title: 'x', description: 'y', tags: [], publishAt: '2026-10-16T17:00:00Z' });
   assert.equal(r.status.privacyStatus, 'private');
   assert.equal(r.status.publishAt, '2026-10-16T17:00:00Z');
 });

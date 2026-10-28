@@ -129,8 +129,7 @@ function walkOf({ where, castle, w, state, pick }) {
  * @param mode   'day' | 'night' | 'change'
  * @param hero   the named guard shown (or null); `tag` puts a small name tag on them (everyday shots)
  */
-export function buildWallWatch({ where = 'castle', mode = 'day', castle, w, state, M, seed, hero, lang, tag = true }) {
-  const it = lang === 'it';
+export function buildWallWatch({ where = 'castle', mode = 'day', castle, w, state, M, seed, hero, tag = true }) {
   const pick = rand01(seed, 'wallwatch', state.day, hero?.id ?? -1);
   const { a, dir, len, inside, lane } = walkOf({ where, castle, w, state, pick });
   const at = (s, side = lane) => a.clone().addScaledVector(dir, s).addScaledVector(inside, side);
@@ -152,13 +151,13 @@ export function buildWallWatch({ where = 'castle', mode = 'day', castle, w, stat
   // the changing of the guard: the old guard stands at the post when the new one marches up
   const old = mode === 'change' ? guard(M, ROYAL.blue, !H.archer && rand01(seed, 'bow2', state.day) < 0.5) : null;
   if (old) group.add(old.root);
-  const sub = mode === 'change' ? (it ? 'Cambio della guardia' : 'Changing of the guard') : mode === 'night' ? (it ? 'Guardia notturna' : 'Night watch') : it ? 'Di ronda' : 'On patrol';
-  const labels = hero && tag ? [castTag(hero, lang, sub)] : [];
+  const sub = mode === 'change' ? 'Changing of the guard' : mode === 'night' ? 'Night watch' : 'On patrol';
+  const labels = hero && tag ? [castTag(hero, sub)] : [];
   const labelPos = new THREE.Vector3();
   const second = where === 'wall2';
-  const banner = mode === 'change' ? (it ? 'Il cambio della guardia' : 'Changing of the guard')
-    : mode === 'night' ? (it ? (second ? 'Di notte sulle seconde mura' : 'Di notte sulle mura') : second ? 'Night on the Second Wall' : 'Night on the walls')
-      : it ? (second ? 'Di ronda sulle seconde mura' : 'Ronda sulle mura') : second ? 'Watch on the Second Wall' : 'Watch on the walls';
+  const banner = mode === 'change' ? 'Changing of the guard'
+    : mode === 'night' ? (second ? 'Night on the Second Wall' : 'Night on the walls')
+      : second ? 'Watch on the Second Wall' : 'Watch on the walls';
   // the day and night watch: walk 3.5 m to the post (60% of the shot), turn and look out
   const WALK = 3.5, STOP = 0.6;
   const walkS = (u) => post - WALK + WALK * ease(clamp01(u / STOP));

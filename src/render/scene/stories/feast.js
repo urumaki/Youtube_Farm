@@ -14,7 +14,7 @@ const LEN = 6.4, TOP = 0.82, BENCH = 0.47; // table length and heights
 const SEATS = [-2.4, -0.8, 0.8]; // along the table (x), on both sides
 const TOAST = 0.68; // the share of the shot when everybody toasts the King
 
-export function buildFeast({ story, M, buildings, seed, lang }) {
+export function buildFeast({ story, M, buildings, seed }) {
   const st = stage(buildings);
   if (!st) return null;
   const { group } = st;
@@ -67,15 +67,15 @@ export function buildFeast({ story, M, buildings, seed, lang }) {
     group.add(P.root);
     guests.push({ P, c, ph: rand01(seed, 'feast', i) * 6, side });
   }
-  const labels = [{ pos: new THREE.Vector3(), title: lang === 'it' ? 'Il Re' : 'The King', sub: lang === 'it' ? 'Alla salute!' : 'Cheers!' }];
-  for (const g of guests) if (g.c) labels.push({ g, ...castTag(g.c, lang), pos: new THREE.Vector3() });
+  const labels = [{ pos: new THREE.Vector3(), title: 'The King', sub: 'Cheers!' }];
+  for (const g of guests) if (g.c) labels.push({ g, ...castTag(g.c), pos: new THREE.Vector3() });
   // the King's banner guards behind his chair: named guards or knights when there are some (owner 2026-10-25)
-  guards.forEach((g, k) => { if (story.escort?.[k]) labels.push({ ...castTag(story.escort[k], lang), pos: g.P.root.position.clone().add(new THREE.Vector3(0, 2.6, 0)) }); });
+  guards.forEach((g, k) => { if (story.escort?.[k]) labels.push({ ...castTag(story.escort[k]), pos: g.P.root.position.clone().add(new THREE.Vector3(0, 2.6, 0)) }); });
   const tmp = new THREE.Vector3();
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'Il banchetto del Re' : 'A feast for the King',
+    banner: 'A feast for the King',
     focus: st.toWorld(C.x + 0.8, 1.1, C.z),
     cam(u) {
       // from the foot of the table, a little to the side: both benches and the King at the far end,

@@ -25,7 +25,7 @@ export function pierFrame(d, w) {
   return { at, deckY: o.y, out, along };
 }
 
-export function buildRegatta({ story, w, M, buildings, seed, lang }) {
+export function buildRegatta({ story, w, M, buildings, seed }) {
   const d = buildings.items.dock;
   if (!d?.pier) return null;
   const { at, deckY } = pierFrame(d, w);
@@ -57,7 +57,7 @@ export function buildRegatta({ story, w, M, buildings, seed, lang }) {
     R.root.position.set(0, -0.04, -0.3);
     R.root.rotation.y = Math.PI; // rowers face the stern
     boat.add(R.root);
-    const tag = { ...castTag(c, lang), P: R, dy: 1.7 };
+    const tag = { ...castTag(c), P: R, dy: 1.7 };
     labels.push(tag);
     const win = c.id === story.winner;
     const pace = win ? 1 : 0.9 - 0.06 * rand01(seed, 'regatta', i);
@@ -69,14 +69,14 @@ export function buildRegatta({ story, w, M, buildings, seed, lang }) {
     P.root.position.copy(at(-0.9 - (i % 2) * 1.1, -1.2 + Math.floor(i / 2) * 1.3));
     P.root.lookAt(at(4, 12, P.root.position.y));
     group.add(P.root);
-    labels.push({ ...castTag(c, lang), P });
+    labels.push({ ...castTag(c), P });
     return P;
   });
   const along = (b, u) => START * (1 - (u / FINISH) * b.pace); // a steady pace, on past the line
   return {
     group,
     labels,
-    banner: lang === 'it' ? 'La regata!' : 'The regatta!',
+    banner: 'The regatta!',
     focus: at(4, 4, deckY + 0.6),
     cam(u) {
       // over the water beside the pier, behind the crowd: the boats come down the river toward the line
@@ -100,7 +100,7 @@ export function buildRegatta({ story, w, M, buildings, seed, lang }) {
         } else {
           b.R.r.g.rotation.set(-2.8 + 0.2 * Math.sin(t * 8), 0, -0.4); b.R.l.g.rotation.set(-0.5, 0, 0.2); b.R.body.rotation.x = 0;
         }
-        b.tag.sub = crossed ? (lang === 'it' ? 'Vince!' : 'Winner!') : b.sub;
+        b.tag.sub = crossed ? 'Winner!' : b.sub;
       }
       crowd.forEach((P, i) => {
         const ph = t * 7 + i;
