@@ -67,6 +67,8 @@ const T = {
       race_results: ['The chariot race! Then the King makes the winner a Cavalier.', 'Chariots thunder round the lists, and the winner kneels before the King!'],
       joust: ['Hear ye! A joust at the Tournament Ground! Every guard may enter: comment JOIN!', 'A joust is announced! Guards, comment JOIN to take up the lance!'],
       joust_results: ['The joust! Then the King knights the winner.', 'Lances down! And the winner kneels before the King to be knighted!'],
+      // owner 2026-10-28: the decree, read once
+      decree: ['Hear ye, hear ye! From this day, guards become Knights and Cavaliers only by winning at the Tournament Ground!', 'Hear ye! No more asking to be a knight: guards win the title at the Tournament Ground!'],
       // owner 2026-10-27: six more stories
       ship: [(e) => `A ship from ${e.from} sails into the harbor!`, (e) => `Ship ahoy! A merchant ship from ${e.from} comes in.`],
       ship_unload: [(e) => `Unloading the ship: crates of ${e.goods} come ashore!`, (e) => `All hands to the pier: the ship's ${e.goods} come ashore!`],
@@ -187,6 +189,7 @@ T.it = {
     haycart: ['Un carro di fieno è bloccato nella porta, e tutti spingono!'],
     snowballs: ['Battaglia a palle di neve in piazza!'],
     rebel: ['Tradimento! Un aspirante ribelle passa la giornata alla gogna, tra i pomodori.'],
+    decree: ['Udite udite! Da oggi le guardie diventano Cavalieri e Cavalleggeri solo vincendo al Campo del torneo!'],
     race: ['Udite udite! Una corsa dei carri al Campo del torneo! Ogni guardia può partecipare: commentate JOIN!'],
     race_results: ['La corsa dei carri! Poi il Re nomina il vincitore Cavalleggero.'],
     joust: ['Udite udite! Una giostra al Campo del torneo! Ogni guardia può partecipare: commentate JOIN!'],

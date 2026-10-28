@@ -804,9 +804,29 @@ test('a Knight and a Cavalier are only won at the games (owner 2026-10-28): neve
   assert.equal(r.state.names[13].wants, undefined);
 });
 
+test('the decree (owner 2026-10-28): the crier proclaims once that Knights and Cavaliers are won at the Tournament Ground', async () => {
+  const { pickStory } = await import('../src/sim/stories.js');
+  const kingdom = (day, storyLog = {}, buildings = [{ id: 'tournament', status: 'done' }]) => ({
+    seed: SEED, date: dateOf(day), day, subscriberCount: 600, weather: 'clear', storyLog, storyArc: null, buildings, houses: [], unlockedTiers: ['harbor'],
+    villagers: Array.from({ length: 8 }, (_, id) => ({ id, job: id === 7 ? 'crier' : 'guard' })),
+    names: Object.fromEntries(Array.from({ length: 8 }, (_, id) => [id, { name: `V${id}`, day: 1 }])),
+  });
+  const s = kingdom(20);
+  const story = pickStory(s);
+  assert.equal(story.id, 'decree');
+  assert.equal(story.crier.id, 7);
+  assert.ok(story.cast.slice(1).every((c) => c.job === 'guard'));
+  assert.equal(s.storyLog.decree, 20);
+  for (let d = 21; d < 80; d++) assert.notEqual(pickStory(kingdom(d, { decree: 20 }))?.id, 'decree', 'read once');
+  assert.notEqual(pickStory(kingdom(20, {}, []))?.id, 'decree', 'only once the Tournament Ground stands');
+  // a story of several days goes on first
+  const arc = kingdom(20);
+  arc.storyArc = { id: 'joust', step: 'results', day: 20, data: { game: 'joust' } };
+  assert.equal(pickStory(arc).id, 'joust');
+});
+
 test('stories of 2026-10-27: the ship, the new bell, the fog, the census, the pies and the regatta', async () => {
   const { storyFor, STORIES } = await import('../src/sim/stories.js');
-  const { buildScript } = await import('../src/audio/narration.js');
   const jobs = ['bellfounder', 'sailor', 'fisherman', 'reeve', 'merchant', 'baker', 'guard', 'farmer', 'cooper', 'potter', 'miller', 'peasant'];
   const kingdom = (weather = 'clear', built = ['harbor', 'bell_foundry', 'cathedral', 'dock', 'counting_house', 'tavern']) => ({
     seed: SEED, date: '2026-11-04', day: 40, subscriberCount: 4321, weather, storyLog: {},

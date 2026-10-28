@@ -12,3 +12,11 @@ export function buildGamesAnnounce(args) {
   st.banner = it ? `${name}! Guardie: scrivete JOIN` : `${name}! Guards: comment JOIN`;
   return st;
 }
+
+// The decree of 2026-10-28 (owner), read once: guards become Knights and Cavaliers only by winning at the Tournament Ground
+export function buildDecree(args) {
+  const st = buildProclaim(args);
+  if (!st) return null;
+  st.banner = args.lang === 'it' ? 'Cavaliere o Cavalleggero? Vinci il torneo!' : 'Knight or Cavalier? Win the tournament!';
+  return st;
+}

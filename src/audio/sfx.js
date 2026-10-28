@@ -445,6 +445,7 @@ const SCENES = {
   ev_rebel: [['chatter', 0.5], ['cheer', 0.3]], // the axe and the tomatoes are synced hits (hits in makeSfxTrack)
   // the games at the Tournament Ground: the crier's bell, hooves and the crowd (the lances striking are synced hits, hits in
   // makeSfxTrack), the fanfare in the throne room
+  ev_decree: [['bell', 0.4], ['chatter', 0.35], ['cheer', 0.4]], // owner 2026-10-28
   ev_race: [['bell', 0.4], ['chatter', 0.35], ['cheer', 0.4]],
   ev_race_results: [['hooves', 0.55], ['chatter', 0.3], ['cheer', 0.4]],
   ev_race_crown: [['fanfare', 0.5], ['cheer', 0.45]],

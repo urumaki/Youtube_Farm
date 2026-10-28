@@ -100,6 +100,9 @@ export const STORIES = {
   pies: { minPop: 50, cooldown: 12, weight: 2, needs: (s) => built(s, 'tavern') },
   // a rowing race on the river past the dock, three boats with named rowers, the crowd on the pier
   regatta: { minPop: 30, cooldown: 14, weight: 2, needs: (s) => built(s, 'dock') && !['rain', 'snow', 'fog'].includes(s.weather) },
+  // owner 2026-10-28: the crier proclaims once that guards become Knights and Cavaliers only by winning at the Tournament
+  // Ground (asking makes a guard), on the first day it can be once the Tournament Ground stands
+  decree: { minPop: 100, once: true, needs: (s) => built(s, 'tournament') },
 };
 const GUARDS = ['guard', 'knight'], LAND = ['farmer', 'peasant', 'shepherd'];
 const teamOf = (s, jobs) => namedVillagers(s).filter((n) => jobs.includes(n.job));
@@ -270,6 +273,12 @@ const BUILD = {
     const crier = roleCast(state, r, ['crier'], 1)[0] || null;
     const crowd = roleCast(state, r, Object.keys(JOB_COUNT(state)), 5, crier ? [crier] : []);
     return { tier: t.id, title: t.title, crier, cast: [...(crier ? [crier] : []), ...crowd] };
+  },
+  decree(state, r) {
+    // the crier reads it out (a named one when there is one), five named guards in front
+    const crier = roleCast(state, r, ['crier'], 1)[0] || null;
+    const guards = roleCast(state, r, ['guard'], 5, crier ? [crier] : []);
+    return { crier, cast: [...(crier ? [crier] : []), ...guards] };
   },
   bigfish(state, r, arc) {
     // the next day the same fisherman roasts it for the newest named villagers
@@ -479,6 +488,12 @@ export function pickStory(state, { unlocked = [] } = {}) {
       return { id: arc.id, step: arc.step, ...story };
     }
   }
+  // a decree read once, on the first day it can be (after the stories of several days, which it never breaks)
+  for (const [k, s] of Object.entries(STORIES)) {
+    if (id || !s.once || state.storyLog[k] !== undefined || !possible(k, s)) continue;
+    const story = BUILD[k](state, r);
+    if (story) { state.storyLog[k] = state.day; return { id: k, ...story }; }
+  }
   // a rebel waiting for the pillory (no more than once every 7 days)
   if (!id && rebelsWaiting(state).length && possible('rebel', STORIES.rebel)
     && (state.storyLog.rebel === undefined || state.day - state.storyLog.rebel >= STORIES.rebel.cooldown)) {
@@ -491,7 +506,7 @@ export function pickStory(state, { unlocked = [] } = {}) {
   }
   if (!id) {
     if (!r.chance(STORY_CHANCE)) return null;
-    const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && !s.onUnlock && !s.onComment && possible(k, s)
+    const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && !s.onUnlock && !s.onComment && !s.once && possible(k, s)
       && (state.storyLog[k] === undefined || state.day - state.storyLog[k] >= s.cooldown));
     if (!options.length) return null;
     id = r.weighted(options, ([, s]) => s.weight)[0];

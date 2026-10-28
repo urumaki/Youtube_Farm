@@ -110,7 +110,12 @@ Add new owner decisions here.
   (`jobFor` makes the Harbor tier's knights guards), never in `availableJobs`. Asking for a knight, captain, commander,
   cavalry and the like makes a guard (`requests.js`). The 80 or so villagers who had asked to be knights before became
   guards on the next day (`assignNames`: an earned job with no `knightDay` / `cavalierDay`, or an apprentice waiting for one).
-  Test with `npm test` ("a Knight and a Cavalier are only won"). The lists are bare earth (the Tournament Ground's pad is `dirt`, not paving). Synced lance sounds (`lance` hit, `hooves` bed, the fanfare in the throne room). Test with
+  Test with `npm test` ("a Knight and a Cavalier are only won").
+  The decree (owner 2026-10-28): the rule is announced once. Story `decree` (`once: true` in `STORIES`, read on the first
+  day it can be once the Tournament Ground stands, after a story of several days and before the pillory; never drawn at
+  random): the crier's dais of `proclaim.js` (`buildDecree` in `stories/games.js`), five named guards in front, the title
+  "Knight or Cavalier? Win the tournament!"; the narrator: "Hear ye, hear ye! From this day, guards become Knights and
+  Cavaliers only by winning at the Tournament Ground!". Test with `npm run render -- --real --subs 2310 --story decree --stills 3.5,5.5`. The lists are bare earth (the Tournament Ground's pad is `dirt`, not paving). Synced lance sounds (`lance` hit, `hooves` bed, the fanfare in the throne room). Test with
   `--story race`, `race:results`, `joust`, `joust:results` (`--built tournament` on a kingdom without one).
   Six more stories (owner 2026-10-27, after the YouTube stats: the days with a story kept more viewers to the end):
   - The ship (`ship`, `stories/ship.js`, from 500 subscribers once the Harbor stands, no rain or snow, cooldown 14): a
