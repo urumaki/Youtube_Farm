@@ -48,8 +48,9 @@ const KEYWORDS = [
   [/engineer|egineer|ingegner|\bsiege|trebuchet|catapult/, 'engineer'],
   [/shep+h?[ae]rd|\bsheep|rancher|\bgoats?\b|\bbarn\b|livestock|raise animals|\bpastore|pecor|allevator/, 'shepherd'],
   [/\btanner|leather\s*worker|tannery|concia|cuoio/, 'tanner'],
-  // no noble titles as jobs (owner): a lord or a landlord collects the taxes
-  [/tax\s*collector|\btax(man|es)?\b|esattore|gabellier|\btasse\b|\blord\b|landlord|\bnoble|\bduke|\bbaron|nobile|signore/, 'taxcollector'],
+  // no noble titles as jobs (owner): a lord or a landlord collects the taxes. "My lord", "my noble lord" and "signore" alone
+  // are how people speak to the king, not a request (2026-10-29: "Hello my Lord, may I be a guard" made a tax collector)
+  [/tax\s*collector|\btax(man|es)?\b|esattore|gabellier|\btasse\b|\b(a|an|be|become)\s+(lord|noble(man|woman)?)\b|\bnoble(man|woman)\b|landlord|\bduke|\bbaron|\b(un|essere|diventare)\s+(nobile|signore)\b/, 'taxcollector'],
   [/tailor|seamstress|dressmaker|\bsew|sarto|sarta|\bcucir/, 'tailor'],
   [/\bpotter|pottery|\bclay\b|vasaio|ceramic|argilla/, 'potter'],
   [/cobbler|shoe\s*maker|\bshoes?\b|calzolai|scarpe/, 'cobbler'],
@@ -67,9 +68,10 @@ const KEYWORDS = [
   // new jobs asked for in the comments up to 2026-10-25 (owner 2026-10-25, by request only)
   [/teacher|\btutor|school\s*master|insegnant|\bmaestr[oa]\b/, 'teacher'],
   [/philosoph|\bthinker|filosof/, 'philosopher'],
-  [/\bbarber|barbiere|hair\s*(cutter|dresser)/, 'barber'],
+  // the medieval surgeon was the barber (2026-10-29: "sawbone", "a surgeon")
+  [/\bbarber|barbiere|hair\s*(cutter|dresser)|saw\s*bones?\b|surgeon|chirurg/, 'barber'],
   [/astronom|astrolog|stargaz|star\s*gaz/, 'astronomer'],
-  [/stable\s*(hand|boy|keeper|master|man)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom)/, 'stablehand'],
+  [/stable\s*(hand|boy|keeper|master|man)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom)|carriage|coach\s*(man|driver)|wagon\s*(driver|master)|\bwagoner|cocchier|carrettier/, 'stablehand'],
   [/advis[eo]r|counsell?or|consiglier/, 'adviser'],
 ];
 
@@ -157,8 +159,9 @@ const REBEL_RE = new RegExp([
 ].join('|'), 'i');
 
 // "join", "I join!", "partecipo": the commenter's villager, if a guard, enters the games announced at the Tournament Ground
-// (owner 2026-10-28, stories.js)
-const JOIN_RE = /\b(join|joining|partecipo|iscrivimi)\b/i;
+// (owner 2026-10-28, stories.js). Joining the kingdom, the army or the guard is not entering the games (2026-10-29: "Can I join
+// the army" entered them)
+const JOIN_RE = /\b(join|joining|partecipo|iscrivimi)\b(?!\s+(as\b|((the|your|this|thy|ur|ya)\s+)?(army|kingdom|village|town|city|realm|guards?|militia|crew|channel|community|people|club|you|ya|u)\b))/i;
 
 /** True when the comment asks to enter the games. */
 export function joinFromText(text) {

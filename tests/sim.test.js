@@ -304,6 +304,15 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
   assert.deepEqual(wantsFromText('I SHAL BE MAKING FARMING TOOLS!'), ['blacksmith']);
   assert.deepEqual(wantsFromText('Yowza i think these people need mead and bread'), ['brewer', 'baker']);
   assert.deepEqual(wantsFromText('maybe later on when there are proper guards'), []);
+  // comments of 2026-10-28: speaking to the king is not asking to be a lord; the surgeon was the barber
+  assert.deepEqual(wantsFromText('Hello my Lord although I have just joined may I please be a guard'), ['guard']);
+  assert.deepEqual(wantsFromText('My dearest lord please bestow upon me the title of Commander'), ['guard']);
+  assert.deepEqual(wantsFromText('My noble lord can I be the Kingdoms Tailor?'), ['tailor']);
+  assert.deepEqual(wantsFromText('can I be a lord'), ['taxcollector']);
+  assert.deepEqual(wantsFromText('Signore, posso essere un fabbro?'), ['blacksmith']);
+  assert.deepEqual(wantsFromText('day 5 for sawbone?'), ['barber']);
+  assert.deepEqual(wantsFromText('mime a surgeon'), ['barber']);
+  assert.deepEqual(wantsFromText('add me as a horse carriage worker pls'), ['stablehand']);
   assert.equal(wantsFromText('Make me a warrior i am sir coolum now')[0], 'guard');
   assert.equal(nameFromText('Can I be a villager called sopita?'), 'Sopita');
   assert.equal(nameFromText('could I be a carpenter named henry'), 'Henry');
@@ -778,6 +787,7 @@ test('the games at the Tournament Ground (owner 2026-10-28): announced, guards w
   assert.ok(!STORIES.joust.needs(noGround), 'only once the Tournament Ground stands');
   // "join" in a comment
   assert.ok(joinFromText('JOIN!') && joinFromText('i want to join the race') && joinFromText('partecipo') && !joinFromText('joined the kingdom yesterday, love it'));
+  assert.ok(!joinFromText('Can I join the army') && !joinFromText('can i join your kingdom as a guard') && !joinFromText('i want to join as a knight') && joinFromText('I join the joust!'));
   // day 1: the crier and named guards in front of him
   const ann = storyFor(kingdom('2026-11-03'), 'race');
   assert.equal(ann.step, 'announce');

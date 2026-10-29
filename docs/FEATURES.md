@@ -329,6 +329,11 @@ Add new owner decisions here.
   now asks for it, no longer the tax collector). Their keywords stay narrow ("school", "stars", "horses", "advice" alone
   ask for nothing). Not made, by the owner's rules: king, queen, royalty, pope (titles), wizard, witch (magic), and the
   rude or villainous ones.
+- From the comments of 2026-10-28 (owner 2026-10-29, `requests.js`): "my lord", "my noble lord" and "Signore," are how
+  people speak to the king, so they no longer ask for the tax collector (only "a lord", "be a lord", "a nobleman",
+  "un signore" do; "Hello my Lord, may I be a guard" had made tax collectors). Sawbones and surgeon ask for the barber;
+  carriage, coachman and wagon driver for the stablehand. "Join the army", "join the kingdom", "join as a guard" no longer
+  enter the Tournament Ground's games: only a "join" that is not about joining the kingdom, the army or the guard does.
 - Buildings begin only when the video can show them (owner 2026-10-23): at most 2 a day once villagers have
   names (3 before), as `timeline.js` shows them (`SHOWN_STARTS` in `simulate.js`); the others wait in
   `s.buildQueue` (in tier order, commissions last) and begin on the next days (`diff.buildingsWaiting`). The
