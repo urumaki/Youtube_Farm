@@ -341,6 +341,16 @@ Add new owner decisions here.
   "mine" alone asks for nothing): in a grey hood and a leather apron, swings a pick with both hands at a wall of rough
   rock beside a mine mouth framed in timber, dust at each blow, a cart of stone beside him (`work.js` `rockface`, tool
   `pick`). Test: `npm run render -- --real --subs 2310 --gallery miner`.
+- A lecture at the University (owner 2026-10-29): the scholar's second scene once the University stands (`scholar:
+  ['desk', 'lecture']`, `NEEDS.lecture` in `scenes.js`). Inside a stone classroom (`buildLectureRoom` in `room.js`, an
+  indoor scene with its own camera and a hard cut, like the sweep's room): the named scholar teaches from the front by a
+  lectern and a slate with chalk circles and lines, pointing at it; six scholars in their caps on two benches write in
+  their books, one raises a hand now and then; tall windows with daylight. No visitor, never the POV shot. The camera
+  pushes in from the back of the room over the students' heads. Test: `npm run render -- --real --subs 2310 --gallery
+  scholar:lecture`.
+- The jobs given by the old keywords set right in `state/kingdom.json` (owner 2026-10-29, `ffd110a`): each villager's own
+  requests read again by hand; 26 changed (14 tax collectors made by "my lord", guards made by "sir", thanks read as a
+  request), 6 who never asked for a job back to the job they were born to. "Bozo" ("I come for bread") stays a guard.
 - The Mine (owner 2026-10-29): a goal at 2,750 ("Mining Town", the miner's tier, before the Beehives at 3,000), 3 days to
   build. In the hills west of the Quarry, outside the Second Wall, with a dirt track on from the Quarry's (`placeMine` in
   `world.js`, laid out last so nothing moves): a hill of rough rock (`crag`) with the adit framed in timber, a plank way

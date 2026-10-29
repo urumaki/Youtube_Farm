@@ -19,7 +19,8 @@ const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 export { VARIANTS, AWAY_VARIANTS, pickVariant };
 // scenes inside a building (the baker's bakehouse, bakery.js; the chimney sweep's room, room.js): own camera, a hard cut
 // in and out
-export const indoorScene = (job, variant) => (job === 'baker' && BAKEHOUSE_VARIANTS.has(variant)) || (job === 'chimneysweep' && variant === 'house');
+export const indoorScene = (job, variant) => (job === 'baker' && BAKEHOUSE_VARIANTS.has(variant)) || (job === 'chimneysweep' && variant === 'house') ||
+  (job === 'scholar' && variant === 'lecture');
 // the innkeeper or brewer behind the bar of the tavern, or the bard in its corner (tavern.js): own camera, a hard cut in
 // and out, the room's lamps
 export const barScene = (variant) => variant === 'inside' || variant === 'inn';

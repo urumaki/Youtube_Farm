@@ -26,7 +26,7 @@ import { buildBoat, buildRiverbank, buildNightWatch, buildStroll } from './away.
 import { povCamera } from './pov.js';
 import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
-import { buildSweepRoom } from './room.js';
+import { buildSweepRoom, buildLectureRoom } from './room.js';
 import { huntSpot } from '../../sim/wall.js';
 import { buildQueue } from './queue.js';
 import { heightAt, WATER_LEVEL } from '../../sim/world.js';
@@ -344,7 +344,10 @@ async function setup(data) {
   };
   const workSceneOnly = ({ job, variant, anchor, ax, az, away, id, face, t0 = 0, floorAt = null }) => {
     // inside a building (the Bakery) the room stands on its floor
-    if (indoorScene(job, variant)) return (job === 'chimneysweep' ? buildSweepRoom : buildBakehouse)({ variant, anchor, away, M, seed: state.seed, id, heightAt: floorAt || ((x, z) => heightAt(w, x, z)) });
+    if (indoorScene(job, variant)) {
+      const build = job === 'chimneysweep' ? buildSweepRoom : job === 'scholar' ? buildLectureRoom : buildBakehouse;
+      return build({ variant, anchor, away, M, seed: state.seed, id, heightAt: floorAt || ((x, z) => heightAt(w, x, z)), rig, color: JOBS.scholar.color });
+    }
     const make = variant === 'dummy' ? buildDummyDrill : buildWorkScene;
     // scenes by the house (the beggar against its back wall): `home` metres out from the wall, facing the croft
     const { home, homeTurn = 0 } = sceneOf(job, variant);

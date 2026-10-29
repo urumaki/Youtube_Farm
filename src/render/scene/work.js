@@ -243,6 +243,8 @@ Object.assign(JOB_SCENES, {
   'executioner:grind': { period: 1.2, raise: -1.2, down: -0.95, bend: 0.25, fx: 'sparks', sound: 'none', tool: 'axe', props: 'grindstone', smooth: true, both: true, hood: true },
   'jester:kids': { period: 0.9, raise: -1.2, down: -0.8, bend: 0, sound: 'none', tool: null, props: 'kids', juggle: true, turn: 0.45, radius: 6.2 },
   'crier:proclaim': { period: 2.6, raise: -1.15, down: -1.15, bend: -0.05, sound: 'none', tool: null, props: 'crowd', read: true, smooth: true, turn: 0.45, radius: 6.8 },
+  // owner 2026-10-29: the scholar lecturing at the front of a classroom of the University (room.js), pointing and gesturing
+  'scholar:lecture': { period: 2.6, raise: -2.3, down: -0.7, bend: -0.05, sound: 'none', tool: null, props: 'none', smooth: true, left: -0.5, turn: 0.35 },
   priest: { period: 3.0, raise: -2.4, down: -0.5, bend: 0.05, sound: 'none', tool: null, props: 'shrine', smooth: true, left: -1.0 },
   'priest:bless': { period: 2.2, raise: -2.3, down: -0.9, bend: 0, fx: 'splash', sound: 'none', tool: null, props: 'none', smooth: true, left: -1.0, turn: 0.4 },
   'priest:preach': { period: 2.8, raise: -2.6, down: -0.8, bend: -0.05, sound: 'none', tool: null, props: 'crowd', smooth: true, left: -1.0, turn: 0.45, radius: 6.8 },

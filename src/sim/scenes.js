@@ -34,6 +34,8 @@ export const VARIANTS = {
   // pen, the engineer in front of a building going up (src/render/scene/work.js, main.js)
   bard: ['square', 'inn'], jester: ['square', 'kids'], cook: ['stall'], butcher: ['stall'], ratcatcher: ['alley'], chimneysweep: ['house'],
   hunter: ['boar', 'stag'], shepherd: ['pen', 'pasture'], engineer: ['site'], falconer: ['meadow'],
+  // owner 2026-10-29: a scholar also teaches the other scholars in a classroom of the University once it stands
+  scholar: ['desk', 'lecture'],
 };
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
 // the fisherman always fishes on the river (owner 2026-10-22): from a jetty with a rod or a net, or in a boat
@@ -49,7 +51,7 @@ const SUMMER = new Set(['fields', 'wheat', 'pasture']);
 export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished
 const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop', inside: 'tavern', stand: 'crier_stand',
-  square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth' };
+  square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth', lecture: 'university' };
 // croft scenes no longer used once the building stands (the innkeeper's barrel in the croft, once the tavern is open)
 const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
 // the same for one job only (owner 2026-10-25): knights train in the lists of the Tournament Ground once it stands, no
@@ -57,8 +59,8 @@ const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
 const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tournament' }, cavalier: { walls: 'tournament' } };
 // scenes with no room for a visitor (on a platform, on the move, inside a house): a host with a guest stays in the croft
 // scenes in a place with its own camera (the tavern's bar, the bakehouse): a villager seen through their eyes walks instead
-const POV_AWAY = new Set(['inside', 'inn', 'house']);
-const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless']);
+const POV_AWAY = new Set(['inside', 'inn', 'house', 'lecture']);
+const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture']);
 // buildings with no shot of their own: no engineer stands in front of them
 const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');
