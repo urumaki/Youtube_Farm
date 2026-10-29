@@ -242,7 +242,14 @@ Add new owner decisions here.
   (`VARIANTS` in `timeline.js`; `'job:variant'` entries in `JOB_SCENES`, `work.js`): guards on the walls,
   sparring or at the straw dummy (`drills.js`); farmers hoeing, sowing or reaping; the smith at the anvil,
   quenching or at the bellows; the fletcher shooting at a target... The croft shots cut in hard and move
-  the camera a different way each time (`CAM_STYLES`). Name labels pop in. Bakers never work in the
+  the camera a different way each time (`CAM_STYLES`). Through their eyes (owner 2026-10-29, `pov.js`): one villager shot,
+  not again within 3 days (`state.sceneLog.pov`, `diff.scenes.pov = { id, mode }` from `planScenes`), starts behind
+  and above the villager, pushes in through the back of the head and stays at the eyes (wider lens 74, near plane 0.05, the
+  head and what is on it hidden, the name label kept up in the view). 'work': in their own place, looking between the work
+  and the hands; a visitor walks up face to face. 'stroll' (alone in the shot, or a scene with its own camera: the walls,
+  the boat, the tavern, the bakehouse): walking down the street nearest home by day, people going by (`buildStroll`,
+  `away.js`). Test: `npm run render -- --real --subs 2310 --pov work --stills 12.5`, `npm run render -- --subs 300 --from
+  200 --names "Alda,Bertoldo,Cunegonda" --pov stroll --stills 17`. Name labels pop in. Bakers never work in the
   open (owner 2026-10-20): a bakehouse stands in their croft (`bakery.js`), with the oven beside them,
   the peel, its own wide-lens camera and a hard cut in and out like the tavern; guests walk in by the door.
   The beggar sits against the back wall of his house swigging from a bottle, or lies asleep by it snoring

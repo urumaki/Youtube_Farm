@@ -113,13 +113,15 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     // a host with a guest stays at home (the castle scenes have no croft to walk into)
     const variant = scenes && n.id in scenes.variants ? scenes.variants[n.id] : pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g, ready: (v) => sceneReady(state, v, sceneJob) });
     if (variant) usedVariants.add(variant);
-    const castleShot = AWAY_VARIANTS.has(variant);
-    const indoor = indoorScene(sceneJob, variant) || barScene(variant);
+    // through the villager's own eyes, at work or on a walk down the street (owner 2026-10-29, diff.scenes.pov)
+    const pov = scenes?.pov?.id === n.id && !(g && scenes.pov.mode === 'stroll') ? scenes.pov.mode : null;
+    const castleShot = AWAY_VARIANTS.has(variant) && !pov;
+    const indoor = (indoorScene(sceneJob, variant) || barScene(variant)) && !pov;
     targets.push({
       kind: 'villager', id: n.id, job: n.job, sceneJob, variant, pos: new THREE.Vector3(), labelPos: new THREE.Vector3(), radius: 6.8, front: 0,
       // a hard cut into each villager (a flight down into a croft only shows roofs and grass)
-      label: { title: n.name, sub: jobSub(n) }, work: null, weight: g ? 1.45 : 1.1, cut: castleShot || indoor, cutIn: true, interior: indoor, phase: NIGHT_VARIANTS.has(variant) ? 1 : undefined,
-      camStyle: castleShot || indoor ? null : CAM_STYLES[(camFrom + crofts++) % CAM_STYLES.length],
+      label: { title: n.name, sub: jobSub(n) }, work: null, weight: g ? 1.45 : 1.1, cut: castleShot || indoor || !!pov, cutIn: true, interior: indoor, phase: NIGHT_VARIANTS.has(variant) && !pov ? 1 : undefined,
+      camStyle: castleShot || indoor || pov ? null : CAM_STYLES[(camFrom + crofts++) % CAM_STYLES.length], pov,
       ...(g ? { pair: f.pair, guest: { id: g.id, name: g.name, job: g.job }, label2: { title: g.name, sub: jobSub(g) }, labelPos2: new THREE.Vector3() } : {}),
     });
   }

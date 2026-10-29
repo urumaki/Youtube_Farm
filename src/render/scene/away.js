@@ -346,9 +346,8 @@ export function buildRiverbank({ w, M, hero, home, heightAt, mode = 'rod', guest
   };
 }
 
-/** The night watch: a guard walks a street near their house at dusk, a lantern held up, a spear. */
-export function buildNightWatch({ w, M, hero, home, heightAt }) {
-  // the street closest to home
+/** The street nearest home: { pl, s } (a road polyline and the distance along it closest to home). */
+function streetNear(w, home) {
   let best = null;
   for (const road of w.roads) {
     const pl = polyline(road.pts);
@@ -357,6 +356,57 @@ export function buildNightWatch({ w, M, hero, home, heightAt }) {
       if (!best || d < best.d) best = { d, s, pl };
     }
   }
+  return best;
+}
+
+/**
+ * A stroll (owner 2026-10-29): the villager walks down the street nearest home by day, swinging their arms, and the shot is
+ * seen through their eyes (pov.js): the street ahead, the houses going by, the people on their way.
+ */
+export function buildStroll({ w, M, hero, home, heightAt }) {
+  const { pl, s: near } = streetNear(w, home);
+  const SPEED = 1.15;
+  // walk the long way along the street, the town ahead
+  const dir = near < pl.total / 2 ? 1 : -1;
+  const s0 = Math.max(4, Math.min(pl.total - 4, near));
+  const place = (s, lateral = 0) => {
+    const [x, z, ang] = pl.at(Math.max(0, Math.min(pl.total, s)));
+    const v = new THREE.Vector3(x - Math.sin(ang) * lateral, 0, z + Math.cos(ang) * lateral);
+    v.y = heightAt(v.x, v.z) + 0.03;
+    return { v, ang };
+  };
+  const group = new THREE.Group();
+  group.visible = false;
+  const P = person(M, JOBS[hero.job]?.color || '#7a6a55');
+  group.add(P.root);
+  let T0 = 0, T1 = 1;
+  const at = (t) => s0 + dir * (t - T0) * SPEED;
+  const pose = (t) => {
+    const { v, ang } = place(at(t), 0.9 * dir);
+    P.root.position.copy(v);
+    P.root.rotation.y = Math.PI / 2 - ang + (dir < 0 ? Math.PI : 0);
+    stride(P, (t - T0) * 6.2, 0.45);
+  };
+  return {
+    group,
+    rig: P,
+    labelPos: new THREE.Vector3(),
+    focus: place(s0).v.add(new THREE.Vector3(0, 1.2, 0)),
+    setWindow(t0, t1) { T0 = t0; T1 = t1; pose(t0); },
+    // the eyes look down the street, a little below the horizon
+    look(eye, fwd, out) { return out.copy(eye).addScaledVector(fwd, 9).add(new THREE.Vector3(0, -1.1, 0)); },
+    update(t, t0, t1) {
+      const on = t >= t0 - 0.1 && t <= t1 + 0.1;
+      group.visible = on;
+      if (on) pose(t);
+    },
+  };
+}
+
+/** The night watch: a guard walks a street near their house at dusk, a lantern held up, a spear. */
+export function buildNightWatch({ w, M, hero, home, heightAt }) {
+  // the street closest to home
+  const best = streetNear(w, home);
   const { pl } = best;
   const s0 = Math.max(4, Math.min(pl.total - 12, best.s - 4));
   const place = (s, lateral = 0) => {

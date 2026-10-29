@@ -56,6 +56,8 @@ const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
 // longer on the castle walls
 const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tournament' }, cavalier: { walls: 'tournament' } };
 // scenes with no room for a visitor (on a platform, on the move, inside a house): a host with a guest stays in the croft
+// scenes in a place with its own camera (the tavern's bar, the bakehouse): a villager seen through their eyes walks instead
+const POV_AWAY = new Set(['inside', 'inn', 'house']);
 const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless']);
 // buildings with no shot of their own: no engineer stands in front of them
 const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
@@ -154,7 +156,21 @@ export function planScenes(state, { featured, tavern, church = null, avoidJobs =
     const life = country[Math.floor(rand01(state.seed, 'country', day) * country.length)];
     ambient = guards.length && (day % 2 === 1 || !life) ? guards[0] : life || null;
   }
+  // one villager seen through their own eyes (owner 2026-10-29, pov.js), not again within SCENE_GAP days: at work in their
+  // own place ('work', a visitor walking up to them too) or walking down the street near home ('stroll', alone in the shot);
+  // never the scenes with a camera of their own (the walls, the boat, the tavern, the bakehouse), which take the walk instead
+  let pov = null;
+  if (named && !recentScene(state, 'pov')) {
+    const own = (f) => {
+      const job = state.names[f.id]?.wants && f.job === 'apprentice' ? state.names[f.id].wants : f.job;
+      const v = variants[f.id];
+      return !AWAY_VARIANTS.has(v) && !POV_AWAY.has(v) && !(job === 'baker' && v) && !(job === 'chimneysweep' && v === 'house');
+    };
+    const f = shots.find((x) => !x.with || own(x));
+    if (f) pov = { id: f.id, mode: f.with || (own(f) && rand01(state.seed, 'pov', day) < 0.5) ? 'work' : 'stroll' };
+  }
   state.sceneLog = { ...(state.sceneLog || {}) };
+  if (pov) state.sceneLog.pov = day;
   if (tavern) state.sceneLog.tavern = day;
   if (church) state.sceneLog.church = day;
   for (const f of shots) {
@@ -162,5 +178,5 @@ export function planScenes(state, { featured, tavern, church = null, avoidJobs =
     state.sceneLog[sceneKey(f.job === 'apprentice' && n?.wants ? n.wants : f.job, variants[f.id])] = day;
   }
   if (ambient) state.sceneLog[ambientKey(ambient)] = day;
-  return { tavern, church, variants, ambient };
+  return { tavern, church, variants, ambient, pov };
 }

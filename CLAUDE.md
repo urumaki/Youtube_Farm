@@ -34,7 +34,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   touches `state/`. `--names` fakes commenters. `--real` starts from the real `state/` (next day, read
   only) instead of a fresh two-day test kingdom: needed to test anything that exists only later (tavern).
   More test flags: `--story <kind>[:<step>]`, `--gallery "job:variant,job+guest:variant"` (`output/gallery/`),
-  `--built a,b` (buildings stand finished), `--church`, `--day <date>` (a saved day again, read only).
+  `--built a,b` (buildings stand finished), `--church`, `--day <date>` (a saved day again, read only),
+  `--pov work|stroll` (a villager seen through their eyes).
 - `npm run daily -- --dry-run --subs 80` — simulate the next real day without saving (no video).
 - `node scripts/preview-day.js 1600 [date]` — render the next real day (real comments since the last saved day, the given
   subscribers) to `output/<date>_en_preview_<subs>.mp4`, read only: nothing saved, nothing published.

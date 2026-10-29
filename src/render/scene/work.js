@@ -1501,6 +1501,8 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     strikeTimes,
     rig: P,
     tool,
+    // where the eyes rest while working (pov.js): the spot the tool strikes, the work on the bench
+    workPoint: (out) => { group.updateMatrixWorld(true); return group.localToWorld(out.copy(impact)); },
     update(t) {
       const { a, k: cycleK, u: cycleU } = pose(t);
       const c = (t + offset) / cfg.period;

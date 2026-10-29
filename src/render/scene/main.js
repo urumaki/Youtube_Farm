@@ -22,7 +22,8 @@ import { buildFields, buildWheat } from './ambient.js';
 import { buildWallWatch } from './wallwatch.js';
 import { buildPasture, buildLaundry } from './everyday.js';
 import { buildSparring, buildDummyDrill } from './drills.js';
-import { buildBoat, buildRiverbank, buildNightWatch } from './away.js';
+import { buildBoat, buildRiverbank, buildNightWatch, buildStroll } from './away.js';
+import { povCamera } from './pov.js';
 import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
 import { buildSweepRoom } from './room.js';
@@ -104,6 +105,15 @@ async function setup(data) {
   const ctx0 = {};
   let caravan = null, tavern = null, church = null;
   const stories = [];
+  // villager shots seen through the villager's eyes (pov.js): the camera, the name label and the head that hides
+  const povs = [];
+  const povFor = (tg, rig, look) => {
+    const p = povCamera(rig, look);
+    tg.cam = p.cam;
+    tg.labelPos = p.labelPos;
+    tg.povRig = p;
+    povs.push(tg);
+  };
   const yFn = (x, z) => heightAt(w, x, z) + 0.03;
   const interiors = []; // villagers working inside a building (the baker's bakehouse), lit while the camera is in
   const ambientScene = (id, hero) => {
@@ -345,7 +355,15 @@ async function setup(data) {
     return make({ job, variant, anchor, face: face ?? Math.atan2(ax, az) + (sceneOf(job, variant).turn ?? 1.1), M, seed: state.seed, id, t0 });
   };
   if (plan) for (const tg of plan.targets) {
-    if (tg.kind === 'villager' && barScene(tg.variant) && buildings.items.tavern) {
+    if (tg.kind === 'villager' && tg.pov === 'stroll') {
+      // a walk down the street near home, through their eyes (owner 2026-10-29)
+      const st = buildStroll({ w, M, hero: { id: tg.id, name: tg.label.title, job: tg.sceneJob }, home: houses.shapes.get(state.villagers[tg.id].house), heightAt: (x, z) => heightAt(w, x, z) });
+      st.setWindow(tg.t0, tg.t1);
+      scene.add(st.group);
+      stories.push({ st, tg });
+      povFor(tg, st.rig, st.look);
+      tg.pos.copy(st.focus);
+    } else if (tg.kind === 'villager' && barScene(tg.variant) && buildings.items.tavern) {
       // the innkeeper or brewer behind the bar of the tavern (owner 2026-10-23), a visitor at the counter
       // or the bard playing in the corner by the fireplace
       const bar = tg.variant === 'inn' ? buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, minstrel: { name: tg.label.title } })
@@ -381,6 +399,8 @@ async function setup(data) {
       tg.work = ws;
       tg.pos.copy(ws.focus);
       tg.labelPos.copy(ws.labelPos);
+      // at work, through their eyes: between the work and the hands, so both are in the view
+      if (tg.pov === 'work') povFor(tg, ws.rig, (eye, fwd, out) => ws.workPoint(out).lerp(ws.rig.r.hand.getWorldPosition(povEye).lerp(ws.rig.l.hand.getWorldPosition(povHand), 0.5), 0.5));
       if (ws.radius) tg.radius = ws.radius;
       if (tg.guest) {
         // a second named villager walks in: frame them both, a little wider
@@ -505,7 +525,7 @@ async function setup(data) {
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
   const overlay = viewer ? null : createOverlay(document.getElementById('stage'), data);
 
-  const ctx = { ...ctx0, renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, interiors, caravan, tavern, church, stories, crews };
+  const ctx = { ...ctx0, renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, interiors, caravan, tavern, church, stories, crews, povs };
   ctx.stats = {
     setupMs: Math.round(performance.now() - t0), houses: state.houses.length, animated: animated.size, trees: nature.count,
     walkers: life.walkers, guards: life.guards, targets: plan?.targets.map((t) => `${t.kind}:${t.id ?? ''}`),
@@ -527,6 +547,8 @@ function setFov(camera, fov) {
   const f = fov || camera.userData.fov0;
   if (camera.fov !== f) { camera.fov = f; camera.updateProjectionMatrix(); }
 }
+
+const povEye = new THREE.Vector3(), povHand = new THREE.Vector3();
 
 function applyFrame(ctx, t) {
   const { plan, camera, env, castle, animated, buildings, life, water, M, houses, nature, overlay, renderer } = ctx;
@@ -556,6 +578,12 @@ function applyFrame(ctx, t) {
   setFov(camera, ev.camera.fov);
   camera.position.copy(ev.camera.pos);
   camera.lookAt(ev.camera.look);
+  // through a villager's eyes the camera is a few centimetres from the hands and the tool: a near plane to match, and the
+  // head it sits in taken away (pov.js)
+  const pov = !ev.flying && ev.active?.povRig ? ev.active : null;
+  for (const tg of ctx.povs || []) tg.povRig.hide(tg === pov && camera.position.distanceTo(tg.povRig.eye(povEye)) < 0.45);
+  const near = pov ? 0.05 : 1;
+  if (camera.near !== near) { camera.near = near; camera.updateProjectionMatrix(); }
   camera.updateMatrixWorld();
   const night = env.set(ev.phase, ev.camera.look, ev.shadowRadius, t, inside ? 1 : 0, ev.flying ? 0 : ev.active?.fog || 0);
   M.setNight(night);
