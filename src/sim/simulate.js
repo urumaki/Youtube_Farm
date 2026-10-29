@@ -296,11 +296,13 @@ function assignNames(s, commenters, blocked, diff) {
       if (c.complains && id !== undefined) { s.names[id].complainDay = s.day; diff.complaints.push({ id: Number(id), name: s.names[id].name }); }
       if (c.rebel && id !== undefined) { s.names[id].rebelDay = s.day; diff.rebels.push({ id: Number(id), name: s.names[id].name }); }
       else if (c.rebel && q) q.rebel = true;
+      // "!join" (owner 2026-10-29): only a villager who was a guard before today enters the games, and is one still after
+      // this comment's own request; never one made a guard today, never the Captain of the Guard
+      const isGuard = () => (s.villagers[id]?.job ?? s.names[id].job) === 'guard';
+      const guardBefore = id !== undefined && isGuard() && s.names[id].requestDay !== s.day && Number(id) !== s.guardCaptain;
       if (id !== undefined && wants.length) applyRequest(id, wants);
       else if (wants.length && q) q.wants = wants;
-      // "!join": only a guard (the job after this comment's own request), never the Captain of the Guard, enters the games
-      const guard = id !== undefined && (s.villagers[id]?.job ?? s.names[id].job) === 'guard' && Number(id) !== s.guardCaptain;
-      if (c.join && guard && !s.gamesEntrants.includes(Number(id))) {
+      if (c.join && guardBefore && isGuard() && !s.gamesEntrants.includes(Number(id))) {
         s.gamesEntrants.push(Number(id));
         diff.joins.push({ id: Number(id), name: s.names[id].name });
       }

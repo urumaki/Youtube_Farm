@@ -871,10 +871,13 @@ test('"!join" (owner 2026-10-29): only guards go on the list of entrants for the
   named(15, 'guard'); named(16, 'farmer'); named(17, 'guard'); named(18, 'farmer');
   state.guardCaptain = 17;
   const c = (id, extra = {}, h = 10) => ({ author: `a${id}`, name: `V${id}`, at: `${dateOf(2)}T${h}:00:00Z`, wants: [], join: true, ...extra });
-  const r = advance(state, { subscribers: 600, date: dateOf(2), commenters: [c(15), c(15, {}, 11), c(16), c(17), c(18, { wants: ['guard'] })] });
-  // 16 is a farmer, 17 the Captain; 18 asked to be a guard in the same comment, so is one
-  assert.deepEqual(r.state.gamesEntrants, [15, 18]);
-  assert.deepEqual(r.diff.joins.map((j) => j.id), [15, 18]);
+  named(19, 'farmer'); named(20, 'guard');
+  const r = advance(state, { subscribers: 600, date: dateOf(2), commenters: [c(15), c(15, {}, 11), c(16), c(17), c(18, { wants: ['guard'] }),
+    c(19, { wants: ['guard'], join: false }, '09'), c(19), c(20, { wants: ['baker'] })] });
+  // 16 is a farmer, 17 the Captain; 18 and 19 were made guards today (in the same comment, or an earlier one), 20 is a
+  // baker after this comment: only 15, a guard from before today, enters
+  assert.deepEqual(r.state.gamesEntrants, [15]);
+  assert.deepEqual(r.diff.joins.map((j) => j.id), [15]);
 });
 
 test('the decree (owner 2026-10-28): the crier proclaims once that Knights and Cavaliers are won at the Tournament Ground', async () => {

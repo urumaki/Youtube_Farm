@@ -97,7 +97,8 @@ Add new owner decisions here.
   proclamation, named guards in front; the title says "Guards: comment !join" and the narration says every guard may
   enter by commenting join with an exclamation mark. Owner 2026-10-29: only "!join", anywhere in the comment
   (`joinFromText` in `requests.js`, a fixed regex; a plain "join" does not count), from a commenter whose villager is a
-  guard after that comment (never the Captain of the Guard) puts the villager once on `state.gamesEntrants`
+  guard since before that day and still one after that comment (never one made a guard that day, never the Captain of
+  the Guard) puts the villager once on `state.gamesEntrants`
   (`simulate.js`, `diff.joins`); the list is emptied when a game is run. Day 2 (`results`): the riders are drawn
   (`drawGuards` in `stories.js`) among the guards on the list (still guards that day), then the other named guards fill
   the places left (owner: fill with random guards); each draw is weighted
@@ -350,7 +351,7 @@ Add new owner decisions here.
   scholar:lecture`.
 - The jobs given by the old keywords set right in `state/kingdom.json` (owner 2026-10-29, `ffd110a`): each villager's own
   requests read again by hand; 26 changed (14 tax collectors made by "my lord", guards made by "sir", thanks read as a
-  request), 6 who never asked for a job back to the job they were born to. "Bozo" ("I come for bread") stays a guard.
+  request), 6 who never asked for a job back to the job they were born to. "Bozo" ("I come for bread") is the drunkard (beggar), the owner says.
 - The Mine (owner 2026-10-29): a goal at 2,750 ("Mining Town", the miner's tier, before the Beehives at 3,000), 3 days to
   build. In the hills west of the Quarry, outside the Second Wall, with a dirt track on from the Quarry's (`placeMine` in
   `world.js`, laid out last so nothing moves): a hill of rough rock (`crag`) with the adit framed in timber, a plank way
