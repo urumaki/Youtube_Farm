@@ -20019,17 +20019,17 @@
    "pair": "tools"
   },
   {
-   "id": 663,
-   "name": "theidiotwizard",
-   "job": "blacksmith",
+   "id": 269,
+   "name": "theperfectinperfectce…",
+   "job": "farmer",
    "today": false,
    "with": {
-    "id": 355,
-    "name": "NuclearMain",
-    "job": "fisherman",
+    "id": 596,
+    "name": "Big",
+    "job": "apprentice",
     "today": false
    },
-   "pair": "tools"
+   "pair": "visit"
   }
  ],
  "lastShown": {
@@ -20049,11 +20049,11 @@
   "214": 8,
   "219": 9,
   "253": 8,
+  "269": 14,
   "272": 8,
   "288": 13,
   "342": 8,
   "343": 9,
-  "355": 14,
   "369": 12,
   "432": 9,
   "446": 13,
@@ -20069,11 +20069,11 @@
   "564": 11,
   "579": 11,
   "583": 13,
+  "596": 14,
   "601": 12,
   "629": 13,
   "639": 14,
-  "654": 13,
-  "663": 14
+  "654": 13
  },
  "storyArc": {
   "id": "joust",
@@ -20083,7 +20083,7 @@
  },
  "sceneLog": {
   "tavern": 14,
-  "blacksmith:bellows": 14,
+  "blacksmith:bellows": 6,
   "carpenter:saw": 10,
   "brewer:tavern": 6,
   "stonemason:stack": 7,
@@ -20102,20 +20102,17 @@
   "fletcher:shoot": 13,
   "woodcutter:fell": 13,
   "peasant:spade": 13,
-  "pov": 14
+  "farmer:sow": 14
  },
  "scenes": {
   "tavern": true,
   "church": null,
   "variants": {
-   "522": "quench",
-   "663": "bellows"
+   "269": "sow",
+   "522": "quench"
   },
   "ambient": null,
-  "pov": {
-   "id": 522,
-   "mode": "work"
-  }
+  "pov": null
  },
  "wall2": {
   "day": 8,

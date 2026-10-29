@@ -471,6 +471,22 @@ test('comments saying they cannot find themselves are spotted, and that villager
   assert.ok(people.includes(Number(hidden[0])), 'the villager who could not find themselves is on screen');
 });
 
+test('never the same scene twice in a video (owner 2026-10-29): two blacksmiths who complained, one today, the other next', async () => {
+  const { pickFeatured } = await import('../src/sim/featured.js');
+  const jobs = ['blacksmith', 'blacksmith', 'fisherman', 'fisherman', 'farmer', 'baker'];
+  const kingdom = (day, lastShown = {}) => ({ seed: SEED, day, subscriberCount: 10, lastShown, villagers: jobs.map((job) => ({ job })),
+    names: Object.fromEntries(jobs.map((job, id) => [id, { name: `V${id}`, job, day: 1, ...(id < 2 ? { complainDay: 14 } : {}) }])) });
+  const people = (f) => f.flatMap((x) => (x.with ? [x, x.with] : [x]));
+  const day1 = pickFeatured(kingdom(14), { tavern: false });
+  const jobsOn = people(day1).map((p) => p.job);
+  assert.equal(new Set(jobsOn).size, jobsOn.length, 'one villager per job on screen');
+  const first = people(day1).find((p) => p.id < 2);
+  assert.ok(first, 'one of the two who complained is shown');
+  const shown = Object.fromEntries(people(day1).map((p) => [p.id, 14]));
+  const day2 = pickFeatured(kingdom(15, shown), { tavern: false });
+  assert.ok(people(day2).some((p) => p.id === 1 - first.id), 'the other comes the next day');
+});
+
 test('scenes: the same scene does not come back within three days', async () => {
   const { SCENE_GAP } = await import('../src/sim/scenes.js');
   let s = genesis({ seed: SEED, date: '2026-09-30' });

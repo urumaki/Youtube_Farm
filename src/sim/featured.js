@@ -56,7 +56,10 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
   const people = Object.entries(state.names || {})
     .map(([id, n]) => {
       const last = state.lastShown?.[id];
-      return { id: Number(id), name: n.name, job: state.villagers?.[Number(id)]?.job ?? n.job, today: n.day === day, asked: n.requestDay === day, complained: n.complainDay === day, last: last < day ? last : undefined };
+      return { id: Number(id), name: n.name, job: state.villagers?.[Number(id)]?.job ?? n.job, today: n.day === day, asked: n.requestDay === day, last: last < day ? last : undefined,
+        // a complaint keeps its place until they are shown, for up to 3 days (owner 2026-10-29: when their job is already on
+        // screen that day, they come first on the next)
+        complained: n.complainDay !== undefined && day - n.complainDay <= 3 && !(last >= n.complainDay && last < day) };
     })
     // innkeepers and brewers serve in the tavern scene when it closes the video
     .filter((n) => n.id < state.subscriberCount && n.job && !(tavern && (n.job === 'innkeeper' || n.job === 'brewer')) && !(clergy && (n.job === 'priest' || n.job === 'bishop')));
@@ -68,7 +71,8 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
     || hash(state.seed, 'feat', day, a.id) - hash(state.seed, 'feat', day, b.id)); // a different face each day
   const out = [];
   const usedJobs = new Set(), usedIds = new Set();
-  const free = (n) => !usedIds.has(n.id) && (!usedJobs.has(n.job) || n.complained);
+  // owner 2026-10-29: never the same scene twice in a video: one shot per job, the complaints too
+  const free = (n) => !usedIds.has(n.id) && !usedJobs.has(n.job);
   const entry = (n) => ({ id: n.id, name: n.name, job: n.job, today: n.today });
   const solo = (n) => n.today && intro(n.job);
   for (const n of people) {

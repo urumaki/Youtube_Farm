@@ -561,7 +561,8 @@ const povEye = new THREE.Vector3(), povHand = new THREE.Vector3();
 function applyFrame(ctx, t) {
   const { plan, camera, env, castle, animated, buildings, life, water, M, houses, nature, overlay, renderer } = ctx;
   for (const ws of ctx.works || []) {
-    if (ws.ownShotOnly) ws.group.visible = t >= ws.shot.t0 - 0.1 && t <= ws.shot.t1 + 0.1;
+    // exactly its own shot: no margin, or the two overlap at the cut from one to the other
+    if (ws.ownShotOnly) ws.group.visible = t >= ws.shot.t0 && t < ws.shot.t1;
     ws.update(t);
   }
   for (const { ws, tg } of ctx.crews || []) {

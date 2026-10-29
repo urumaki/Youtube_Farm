@@ -227,7 +227,10 @@ Add new owner decisions here.
   Test with `--gallery ambient:wheat` (add `--date 2026-04-15` for spring).
 - Who is shown at work (`src/sim/featured.js`, owner 2026-10-20): picked by the simulation and saved as
   `state.featured`: villagers named today first (the narrator welcomes only jobs on screen), then granted
-  requests, never a job the previous video showed (`diff.avoidJobs`), one per job. Saves without
+  requests, never a job the previous video showed (`diff.avoidJobs`), one per job. Owner 2026-10-29: never the same
+  scene twice in a video, so one villager per job on screen with no exception (two blacksmiths who had both complained
+  were shown at the forge with a fisherman each); a complaint keeps its place until they are shown, up to 3 days, so the
+  one left out comes first the next day (`pickFeatured` in `featured.js`). Saves without
   `featured` use the old rule to know what the previous video showed.
 - `npm run render -- --day 2026-10-20` renders a saved day again with today's code (read only,
   `output/<day>_en_again.mp4`). Replacing a published video is the owner's call:
