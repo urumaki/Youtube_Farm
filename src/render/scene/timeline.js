@@ -214,7 +214,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     for (const p of state.pendingConstruction) {
       if (targets.length >= 2) break;
       const it = buildings.items[p.building];
-      if (it && !targets.some((t) => t.id === p.building)) targets.push({ kind: 'building', id: p.building, pos: it.focus.clone(), radius: 40, front: (it.lot?.rot ?? 0) + Math.PI / 2, label: { title: BUILDINGS[p.building].label.replace(/^the /, 'The '), sub: `${Math.round((1 - p.daysLeft / p.daysTotal) * 100)}% built` } });
+      if (it && !targets.some((t) => t.id === p.building)) targets.push({ kind: 'building', id: p.building, pos: it.focus.clone(), radius: 40, front: (it.lot?.rot ?? 0) + Math.PI / 2, label: { title: BUILDINGS[p.building].label.replace(/^the /, 'The '), sub: 'Under construction' } }); // the share built is on the bar under it (overlay.js)
     }
   }
   if (targets.length < 2) targets.push({ kind: 'castle', pos: castle.keep.clone(), radius: 62, front: 0.6, label: null });

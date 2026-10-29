@@ -21,6 +21,9 @@ const CSS = `
 #ov .label .s{font-weight:700;font-size:28px;color:#e3b23c;letter-spacing:1px;text-transform:uppercase}
 #ov .label.loss{background:rgba(70,18,26,.88);border-color:#c9a0a0}
 #ov .label .more{font-weight:700;font-size:24px;color:#cfd8ff}
+#ov .label .prog{position:relative;margin:10px auto 2px;width:320px;height:34px;border-radius:17px;background:rgba(0,0,0,.5);border:2px solid #e3b23c;overflow:hidden}
+#ov .label .prog i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#b8862a,#ffe08a)}
+#ov .label .prog b{position:relative;display:block;font-weight:800;font-size:24px;line-height:34px;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.95)}
 #ov .tag{position:absolute;transform:translate(-50%,-100%);padding:4px 10px 5px;border-radius:12px;background:rgba(18,29,71,.82);border:2px solid #e3b23c;white-space:nowrap;text-align:center;line-height:1.05}
 #ov .tag .t{font-family:'Cinzel',serif;font-weight:700;font-size:22px;color:#fff4d6}
 #ov .tag .s{font-weight:700;font-size:14px;color:#e3b23c;letter-spacing:1px;text-transform:uppercase}
@@ -99,6 +102,15 @@ export function createOverlay(root, data) {
   roll.innerHTML = people.length ? `<div class="h">${s.credits}</div>` + shownPeople.map(({ id, n }) => `<div class="n">${esc(n.name)}<i>${esc(job(n, id))}</i></div>`).join('')
     + (others > 0 ? `<div class="h more">${s.others(others.toLocaleString('en-US'))}</div>` : '') : '';
   const labelEls = new Map();
+  // how far a building is: yesterday's share and today's (owner 2026-10-29: a percentage bar over the building going up)
+  const buildSpan = (id) => {
+    const bd = data.state.buildings?.find((b) => b.id === id);
+    if (!bd) return null;
+    const total = bd.daysTotal || 0;
+    const left = bd.status === 'done' ? 0 : data.state.pendingConstruction?.find((p) => p.building === id)?.daysLeft ?? 0;
+    const to = total ? Math.min(1, Math.max(0, 1 - left / total)) : 1;
+    return { from: Math.max(0, to - (total ? 1 / total : 0)), to };
+  };
   const v = new THREE.Vector3();
 
   return {
@@ -131,12 +143,19 @@ export function createOverlay(root, data) {
           el = document.createElement('div');
           el.className = 'label' + (tg.kind === 'loss' ? ' loss' : '');
           el.innerHTML = `<div class="t">${esc(label.title)}</div>${label.sub ? `<div class="s">${esc(label.sub)}</div>` : ''}${key === tg && tg.extra ? `<div class="more">${s.more(tg.extra)}</div>` : ''}`;
+          if (key === tg && site && (el.span = buildSpan(tg.id))) el.insertAdjacentHTML('beforeend', '<div class="prog"><i></i><b></b></div>');
           ov.querySelector('.safe').appendChild(el);
           labelEls.set(key, el);
         }
         (pos ? v.copy(pos) : v.copy(tg.pos).add(new THREE.Vector3(0, 3, 0))).project(camera);
         const x = (v.x * 0.5 + 0.5) * W - SAFE.left, y = (-v.y * 0.5 + 0.5) * H - SAFE.top;
         el.style.display = 'block';
+        if (el.span) {
+          // the bar fills from yesterday's share to today's while the building goes up in the shot
+          const p = el.span.from + (el.span.to - el.span.from) * (ev.progress.get('b' + tg.id) ?? 1);
+          el.querySelector('.prog i').style.width = `${(p * 100).toFixed(1)}%`;
+          el.querySelector('.prog b').textContent = `${Math.round(p * 100)}%`;
+        }
         const wEl = el.offsetWidth, hEl = el.offsetHeight;
         const sw = W - SAFE.left - SAFE.right, sh = H - SAFE.top - SAFE.bottom;
         const cx = Math.min(sw - wEl / 2, Math.max(wEl / 2, x));

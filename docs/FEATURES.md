@@ -400,6 +400,11 @@ Add new owner decisions here.
   stepping out of the building toward the camera (squares are open paving). Spots in front of a lot are on the ground under
   them (`floorOf`: a foundation's top, a square's sloping side, else the terrain): before 2026-10-24 `atLot` put the
   woodcutter by the sawmill and his visitor 0.25 m up in the air.
+- Construction bar (owner 2026-10-29): the big label over a building in a building shot has a gold percentage bar under it
+  (`overlay.js`, `buildSpan`). It fills from yesterday's share to today's (`1 - daysLeft / daysTotal`) while the building
+  goes up in the shot: 0% the day construction begins, 100% the day it is completed. A building still going up with no
+  event today is labelled "Under construction" (`timeline.js`), the number is on the bar. Test: `npm run render -- --subs 300
+  --from 200 --stills 8` (a site that begins), `npm run render -- --real --subs 2310 --stills 7.6` (one completed).
 - Second scenes and own places (owner 2026-10-25, for the jobs that had one scene, `work.js`, `scenes.js`, `main.js`): the tax
   collector goes door to door with his tally, a householder holding out a purse in a doorway (`taxcollector:rounds`, a house
   front turned halfway to the camera, props `doorstep`); the merchant loads sacks from a stack onto a cart (`merchant:cart`);
