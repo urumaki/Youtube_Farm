@@ -14,8 +14,8 @@ const DESCRIPTION_TAGS = '#subscriberkingdom #medieval #citybuilder #castle';
 
 export function metadata({ state, diff }) {
   const d = diff.delta;
-  // owner 2026-10-29: a hook first for viewers who do not know the channel yet, the day's numbers after
-  const title = `Your name could be in this kingdom 👑 Day ${state.day} · ${d >= 0 ? '+' : ''}${d} villagers #shorts`;
+  // owner 2026-10-29: the day first, then the hook for viewers who do not know the channel yet, then the day's numbers
+  const title = `Day ${state.day} · Your name could be in this kingdom 👑 ${d >= 0 ? '+' : ''}${d} villagers #shorts`;
   const description = `Every subscriber is one villager of Subscriber Kingdom. Subscribe to move in!\n${DESCRIPTION_TAGS}`;
   return { title, description, tags: ['subscriber kingdom', 'medieval', 'kingdom builder', 'castle', 'shorts'] };
 }
