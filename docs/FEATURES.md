@@ -245,7 +245,8 @@ Add new owner decisions here.
   (`VARIANTS` in `timeline.js`; `'job:variant'` entries in `JOB_SCENES`, `work.js`): guards on the walls,
   sparring or at the straw dummy (`drills.js`); farmers hoeing, sowing or reaping; the smith at the anvil,
   quenching or at the bellows; the fletcher shooting at a target... The croft shots cut in hard and move
-  the camera a different way each time (`CAM_STYLES`). Through their eyes (owner 2026-10-29, `pov.js`): one villager shot,
+  the camera a different way each time (`CAM_STYLES`). Through their eyes (owner 2026-10-29, `pov.js`; OFF for now, `POV_ON = false` in `scenes.js`:
+  two bodies showed one inside the other; saves that planned one render the usual shot, `--pov` still forces one): one villager shot,
   not again within 3 days (`state.sceneLog.pov`, `diff.scenes.pov = { id, mode }` from `planScenes`), starts behind
   and above the villager, pushes in through the back of the head and stays at the eyes (wider lens 74, near plane 0.05, the
   head and what is on it hidden, the name label kept up in the view). 'work': in their own place, looking between the work

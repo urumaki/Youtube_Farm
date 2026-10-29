@@ -59,6 +59,9 @@ const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
 const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tournament' }, cavalier: { walls: 'tournament' } };
 // scenes with no room for a visitor (on a platform, on the move, inside a house): a host with a guest stays in the croft
 // scenes in a place with its own camera (the tavern's bar, the bakehouse): a villager seen through their eyes walks instead
+// owner 2026-10-29: the shots through a villager's eyes are off for now (two bodies showed one inside the other); saves that
+// planned one render the usual shot (timeline.js), test renders can still ask for one with --pov
+export const POV_ON = false;
 const POV_AWAY = new Set(['inside', 'inn', 'house', 'lecture']);
 const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture']);
 // buildings with no shot of their own: no engineer stands in front of them
@@ -162,7 +165,7 @@ export function planScenes(state, { featured, tavern, church = null, avoidJobs =
   // own place ('work', a visitor walking up to them too) or walking down the street near home ('stroll', alone in the shot);
   // never the scenes with a camera of their own (the walls, the boat, the tavern, the bakehouse), which take the walk instead
   let pov = null;
-  if (named && !recentScene(state, 'pov')) {
+  if (POV_ON && named && !recentScene(state, 'pov')) {
     const own = (f) => {
       const job = state.names[f.id]?.wants && f.job === 'apprentice' ? state.names[f.id].wants : f.job;
       const v = variants[f.id];

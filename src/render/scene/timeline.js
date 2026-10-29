@@ -7,7 +7,7 @@ import { NIGHT_STORIES, storyCue } from './stories/index.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
 import { BAKEHOUSE_VARIANTS } from './bakery.js';
-import { VARIANTS, AWAY_VARIANTS, NIGHT_VARIANTS, pickVariant, sceneReady } from '../../sim/scenes.js';
+import { VARIANTS, AWAY_VARIANTS, NIGHT_VARIANTS, pickVariant, sceneReady, POV_ON } from '../../sim/scenes.js';
 
 export const DURATION = 30;
 // the wide shot with the goal and the end credits is short (3.5 s) so the daily update keeps the time
@@ -115,7 +115,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     const variant = scenes && n.id in scenes.variants ? scenes.variants[n.id] : pickVariant(sceneJob, state.seed, state.day, n.id, usedVariants, { croft: !!g, ready: (v) => sceneReady(state, v, sceneJob) });
     if (variant) usedVariants.add(variant);
     // through the villager's own eyes, at work or on a walk down the street (owner 2026-10-29, diff.scenes.pov)
-    const pov = scenes?.pov?.id === n.id && !(g && scenes.pov.mode === 'stroll') ? scenes.pov.mode : null;
+    const pov = (POV_ON || scenes?.pov?.forced) && scenes?.pov?.id === n.id && !(g && scenes.pov.mode === 'stroll') ? scenes.pov.mode : null;
     const castleShot = AWAY_VARIANTS.has(variant) && !pov;
     const indoor = (indoorScene(sceneJob, variant) || barScene(variant)) && !pov;
     targets.push({

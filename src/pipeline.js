@@ -178,7 +178,7 @@ export async function testRender(args, log = console) {
   if (args.story) diff.story = state.story = storyFor(state, args.story);
   if (args.pov && diff.scenes) {
     const f = (diff.featured || []).find((x) => (args.pov === 'work' ? !AWAY_VARIANTS.has(diff.scenes.variants?.[x.id]) : !x.with));
-    diff.scenes = state.scenes = { ...diff.scenes, pov: f ? { id: f.id, mode: args.pov } : null };
+    diff.scenes = state.scenes = { ...diff.scenes, pov: f ? { id: f.id, mode: args.pov, forced: true } : null };
   }
   // the weather the story brings or needs, as the daily simulation does
   const sky = { storm: 'rain', christmas: 'snow', snowballs: 'snow', fogboat: 'fog' }[args.story?.split(':')[0]];

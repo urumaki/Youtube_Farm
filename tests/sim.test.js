@@ -569,8 +569,13 @@ test('villagers introduced today are shown alone in an everyday scene of their j
   assert.equal(introVariant(seen, 'guard'), null);
 });
 
-test('one villager seen through their own eyes, not again within three days (owner 2026-10-29)', async () => {
-  const { planScenes, AWAY_VARIANTS } = await import('../src/sim/scenes.js');
+test('one villager seen through their own eyes, not again within three days (owner 2026-10-29; off for now)', async (t) => {
+  const { planScenes, AWAY_VARIANTS, POV_ON } = await import('../src/sim/scenes.js');
+  if (!POV_ON) {
+    const s = { seed: SEED, day: 5, date: '2026-10-29', subscriberCount: 1, unlockedTiers: [], buildings: [], pendingConstruction: [], sceneLog: {}, villagers: [{ job: 'blacksmith' }], names: { 0: { name: 'N0', job: 'blacksmith', day: 1 } } };
+    assert.equal(planScenes(s, { featured: [{ id: 0, job: 'blacksmith', today: false, with: null }], tavern: false }).pov, null);
+    return t.skip('POV_ON is false');
+  }
   const kingdom = (day, jobs, sceneLog = {}) => ({
     seed: SEED, day, date: '2026-10-29', subscriberCount: jobs.length, unlockedTiers: [], buildings: [], pendingConstruction: [], sceneLog,
     villagers: jobs.map((job) => ({ job })), names: Object.fromEntries(jobs.map((job, id) => [id, { name: `N${id}`, job, day: 1 }])),
