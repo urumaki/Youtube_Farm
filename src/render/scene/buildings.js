@@ -177,6 +177,30 @@ const BUILD = {
     crane(b, 8, 6, 9);
     out.focusH = 4;
   },
+  mine(b, lot, out) {
+    // a hill of rough rock with the adit cut into its face and framed in timber, a plank way out to a cart of ore, the
+    // spoil heap on one side, a windlass over a shaft on the other (owner 2026-10-29)
+    const rock = (r, x, y, z, sx = 1, sy = 1, sz = 1) => b.add('crag', new THREE.DodecahedronGeometry(r, 0).scale(sx, sy, sz), x, y, z);
+    rock(7, 0, 1.5, -5.5, 1.5, 0.9, 0.8); rock(5, -7.5, 0.5, -4.5, 1.1, 0.9, 1); rock(5, 7.5, 0.8, -5, 1.1, 1, 1);
+    rock(4, -3, 5.8, -7); rock(4, 4, 5.2, -7.5);
+    b.add('window', boxGeo(2.4, 2.8, 0.3), 0, 1.4, 0.15); // the dark of the adit
+    for (const x of [-1.4, 1.4]) b.add('woodDark', boxGeo(0.35, 3.2, 0.35), x, 1.6, 0.4);
+    b.add('woodDark', boxGeo(3.6, 0.45, 0.5), 0, 3.3, 0.4);
+    for (const x of [-0.5, 0.5]) b.add('wood', boxGeo(0.25, 0.08, 8), x, 0.06, 4.4);
+    for (let i = 0; i < 8; i++) b.add('woodDark', boxGeo(1.6, 0.06, 0.25), 0, 0.03, 1 + i);
+    b.add('wood', boxGeo(1.2, 0.7, 1.6), 0, 0.6, 5.2); // the cart, full of ore
+    for (const x of [-0.65, 0.65]) for (const z of [4.7, 5.7]) b.add('woodDark', cylGeo(0.25, 0.25, 0.12, 10), x, 0.25, z, 0, 0, Math.PI / 2);
+    for (const [x, z] of [[-0.3, 4.8], [0.3, 5.1], [-0.2, 5.5], [0.25, 5.6]]) b.add('crag', new THREE.DodecahedronGeometry(0.3, 0), x, 1.0, z);
+    b.add('soil', new THREE.ConeGeometry(3, 2.4, 9), 9.5, 1.0, 5.5); // the spoil heap
+    b.add('stone', cylGeo(1.3, 1.4, 0.6, 12), -7, 0.3, 3); // the shaft, and the windlass over it
+    for (const x of [-8.2, -5.8]) b.add('woodDark', boxGeo(0.25, 1.7, 0.25), x, 0.85, 3);
+    b.add('wood', cylGeo(0.25, 0.25, 2.6, 10), -7, 1.55, 3, 0, 0, Math.PI / 2);
+    b.add('woodDark', boxGeo(0.1, 0.6, 0.1), -5.6, 1.35, 3.25);
+    b.add('iron', cylGeo(0.03, 0.03, 1.2, 4), -7, 1.0, 3.25);
+    b.add('wood', cylGeo(0.3, 0.25, 0.5, 10), -7, 0.65, 3.25);
+    out.lights.push([0, 3.0, 0.8]);
+    out.focusH = 3;
+  },
   market(b, lot, out, ctx) {
     // stalls in two rows facing the road (the road crosses the square, so its centre stays clear)
     let i = 0;
@@ -889,8 +913,8 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
       }
       padGeo.computeVertexNormals();
     }
-    // the Tournament Ground's lists are bare earth, not paving (owner 2026-10-28)
-    const foundation = new THREE.Mesh(padGeo, bd.id === 'tournament' ? M.dirt : M.cobble);
+    // the Tournament Ground's lists and the Mine's yard are bare earth, not paving (owner 2026-10-28, 2026-10-29)
+    const foundation = new THREE.Mesh(padGeo, bd.id === 'tournament' || bd.id === 'mine' ? M.dirt : M.cobble);
     foundation.position.y = -padH / 2 + 0.05;
     foundation.receiveShadow = true;
     const inner = b.build(mats);

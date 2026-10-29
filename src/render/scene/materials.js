@@ -58,6 +58,7 @@ export function makeMaterials(seed) {
     soil: std({ color: '#4e3b2a', roughness: 1 }),
     greens: std({ color: '#4f7a2e', roughness: 0.9 }),
     rock: std({ map: stone.map, color: '#a09a90' }),
+    crag: std({ color: '#7d776d', roughness: 0.95, flatShading: true }), // rough natural rock, no cut blocks (the Mine's hill)
     dirt: std({ color: '#7a6448' }),
     rubble: std({ map: stoneDark.map, color: '#8a857c' }),
     people: std({ roughness: 0.8 }),

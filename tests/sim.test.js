@@ -321,6 +321,20 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
   assert.deepEqual(wantsFromText('Can I be a minor in the cave'), ['miner']);
   assert.deepEqual(wantsFromText('I be mining.'), ['miner']);
   assert.deepEqual(wantsFromText('this one is mine, a minor detail'), []);
+  // the older comments read again (2026-10-29): "sir" is how people speak; the job they have is not the one they ask for
+  const older = {
+    'Im the town crier but can I be a teacher as well': 'teacher', 'Great sir, may I be a blacksmith please': 'blacksmith',
+    'Hello sir I am chezzkahn and I would like to be a librarian': 'scholar', 'could I be a army engineer': 'engineer',
+    'may I be an academic so I may study engineering': 'scholar', 'can I be kight plssss': 'guard', 'to be the king’s night': 'guard',
+    'Can i be a men at arms': 'guard', 'May I serve as a defender of the city?': 'guard', 'can I be a crossbowman': 'fletcher',
+    'a metalsmith named xc': 'blacksmith', 'Can i be a goldsmith?': 'blacksmith', 'a craftman': 'carpenter', 'a woodworker?': 'carpenter',
+    'an shipwright': 'carpenter', 'the vows of monastic life': 'priest', 'Can I be the Deacon': 'priest', 'the pediatrician': 'physician',
+    'Day 3 for sawbonee?': 'barber', 'the local winery boss': 'brewer', 'a stable worker': 'stablehand', 'the town speaker': 'crier',
+    'a simple laborer': 'peasant', 'wanna be the hobo': 'beggar', 'the mechanical expert': 'engineer', 'the Justiciar': 'taxcollector',
+    'a prosecutor': 'taxcollector', 'I am the fletcher so can the army use my bows': 'fletcher',
+  };
+  for (const [text, job] of Object.entries(older)) assert.equal(wantsFromText(text)[0], job, text);
+  for (const text of ['thank you sir', 'a night out', 'Make me a flower dealer']) assert.deepEqual(wantsFromText(text), [], text);
   assert.deepEqual(wantsFromText('add me as a horse carriage worker pls'), ['stablehand']);
   assert.equal(wantsFromText('Make me a warrior i am sir coolum now')[0], 'guard');
   assert.equal(nameFromText('Can I be a villager called sopita?'), 'Sopita');
@@ -794,18 +808,18 @@ test('the games at the Tournament Ground (owner 2026-10-28): announced, guards w
   const noGround = kingdom('2026-11-03');
   noGround.buildings = [];
   assert.ok(!STORIES.joust.needs(noGround), 'only once the Tournament Ground stands');
-  // "join" in a comment
-  assert.ok(joinFromText('JOIN!') && joinFromText('i want to join the race') && joinFromText('partecipo') && !joinFromText('joined the kingdom yesterday, love it'));
-  assert.ok(!joinFromText('Can I join the army') && !joinFromText('can i join your kingdom as a guard') && !joinFromText('i want to join as a knight') && joinFromText('I join the joust!'));
+  // owner 2026-10-29: only "!join", anywhere in the comment
+  assert.ok(joinFromText('!join') && joinFromText('!JOIN') && joinFromText('count me in for the race !join please'));
+  for (const t of ['JOIN!', 'join', 'i want to join the race', 'Can I join the army', 'partecipo', 'joined the kingdom', '!joined']) assert.ok(!joinFromText(t), t);
   // day 1: the crier and named guards in front of him
   const ann = storyFor(kingdom('2026-11-03'), 'race');
   assert.equal(ann.step, 'announce');
   assert.ok(ann.cast.every((c) => c.job === 'guard'));
-  // day 2: those who joined after the announcement ride first, the places left go to other guards; never the Captain
+  // day 2: the guards on the list of entrants ride first, the places left go to other guards; never the Captain
   for (let d = 1; d <= 30; d++) {
     const s = kingdom(`2026-12-${String(1 + (d % 28)).padStart(2, '0')}-${d}`);
-    s.names[9].joinDay = 20; s.names[10].joinDay = 20; s.names[3].joinDay = 19; // 3 joined before the announcement (day 19)
-    const riders = drawGuards(s, rng(SEED, 'g', d), 4, 19);
+    s.gamesEntrants = [9, 10];
+    const riders = drawGuards(s, rng(SEED, 'g', d), 4);
     assert.equal(riders.length, 4);
     assert.ok(riders.some((x) => x.id === 9) && riders.some((x) => x.id === 10), 'both who joined ride');
     assert.equal(riders.filter((x) => x.joined).length, 2);
@@ -813,13 +827,16 @@ test('the games at the Tournament Ground (owner 2026-10-28): announced, guards w
   }
   // the older a guard's name, the better the chance: the oldest weighs 1.9, the newest 1.0
   const counts = new Map();
-  for (let d = 0; d < 6000; d++) for (const x of drawGuards(kingdom('2026-11-03'), rng(SEED, 'w', d), 1, 99)) counts.set(x.id, (counts.get(x.id) || 0) + 1);
+  for (let d = 0; d < 6000; d++) for (const x of drawGuards(kingdom('2026-11-03'), rng(SEED, 'w', d), 1)) counts.set(x.id, (counts.get(x.id) || 0) + 1);
   const ratio = counts.get(0) / counts.get(11);
   assert.ok(ratio > 1.65 && ratio < 2.2, `oldest vs newest ${ratio.toFixed(2)}`);
   // the results: the winner gets the title of the game
   for (const [id, title, n] of [['race', 'cavalier', 4], ['joust', 'knight', 2]]) {
     const s = kingdom('2026-11-04');
+    s.gamesEntrants = [3];
     const res = storyFor(s, `${id}:results`);
+    assert.ok(res.riders.some((x) => x.id === 3 && x.joined));
+    assert.deepEqual(s.gamesEntrants, [], 'the list is emptied once the game is run');
     assert.equal(res.step, 'results');
     assert.equal(res.riders.length, n);
     assert.ok(res.riders.some((x) => x.id === res.winner));
@@ -846,6 +863,18 @@ test('a Knight and a Cavalier are only won at the games (owner 2026-10-28): neve
   const job = (id) => r.state.villagers[id].job;
   assert.deepEqual([10, 11, 12, 13, 14].map(job), ['guard', 'knight', 'cavalier', 'guard', 'guard']);
   assert.equal(r.state.names[13].wants, undefined);
+});
+
+test('"!join" (owner 2026-10-29): only guards go on the list of entrants for the games, once each, not the Captain', () => {
+  const { state } = run([600]);
+  const named = (id, job) => { state.names[id] = { name: `V${id}`, author: `a${id}`, day: 1, job }; state.namedAuthors.push(`a${id}`); state.villagers[id].job = job; };
+  named(15, 'guard'); named(16, 'farmer'); named(17, 'guard'); named(18, 'farmer');
+  state.guardCaptain = 17;
+  const c = (id, extra = {}, h = 10) => ({ author: `a${id}`, name: `V${id}`, at: `${dateOf(2)}T${h}:00:00Z`, wants: [], join: true, ...extra });
+  const r = advance(state, { subscribers: 600, date: dateOf(2), commenters: [c(15), c(15, {}, 11), c(16), c(17), c(18, { wants: ['guard'] })] });
+  // 16 is a farmer, 17 the Captain; 18 asked to be a guard in the same comment, so is one
+  assert.deepEqual(r.state.gamesEntrants, [15, 18]);
+  assert.deepEqual(r.diff.joins.map((j) => j.id), [15, 18]);
 });
 
 test('the decree (owner 2026-10-28): the crier proclaims once that Knights and Cavaliers are won at the Tournament Ground', async () => {

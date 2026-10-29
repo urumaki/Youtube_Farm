@@ -250,7 +250,9 @@ function assignNames(s, commenters, blocked, diff) {
   diff.renamed = [];
   diff.complaints = [];
   diff.rebels = []; // commenters talking of overthrowing the king (the pillory, stories.js)
-  diff.joins = []; // villagers whose commenter wrote "join": guards enter the games at the Tournament Ground (stories.js)
+  diff.joins = []; // guards whose commenter wrote "!join": entered for the next games at the Tournament Ground (stories.js)
+  // owner 2026-10-29: the guards entered for the next games, emptied when a game is run (stories.js)
+  s.gamesEntrants ??= [];
   diff.newCommenters = 0; // people commenting for the first time (no story on busy days, stories.js)
   // names are untrusted: cleaned to letters, digits and . _ -, never one that reads like code or an instruction
   const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !looksLikeCode(raw) && !looksLikeCode(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
@@ -294,9 +296,14 @@ function assignNames(s, commenters, blocked, diff) {
       if (c.complains && id !== undefined) { s.names[id].complainDay = s.day; diff.complaints.push({ id: Number(id), name: s.names[id].name }); }
       if (c.rebel && id !== undefined) { s.names[id].rebelDay = s.day; diff.rebels.push({ id: Number(id), name: s.names[id].name }); }
       else if (c.rebel && q) q.rebel = true;
-      if (c.join && id !== undefined) { s.names[id].joinDay = s.day; diff.joins.push({ id: Number(id), name: s.names[id].name }); }
       if (id !== undefined && wants.length) applyRequest(id, wants);
       else if (wants.length && q) q.wants = wants;
+      // "!join": only a guard (the job after this comment's own request), never the Captain of the Guard, enters the games
+      const guard = id !== undefined && (s.villagers[id]?.job ?? s.names[id].job) === 'guard' && Number(id) !== s.guardCaptain;
+      if (c.join && guard && !s.gamesEntrants.includes(Number(id))) {
+        s.gamesEntrants.push(Number(id));
+        diff.joins.push({ id: Number(id), name: s.names[id].name });
+      }
       continue;
     }
     const name = call || valid(c.name);

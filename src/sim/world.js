@@ -133,7 +133,19 @@ function buildWorld(seed) {
   // plots too), so no plot, street or lot moves
   placeStreetLot(w, 'counting_house', 6, 5, [...w.plots, ...w.finePlots, ...w.densePlots]);
   placeStreetLot(w, 'apothecary_shop', 6, 5, [...w.plots, ...w.finePlots, ...w.densePlots]);
+  placeMine(w);
   return w;
+}
+
+// The Mine (owner 2026-10-29): in the hills west of the Quarry, far from every plot, its front (+z) toward the town, and a
+// dirt track on from the Quarry's. Laid out last, so no plot, street or lot moves.
+function placeMine(w) {
+  const lot = { id: 'mine', x: -150, z: -262, hw: 12, hd: 9, rot: -0.52 };
+  w.lots.mine = lot;
+  const q = w.lots.quarry, fx = lot.x - Math.sin(lot.rot) * (lot.hd + 6), fz = lot.z + Math.cos(lot.rot) * (lot.hd + 6);
+  w.tracks.push({ id: 'mine', pts: catmull([[q.x + 10, q.z + 14], [q.x - 30, q.z + 18], [fx - 4, fz + 6], [fx, fz]], 6), width: ROAD_WIDTH.track });
+  w.allPaths = [...w.roads, ...w.tracks];
+  w.pathIndex = buildPathIndex(w.allPaths);
 }
 
 // The Royal Palace (owner 2026-10-23) stands beside the University: the free ground nearest it, found after every

@@ -8,38 +8,39 @@ import { TIERS, JOBS, MERGED, tiersReached, mergedJob } from './tiers.js';
 // (more words added 2026-10-23 from the comments of 2026-10-22: typos, weaponsmith, pub, harbour, herbalist...)
 const KEYWORDS = [
   [/tool\s*smith|\btools?\b|attrezz|utensil/, 'blacksmith'], // jobs folded together: MERGED in tiers.js
-  [/black\s*smith|\bsmith\b|\bforge\b|\banvil|fabbro|weapon\s*(smith|maker)|armou?r(er|smith)|armaiol/, 'blacksmith'],
-  [/\bbrew|\bmead\b|\bale\b|\bbeer|\bbirr|idromele/, 'brewer'],
+  [/black\s*smith|\bsmith\b|\bforge\b|\banvil|fabbro|weapon\s*(smith|maker)|armou?r(er|smith)|armaiol|(metal|gold|silver|steel|copper|lock)\s*smith|\bsmithy|\bsmithing/, 'blacksmith'],
+  [/\bbrew|\bmead\b|\bale\b|\bbeer|\bbirr|idromele|winery|wine\s*maker|vintner|moonshine/, 'brewer'],
   [/tavern|\binn\b|innkeeper|bar\s*keep|bartender|taverna|\boste\b|\bpub\b/, 'innkeeper'],
   [/warrior|\bfighter|\bsword|\bwarlord|guerrier|combattent|spadaccin/, 'guard'],
-  [/\bbeggar|\bdrunk|\bdrink|sit all day|mendicant|ubriac|homeless|senza\s*tetto|vagabond|\btramp\b/, 'beggar'],
+  [/\bbeggar|\bdrunk|\bdrink|sit all day|mendicant|ubriac|homeless|senza\s*tetto|vagabond|\btramp\b|\bhobo/, 'beggar'],
   [/weirdo|\bweird\b|\bfool\b|crazy|lunatic|\bscemo|\bmatto|\bidiot|nitwit/, 'jester'],
   [/jester|\bclown|juggl|giullare|buffone/, 'jester'],
-  [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b|frecce|arciere/, 'fletcher'],
+  [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b|crossbow|long\s*bow|frecce|arciere/, 'fletcher'],
   // owner 2026-10-28: a Knight, a Cavalier and the Captain of the Guard are only won at the tournaments, so asking makes a guard
-  // (2026-10-29: "teutonic Kinght", paladin, "chief of war")
-  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bpaladin|chief of war|war\s*chief|\bsir\b|cavaliere|commander|general|\barmy|captain|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
+  // (2026-10-29: "teutonic Kinght", "kight", "the king's night", paladin, "chief of war", men-at-arms, a defender of the city;
+  // "sir" alone is how people speak to the king, "an army engineer" asks for the engineer)
+  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|general|\barmy(?!\s*engineer)|captain|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
   [/\bguard|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
   [/chapel|church|cathedral|cappella|chiesa/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
-  [/carpenter|\bbuilder|falegname|carpentiere|craftsman|craftsmen|artisan|artigian/, 'carpenter'],
+  [/carpenter|\bbuilder|falegname|carpentiere|craftsman|craftsmen|craftm[ae]n|artisan|artigian|wood\s*worker|\bcarvers?\b|shipwright|ship\s*builder/, 'carpenter'],
   [/\bbishop|vescovo/, 'bishop'],
-  [/\bpriest|\bmonk|\bfriar|prete|frate|monaco/, 'priest'],
+  [/\bpriest|\bpreist|\bmonk|\bfriar|monaster|monastic|\bdeacon|\bnun\b|religious figure|prete|frate|monaco/, 'priest'],
   [/\bbaker|\bbread|\bbake|fornaio|\bpane\b/, 'baker'],
   [/\bmill(er)?\b|mugnaio|mulino/, 'miller'],
   [/fisher|\bfish|pescator|\bpesca|harbou?r|\bdocks?\b|\bporto\b/, 'fisherman'],
   [/wood\s*cutter|lumber|\baxe\b|\bwood\b|taglialegna|boscaiolo/, 'woodcutter'],
   [/\bfarm(?!ing tools?)|\bcrops?\b|contadin|agricolt/, 'farmer'],
-  [/\bpeasant|bracciant|\bcitizen|cittadin|commoner|gardener|grounds?\s*keeper|groudnskeeper|giardinier/, 'peasant'],
+  [/\bpeasant|bracciant|\bcitizen|cittadin|commoner|gardener|grounds?\s*keeper|groudnskeeper|giardinier|labou?rer/, 'peasant'],
   // the banker is a money changer until the Bank (2026-10-29)
   [/merchant|\bbanker|banchier|money\s*(changer|lender)|\btrader|\bshop|mercante|negozi|head of trade|\btrade\b|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
   [/\bsailor|\bpirate|marinaio|pirata/, 'fisherman'],
   [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
-  [/scholar|\bscribe|librar|studioso|scientist|physicist|scienziat|inventor|professor|professore/, 'scholar'],
-  [/doctor|healer|physician|medico|guaritore/, 'physician'],
+  [/scholar|\bscribe|librar|studioso|scientist|physicist|academic|scienziat|inventor|professor|professore/, 'scholar'],
+  [/doctor|healer|physician|medico|guaritore|\bmedic\b|pediatric|clinic/, 'physician'],
   [/apothecar|\bapo\w*th\w*ry|alchemist|alchimista|\bchemist|\bchimico|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
   // running the town was the reeve's job (the council, politics, the law); owner 2026-10-23: the tax collector's now
-  [/\breeve\b|\bcouncil\b|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice/, 'taxcollector'],
+  [/\breeve\b|\bcouncil\b|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice|justiciar|prosecutor|\blawman/, 'taxcollector'],
   // jobs folded into another (owner 2026-10-23): the weaver into the tailor, the chronicler into the scholar, the admiral into the sailor
   [/\bweaver|\bweav(e|ing)\b|\bloom\b|tessitor|telaio/, 'tailor'],
   [/chronicler|historian|\bhistory\b|cronista|\bstorico/, 'scholar'],
@@ -47,7 +48,7 @@ const KEYWORDS = [
   // new jobs asked for in the comments of 2026-10-22 (owner 2026-10-23, by request only)
   [/hunter|\bhunt(ing)?\b|cacciator|\bcaccia\b/, 'hunter'],
   [/butcher|macellai|\bmeat\b/, 'butcher'],
-  [/engineer|egineer|ingegner|\bsiege|trebuchet|catapult/, 'engineer'],
+  [/engineer|egineer|mechanic|ingegner|\bsiege|trebuchet|catapult/, 'engineer'],
   [/shep+h?[ae]rd|\bsheep|rancher|\bgoats?\b|\bbarn\b|livestock|raise animals|\bpastore|pecor|allevator/, 'shepherd'],
   [/\btanner|leather\s*worker|tannery|concia|cuoio/, 'tanner'],
   // no noble titles as jobs (owner): a lord or a landlord collects the taxes. "My lord", "my noble lord" and "signore" alone
@@ -66,14 +67,14 @@ const KEYWORDS = [
   [/\bcook|\bchef\b|\bcuoc[oa]|\bkitchen|\bcucina\b/, 'cook'],
   [/\bmayor|sindaco/, 'taxcollector'],
   [/executioner|headsman|\bboia\b|carnefice|giustiziere/, 'executioner'],
-  [/town\s*crier|\bcrier\b|\bherald|banditore|araldo|messaggero|messenger|courier|doomsayer|announcer|annunciator|news\s*(paper|boy|seller)|giornal/, 'crier'],
+  [/town\s*crier|\bcrier\b|town\s*speaker|\bherald|banditore|araldo|messaggero|messenger|courier|doomsayer|announcer|annunciator|news\s*(paper|boy|seller)|giornal/, 'crier'],
   // new jobs asked for in the comments up to 2026-10-25 (owner 2026-10-25, by request only)
   [/teacher|\btutor|school\s*master|insegnant|\bmaestr[oa]\b/, 'teacher'],
   [/philosoph|\bthinker|filosof/, 'philosopher'],
   // the medieval surgeon was the barber (2026-10-29: "sawbone", "a surgeon")
-  [/\bbarber|barbiere|hair\s*(cutter|dresser)|saw\s*bones?\b|surgeon|chirurg/, 'barber'],
+  [/\bbarber|barbiere|hair\s*(cutter|dresser)|saw\s*bone|surgeon|chirurg/, 'barber'],
   [/astronom|astrolog|stargaz|star\s*gaz/, 'astronomer'],
-  [/stable\s*(hand|boy|keeper|master|man)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom)|carriage|coach\s*(man|driver)|wagon\s*(driver|master)|\bwagoner|cocchier|carrettier/, 'stablehand'],
+  [/stable\s*(hand|boy|keeper|master|man|worker)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom)|carriage|coach\s*(man|driver)|wagon\s*(driver|master)|\bwagoner|cocchier|carrettier/, 'stablehand'],
   [/advis[eo]r|counsell?or|consiglier/, 'adviser'],
   // owner 2026-10-29, from "a minor in the cave" and "I be mining" ("mine" alone is the word for mine, not a request)
   [/\bminers?\b|\bmining\b|\bminor in the (cave|mine)|\bquarry\s*man|\bpick\s*axe|minatore|miniera|cavatore/, 'miner'],
@@ -81,6 +82,8 @@ const KEYWORDS = [
 
 // "maybe later, when there are proper guards" is a wish for the kingdom, not a job request
 const WISH = /\b(when|once|until|till|if|after)\s+(there|we|they|you|the kingdom|it)\b[^.!?,]*$|\bquando\s+ci\s+sar[àa]nno?\b[^.!?,]*$/;
+// "I'm the town crier but can I be a teacher": the job they have, said before asking for another, is not the request
+const NOW_BEFORE = /\b(i'?m|im|i am)\s+(the\s+|a\s+|an\s+)?(town\s+|local\s+)?$/, NOW_AFTER = /^[\w\s'-]{0,25}\bbut\b/;
 
 // Comment text is untrusted input. It is never run, never passed to a shell, a template or a language model:
 // only the fixed regexes in this file read it, and then it is dropped. plainText() makes it safe to scan: a
@@ -93,7 +96,7 @@ export function plainText(raw) {
 
 /** Requested jobs in the order they appear in the comment (no duplicates). */
 export function wantsFromText(text) {
-  const t = plainText(text).toLowerCase();
+  const t = plainText(text).toLowerCase().replace(/[’‘]/g, "'");
   // the name asked for is not a job: "call me Hunter, I want to bake" asks for the baker
   const n = NAME_RE.exec(t);
   const nameAt = n ? [n.index + n[0].length - n[1].length, n.index + n[0].length] : [-1, -1];
@@ -103,6 +106,7 @@ export function wantsFromText(text) {
     for (let m = g.exec(t); m; m = g.exec(t)) {
       if (m.index >= nameAt[0] && m.index < nameAt[1]) continue;
       if (WISH.test(t.slice(Math.max(0, m.index - 60), m.index))) continue;
+      if (NOW_BEFORE.test(t.slice(Math.max(0, m.index - 20), m.index)) && NOW_AFTER.test(t.slice(m.index))) continue;
       hits.push([m.index, job]);
       break;
     }
@@ -162,10 +166,9 @@ const REBEL_RE = new RegExp([
   /\babbasso (il )?re\b/.source, /\b(rivoluzione|ribellione|rivolta|ribelle|ribelli|colpo di stato|tradimento|traditore)\b/.source,
 ].join('|'), 'i');
 
-// "join", "I join!", "partecipo": the commenter's villager, if a guard, enters the games announced at the Tournament Ground
-// (owner 2026-10-28, stories.js). Joining the kingdom, the army or the guard is not entering the games (2026-10-29: "Can I join
-// the army" entered them)
-const JOIN_RE = /\b(join|joining|partecipo|iscrivimi)\b(?!\s+(as\b|((the|your|this|thy|ur|ya)\s+)?(army|kingdom|village|town|city|realm|guards?|militia|crew|channel|community|people|club|you|ya|u)\b))/i;
+// owner 2026-10-29: only "!join", anywhere in the comment ("count me in !join"), enters the commenter's villager, if a guard,
+// for the games at the Tournament Ground (simulate.js, stories.js); a plain "join" ("can I join the army") does not
+const JOIN_RE = /!join\b/i;
 
 /** True when the comment asks to enter the games. */
 export function joinFromText(text) {

@@ -8,7 +8,7 @@ export function buildGamesAnnounce(args) {
   const name = story.id === 'race' ? 'A chariot race' : 'A joust';
   const st = buildProclaim({ ...args, story: { ...story, title: name } });
   if (!st) return null;
-  st.banner = `${name}! Guards: comment JOIN`;
+  st.banner = `${name}! Guards: comment !join`;
   return st;
 }
 

@@ -62,9 +62,9 @@ const L = {
     snowballs: ['A snowball fight in the square!', 'Snow day! The villagers pelt each other with snowballs.'],
     rebel: ['Treason! A would-be rebel spends the day in the pillory.', 'Plotting against the king? To the pillory, and here come the tomatoes!'],
     // the games at the Tournament Ground (owner 2026-10-28): the crier's announcement, then the results and the title
-    race: ['Hear ye! A chariot race at the Tournament Ground! Every guard may enter: comment JOIN!', 'A chariot race is announced! Guards, comment JOIN to take the reins!'],
+    race: ['Hear ye! A chariot race at the Tournament Ground! Every guard may enter: comment join, with an exclamation mark in front!', 'A chariot race is announced! Guards, comment exclamation mark join to take the reins!'],
     race_results: ['The chariot race! Then the King makes the winner a Cavalier.', 'Chariots thunder round the lists, and the winner kneels before the King!'],
-    joust: ['Hear ye! A joust at the Tournament Ground! Every guard may enter: comment JOIN!', 'A joust is announced! Guards, comment JOIN to take up the lance!'],
+    joust: ['Hear ye! A joust at the Tournament Ground! Every guard may enter: comment join, with an exclamation mark in front!', 'A joust is announced! Guards, comment exclamation mark join to take up the lance!'],
     joust_results: ['The joust! Then the King knights the winner.', 'Lances down! And the winner kneels before the King to be knighted!'],
     // owner 2026-10-28: the decree, read once
     decree: ['Hear ye, hear ye! From this day, guards become Knights and Cavaliers only by winning at the Tournament Ground!', 'Hear ye! No more asking to be a knight: guards win the title at the Tournament Ground!'],

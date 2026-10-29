@@ -70,8 +70,9 @@ export const STORIES = {
   // Comic, nobody hurt; never drawn otherwise, at most once every 7 days, the newest rebel of the last 7 days (rebelDay).
   rebel: { onComment: true, minPop: 1, cooldown: 7, needs: (s) => built(s, 'pillory') },
   // owner 2026-10-28: the games at the Tournament Ground are two events of two days each, the chariot race and the joust.
-  // Day 1 ('announce'): the town crier reads the proclamation in the square and every guard may enter by commenting "join"
-  // (names[id].joinDay, simulate.js). Day 2 ('results'): the entrants are drawn among the guards who joined (the others
+  // Day 1 ('announce'): the town crier reads the proclamation in the square and every guard may enter by commenting "!join"
+  // (owner 2026-10-29: `state.gamesEntrants`, guards only, simulate.js; emptied when a game is run). Day 2 ('results'): the
+  // entrants are drawn among the guards who joined (the others
   // fill the places left), the longer a guard has had their name the better their chance (`drawGuards`); the race or the
   // joust, then the King names the winner in the throne room: a Cavalier for the race, a Knight for the joust. Only named
   // guards ride, never the Captain of the Guard
@@ -388,13 +389,14 @@ export const GAMES = { race: { riders: 4, title: 'cavalier' }, joust: { riders: 
 
 /**
  * The entrants of a game (owner 2026-10-28): n named guards drawn without replacement, first among those who commented
- * "join" after the announcement (joinDay > since), then among the other guards for the places left. Each draw is weighted
+ * "!join" (state.gamesEntrants, still guards today), then among the other guards for the places left. Each draw is weighted
  * by seniority among the guards still in that pool: the one named longest ago weighs 1.9, the newest 1.0, the others in
  * between in proportion to their place in the line (ties: the lower id is the older).
  */
-export function drawGuards(state, r, n, since) {
+export function drawGuards(state, r, n) {
   const guards = jousters(state).map(({ id, name, job, day }) => ({ id, name, job, day }));
-  const joined = guards.filter((g) => (state.names[g.id].joinDay ?? -1) > since);
+  const entered = new Set(state.gamesEntrants || []);
+  const joined = guards.filter((g) => entered.has(g.id));
   const rest = guards.filter((g) => !joined.includes(g));
   const out = [];
   for (const pool of [joined, rest]) {
@@ -419,8 +421,9 @@ function game(state, r, arc, id) {
     return { game: id, day: state.day, crier, cast: [...(crier ? [crier] : []), ...guards] };
   }
   const since = arc.data?.day ?? state.day - 1;
-  const riders = drawGuards(state, r, GAMES[id].riders, since);
+  const riders = drawGuards(state, r, GAMES[id].riders);
   if (riders.length < 2) return null;
+  state.gamesEntrants = []; // the game is run: the next games take new entries
   const winner = r.pick(riders).id;
   promote(state, winner, GAMES[id].title);
   // seven named villagers in the stands (with the riders, few enough tags that all show at once)

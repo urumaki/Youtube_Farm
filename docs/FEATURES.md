@@ -94,11 +94,13 @@ Add new owner decisions here.
   The games at the Tournament Ground (owner 2026-10-27, reworked 2026-10-28): two events of their own, the chariot race
   (`race`) and the joust (`joust`), each over two days once the Tournament Ground stands (no rain or snow, cooldown 14).
   Day 1 (`announce`, scene `stories/games.js` on the crier's dais of `proclaim.js`): the town crier reads the
-  proclamation, named guards in front; the title says "Guards: comment JOIN" and the narration says every guard may
-  enter by commenting JOIN. A comment with "join" (or "partecipo", "iscrivimi"; `joinFromText` in `requests.js`, a fixed
-  regex) from a commenter who already has a villager sets `names[id].joinDay` (`simulate.js`, `diff.joins`). Day 2
-  (`results`): the riders are drawn (`drawGuards` in `stories.js`) among the named guards who joined after the
-  announcement, then the other named guards fill the places left (owner: fill with random guards); each draw is weighted
+  proclamation, named guards in front; the title says "Guards: comment !join" and the narration says every guard may
+  enter by commenting join with an exclamation mark. Owner 2026-10-29: only "!join", anywhere in the comment
+  (`joinFromText` in `requests.js`, a fixed regex; a plain "join" does not count), from a commenter whose villager is a
+  guard after that comment (never the Captain of the Guard) puts the villager once on `state.gamesEntrants`
+  (`simulate.js`, `diff.joins`); the list is emptied when a game is run. Day 2 (`results`): the riders are drawn
+  (`drawGuards` in `stories.js`) among the guards on the list (still guards that day), then the other named guards fill
+  the places left (owner: fill with random guards); each draw is weighted
   by seniority, the guard named longest ago 1.9, the newest 1.0, the rest in proportion. Only named guards, never the
   Captain of the Guard; the race needs four, the joust two (`GAMES`). The race (four chariots on the far straight) or the
   joust (two riders over the tilt: the winner's lance breaks on the shield, the loser rocks in the saddle, nobody falls;
@@ -332,15 +334,29 @@ Add new owner decisions here.
 - From the comments of 2026-10-28 (owner 2026-10-29, `requests.js`): "my lord", "my noble lord" and "Signore," are how
   people speak to the king, so they no longer ask for the tax collector (only "a lord", "be a lord", "a nobleman",
   "un signore" do; "Hello my Lord, may I be a guard" had made tax collectors). Sawbones and surgeon ask for the barber;
-  carriage, coachman and wagon driver for the stablehand. "Join the army", "join the kingdom", "join as a guard" no longer
-  enter the Tournament Ground's games: only a "join" that is not about joining the kingdom, the army or the guard does.
-  Also: "Kinght", paladin and "chief of war" ask for a guard (a knight is won); banker and money changer for the
+  carriage, coachman and wagon driver for the stablehand. Also: "Kinght", paladin and "chief of war" ask for a guard (a knight is won); banker and money changer for the
   merchant (no banker job before the Bank); physicist for the scholar; chemist for the apothecary; "claim the king's
   throne" makes a rebel. Not mapped, no such job: street sweeper (a broom and clean roads); villainous: assassin, mafia.
 - Miner (owner 2026-10-29, by request only: miner, mining, "a minor in the cave", quarryman, pickaxe, minatore;
   "mine" alone asks for nothing): in a grey hood and a leather apron, swings a pick with both hands at a wall of rough
   rock beside a mine mouth framed in timber, dust at each blow, a cart of stone beside him (`work.js` `rockface`, tool
   `pick`). Test: `npm run render -- --real --subs 2310 --gallery miner`.
+- The Mine (owner 2026-10-29): a goal at 2,750 ("Mining Town", the miner's tier, before the Beehives at 3,000), 3 days to
+  build. In the hills west of the Quarry, outside the Second Wall, with a dirt track on from the Quarry's (`placeMine` in
+  `world.js`, laid out last so nothing moves): a hill of rough rock (`crag`) with the adit framed in timber, a plank way
+  to a cart of ore, a spoil heap, a windlass over a shaft, on a dirt yard (`buildings.js` `mine`). Once it stands the
+  miner works at its rock face (`PLACES` in `main.js`). Test: `npm run render -- --real --subs 2760 --stills 9.5,10.8`,
+  `--built mine --gallery miner`.
+- All the public comments read again (owner 2026-10-29, 1,420 of them; comments with no job: 455 down to 414): "sir"
+  alone is how people speak, not a knight ("a sir", "be a sir" still ask for it); "I'm the town crier but can I be a
+  teacher" asks for the teacher (the job someone has, said before "but", is passed over); "army engineer" and "military
+  engineer" ask for the engineer. New words: "kight", "the king's night", men-at-arms, military, defender, "protect the
+  kingdom", retinue: guard; crossbow, longbow: fletcher; metalsmith, goldsmith, smithy: blacksmith; craftman, woodworker,
+  carver, shipwright: carpenter; monastery, monastic, deacon, nun: priest; medic, pediatrician, clinic: physician;
+  "sawbonee": barber; winery, vintner, moonshine: brewer; stable worker: stablehand; town speaker: crier; laborer:
+  peasant; hobo: beggar; mechanic: engineer; academic: scholar; justiciar, prosecutor, lawman: tax collector. Still not
+  read right: "the guards threw food at me... a city sweeper" (guard), "the inn needs a cook" (innkeeper). No job for:
+  adventurer, assistant, aviation pioneer, crackhead, thief, assassin, wizard, witch, prince, queen.
 - Buildings begin only when the video can show them (owner 2026-10-23): at most 2 a day once villagers have
   names (3 before), as `timeline.js` shows them (`SHOWN_STARTS` in `simulate.js`); the others wait in
   `s.buildQueue` (in tier order, commissions last) and begin on the next days (`diff.buildingsWaiting`). The

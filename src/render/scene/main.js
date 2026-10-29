@@ -191,6 +191,8 @@ async function setup(data) {
     // on the University's lawn, the cooper, the bell founder and the clockmaker in front of their workshops on the ward squares
     potter: ['potter_stall', 0, 2.7], tailor: ['tailor_stall', 0, 2.7], cobbler: ['cobbler_stall', 0, 2.7],
     scholar: ['university', 6, -3, { y: 0.12 }], cooper: ['cooperage', 0, 3.6], bellfounder: ['bell_foundry', 0, 3.8], clockmaker: ['clock_tower', 0, 4.2],
+    // owner 2026-10-29: the miner at the Mine's rock face, beside the adit
+    miner: ['mine', 4.5, 2.6, { back: true }],
   };
   // farmers work in one of the fields (owner 2026-10-23), on the crop (its surface is 0.12 m above the ground); the
   // odd ones, which have no hay bales in summer and autumn (buildFields in buildings.js)
