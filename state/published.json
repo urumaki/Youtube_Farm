@@ -62,7 +62,13 @@
   "uploadedAt": "2026-10-28T10:38:12.764Z"
  },
  "2026-10-29_en": {
-  "youtube": "XhJ8oC9Jj1A",
-  "uploadedAt": "2026-10-29T11:22:39.968Z"
+  "replaced": [
+   {
+    "youtube": "XhJ8oC9Jj1A",
+    "uploadedAt": "2026-10-29T11:22:39.968Z"
+   }
+  ],
+  "youtube": "cbjoXa7aO4I",
+  "uploadedAt": "2026-10-29T16:26:49.949Z"
  }
 }

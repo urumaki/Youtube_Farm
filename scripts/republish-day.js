@@ -13,7 +13,7 @@ loadEnv();
 const args = process.argv.slice(2);
 const date = args.find((a) => /^\d{4}-\d{2}-\d{2}$/.test(a));
 const at = args.includes('--at') ? args[args.indexOf('--at') + 1] : '';
-if (at && !/^d{1,2}:d{2}$/.test(at)) throw new Error('--at takes HH:MM (UTC)');
+if (at && !/^\d{1,2}:\d{2}$/.test(at)) throw new Error('--at takes HH:MM (UTC)');
 const video = args.find((a) => a.endsWith('.mp4')) || path.join('output', `${date}_en_again.mp4`);
 if (!date || !fs.existsSync(video)) throw new Error('usage: node scripts/republish-day.js YYYY-MM-DD [video.mp4]');
 const { state: raw, diff } = JSON.parse(fs.readFileSync(path.join(STATE_DIR, 'history', `${date}.json`), 'utf8'));
