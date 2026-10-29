@@ -334,6 +334,10 @@ Add new owner decisions here.
   "un signore" do; "Hello my Lord, may I be a guard" had made tax collectors). Sawbones and surgeon ask for the barber;
   carriage, coachman and wagon driver for the stablehand. "Join the army", "join the kingdom", "join as a guard" no longer
   enter the Tournament Ground's games: only a "join" that is not about joining the kingdom, the army or the guard does.
+  Also: "Kinght", paladin and "chief of war" ask for a guard (a knight is won); banker and money changer for the
+  merchant (no banker job before the Bank); physicist for the scholar; chemist for the apothecary; "claim the king's
+  throne" makes a rebel. Not mapped, no such job: miner ("minor in the cave", "I be mining"), street sweeper (a broom
+  and clean roads); villainous: assassin, mafia.
 - Buildings begin only when the video can show them (owner 2026-10-23): at most 2 a day once villagers have
   names (3 before), as `timeline.js` shows them (`SHOWN_STARTS` in `simulate.js`); the others wait in
   `s.buildQueue` (in tier order, commissions last) and begin on the next days (`diff.buildingsWaiting`). The

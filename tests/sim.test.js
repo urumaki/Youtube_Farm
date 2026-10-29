@@ -312,6 +312,12 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
   assert.deepEqual(wantsFromText('Signore, posso essere un fabbro?'), ['blacksmith']);
   assert.deepEqual(wantsFromText('day 5 for sawbone?'), ['barber']);
   assert.deepEqual(wantsFromText('mime a surgeon'), ['barber']);
+  assert.deepEqual(wantsFromText('Can I be an teutonic Kinght ?'), ['guard']);
+  assert.deepEqual(wantsFromText('Has anybody Requested to be a paladin'), ['guard']);
+  assert.deepEqual(wantsFromText('can I be the chief of war against other villages'), ['guard']);
+  assert.deepEqual(wantsFromText('can I be a banker'), ['merchant']);
+  assert.deepEqual(wantsFromText('Day 6 of asking to be a physicist'), ['scholar']);
+  assert.deepEqual(wantsFromText('I request to be a chemist'), ['apothecary']);
   assert.deepEqual(wantsFromText('add me as a horse carriage worker pls'), ['stablehand']);
   assert.equal(wantsFromText('Make me a warrior i am sir coolum now')[0], 'guard');
   assert.equal(nameFromText('Can I be a villager called sopita?'), 'Sopita');
@@ -965,7 +971,7 @@ test('comment words of 2026-10-25: typos and synonyms reach the jobs, six new jo
 test('the would-be rebel (owner 2026-10-27): comments of overthrowing the king are spotted, the pillory at most once in 7 days', async () => {
   const { rebelFromText, wantsFromText } = await import('../src/sim/requests.js');
   for (const t of ['Can I start an organization or overthrow the king?', 'kill the king!!', 'down with the king', 'I will be the new king', 'VIVA LA REVOLUTION',
-    'join the rebellion', 'abbasso il re', 'uccidere il re', 'steal the crown', 'dethrone his majesty']) assert.ok(rebelFromText(t), t);
+    'join the rebellion', 'abbasso il re', 'uccidere il re', 'steal the crown', 'dethrone his majesty', 'Day 5 trying to claim the kings throne']) assert.ok(rebelFromText(t), t);
   for (const t of ['long live the king', 'can I be a knight for the king?', 'I love this kingdom', 'my king please grant my wish', 'call me Violet', 'a coupon']) assert.ok(!rebelFromText(t), t);
   assert.deepEqual(wantsFromText('overthrow the king'), [], 'not a job request');
   const { pickStory, storyFor } = await import('../src/sim/stories.js');

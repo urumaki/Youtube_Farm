@@ -17,7 +17,8 @@ const KEYWORDS = [
   [/jester|\bclown|juggl|giullare|buffone/, 'jester'],
   [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b|frecce|arciere/, 'fletcher'],
   // owner 2026-10-28: a Knight, a Cavalier and the Captain of the Guard are only won at the tournaments, so asking makes a guard
-  [/\bknight|\bsir\b|cavaliere|commander|general|\barmy|captain|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
+  // (2026-10-29: "teutonic Kinght", paladin, "chief of war")
+  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bpaladin|chief of war|war\s*chief|\bsir\b|cavaliere|commander|general|\barmy|captain|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
   [/\bguard|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
   [/chapel|church|cathedral|cappella|chiesa/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
@@ -30,12 +31,13 @@ const KEYWORDS = [
   [/wood\s*cutter|lumber|\baxe\b|\bwood\b|taglialegna|boscaiolo/, 'woodcutter'],
   [/\bfarm(?!ing tools?)|\bcrops?\b|contadin|agricolt/, 'farmer'],
   [/\bpeasant|bracciant|\bcitizen|cittadin|commoner|gardener|grounds?\s*keeper|groudnskeeper|giardinier/, 'peasant'],
-  [/merchant|\btrader|\bshop|mercante|negozi|head of trade|\btrade\b|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
+  // the banker is a money changer until the Bank (2026-10-29)
+  [/merchant|\bbanker|banchier|money\s*(changer|lender)|\btrader|\bshop|mercante|negozi|head of trade|\btrade\b|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
   [/\bsailor|\bpirate|marinaio|pirata/, 'fisherman'],
   [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
-  [/scholar|\bscribe|librar|studioso|scientist|scienziat|inventor|professor|professore/, 'scholar'],
+  [/scholar|\bscribe|librar|studioso|scientist|physicist|scienziat|inventor|professor|professore/, 'scholar'],
   [/doctor|healer|physician|medico|guaritore/, 'physician'],
-  [/apothecar|\bapo\w*th\w*ry|alchemist|alchimista|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
+  [/apothecar|\bapo\w*th\w*ry|alchemist|alchimista|\bchemist|\bchimico|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
   // running the town was the reeve's job (the council, politics, the law); owner 2026-10-23: the tax collector's now
   [/\breeve\b|\bcouncil\b|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice/, 'taxcollector'],
   // jobs folded into another (owner 2026-10-23): the weaver into the tailor, the chronicler into the scholar, the admiral into the sailor
@@ -152,7 +154,7 @@ export function complainsFromText(text) {
 const KING = String.raw`(the |our |this |that |your |his |my |da |le )?(king|kingdom|crown|throne|monarchy|majesty|ruler)`;
 const REBEL_RE = new RegExp([
   String.raw`\b(overthrow|over throw|overthrown|overthrowing|kill|killing|murder|assassinate|dethrone|depose|behead|usurp|topple|betray|defeat|destroy|stab|poison|take down|takedown)\s+${KING}\b`,
-  String.raw`\bdown with ${KING}\b`, String.raw`\b(steal|take|seize|claim)\s+(the |your )?(crown|throne)\b`, String.raw`\bi('?ll| will| shall)\s+be (the )?(new )?king\b`,
+  String.raw`\bdown with ${KING}\b`, String.raw`\b(steal|take|seize|claim)\s+(the |your |the king'?s |his )?(crown|throne)\b`, String.raw`\bi('?ll| will| shall)\s+be (the )?(new )?king\b`,
   /\b(revolution|revolt|rebellion|rebel|rebels|uprising|insurrection|mutiny|treason|coup|anarchy|regicide|usurper|traitor)\b/.source,
   /\b(uccidere|uccido|ammazzare|ammazzo|rovesciare|rovescio|detronizzare|spodestare|tradire)\s+(il |del )?re\b/.source,
   /\babbasso (il )?re\b/.source, /\b(rivoluzione|ribellione|rivolta|ribelle|ribelli|colpo di stato|tradimento|traditore)\b/.source,
