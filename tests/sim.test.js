@@ -318,6 +318,9 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
   assert.deepEqual(wantsFromText('can I be a banker'), ['merchant']);
   assert.deepEqual(wantsFromText('Day 6 of asking to be a physicist'), ['scholar']);
   assert.deepEqual(wantsFromText('I request to be a chemist'), ['apothecary']);
+  assert.deepEqual(wantsFromText('Can I be a minor in the cave'), ['miner']);
+  assert.deepEqual(wantsFromText('I be mining.'), ['miner']);
+  assert.deepEqual(wantsFromText('this one is mine, a minor detail'), []);
   assert.deepEqual(wantsFromText('add me as a horse carriage worker pls'), ['stablehand']);
   assert.equal(wantsFromText('Make me a warrior i am sir coolum now')[0], 'guard');
   assert.equal(nameFromText('Can I be a villager called sopita?'), 'Sopita');

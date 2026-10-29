@@ -21,6 +21,7 @@ const ACTIVITIES = {
   shepherd: 'counts the sheep and gets a different number each time', tanner: 'hangs a new hide to dry in the sun',
   teacher: 'teaches the children their letters', philosopher: 'wonders aloud why the river never stops', barber: 'trims the best beard in town',
   astronomer: 'counts the stars and loses count', stablehand: 'brushes the horses until they shine', adviser: 'gives the King a piece of advice',
+  miner: 'brings up a cart of stone and one shiny pebble',
   chronicler: 'records today in the kingdom chronicle', admiral: 'charts a route to distant lands',
   fletcher: 'fletches a bundle of arrows', weirdo: 'dances alone in the square for no reason', beggar: 'raises a mug to every passer-by',
   jester: 'juggles for a crowd of children', warrior: 'trains with the sword until sunset', toolsmith: 'forges new hoes and sickles for the farmers',

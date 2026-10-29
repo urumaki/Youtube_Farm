@@ -80,6 +80,8 @@ export const JOBS = {
   astronomer: { label: 'Astronomer', color: '#2e3a6e', requestOnly: true },
   stablehand: { label: 'Stablehand', color: '#7a6a3a', requestOnly: true },
   adviser: { label: 'Royal Adviser', color: '#4a2e5e', requestOnly: true },
+  // asked for in the comments of 2026-10-28 (owner 2026-10-29), by request only
+  miner: { label: 'Miner', color: '#5b5650', requestOnly: true },
 };
 
 export const BUILDINGS = {

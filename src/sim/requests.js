@@ -75,6 +75,8 @@ const KEYWORDS = [
   [/astronom|astrolog|stargaz|star\s*gaz/, 'astronomer'],
   [/stable\s*(hand|boy|keeper|master|man)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom)|carriage|coach\s*(man|driver)|wagon\s*(driver|master)|\bwagoner|cocchier|carrettier/, 'stablehand'],
   [/advis[eo]r|counsell?or|consiglier/, 'adviser'],
+  // owner 2026-10-29, from "a minor in the cave" and "I be mining" ("mine" alone is the word for mine, not a request)
+  [/\bminers?\b|\bmining\b|\bminor in the (cave|mine)|\bquarry\s*man|\bpick\s*axe|minatore|miniera|cavatore/, 'miner'],
 ];
 
 // "maybe later, when there are proper guards" is a wish for the kingdom, not a job request

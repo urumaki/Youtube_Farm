@@ -81,6 +81,7 @@ export function rig(M, color, { seated = false, walk = false, ground = false } =
 // a soft round dot, so particles are not drawn as squares (made once, in the browser only)
 let dotTexture = null;
 let horseCoat = null; // the stablehand's brown horse
+let mineDark = null, rockMat = null; // the miner's mine mouth and rough rock
 function roundDot() {
   if (dotTexture || typeof document === 'undefined') return dotTexture;
   const c = document.createElement('canvas');
@@ -196,6 +197,8 @@ const JOB_SCENES = {
   astronomer: { period: 3.0, raise: -2.6, down: -1.1, bend: -0.1, sound: 'none', tool: null, props: 'armillary', smooth: true, left: -0.9 },
   stablehand: { period: 1.1, raise: -1.25, down: -1.0, bend: 0.1, sound: 'none', tool: null, props: 'stable', push: true, left: -0.3 },
   adviser: { period: 2.2, raise: -1.3, down: -1.08, bend: 0.25, sound: 'none', tool: null, props: 'mapdesk', smooth: true, left: -1.05 },
+  // asked for in the comments of 2026-10-28 (owner 2026-10-29): the miner swings a pick at a rock face by a timbered mine mouth
+  miner: { period: 1.6, hit: 0.72, raise: -2.8, down: -0.9, bend: 0.25, fx: 'dust', sound: 'chisel', tool: 'pick', props: 'rockface', both: true },
 };
 const DEFAULT_SCENE = { period: 2.4, hit: 0.5, raise: -2.6, down: -0.2, bend: 0, fx: null, sound: 'none', tool: null, props: 'market', wave: true };
 // Other scenes of the same jobs, 'job:variant' (owner 2026-10-20: a job is not always shown the same way;
@@ -289,6 +292,14 @@ export function toolGeo(kind, M) {
       put(along(boxGeo(0.03, 0.24, 0.2), p).translate(...end.clone().addScaledVector(p, 0.12).toArray()), iron);
       put(along(boxGeo(0.06, 0.08, 0.1), p).translate(...end.clone().addScaledVector(p, -0.03).toArray()), iron);
       return 0.24;
+    } });
+  } else if (kind === 'pick') {
+    striker(g, M, { beta: 0.3, len: 0.85, back: 0.1, head: (put, along, h, p, end) => {
+      // an iron head across the handle: the point on the striking side, a shorter one behind
+      put(along(new THREE.ConeGeometry(0.035, 0.3, 6), p).translate(...end.clone().addScaledVector(p, 0.15).toArray()), iron);
+      put(along(new THREE.ConeGeometry(0.035, 0.22, 6).rotateX(Math.PI), p).translate(...end.clone().addScaledVector(p, -0.11).toArray()), iron);
+      put(along(boxGeo(0.06, 0.08, 0.07), p).translate(...end.toArray()), iron);
+      return 0.3;
     } });
   } else if (kind === 'hoe') {
     striker(g, M, { beta: 0.35, len: 1.25, back: 0.25, head: (put, along, h, p, end) => {
@@ -1110,6 +1121,22 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       add(boxGeo(0.9, 0.45, 0.5).translate(-1.4, 0.22, 1.3), M.hay);
       add(cylGeo(0.18, 0.15, 0.3, 10).translate(1.3, 0.15, 0.3), M.wood);
       return new THREE.Vector3(0, 1.3, 0.5);
+    }
+    case 'rockface': { // a wall of rough rock struck at chest height, a mine mouth framed in timber in it, a cart of stone
+      const rock = (rockMat ??= new THREE.MeshStandardMaterial({ color: '#77736b', roughness: 0.95, flatShading: true }));
+      const mouth = (mineDark ??= new THREE.MeshStandardMaterial({ color: '#141210', roughness: 1 }));
+      // the face the pick strikes is at z 1.05 (each rock's front: z - 0.8 r)
+      for (const [x, y, z, r] of [[0, 0.6, 1.65, 0.75], [-0.8, 0.5, 1.8, 0.65], [0.55, 1.45, 1.85, 0.6], [-0.4, 1.5, 1.9, 0.62], [2.3, 0.7, 1.9, 0.75], [1.5, 2.05, 2.0, 0.6]]) {
+        add(new THREE.DodecahedronGeometry(r, 0).scale(1.1, 1, 0.8).rotateY(x).translate(x, y, z), rock);
+      }
+      add(boxGeo(0.8, 1.5, 0.1).translate(1.35, 0.75, 1.55), mouth);
+      for (const x of [0.88, 1.82]) add(boxGeo(0.14, 1.7, 0.14).translate(x, 0.85, 1.45), M.woodDark);
+      add(boxGeo(1.15, 0.16, 0.18).translate(1.35, 1.75, 1.45), M.woodDark);
+      for (const [x, z] of [[-0.35, 0.95], [0.3, 0.85], [0.05, 0.7]]) add(new THREE.DodecahedronGeometry(0.09, 0).translate(x, 0.07, z), rock);
+      add(boxGeo(0.5, 0.36, 0.7).translate(-1.35, 0.4, 0.75), M.wood); // the cart
+      for (const x of [-1.62, -1.08]) for (const z of [0.5, 1.0]) add(cylGeo(0.13, 0.13, 0.06, 10).rotateZ(Math.PI / 2).translate(x, 0.13, z), M.woodDark);
+      for (const [x, z] of [[-1.42, 0.6], [-1.28, 0.75], [-1.4, 0.92], [-1.3, 0.55]]) add(new THREE.DodecahedronGeometry(0.11, 0).translate(x, 0.62, z), rock);
+      return new THREE.Vector3(0, 1.0, 1.05);
     }
     case 'mapdesk': { // a table with a map of the kingdom, a candle, a little stack of letters with a seal
       add(boxGeo(1.3, 0.07, 0.75).translate(0, 0.8, 0.65), M.wood);
