@@ -27,6 +27,12 @@ test('at most 5 hashtags per video, none repeated', () => {
 });
 const sample = () => ({ state: { day: 3, date: '2026-10-16', subscriberCount: 87 }, diff: { delta: 11 } });
 
+test('the title opens with the hook, then the day and the new villagers (owner 2026-10-29)', () => {
+  assert.equal(metadata(sample()).title, 'Your name could be in this kingdom 👑 Day 3 · +11 villagers #shorts');
+  assert.equal(metadata({ ...sample(), diff: { delta: -4 } }).title, 'Your name could be in this kingdom 👑 Day 3 · -4 villagers #shorts');
+  assert.ok(metadata(sample()).title.length <= 100, 'YouTube cuts titles at 100 characters');
+});
+
 test('publish uploads to YouTube once per day', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pub-'));
   const video = path.join(dir, 'v.mp4');
