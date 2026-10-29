@@ -849,6 +849,12 @@ test('the games at the Tournament Ground (owner 2026-10-28): announced, guards w
     assert.equal(s.names[res.winner][`${title}Day`], 20);
     assert.ok(res.crowd.every((c) => !res.riders.some((x) => x.id === c.id)), 'the stands hold others');
   }
+  // owner 2026-10-29: a joust set by the owner for a day comes before the calendar and a new goal
+  const { pickStory } = await import('../src/sim/stories.js');
+  const set = { ...kingdom('2026-10-31'), storyLog: {}, storyArc: { id: 'joust', step: 'announce', day: 20, owner: true } };
+  const st = pickStory(set, { unlocked: ['north'] });
+  assert.deepEqual([st.id, st.step], ['joust', 'announce']);
+  assert.deepEqual([set.storyArc.id, set.storyArc.step, set.storyArc.day], ['joust', 'results', 21]);
   // too few guards: no games
   const few = kingdom('2026-11-03');
   for (let id = 2; id < 12; id++) few.villagers[id].job = 'farmer';

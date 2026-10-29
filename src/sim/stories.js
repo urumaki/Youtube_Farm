@@ -461,9 +461,12 @@ export function pickStory(state, { unlocked = [] } = {}) {
   const pop = state.subscriberCount;
   const mmdd = state.date.slice(5);
   const possible = (id, s) => pop >= (s.minPop ?? 1) && (!s.needs || s.needs(state));
-  let id = Object.keys(STORIES).find((k) => STORIES[k].date === mmdd && possible(k, STORIES[k]));
+  // a story the owner set for a given day (state.storyArc with owner: true; owner 2026-10-29: the joust) comes before the
+  // calendar and the proclamation of a new goal
+  const ownerDay = !!(state.storyArc?.owner && state.storyArc.day <= state.day);
+  let id = ownerDay ? undefined : Object.keys(STORIES).find((k) => STORIES[k].date === mmdd && possible(k, STORIES[k]));
   // a new goal reached today: the proclamation (the highest tier when several came at once)
-  if (!id && unlocked.length) {
+  if (!id && unlocked.length && !ownerDay) {
     const story = BUILD.proclaim(state, r, null, unlocked[unlocked.length - 1]);
     if (story) { state.storyLog.proclaim = state.day; return { id: 'proclaim', ...story }; }
   }

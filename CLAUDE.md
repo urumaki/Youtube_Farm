@@ -8,6 +8,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   runs from it and commits `state/` there). Pull before pushing.
 - Owner's standing rule: commit and push every change to GitHub as soon as it is done and tested, without
   asking (`git pull --rebase --autostash` first). Leave the owner's own uncommitted local edits alone.
+- Each day starts from `state/history/<previous day>.json`, not `state/kingdom.json`: a hand fix to the saved state goes
+  in both files (the latest history file and kingdom.json), or the next run loses it.
 - Never commit keys. Secrets live only in the owner's local `.env` and in GitHub Actions secrets
   (`YOUTUBE_API_KEY`, `YT_OAUTH_CLIENT_ID`, `YT_OAUTH_CLIENT_SECRET`, `YT_OAUTH_REFRESH_TOKEN`).
   Variables: `PUBLISH_TARGETS=youtube`, optional `YT_PUBLISH_AT` (HH:MM UTC), `YT_PRIVACY`.

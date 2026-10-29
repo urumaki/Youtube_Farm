@@ -103,7 +103,10 @@ Add new owner decisions here.
   (`drawGuards` in `stories.js`) among the guards on the list (still guards that day), then the other named guards fill
   the places left (owner: fill with random guards); each draw is weighted
   by seniority, the guard named longest ago 1.9, the newest 1.0, the rest in proportion. Only named guards, never the
-  Captain of the Guard; the race needs four, the joust two (`GAMES`). The race (four chariots on the far straight) or the
+  Captain of the Guard; the race needs four, the joust two (`GAMES`). The owner can set a game for a day:
+  `state.storyArc = { id: 'joust', step: 'announce', day, owner: true }` (in kingdom.json and the latest history file) comes
+  before the calendar and a new goal's proclamation (`pickStory`); owner 2026-10-29: the joust announced on 2026-10-30,
+  the results after Halloween. The race (four chariots on the far straight) or the
   joust (two riders over the tilt: the winner's lance breaks on the shield, the loser rocks in the saddle, nobody falls;
   scene `stories/joust.js`), then a second shot in the new throne room (`stories/throne.js`, step `crown`, added by
   `timeline.js`): the winner walks up the red carpet between the other riders and named villagers, kneels, the King

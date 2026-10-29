@@ -14469,7 +14469,7 @@
    "name": "Imnotbucketjosh",
    "author": "UCg6B1vTHDPanmz-EvB07eKw",
    "day": 7,
-   "job": "beggar",
+   "job": "brewer",
    "requestDay": 7
   },
   "88": {
@@ -14522,7 +14522,7 @@
    "name": "DistantHorizons9",
    "author": "UCzgm78GRwcqEl7hMuaUNhHg",
    "day": 7,
-   "job": "fletcher",
+   "job": "hunter",
    "requestDay": 7
   },
   "97": {
@@ -14680,7 +14680,7 @@
    "name": "vogximillius",
    "author": "UC_CgnL--9jQnlxGvH52mAfg",
    "day": 7,
-   "job": "taxcollector",
+   "job": "crier",
    "requestDay": 7
   },
   "121": {
@@ -14784,7 +14784,7 @@
    "name": "BIG_STURM",
    "author": "UCkiVnBaDdKQ8DWNsov5pgjg",
    "day": 7,
-   "job": "taxcollector",
+   "job": "merchant",
    "requestDay": 12
   },
   "137": {
@@ -14961,7 +14961,7 @@
    "name": "Bozo",
    "author": "UCxweZeoGo29ZJlrY5GHvdzA",
    "day": 7,
-   "job": "guard",
+   "job": "beggar",
    "requestDay": 7
   },
   "165": {
@@ -15081,7 +15081,7 @@
    "name": "ChessGod89",
    "author": "UCavknpqGuKLRVrffcIrRYiA",
    "day": 7,
-   "job": "taxcollector",
+   "job": "guard",
    "requestDay": 7
   },
   "184": {
@@ -15106,9 +15106,7 @@
   "187": {
    "name": "6.5undun243",
    "author": "UCaPHUq7eqpq_s45rLO2cImg",
-   "day": 8,
-   "job": "taxcollector",
-   "requestDay": 8
+   "day": 8
   },
   "188": {
    "name": "carbo",
@@ -15128,7 +15126,7 @@
    "name": "samlax4683",
    "author": "UCJJ9v4JR4xIYaOgASfmh0Cw",
    "day": 8,
-   "job": "guard",
+   "job": "farmer",
    "requestDay": 9
   },
   "191": {
@@ -15187,7 +15185,7 @@
    "name": "Goofy_pyro",
    "author": "UC5591oyxuKO1l6m3euo4DbQ",
    "day": 8,
-   "job": "taxcollector",
+   "job": "blacksmith",
    "requestDay": 9
   },
   "200": {
@@ -15355,7 +15353,7 @@
    "name": "Isotropic",
    "author": "UCGDLWJ6dOc_P0s8NF6dXaJA",
    "day": 8,
-   "job": "taxcollector",
+   "job": "blacksmith",
    "requestDay": 9
   },
   "224": {
@@ -15475,7 +15473,7 @@
    "name": "ininfagacha5901",
    "author": "UCLqaIXMAshOdL72Chp8DEXw",
    "day": 8,
-   "job": "taxcollector",
+   "job": "physician",
    "requestDay": 8
   },
   "242": {
@@ -15532,7 +15530,7 @@
    "name": "Doodle_man",
    "author": "UCI_5_qdW5tRV_0VGhA019Qg",
    "day": 8,
-   "job": "taxcollector",
+   "job": "priest",
    "requestDay": 10
   },
   "251": {
@@ -15661,8 +15659,6 @@
    "name": "theperfectinperfectce…",
    "author": "UCckdb1TzIa7IkXMojZEdJiQ",
    "day": 8,
-   "job": "taxcollector",
-   "requestDay": 8,
    "complainDay": 12
   },
   "270": {
@@ -15676,7 +15672,7 @@
    "name": "Dutchgeoball2",
    "author": "UCdNVLrYplBPDAwqoY3yCtww",
    "day": 8,
-   "job": "taxcollector",
+   "job": "guard",
    "requestDay": 9
   },
   "272": {
@@ -15718,9 +15714,7 @@
   "277": {
    "name": "Someperson",
    "author": "UCB4hb6k8_zuWC4dPURAs76g",
-   "day": 8,
-   "job": "taxcollector",
-   "requestDay": 8
+   "day": 8
   },
   "278": {
    "name": "Johnnie",
@@ -15738,7 +15732,7 @@
    "name": "Maddox",
    "author": "UCkKQHHXfuqmGFVPgFF_ILmw",
    "day": 8,
-   "job": "crier",
+   "job": "teacher",
    "requestDay": 13
   },
   "281": {
@@ -16009,7 +16003,7 @@
    "name": "mayflowernationalpark…",
    "author": "UCWbpdOyfF3HHNvZf_O9TcNQ",
    "day": 8,
-   "job": "fletcher",
+   "job": "taxcollector",
    "requestDay": 8
   },
   "321": {
@@ -16079,7 +16073,7 @@
    "name": "analtforme.156",
    "author": "UCyWAhdbbEVcHQA6EnCD1STg",
    "day": 8,
-   "job": "taxcollector",
+   "job": "peasant",
    "requestDay": 8
   },
   "332": {
@@ -16115,7 +16109,7 @@
    "name": "tanyushkav9221",
    "author": "UCTPGfBS_dQMAhFlAeyfD36Q",
    "day": 8,
-   "job": "taxcollector",
+   "job": "baker",
    "requestDay": 11
   },
   "337": {
@@ -16253,9 +16247,7 @@
   "356": {
    "name": "Alien_named_steven",
    "author": "UCqv-lIYQkXDYcIm4p72LyVQ",
-   "day": 8,
-   "job": "guard",
-   "requestDay": 9
+   "day": 8
   },
   "357": {
    "name": "philipgundersen6709",
@@ -16350,7 +16342,7 @@
    "name": "motad.1387",
    "author": "UCznbTv3NwGz1ehzWP-kddxQ",
    "day": 9,
-   "job": "taxcollector",
+   "job": "guard",
    "requestDay": 10
   },
   "372": {
@@ -16462,7 +16454,7 @@
    "name": "lilbroplays1",
    "author": "UCWReHvQna7NWa1E9Vz-5sAw",
    "day": 9,
-   "job": "guard",
+   "job": "crier",
    "requestDay": 12
   },
   "390": {
@@ -16761,7 +16753,7 @@
    "name": "Zachary",
    "author": "UCexaCrMGRietZMRQkcbuj8Q",
    "day": 9,
-   "job": "taxcollector",
+   "job": "jester",
    "requestDay": 9
   },
   "436": {
@@ -16832,7 +16824,7 @@
    "name": "Donna",
    "author": "UCFOH7vlrvEkgu63JKWbzsFA",
    "day": 9,
-   "job": "woodcutter",
+   "job": "carpenter",
    "requestDay": 11,
    "complainDay": 13
   },
@@ -16938,9 +16930,7 @@
   "462": {
    "name": "joaquimdelfes705",
    "author": "UCgldq3JDhh2sMU8dx3pg8ww",
-   "day": 9,
-   "job": "guard",
-   "requestDay": 9
+   "day": 9
   },
   "463": {
    "name": "forg_guyanimates",
@@ -17380,7 +17370,7 @@
    "name": "MalmquistJohnston",
    "author": "UCF4iYqXQjSE8urzx4rZgH8Q",
    "day": 10,
-   "job": "taxcollector",
+   "job": "stonemason",
    "requestDay": 12
   },
   "530": {
@@ -17471,7 +17461,7 @@
    "name": "RanaanBooker",
    "author": "UCMQKtW5jM_0XP3wc2f9sLqw",
    "day": 10,
-   "job": "taxcollector",
+   "job": "priest",
    "requestDay": 11,
    "complainDay": 12
   },
@@ -17588,9 +17578,7 @@
   "561": {
    "name": "wargooner17",
    "author": "UCh6FMvZya3LO7u37hMKUFoQ",
-   "day": 11,
-   "job": "guard",
-   "requestDay": 11
+   "day": 11
   },
   "562": {
    "name": "haroldkeaton8240",
@@ -18152,7 +18140,7 @@
    "name": "MJPGAMING",
    "author": "UCH8Xc1q8Zs2YT-AcP6_aJlg",
    "day": 12,
-   "job": "guard",
+   "job": "fletcher",
    "requestDay": 12
   },
   "646": {
@@ -20087,7 +20075,12 @@
   "654": 13,
   "663": 14
  },
- "storyArc": null,
+ "storyArc": {
+  "id": "joust",
+  "step": "announce",
+  "day": 15,
+  "owner": true
+ },
  "sceneLog": {
   "tavern": 14,
   "blacksmith:bellows": 14,
