@@ -67,7 +67,7 @@ export function summarizeDiff(diff) {
 }
 
 /** Narration -> TTS -> captions -> soundtrack -> frames -> MP4. */
-export async function produceVideo(state, diff, { out, quality, tts, log = console, workDir } = {}) {
+export async function produceVideo(state, diff, { out, quality, tts, log = console, workDir, needVoice = false } = {}) {
   const dir = workDir || path.join('.cache', 'work', `${state.date}_en_${state.subscriberCount}`);
   fs.mkdirSync(dir, { recursive: true });
   // the shot plan first, so each sentence can wait for the shot it talks about
@@ -78,6 +78,8 @@ export async function produceVideo(state, diff, { out, quality, tts, log = conso
   const sentences = script.sentences.map((s, i) => ({ ...s, at: anchors[i] === null ? null : anchors[i] - VOICE_DELAY }));
   const voice = await synthesize(sentences, { outDir: dir, provider: tts, log });
   log.log(`[audio] ${voice.provider} narration ${voice.duration.toFixed(2)} s`);
+  // owner 2026-10-29: a saved day made again always has the narrator (no silent video when the voice could not run)
+  if (needVoice && voice.provider === 'none') throw new Error('no narrator voice (is PYTHON set in .env for Kokoro?); pass --tts none for a silent test');
   const captions = captionPhrases(voice.words, VOICE_DELAY);
   const data = { mode: 'video', state, diff, captions, quality };
   const audio = async (stats) => {
@@ -207,5 +209,5 @@ export async function testRender(args, log = console) {
     return r;
   }
   const out = args.out || path.join('output', args.day ? `${args.day}_en_again.mp4` : `test_${args.subs}_en.mp4`);
-  return produceVideo(state, diff, { out, quality: args.quality, tts: args.tts, log });
+  return produceVideo(state, diff, { out, quality: args.quality, tts: args.tts, log, needVoice: !!args.day && args.tts !== 'none' });
 }

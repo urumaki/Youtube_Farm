@@ -399,7 +399,7 @@ async function setup(data) {
       tg.away = Math.atan2(az, ax);
       const ws = workScene({ job: tg.sceneJob || v.job, variant: as ?? tg.variant, anchor, ax, az, away: tg.away, id: tg.id, face, t0: tg.t0, floorAt });
       scene.add(ws.group);
-      if (ws.room) { scene.add(ws.room); interiors.push({ ws, tg }); tg.cam = (u) => ws.cam(u, !!tg.guest); } else works.push(ws);
+      if (ws.room) { scene.add(ws.room); interiors.push({ ws, tg }); tg.cam = (u) => ws.cam(u, !!tg.guest); } else { ws.shot = tg; ws.at = anchor.clone(); works.push(ws); }
       if (cam) tg.cam = cam; // a place with its own camera (down an alley)
       tg.work = ws;
       tg.pos.copy(ws.focus);
@@ -530,6 +530,9 @@ async function setup(data) {
   const env = buildEnvironment(renderer, scene, camera, { viewer, weather: diff.weather, seed: state.seed, width: width * renderer.getPixelRatio(), height: height * renderer.getPixelRatio(), quality: data.quality || (viewer ? 'high' : 'medium') });
   const overlay = viewer ? null : createOverlay(document.getElementById('stage'), data);
 
+  // owner 2026-10-29: two villagers of a job with one workplace (two blacksmiths at the forge) get the same spot there
+  // (PLACES): each is only seen in their own shot, never one inside the other
+  for (const a of works) for (const b of works) if (a !== b && a.shot && b.shot && a.at.distanceTo(b.at) < 1.5) a.ownShotOnly = true;
   const ctx = { ...ctx0, renderer, scene, camera, env, plan, castle, houses, animated, buildings, nature, life, water, M, overlay, data, w, works, interiors, caravan, tavern, church, stories, crews, povs };
   ctx.stats = {
     setupMs: Math.round(performance.now() - t0), houses: state.houses.length, animated: animated.size, trees: nature.count,
@@ -557,7 +560,10 @@ const povEye = new THREE.Vector3(), povHand = new THREE.Vector3();
 
 function applyFrame(ctx, t) {
   const { plan, camera, env, castle, animated, buildings, life, water, M, houses, nature, overlay, renderer } = ctx;
-  for (const ws of ctx.works || []) ws.update(t);
+  for (const ws of ctx.works || []) {
+    if (ws.ownShotOnly) ws.group.visible = t >= ws.shot.t0 - 0.1 && t <= ws.shot.t1 + 0.1;
+    ws.update(t);
+  }
   for (const { ws, tg } of ctx.crews || []) {
     ws.group.visible = t >= tg.t0 - 0.1 && t <= tg.t1 + 0.1;
     if (ws.group.visible) ws.update(t);

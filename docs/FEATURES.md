@@ -392,7 +392,9 @@ Add new owner decisions here.
   kingdom already reached is queued like a new one (the Counting House on the real kingdom). Test with
   `npm run render -- --real --subs 775 --built counting_house,apothecary_shop --gallery "merchant:stall,taxcollector:counting,apothecary:shop"`
   (`--built` makes buildings stand finished in a test render).
-  More of them (owner 2026-10-23, `PLACES` in `main.js`): once their building stands, every scene of the job happens in
+  More of them (owner 2026-10-23, `PLACES` in `main.js`; owner 2026-10-29: two villagers of the job on screen the same
+  day, two blacksmiths, share the spot, so each is seen only in their own shot, `ownShotOnly`, never one inside the other):
+  once their building stands, every scene of the job happens in
   front of it with the croft scene's props (visits too): the smith in the forge's yard under the awning, the woodcutter by
   the sawmill's log pile, the mason on the quarry floor, the miller at the windmill door, the executioner chopping cabbages
   at the foot of the pillory (the camera on the market square); farmers work in one of the odd fields (no hay bales there),
