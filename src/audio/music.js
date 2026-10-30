@@ -95,4 +95,29 @@ export function makeMusic(seed, date, seconds = 31) {
   return [L, R];
 }
 
-export function writeMusic(file, seed, date) { writeWav(file, makeMusic(seed, date), RATE); return file; }
+/**
+ * The night of the raid (owner 2026-10-30): no tune, a low drone and war drums that quicken toward the gate falling
+ * (15 s), heavy hits at the breach, then silence over the smoke from 24 s.
+ */
+export function makeRaidMusic(seed, date, seconds = 31) {
+  const r = rng(seed, 'music', date, 'raid');
+  const N = Math.round(seconds * RATE);
+  const L = new Float32Array(N), R = new Float32Array(N), perc = new Float32Array(N);
+  const hits = [];
+  for (let t = 2.0, gap = 0.9; t < 23.5; t += gap) { hits.push([t, 0.55 + 0.35 * Math.min(1, t / 15)]); if (t > 4 && t < 15) gap = Math.max(0.42, gap * 0.95); if (t >= 15) gap = 0.75; }
+  hits.push([15.4, 1.1], [15.55, 0.9]);
+  for (const [t, amp] of hits) { drum(perc, Math.round(t * RATE), amp, r); drum(perc, Math.round((t + 0.12) * RATE), amp * 0.35, r); }
+  let p1 = 0, p2 = 0;
+  for (let i = 0; i < N; i++) {
+    const tt = i / RATE;
+    p1 += (2 * Math.PI * midi(26)) / RATE; p2 += (2 * Math.PI * midi(33)) / RATE;
+    const swell = 0.6 + 0.4 * Math.sin(tt * 0.5);
+    const fade = Math.min(1, tt / 1.5) * (tt < 23.5 ? 1 : Math.max(0, 1 - (tt - 23.5) / 2.5));
+    const drone = (Math.sin(p1) + 0.4 * Math.sin(2 * p1) + 0.5 * Math.sin(p2) + 0.2 * Math.sin(3 * p2)) * 0.09 * swell * fade;
+    L[i] = drone + perc[i] * 1.2;
+    R[i] = drone + perc[i] * 1.2;
+  }
+  return [L, R];
+}
+
+export function writeMusic(file, seed, date, mood = null) { writeWav(file, mood === 'raid' ? makeRaidMusic(seed, date) : makeMusic(seed, date), RATE); return file; }

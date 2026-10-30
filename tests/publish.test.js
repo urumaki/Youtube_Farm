@@ -71,3 +71,10 @@ test('scheduled publishing time', () => {
   assert.equal(r.status.privacyStatus, 'private');
   assert.equal(r.status.publishAt, '2026-10-16T17:00:00Z');
 });
+
+test('the two days of the night raid say what happened in the title (owner 2026-10-30)', () => {
+  const day = (step) => metadata({ ...sample(), diff: { ...sample().diff, story: { id: 'raid', step } } }).title;
+  assert.equal(day('attack'), 'Day 3: The kingdom was attacked tonight 🔥 +11 villagers — 87 in the kingdom 👑 #shorts');
+  assert.equal(day('rescue'), 'Day 3: The guards brought them home 🛡️ +11 villagers — 87 in the kingdom 👑 #shorts');
+  assert.ok(day('attack').length <= 100 && day('rescue').length <= 100);
+});

@@ -150,6 +150,7 @@ const words = (s) => s.split(/\s+/).filter(Boolean).length;
 export function buildScript(state, diff, { seed = state.seed, shots = [] } = {}) {
   const r = rng(seed, 'narration', diff.date, 'en'); // 'en' keeps the draws of the days already published
   const pick = (a) => r.pick(a);
+  if (diff.story?.id === 'raid') return raidScript(state, diff, pick);
   // never the same line twice in one video (two buildings begun the same day)
   const said = new Set();
   const fresh = (a) => { const free = a.filter((f) => !said.has(f)), x = r.pick(free.length ? free : a); said.add(x); return x; };
@@ -269,6 +270,37 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   return { sentences: S.map(({ text, role, job: about, building }) => ({ text, role, ...(about ? { job: about } : {}), ...(building ? { building } : {}) })), text, words: words(text) };
 }
 
+/**
+ * The night raid (owner 2026-10-30): its own script, each line at a fixed time over its shot (`at`, video seconds; the
+ * shots in RAID_SHOTS, src/render/scene/stories/raid.js). Names are never read aloud: the guard first to the gate and the
+ * owner of the burning house are on screen when the narrator talks of them. The second day ends as usual (goal, call to
+ * action).
+ */
+function raidScript(state, diff, pick) {
+  const e = diff.story, n = (x) => Number(x || 0).toLocaleString('en-US');
+  const lines = e.step === 'rescue' ? [
+    [`Day ${diff.day}. The morning after the raid, the town starts to rebuild.`, 0.4],
+    [`At dawn, ${['one', 'two', 'three', 'four', 'five'][(e.guards || []).length - 1] || 'five'} guards tracked the bandits to their camp.`, 5.3],
+    [e.missing ? 'The bandits ran, and the missing villager was free!' : 'The bandits ran for their lives!', 8.9],
+    ['The whole town came out to cheer them home.', 12.6],
+    ['Hear ye! The bandits have fled the kingdom!', 19.3],
+    ...(diff.next ? [[pick(L.goal)(n(diff.next.remaining), diff.next.goal), FIXED_AT.goal]] : []),
+    [pick(L.cta), FIXED_AT.cta],
+  ] : [
+    ['They came at midnight.', 0.4],
+    [`Bandits from the northern woods. ${n(e.bandits)} of them.`, 2.3],
+    [`Only ${n(e.guardCount)} guards stood between them and ${n(e.population ?? state.subscriberCount)} villagers.`, 6.3],
+    ['And one of them was first to the gate.', 9.6],
+    [`The ${e.gate?.side || 'east'} gate fell.`, 15.3],
+    ['Look whose house is burning.', 18.4],
+    ['By morning, three houses were gone.', 24.4],
+    [e.missing ? 'And one villager was missing.' : 'And the bandits were gone.', 26.6],
+  ];
+  const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
+  const text = sentences.map((x) => x.text).join(' ');
+  return { sentences, text, words: words(text) };
+}
+
 // About how long a line takes to say (the voice of 2026-10-23: ~18 letters a second, numbers and pauses slower)
 export const spokenLength = (t) => 0.055 * (t.match(/\p{L}/gu) || []).length + 0.4 * (t.match(/\d/g) || []).length + 0.3 * (t.match(/[,:;?]/g) || []).length;
 const GAP = 0.28, FIRST = 0.38; // the pause between sentences and the first word (src/audio/tts/index.js)
@@ -334,6 +366,7 @@ function sentenceCues(sentences, cues = []) {
   for (const pass of [true, false]) sentences.forEach((s, i) => { if (named(s) === pass) out[i] = cueOf(s); });
   return out;
   function cueOf(s) {
+    if (s.at !== undefined) return { at: s.at }; // a line with a time of its own (the raid)
     if (FIXED_AT[s.role] !== undefined) return { at: FIXED_AT[s.role] };
     const match = SHOT_OF[s.role];
     // a sentence naming a job waits for that villager's shot (and for no other; a visiting villager is in

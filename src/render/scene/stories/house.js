@@ -10,7 +10,7 @@ import { person, flameMaterial, flicker, castTag, clamp01 } from './common.js';
 
 const NEIGHBOURS = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d', '#7b6a43'];
 
-function houseStage(houses, id) {
+export function houseStage(houses, id) {
   const sh = houses.shapes.get(id);
   if (!sh) return null;
   const group = new THREE.Group();
@@ -38,7 +38,8 @@ function particles(n, color, size, opacity) {
   return pts;
 }
 
-export function buildFire({ story, M, houses, seed }) {
+/** story.raging (the night raid, raid.js): the fire never goes out and the house's owner is named on the door (story.door). */
+export function buildFire({ story, M, houses, seed, roofs = [] }) {
   const st = houseStage(houses, story.house);
   if (!st) return null;
   const { group, W, D, wallH, roofH } = st;
@@ -49,7 +50,7 @@ export function buildFire({ story, M, houses, seed }) {
   const ray = new THREE.Raycaster();
   const roofAt = (x, z) => {
     ray.set(st.toWorld(x, 40, z), new THREE.Vector3(0, -1, 0));
-    const hit = ray.intersectObject(houses.group, true)[0];
+    const hit = ray.intersectObjects([houses.group, ...roofs], true)[0];
     return hit ? hit.point.y - st.sh.base - 0.25 : wallH + roofH * (1 - Math.abs(z) / (D / 2));
   };
   const roofY = roofAt(0, 0);
@@ -90,13 +91,13 @@ export function buildFire({ story, M, houses, seed }) {
     // the heroes throw the water, at the house end of the line
     const x = c ? -W * 0.15 + i * 1.1 : x0 - (5 - i) * 1.0;
     P.root.position.set(x, 0, c ? lineZ + 0.9 : lineZ);
-    P.root.rotation.y = c ? Math.PI : Math.PI / 2; // throwers face the house, the chain faces along the street
+    P.root.rotation.y = c ? 0 : Math.PI / 2; // throwers face the house (+z), the chain faces along the street
     group.add(P.root);
     return { P, c, x, n };
   });
   const throwers = chain.filter((m) => m.c);
   if (!throwers.length) { // no named villagers: the first two neighbours throw
-    chain.slice(0, 2).forEach((m, i) => { m.x = -W * 0.15 + i * 1.1; m.P.root.position.set(m.x, 0, lineZ + 0.9); m.P.root.rotation.y = Math.PI; throwers.push(m); });
+    chain.slice(0, 2).forEach((m, i) => { m.x = -W * 0.15 + i * 1.1; m.P.root.position.set(m.x, 0, lineZ + 0.9); m.P.root.rotation.y = 0; throwers.push(m); });
   }
   const passers = chain.filter((m) => !throwers.includes(m));
   for (const m of [...throwers, ...passers]) m.P.r.hand.add(toolGeo('bucket', M));
@@ -104,11 +105,13 @@ export function buildFire({ story, M, houses, seed }) {
   group.add(splash);
   const labels = throwers.filter((m) => m.c).map((m) => ({ m, ...castTag(m.c, 'Hero of the day') }));
   for (const m of chain) if (!m.c && m.n && !throwers.includes(m)) labels.push({ m, ...castTag(m.n) });
+  const door = story.door && { ...castTag(story.door, 'Their home'), at: new THREE.Vector3(0, 2.7, -D / 2 - 0.15) };
+  if (door) labels.unshift(door);
   const tmp = new THREE.Vector3();
   return {
     group,
     labels,
-    banner: 'Fire!',
+    banner: story.raging ? null : 'Fire!',
     focus: st.toWorld(0, wallH, 0),
     cam: (u) => streetCam(st, u),
     update(t, t0, t1) {
@@ -116,7 +119,7 @@ export function buildFire({ story, M, houses, seed }) {
       glow.visible = group.visible;
       if (!group.visible) return;
       const u = clamp01((t - t0) / (t1 - t0));
-      const fire = 1 - 0.92 * clamp01((u - 0.3) / 0.6); // the buckets win
+      const fire = story.raging ? 1 : 1 - 0.92 * clamp01((u - 0.3) / 0.6); // the buckets win
       for (const f of flames) { flicker(f, t, f.userData.k); f.scale.multiplyScalar(Math.max(0.05, fire)); f.visible = fire > 0.06; }
       glow.intensity = 90 * fire * (1 + 0.15 * Math.sin(t * 19));
       const sp = smoke.geometry.attributes.position.array;
@@ -151,11 +154,11 @@ export function buildFire({ story, M, houses, seed }) {
           const r = (q) => rand01(seed, 'spl', k, i, q);
           arr[j] = P.root.position.x + (r(0) - 0.5) * 0.8;
           arr[j + 1] = 1.6 + age * 7 * (0.6 + r(1)) - 9 * age * age;
-          arr[j + 2] = P.root.position.z - 0.5 - age * 7 * (0.6 + r(2) * 0.6);
+          arr[j + 2] = P.root.position.z + 0.5 + age * 7 * (0.6 + r(2) * 0.6); // up onto the front of the house
         }
       });
       splash.geometry.attributes.position.needsUpdate = true;
-      for (const lb of labels) lb.pos.copy(tmp.copy(lb.m.P.root.position).setY(2.3 + 0.45 * labels.indexOf(lb))).applyMatrix4(group.matrix);
+      for (const lb of labels) lb.pos.copy(lb.at ? tmp.copy(lb.at) : tmp.copy(lb.m.P.root.position).setY(2.3 + 0.45 * labels.indexOf(lb))).applyMatrix4(group.matrix);
     },
   };
 }

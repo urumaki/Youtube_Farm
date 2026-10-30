@@ -5,7 +5,7 @@ import { availableJobs } from './requests.js';
 import { TIERS, BUILDINGS, JOBS, COMMISSIONS, jobFor, houseCapacity, tiersReached, mergedJob } from './tiers.js';
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
-import { pickStory } from './stories.js';
+import { pickStory, STORIES } from './stories.js';
 import { pickFeatured, shownJobs, markShown } from './featured.js';
 import { planScenes, tavernToday, churchToday, staleJob, introVariant } from './scenes.js';
 import { planWall2, wallBlockers, insideWall2, crossesFields } from './wall.js';
@@ -184,6 +184,8 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   // buildings the owner commissions with no goal (COMMISSIONS in tiers.js)
   for (const b of COMMISSIONS) if (!queued(b)) s.buildQueue.push({ id: b, tier: 'commission' });
   let room = Object.keys(s.names || {}).length > 0 ? SHOWN_STARTS : SHOWN_STARTS + 1;
+  // the day after the raid takes the whole video (owner 2026-10-30): nothing begins that day
+  if (STORIES[s.storyArc?.id]?.takeover && s.storyArc.day <= day) room = 0;
   const waiting = [];
   for (const q of s.buildQueue) {
     const shot = !NO_SHOT.has(q.id);
@@ -217,7 +219,8 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
  * day again (scripts/replan-day.js): `s` must then hold yesterday's storyLog, storyArc, lastShown and sceneLog.
  */
 export function planDay(s, prev, diff) {
-  diff.story = pickStory(s, { unlocked: diff.unlocked || [] });
+  const shownBuildings = new Set([...diff.buildingsStarted, ...diff.buildingsCompleted]).size;
+  diff.story = pickStory(s, { unlocked: diff.unlocked || [], buildingShots: shownBuildings });
   s.story = diff.story;
   // the storm brings the rain to the whole video, Christmas Eve the snow
   const sky = { storm: 'rain', christmas: 'snow' }[diff.story?.id];
@@ -226,12 +229,13 @@ export function planDay(s, prev, diff) {
     diff.events[0].weather = sky;
   }
   diff.avoidJobs = prev.day > 0 ? shownJobs(prev) : [];
-  // (the hen in the tavern is the tavern's shot that day)
-  const tavern = diff.story?.id !== 'chicken' && tavernToday(s), church = churchToday(s, tavern);
-  diff.featured = pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, church, stale: (job) => staleJob(s, job), intro: (job) => !!introVariant(s, job) });
+  // (the hen in the tavern is the tavern's shot that day); a story that takes the whole video (the raid) shows nobody at
+  // work, so nobody loses their turn
+  const takeover = !!STORIES[diff.story?.id]?.takeover;
+  const tavern = !takeover && diff.story?.id !== 'chicken' && tavernToday(s), church = !takeover && churchToday(s, tavern);
+  diff.featured = takeover ? [] : pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, church, stale: (job) => staleJob(s, job), intro: (job) => !!introVariant(s, job) });
   s.featured = diff.featured;
   markShown(s, diff.featured);
-  const shownBuildings = new Set([...diff.buildingsStarted, ...diff.buildingsCompleted]).size;
   diff.scenes = planScenes(s, { featured: diff.featured, tavern, church, avoidJobs: diff.avoidJobs, buildingShots: Math.min(2, shownBuildings) });
   s.scenes = diff.scenes;
 }

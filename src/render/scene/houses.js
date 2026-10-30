@@ -337,9 +337,28 @@ export function buildAnimatedHouse(sh, h, seed, M, housesCtx, { raised = false }
     obj.scale.y = Math.max(0.001, k);
     obj.position.y = pivot * (1 - obj.scale.y);
   };
+  let burnt = null;
+  const CHAR = new THREE.Color('#15110f');
   return {
     group: g, top, mid, chimneyTop, shape: sh,
     raised,
+    /** k: 0 as built, 1 burnt black, the windows dark (the night raid, stories/raid.js). Its own materials from the first call. */
+    burn(k) {
+      if (!burnt) {
+        if (k <= 0) return;
+        burnt = [];
+        g.traverse((o) => {
+          if (!o.isMesh) return;
+          o.material = o.material.clone();
+          burnt.push({ m: o.material, color: o.material.color.clone(), emissive: o.material.emissive?.clone(), rough: o.material.roughness });
+        });
+      }
+      for (const b of burnt) {
+        b.m.color.copy(b.color).lerp(CHAR, k);
+        if (b.emissive) b.m.emissive.copy(b.emissive).multiplyScalar(1 - k);
+        b.m.roughness = b.rough + (1 - b.rough) * k;
+      }
+    },
     /** p: 0 = bare plot · foundation · ground-floor walls · upper floors · roof · details · 1 finished */
     set(p) {
       if (raised) {

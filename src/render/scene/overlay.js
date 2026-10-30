@@ -46,6 +46,7 @@ const CSS = `
 #ov .credits .n i{display:block;font-family:'Inter',sans-serif;font-style:normal;font-weight:700;font-size:calc(var(--fs) * .55);letter-spacing:1px;color:#e3b23c;text-transform:uppercase}
 #ov .day{position:absolute;left:0;top:0;font-weight:700;font-size:30px;color:#fff;opacity:.92;text-shadow:0 2px 8px rgba(0,0,0,.9)}
 #ov .cap{position:absolute;left:0;right:0;bottom:30px;text-align:center}
+#ov .foot{position:absolute;left:0;right:0;bottom:230px;text-align:center;font-weight:800;font-size:34px;letter-spacing:1px;color:#fff4d6;text-shadow:0 2px 0 #000,0 3px 12px rgba(0,0,0,.95)}
 #ov .cap span{display:inline-block;margin:0 8px;font-weight:900;font-size:64px;line-height:1.15;color:#fff;text-shadow:0 0 6px #000,0 4px 0 #000,0 6px 18px rgba(0,0,0,.9);-webkit-text-stroke:2px #000}
 #ov .cap span.on{color:#ffd35a}
 `;
@@ -66,11 +67,12 @@ export function createOverlay(root, data) {
     <div class="banner"></div>
     <div class="credits"><div class="roll"></div></div>
     <div class="cta"><div class="big">${s.cta1}<br>${s.cta2}</div><div class="btn">${s.btn}</div><div class="cmt">${s.cmt}</div></div>
+    <div class="foot"></div>
     <div class="cap"></div>
   </div>`;
   root.appendChild(ov);
   const $ = (q) => ov.querySelector(q);
-  const banner = $('.banner');
+  const banner = $('.banner'), foot = $('.foot');
   const tagEls = [];
   const counter = $('.counter'), num = $('.num'), unit = $('.unit'), delta = $('.delta'), goal = $('.goal'), cta = $('.cta'), cap = $('.cap'), day = $('.day');
   const diff = data.diff;
@@ -115,8 +117,10 @@ export function createOverlay(root, data) {
 
   return {
     update(t, ev, camera) {
-      const hook = t < 2.2, wide = ev.section === 'wide', ctaOn = ev.section === 'cta';
+      // the raid's own shots (ev.takeover) open without the counter
+      const hook = t < 2.2 && !ev.takeover, wide = ev.section === 'wide', ctaOn = ev.section === 'cta';
       counter.style.opacity = hook || wide ? 1 : 0;
+      day.style.opacity = ev.takeover ? 0 : '';
       counter.style.transform = `scale(${hook ? 0.92 + 0.08 * Math.min(1, t / 0.4) : 0.8}) translateY(${wide ? -10 : 0}px)`;
       counter.style.transformOrigin = '50% 0';
       const shown = hook ? Math.round(diff.from + (pop - diff.from) * Math.min(1, t / 1.2)) : pop;
@@ -174,6 +178,8 @@ export function createOverlay(root, data) {
       // many small name tags (the caravan): nearest first, hidden when they would overlap
       for (const el of tagEls) el.style.display = 'none';
       banner.style.opacity = 0;
+      foot.textContent = tg?.footer || '';
+      foot.style.opacity = tg?.footer ? Math.max(0, Math.min(1, (ev.activeU - 0.05) * 6, (0.97 - ev.activeU) * 12)) : 0;
       // the builders' tags wait for the flight into the shot to end
       const tagFrom = site ? 0.3 : 0.08;
       if (tg && tg.labels && ev.activeU > tagFrom && ev.activeU < 0.97) {

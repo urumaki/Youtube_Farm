@@ -1090,3 +1090,43 @@ test('the would-be rebel (owner 2026-10-27): comments of overthrowing the king a
   assert.equal(r.state.names[id].rebelDay, r.state.day);
   assert.deepEqual(r.diff.rebels.map((x) => x.name), ['Spartacus']);
 });
+
+test('the night raid (owner 2026-10-30): two days that take the whole video, a gate with open land outside, back 30 days later at the soonest', async () => {
+  const { STORIES, storyFor, pickStory } = await import('../src/sim/stories.js');
+  // a walled town of 900 with named guards (dates end on the eve of Halloween)
+  let s = genesis({ seed: SEED, date: '2026-10-17' });
+  const start = new Date('2026-10-18T00:00:00Z');
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(start.getTime() + i * 86400000).toISOString().slice(0, 10);
+    const commenters = i === 11 ? Array.from({ length: 14 }, (_, k) => ({ author: 'r' + k, name: `Raid${k}`, at: `${date}T00:${String(k).padStart(2, '0')}:00Z`, wants: k < 7 ? ['guard'] : [] })) : [];
+    s = advance(s, { subscribers: i ? 900 : 300, date, commenters }).state;
+  }
+  assert.equal(s.date, '2026-10-29');
+  assert.ok(s.buildings.some((b) => b.id === 'wall2' && b.status === 'done'));
+  const raid = storyFor(s, 'raid');
+  assert.equal(raid.step, 'attack');
+  assert.ok(['north', 'east', 'south', 'west'].includes(raid.gate.side));
+  assert.equal(raid.houses.length, 3);
+  assert.ok(s.houses.find((h) => h.id === raid.houses[0]).occupants.includes(raid.owner.id), 'the house shown is the named owner\'s');
+  assert.ok(['guard', 'knight'].includes(raid.guard.job) && raid.guard.name);
+  assert.ok(raid.missing && !['guard', 'knight'].includes(raid.missing.job) && raid.missing.id !== raid.owner.id);
+  assert.ok(raid.guardCount >= 5 && raid.bandits >= 30 && raid.population === 900);
+  const rescue = storyFor(s, 'raid:rescue');
+  assert.equal(rescue.guards.length, 5);
+  assert.equal(rescue.guards[0].id, raid.guard.id, 'the guard first to the gate leads the rescue');
+  assert.deepEqual(rescue.missing, raid.missing);
+  // never drawn on a day the video must show a building, nor on the eve of a calendar event (Halloween tomorrow)
+  const ok = { ...s, date: '2026-11-05', weather: 'clear' };
+  assert.ok(STORIES.raid.needs(ok) && !STORIES.raid.needs(ok, { buildingShots: 1 }));
+  assert.ok(!STORIES.raid.needs({ ...ok, date: '2026-10-30' }) && !STORIES.raid.needs({ ...ok, weather: 'rain' }));
+  // the rescue comes the very next day, before the calendar (Halloween) and a new goal; nobody is shown at work, nothing begins
+  s.storyArc = { id: 'raid', step: 'rescue', day: s.day + 1, data: raid };
+  const { state: t, diff } = advance(s, { subscribers: 1100, date: '2026-10-30' });
+  assert.deepEqual([diff.story.id, diff.story.step], ['raid', 'rescue']);
+  assert.deepEqual(diff.featured, []);
+  assert.ok(diff.buildingsStarted.every((b) => ['fields', 'guardposts', 'charter_stone'].includes(b)), 'only buildings with no shot of their own');
+  assert.equal(t.storyArc, null);
+  // 30 days at least before the next raid
+  const later = { ...ok, storyLog: { raid: s.day + 1 }, day: s.day + 20, storyArc: null };
+  for (let d = 0; d < 40; d++) assert.notEqual(pickStory({ ...later, date: `2026-12-${String(1 + (d % 28)).padStart(2, '0')}`, storyLog: { raid: s.day + 1 } })?.id, 'raid');
+});

@@ -157,6 +157,50 @@ Add new owner decisions here.
     14): three rowing boats in red, blue and gold race down the river to the end of the pier, a named rower in each
     (fishermen and sailors first), four named villagers cheering by the finish pennant; the winner crosses first and raises
     an arm. Test with `--story regatta`.
+  The night raid (owner 2026-10-30, after the views of the shorts dropped: an event that breaks the format; `raid`, scene
+  `stories/raid.js`): two days that take the whole video (`takeover` in `STORIES`; `makePlan` in `timeline.js` lays out
+  `RAID_SHOTS` with hard cuts, no hook, no counter or day label; nobody is shown at work, so nobody loses their turn). Day 1
+  (`attack`, at night, all 30 s, the video loops): a burning arrow into a roof (0-2 s), the bandits come out of the
+  northern woods with torches while the named guards run along the Second Wall (2-6), close on the named guard first to
+  the gate (tag "First to the gate", 6-11), outside the gate the ram and the named guards on the gatehouse with the small
+  line "Subscribe to join the defense" at the bottom (`footer`, 11-15), the doors burst open and the bandits pour in
+  (15-18), a named villager's house burns with their name on the door ("Their home") and named neighbours at the buckets
+  (18-24), smoke and silence over the three burning roofs, the camera back on the first shot's view (24-30). Day 2
+  (`rescue`, the very next day: `urgent`, before the calendar and a proclamation; nothing begins that day): named
+  carpenters and masons repair the house (0-5), five named guards (the one first to the gate leads) charge the bandits'
+  camp at the edge of the woods, the bandits run, the missing named villager is untied ("Free!", 5-12), they walk home
+  through the open gate between named villagers clapping ("Welcome home!", 12-19), the crier: "The bandits are gone!"
+  (19-23.5), then the usual wide shot, goal and call to action. The narrator has a script of its own, each line at its
+  time (`raidScript` in `narration.js`; names never read aloud: "And one of them was first to the gate.", "Look whose
+  house is burning." while the name is on screen). The numbers: the guards on watch that night (one guard in twenty, at
+  least five; the kingdom had 439 guards, "only 439 guards" against 40 bandits made no sense) and about twice as many
+  bandits (30 at least), the population. The gate: open land outside (no plot within 55 m of the road out, so the camera
+  outside films the gate), houses inside, the northernmost such gate; the narrator names its side ("The north gate
+  fell."). The three houses: the named villager's house inside the wall nearest the gate and the two next to it; they
+  are not changed in the state (repaired the next day). Bandits have no names: black clothes, a black bandana round the
+  head, a dark red one over the face (`BANDIT` in `outfits.js`). Titles: "Day N: The kingdom was attacked tonight 🔥 +X
+  villagers — N in the kingdom 👑 #shorts", then "Day N: The guards brought them home 🛡️ ..." (`metadata` in
+  `src/publish/index.js`). Sound: war drums that quicken to the breach and stop at 23.5 s, no tune (`makeRaidMusic`), the
+  ram (`ram`) and the gate giving way (`crash`) as synced hits, no birds, drawbridge or chime that night. Drawn at random
+  (weight 3) from 500 subscribers once the Second Wall stands with five named guards, no rain or snow, never on a day the
+  video must show a building, nor on the eve of a calendar event; cooldown 30 days. The owner allowed for this event a
+  named villager whose house burns and one who goes missing (freed the next day); still nobody gets hurt.
+  Owner's changes to day 1 (2026-10-30, after the first preview): nobody but the bandits outside the walls, and the streets
+  empty all night (`quietTown` on the shots: `life.hideWalkers`, the castle guards off); the bandits run straight down
+  lanes clear of the land's trees and the houses (`obstacles`, `clearLanes`; the woods leave those lanes free), never
+  through them; the guards on the wall stand on the wall walk (`wallWalk`: the top of the nearest piece of the Second
+  Wall); the run to the gate filmed from higher and to the side so the guard and the four behind him are all in the frame;
+  the guards on the gatehouse are named and shoot arrows (bows, white fletching) that stick in the ground in front of the
+  bandits; at the breach each of four guards holds off one bandit a step apart (blow for blow, clangs) while the others run
+  in single file through the middle of the gate and fan out only past them; more flames on the burning roofs, flames in
+  every front window with black smoke pouring out (`blaze`); the neighbours throw the buckets onto the house, not the
+  street (`buildFire`, also the ordinary fire story); the three houses turn black, windows dark, when the narrator says
+  they are gone (24.4 s: they are built on their own like the houses built that day, `burn(k)` in `houses.js`). The loop
+  is kept. Owner's changes to day 2 (2026-10-30): the bandits' camp is in a clearing deep in the woods, far from any house
+  (`campSite`: at least 80 m from every plot, dry ground, no tree of the land within 13 m, the guards' way in and the
+  bandits' ways out clear; `clearing` rings it with trees), and two of the five named guards stop and shoot arrows at the
+  ground just behind the bandits as they run (nobody hurt). Test with
+  `npm run render -- --real --subs N --story raid` and `--story raid:rescue` (stills: `--stills 0.4,4.5,8,13,16.5,20,26`).
   The people in a role are named villagers of that job when the kingdom has them (owner 2026-10-25, `roleCast` in
   `stories.js`): the guards beside the heroes against the bandits (`guardCast`) and the King's banner guards in the
   procession and at the feast (`escort`) are named guards or knights, the folk with torches against the wolves named

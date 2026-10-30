@@ -8,6 +8,8 @@
 // dropped by the owner on 2026-10-22.)
 import { rng } from './prng.js';
 import { TIERS } from './tiers.js';
+import { world } from './world.js';
+import { wallLayout, insideWall2 } from './wall.js';
 
 export const PLACES = ['Ashford', 'the Northern Marches', 'Kingsbridge', 'the Salt Coast', 'Ravenscar', 'the Amber Vale', 'Dunmoor', 'the Eastern Isles'];
 export const GOODS = ['spices', 'wool', 'salt', 'silk', 'amber', 'wine', 'iron tools', 'honey', 'dyed cloth'];
@@ -98,7 +100,18 @@ export const STORIES = {
   // owner 2026-10-28: the crier proclaims once that guards become Knights and Cavaliers only by winning at the Tournament
   // Ground (asking makes a guard), on the first day it can be once the Tournament Ground stands
   decree: { minPop: 100, once: true, needs: (s) => built(s, 'tournament') },
+  // owner 2026-10-30 (the views were dropping: an event that breaks the format): the night raid, over two days that take
+  // the whole video (`takeover`, timeline.js). Day 1 (`attack`): bandits out of the northern woods set roofs on fire with
+  // burning arrows, the named guards run to the Second Wall, the gate gives way, a named villager's house burns, three
+  // houses are lost and a named villager is missing. Day 2 (`rescue`, the very next day: `urgent` comes before the
+  // calendar and a proclamation): the burnt houses are repaired, five named guards chase the bandits off and free the
+  // missing villager, the town cheers them home through the gate, the crier proclaims the bandits gone. Nobody gets hurt.
+  // At least 30 days apart; never on a day the video must show a building, nor the day before a calendar event.
+  raid: { minPop: 500, cooldown: 30, weight: 3, urgent: true, takeover: true, steps: ['attack', 'rescue'],
+    needs: (s, o = {}) => built(s, 'wall2') && teamOf(s, GUARDS).length >= 5 && !['rain', 'snow'].includes(s.weather) && !o.buildingShots
+      && !Object.values(STORIES).some((x) => x.date === tomorrow(s)) },
 };
+const tomorrow = (s) => new Date(Date.parse(s.date) + 86400000).toISOString().slice(5, 10);
 const GUARDS = ['guard', 'knight'], LAND = ['farmer', 'peasant', 'shepherd'];
 const teamOf = (s, jobs) => namedVillagers(s).filter((n) => jobs.includes(n.job));
 const STORY_CHANCE = 0.5;
@@ -376,7 +389,80 @@ const BUILD = {
     const crowd = roleCast(state, r, named.map((n) => n.job), 4, rowers);
     return { rowers, crowd, winner: r.pick(rowers).id, cast: [...rowers, ...crowd] };
   },
+  raid(state, r, arc) {
+    if (arc?.step === 'rescue') {
+      const { id: _id, step: _step, ...d } = arc.data; // (yesterday's story as saved, without its id and step)
+      // the guard first to the gate leads four other named guards; named carpenters and masons repair; the newest named
+      // villagers (today's commenters first) cheer at the gate; the crier (a named one when there is one) reads the news
+      const keep = [d.guard, d.owner, d.missing].filter(Boolean);
+      const guards = [...(state.villagers[d.guard.id] && GUARDS.includes(state.villagers[d.guard.id].job) ? [d.guard] : []), ...roleCast(state, r, GUARDS, 5, keep)].slice(0, 5);
+      const crew = roleCast(state, r, BUILDERS, 3, [...keep, ...guards]);
+      const crier = roleCast(state, r, ['crier'], 1, [...keep, ...guards, ...crew])[0] || null;
+      const taken = [...keep, ...guards, ...crew, ...(crier ? [crier] : [])];
+      const crowd = namedVillagers(state).filter((n) => !taken.some((x) => x.id === n.id)).slice(0, 8).map(strip);
+      return { ...d, guards: guards.map(strip), crew: crew.map(strip), crier: crier && strip(crier), crowd, cast: [...guards, ...(d.missing ? [d.missing] : []), ...crew, ...crowd].map(strip) };
+    }
+    const w = world(state.seed);
+    const gate = raidGate(w, state);
+    if (!gate) return null;
+    // three houses burn: the house with a named villager inside the wall nearest the gate (the one the video shows) and
+    // the two next to it
+    const named = namedVillagers(state), namedIds = new Set(named.map((n) => n.id));
+    const plots = new Map(state.plots.map((p) => [p.id, p]));
+    const near = state.houses.filter((h) => h.status === 'occupied' && h.occupants.length && plots.has(h.plot))
+      .map((h) => ({ h, p: plots.get(h.plot) })).filter(({ p }) => insideWall2(state.wall2.pts, p.x, p.z, undefined, w))
+      .map((o) => ({ ...o, d: Math.hypot(o.p.x - gate.x, o.p.z - gate.z) })).sort((a, b) => a.d - b.d || a.h.id - b.h.id);
+    const shown = near.find((o) => o.h.occupants.some((id) => namedIds.has(id)));
+    if (!shown) return null;
+    const rest = near.filter((o) => o !== shown).sort((a, b) => Math.hypot(a.p.x - shown.p.x, a.p.z - shown.p.z) - Math.hypot(b.p.x - shown.p.x, b.p.z - shown.p.z) || a.h.id - b.h.id).slice(0, 2);
+    const owner = named.find((n) => shown.h.occupants.includes(n.id));
+    const guard = roleCast(state, r, GUARDS, 1, [owner])[0];
+    if (!guard) return null;
+    // the missing villager: a named villager who is no guard (the guards free them the next day)
+    const others = named.filter((n) => !GUARDS.includes(n.job) && n.id !== owner.id);
+    const missing = others.length ? r.pick(others.slice(0, 12)) : null;
+    // four more named guards on the wall and at the gate; the neighbours at the buckets in front of the burning house
+    // (today's commenters first)
+    const defenders = roleCast(state, r, GUARDS, 4, [owner, guard]);
+    const chain = named.filter((n) => ![owner.id, guard.id, missing?.id, ...defenders.map((x) => x.id)].includes(n.id)).slice(0, 3);
+    const watch = Math.max(5, Math.round(state.villagers.filter((v) => GUARDS.includes(v.job)).length / 20));
+    const bandits = Math.max(30, Math.round((watch * 2 + r.int(-4, 4)) / 10) * 10);
+    return {
+      gate: { x: gate.x, z: gate.z, rot: gate.rot, side: gate.side }, houses: [shown.h.id, ...rest.map((o) => o.h.id)],
+      owner: strip(owner), guard: strip(guard), defenders: defenders.map(strip), missing: missing && strip(missing), chain: chain.map(strip),
+      // the guards on watch that night (one in twenty, at least five; the kingdom has hundreds) and about twice as many bandits
+      bandits, guardCount: watch, population: state.subscriberCount,
+      cast: [guard, ...defenders, owner, ...chain].map(strip),
+    };
+  },
 };
+const strip = ({ id, name, job, day }) => ({ id, name, job, day });
+
+/**
+ * The gate of the Second Wall the bandits break: open land outside it (no plot within 55 m of the road out, so the camera
+ * outside films the gate and not a house), occupied houses inside near it, the northernmost such gate (the bandits come
+ * from the northern woods); else the gate with the fewest plots outside. side: where it stands seen from the castle
+ * (north is -z). The frame: `in` points into the town (toward the castle), `x` along the wall.
+ */
+function raidGate(w, state) {
+  if (!state.wall2?.pts) return null;
+  const { gates } = wallLayout(w, state.wall2.pts);
+  if (!gates.length) return null;
+  const plots = new Map(state.plots.map((p) => [p.id, p]));
+  const homes = state.houses.filter((h) => h.status === 'occupied' && plots.has(h.plot)).map((h) => plots.get(h.plot));
+  const rated = gates.map((g) => {
+    let ix = -Math.sin(g.rot), iz = Math.cos(g.rot);
+    if (ix * -g.x + iz * -g.z < 0) { ix = -ix; iz = -iz; }
+    const local = (p) => [(p.x - g.x) * iz - (p.z - g.z) * ix, (p.x - g.x) * ix + (p.z - g.z) * iz];
+    const outside = state.plots.filter((p) => { const [x, z] = local(p); return Math.abs(x) < 30 && z < -3 && z > -55; }).length;
+    const inside = homes.filter((p) => { const [x, z] = local(p); return Math.abs(x) < 45 && z > 3 && z < 90; }).length;
+    return { g, outside, inside };
+  });
+  const good = rated.filter((x) => !x.outside && x.inside >= 3).sort((a, b) => a.g.z - b.g.z);
+  const { g } = good[0] || [...rated].sort((a, b) => a.outside - b.outside || b.inside - a.inside)[0];
+  const ang = Math.atan2(-g.z, g.x); // 0 east, PI/2 north
+  return { ...g, side: ['east', 'north', 'west', 'south'][((Math.round(ang / (Math.PI / 2)) % 4) + 4) % 4] };
+}
 const SHIPS = ['the Sea Swallow', 'the Golden Gull', 'the Saint Brendan', 'the Merry Otter', 'the Northern Star', 'the Fair Wind'];
 
 // the riders of the games at the Tournament Ground: named guards only (owner 2026-10-28), not the Captain of the Guard
@@ -455,15 +541,16 @@ const JOB_COUNT = (state) => Object.fromEntries(namedVillagers(state).map((n) =>
  * Today's story, or null. Records it in state.storyLog (id -> last day) for the cooldowns.
  * Call after the population and names of the day are settled.
  */
-export function pickStory(state, { unlocked = [] } = {}) {
+export function pickStory(state, { unlocked = [], buildingShots = 0 } = {}) {
   state.storyLog ??= {};
   const r = rng(state.seed, 'story', state.date);
   const pop = state.subscriberCount;
   const mmdd = state.date.slice(5);
-  const possible = (id, s) => pop >= (s.minPop ?? 1) && (!s.needs || s.needs(state));
+  const possible = (id, s) => pop >= (s.minPop ?? 1) && (!s.needs || s.needs(state, { buildingShots }));
   // a story the owner set for a given day (state.storyArc with owner: true; owner 2026-10-29: the joust) comes before the
   // calendar and the proclamation of a new goal
-  const ownerDay = !!(state.storyArc?.owner && state.storyArc.day <= state.day);
+  // so does the next step of an urgent story (the rescue the day after the raid)
+  const ownerDay = !!((state.storyArc?.owner || STORIES[state.storyArc?.id]?.urgent) && state.storyArc.day <= state.day);
   let id = ownerDay ? undefined : Object.keys(STORIES).find((k) => STORIES[k].date === mmdd && possible(k, STORIES[k]));
   // a new goal reached today: the proclamation (the highest tier when several came at once)
   if (!id && unlocked.length && !ownerDay) {

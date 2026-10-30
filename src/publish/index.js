@@ -15,7 +15,9 @@ const DESCRIPTION_TAGS = '#subscriberkingdom #medieval #citybuilder #castle';
 export function metadata({ state, diff }) {
   const d = diff.delta;
   // owner 2026-10-30: back to the day's numbers (the hook-first titles of 2026-10-29 did worse)
-  const title = `Day ${state.day}: ${d >= 0 ? '+' : ''}${d} villagers — ${state.subscriberCount} in the kingdom 👑 #shorts`;
+  // owner 2026-10-30: the two days of the night raid say what happened first
+  const raid = diff.story?.id === 'raid' ? { attack: 'The kingdom was attacked tonight 🔥 ', rescue: 'The guards brought them home 🛡️ ' }[diff.story.step] || '' : '';
+  const title = `Day ${state.day}: ${raid}${d >= 0 ? '+' : ''}${d} villagers — ${state.subscriberCount} in the kingdom 👑 #shorts`;
   const description = `Every subscriber is one villager of Subscriber Kingdom. Subscribe to move in!\n${DESCRIPTION_TAGS}`;
   return { title, description, tags: ['subscriber kingdom', 'medieval', 'kingdom builder', 'castle', 'shorts'] };
 }

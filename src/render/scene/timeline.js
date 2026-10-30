@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { BUILDINGS, JOBS, tavernScene } from '../../sim/tiers.js';
 import { CASTLE } from '../../sim/world.js';
 import { NIGHT_STORIES, storyCue } from './stories/index.js';
+import { RAID_SHOTS } from './stories/raid.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
 import { BAKEHOUSE_VARIANTS } from './bakery.js';
@@ -32,6 +33,15 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const addedByHouse = new Map();
   for (const a of diff.added) if (!addedByHouse.has(a.house)) addedByHouse.set(a.house, a);
   const jobLabel = (j) => JOBS[j]?.label || j;
+  // the night raid takes the whole video (owner 2026-10-30): its shots one after the other with hard cuts, no hook; the
+  // second day ends with the usual wide shot and call to action, the first runs to the end
+  if (diff.story?.id === 'raid' && RAID_SHOTS[diff.story.step]) {
+    const shots = RAID_SHOTS[diff.story.step];
+    const raid = shots.map(([shot, t0, t1]) => ({
+      kind: 'event', id: `raid_${shot}`, story: { ...diff.story, shot }, pos: castle.keep.clone(), radius: 12, front: 0, label: null, labels: [], cut: true, t0, t1,
+    }));
+    return { targets: raid, ...kingdomBox(houses), story: null, dusk: 0.8, start: 0, end: shots.at(-1)[2], takeover: true };
+  }
   // Days with named villagers follow the owner's order: the caravan opens the video (no castle hook),
   // then a few seconds of new buildings, then the named villagers at work. New houses are not shown
   // one by one on those days (they still appear finished in the town and in the wide shot).
@@ -239,11 +249,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     tg.builders = crewRoles(pool.splice(0, tg.crew ?? 4).map((n) => ({ id: n.id, name: n.name, job: n.job, sub: jobSub(n), trade: n.job === 'apprentice' ? n.wants : n.job })));
   }
 
-  // kingdom extent for the wide shot
-  const box = new THREE.Box3(new THREE.Vector3(-60, 0, -60), new THREE.Vector3(80, 30, 60));
-  for (const sh of houses.shapes.values()) box.expandByPoint(new THREE.Vector3(sh.x, sh.base, sh.z));
-  const center = box.getCenter(new THREE.Vector3());
-  const size = box.getSize(new THREE.Vector3());
+  const { center, extent } = kingdomBox(houses);
 
   // the caravan replaces the castle hook: it starts at 0 s, the counter overlay still shows over it
   const start = targets[0]?.kind === 'caravan' ? 0 : HOOK;
@@ -260,7 +266,15 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   }
   // overcast days keep more light at the end so the wide shot stays readable
   const dusk = ['fog', 'rain', 'snow', 'cloudy'].includes(diff.weather) ? 0.55 : 0.8;
-  return { targets, center, extent: Math.max(size.x, size.z), story, dusk, start };
+  return { targets, center, extent, story, dusk, start };
+}
+
+/** The kingdom's extent, for the wide shot. */
+function kingdomBox(houses) {
+  const box = new THREE.Box3(new THREE.Vector3(-60, 0, -60), new THREE.Vector3(80, 30, 60));
+  for (const sh of houses.shapes.values()) box.expandByPoint(new THREE.Vector3(sh.x, sh.base, sh.z));
+  const size = box.getSize(new THREE.Vector3());
+  return { center: box.getCenter(new THREE.Vector3()), extent: Math.max(size.x, size.z) };
 }
 
 // the work at a building site, in the order the builders stand along its front (work.js scenes): the plan, the hammer,
@@ -358,11 +372,12 @@ export function evaluate(plan, t) {
   // drawbridge lowers in the hook and rises again at the end so the video loops
   out.bridge = t < 1.8 ? ease(t / 1.8) : t > 28.2 ? 1 - ease((t - 28.2) / 1.8) : 1;
   let pose;
-  const start = plan.start ?? HOOK;
+  const start = plan.start ?? HOOK, end = plan.end ?? UPDATE_END;
+  out.takeover = !!plan.takeover && t < end; // the raid's own shots: no counter, credits or call to action over them
   if (t < start) {
     pose = mixPose(HOOK_FROM, HOOK_TO, easeOut(t / HOOK));
     out.shadowRadius = 140;
-  } else if (t < UPDATE_END) {
+  } else if (t < end) {
     const i = plan.targets.findIndex((tg) => t >= tg.t0 && t < tg.t1);
     const tg = plan.targets[Math.max(0, i)];
     const u = (t - tg.t0) / (tg.t1 - tg.t0);
@@ -396,7 +411,7 @@ export function evaluate(plan, t) {
     }
   }
   out.camera = pose;
-  out.section = t < start ? 'hook' : t < UPDATE_END ? 'update' : t < WIDE_END ? 'wide' : 'cta';
+  out.section = t < start ? 'hook' : t < end ? 'update' : t < WIDE_END ? 'wide' : 'cta';
   return out;
 }
 

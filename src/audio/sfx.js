@@ -463,6 +463,18 @@ const SCENES = {
   ev_census: [['chatter', 0.5]],
   ev_pies: [['chatter', 0.55], ['cheer', 0.4]],
   ev_regatta: [['water', 0.55], ['oars', 0.4], ['cheer', 0.45]],
+  // the night raid (owner 2026-10-30): fire and shouting, then the smoke in silence; the next day hammers, the chase, the cheers
+  ev_raid_arrow: [['fire', 0.6], ['chatter', 0.45]],
+  ev_raid_woods: [['fire', 0.3], ['chatter', 0.5], ['breeze', 0.4]],
+  ev_raid_guard: [['fire', 0.35], ['chatter', 0.3]],
+  ev_raid_fight: [['fire', 0.4], ['chatter', 0.55]],
+  ev_raid_breach: [['fire', 0.45], ['chatter', 0.6]],
+  ev_raid_house: [['fire', 0.85], ['chatter', 0.4]],
+  ev_raid_smoke: [['fire', 0.18], ['breeze', 0.5]],
+  ev_raid_repair: [['hammer', 0.8], ['saw', 0.3], ['birds', 0.3]],
+  ev_raid_chase: [['chatter', 0.5], ['breeze', 0.3]],
+  ev_raid_return: [['cheer', 0.7], ['chatter', 0.3]],
+  ev_raid_crier: [['bell', 0.4], ['cheer', 0.5]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],
@@ -477,7 +489,7 @@ const SCENES = {
 /** One impact, synced to a strike in the animation (blacksmith, woodcutter, farmer, mason, guards training). */
 const AXE_LEAD = 0.22; // the axe's whoosh before the blow
 function hit(kind, r) {
-  const o = buf(kind === 'anvil' ? 0.9 : kind === 'axe' ? 0.8 : 0.4);
+  const o = buf(kind === 'anvil' ? 0.9 : kind === 'axe' || kind === 'ram' ? 0.8 : kind === 'crash' ? 1.2 : 0.4);
   if (kind === 'anvil') {
     const f = r.float(1050, 1180), a = r.float(0.4, 0.5);
     modes(o, 0, [[f, 0.5, 0.45], [f * 2.76, 0.32, 0.22], [f * 5.4, 0.18, 0.1], [f * 8.93, 0.1, 0.05], [f * 0.5, 0.15, 0.3]], a, r);
@@ -506,6 +518,14 @@ function hit(kind, r) {
   } else if (kind === 'lance') { // a lance striking a shield: a sharp wooden crack and splintering
     modes(o, 0, [[r.float(240, 300), 0.6, 0.05], [r.float(620, 720), 0.4, 0.03], [r.float(1500, 1800), 0.25, 0.015]], 0.85, r);
     noiseBurst(o, 0, 0.09, 0.8, r, [new Biquad('bp', 2600, 0.9)]);
+  } else if (kind === 'ram') { // the ram against the gate (owner 2026-10-30, the raid): a deep wooden boom and a rattle of iron
+    modes(o, 0, [[r.float(48, 58), 1, 0.35], [r.float(95, 115), 0.8, 0.2], [r.float(230, 270), 0.4, 0.08]], 1, r);
+    noiseBurst(o, 0, 0.06, 0.7, r, [new Biquad('lp', 700)]);
+    noiseBurst(o, Math.round(0.03 * RATE), 0.12, 0.18, r, [new Biquad('bp', 3200, 1.2)]);
+  } else if (kind === 'crash') { // the gate giving way: splintering timber and the leaves banging open
+    noiseBurst(o, 0, 0.5, 0.9, r, [new Biquad('bp', 1800, 0.6)]);
+    modes(o, 0, [[r.float(60, 75), 0.9, 0.4], [r.float(140, 170), 0.6, 0.2]], 0.9, r);
+    modes(o, Math.round(0.35 * RATE), [[r.float(70, 85), 0.8, 0.3]], 0.7, r);
   } else if (kind === 'chisel') {
     modes(o, 0, [[r.float(2100, 2600), 0.4, 0.03], [r.float(5200, 6000), 0.2, 0.015]], 0.5, r);
     noiseBurst(o, 0, 0.015, 0.4, r, [new Biquad('hp', 2500)]);
@@ -553,13 +573,15 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
       R[a + i] += mono[i] * env * gr;
     }
   };
+  // the night of the raid has no birds, no drawbridge and no chime: its own shots fill the whole video
+  const raid = cues.some((c) => c.id === 'raid_arrow');
   // quiet beds for the whole video
-  place(sound('breeze', duration, r, workDir), 0, 0.05, 0, 1, 1);
-  place(sound('birds', duration, r, workDir), 0, 0.22, 0.2, 1, 1);
+  place(sound('breeze', duration, r, workDir), 0, raid ? 0.15 : 0.05, 0, 1, 1);
+  if (!raid) place(sound('birds', duration, r, workDir), 0, 0.22, 0.2, 1, 1);
   if (weather === 'rain') place(sound('rain', duration, r, workDir), 0, 0.35, 0, 1, 1);
   // hook: the drawbridge chain runs down and the bridge lands
-  place(sound('chain', 1.7, r, workDir), 0.05, 0.3, 0.3, 0.1, 0.2);
-  place(sound('thud', 0.8, r, workDir), 1.75, 0.55, 0.3, 0.005, 0.3);
+  if (!raid) place(sound('chain', 1.7, r, workDir), 0.05, 0.3, 0.3, 0.1, 0.2);
+  if (!raid) place(sound('thud', 0.8, r, workDir), 1.75, 0.55, 0.3, 0.005, 0.3);
   // the shots
   for (const cue of cues) {
     const scene = sceneFor(cue);
@@ -575,12 +597,14 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
   }
   // story shots with hits of their own kinds at their own times (the pillory: tomatoes, the axe on the block)
   for (const cue of cues.filter((c) => c.kind === 'event' && c.hits?.length)) {
-    for (const [ts, kind] of cue.hits) place(hit(kind, r), ts - 0.005 - (kind === 'axe' ? AXE_LEAD : 0), kind === 'axe' ? 0.95 : 0.5, cue.pan ?? 0, 0.002, 0.3);
+    for (const [ts, kind] of cue.hits) place(hit(kind, r), ts - 0.005 - (kind === 'axe' ? AXE_LEAD : 0), ['axe', 'ram', 'crash'].includes(kind) ? 0.95 : 0.5, cue.pan ?? 0, 0.002, 0.3);
   }
   // wide shot: a distant bell if the kingdom has one; chains again as the bridge rises for the loop
   if (cues.some((c) => c.hasChapel)) place(sound('bell', 4.5, r, workDir), 23.9, 0.18, -0.3, 0.2, 1.2);
-  place(sound('chime', 1.2, r, workDir), 27.1, 0.4, 0, 0.005, 0.5);
-  place(sound('chain', 1.7, r, workDir), 28.2, 0.25, 0.3, 0.1, 0.4);
+  if (!raid) place(sound('chime', 1.2, r, workDir), 27.1, 0.4, 0, 0.005, 0.5);
+  if (!raid) place(sound('chain', 1.7, r, workDir), 28.2, 0.25, 0.3, 0.1, 0.4);
+  // the arrow's whoosh into the roof at the start of the raid
+  if (raid) place(hit('axe', r), 0.62 - AXE_LEAD, 0.7, -0.3, 0.002, 0.3);
   // gentle limiter
   for (let i = 0; i < N; i++) { L[i] = Math.tanh(L[i] * 1.1) / 1.1; R[i] = Math.tanh(R[i] * 1.1) / 1.1; }
   writeWav(file, [L, R], RATE);

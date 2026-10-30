@@ -124,3 +124,15 @@ test('each line fits its shot: short lines over the 2.3 s building shots, nothin
   for (const id of ['potter_stall', 'university']) assert.ok(s.sentences.some((x) => x.building === id), `a line for ${id}`);
   assert.ok(s.sentences.some((x) => x.role === 'raised'), 'a line for the raised house');
 });
+
+test('the night raid has its own script, each line at its time, no name read aloud (owner 2026-10-30)', () => {
+  const story = { id: 'raid', step: 'attack', bandits: 40, guardCount: 22, population: 2400, gate: { side: 'east' }, guard: { name: 'Zed' }, owner: { name: 'Ann' }, missing: { name: 'Bo' }, cast: [] };
+  const s = buildScript({ subscriberCount: 2400, seed: 1 }, { date: '2026-11-02', day: 18, story, next: null });
+  assert.equal(s.sentences[0].text, 'They came at midnight.');
+  assert.ok(s.text.includes('40 of them') && s.text.includes('Only 22 guards stood between them and 2,400 villagers.') && s.text.includes('The east gate fell.'));
+  assert.ok(!/Zed|Ann|Bo\b/.test(s.text), 'names stay on screen');
+  for (let i = 1; i < s.sentences.length; i++) assert.ok(s.sentences[i].at > s.sentences[i - 1].at);
+  assert.ok(s.sentences.at(-1).at < 28.3);
+  const r = buildScript({ subscriberCount: 2400, seed: 1 }, { date: '2026-11-03', day: 19, story: { ...story, step: 'rescue', guards: [{}, {}, {}, {}, {}] }, next: { remaining: 100, goal: 'the Mine opens' } });
+  assert.ok(r.text.includes('five guards') && r.sentences.at(-1).at === 27.1);
+});

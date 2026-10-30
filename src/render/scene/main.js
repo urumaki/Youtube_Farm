@@ -74,7 +74,9 @@ async function setup(data) {
 
   // houses built or rebuilt today are animated individually in the video, and a few that got another storey
   const raisedToday = (diff.housesRaised || []).filter((id) => !diff.housesBuilt.includes(id)).slice(0, 6);
-  const todays = viewer ? [] : [...diff.housesBuilt, ...diff.housesRebuilt].slice(0, 60).concat(raisedToday);
+  // and the three houses that burn in the night raid (they turn black at the end, stories/raid.js)
+  const burning = diff.story?.id === 'raid' && diff.story.step === 'attack' ? diff.story.houses.filter((id) => !diff.housesBuilt.includes(id) && !raisedToday.includes(id)) : [];
+  const todays = viewer ? [] : [...diff.housesBuilt, ...diff.housesRebuilt].slice(0, 60).concat(raisedToday, burning);
   const animatedIds = new Set(todays);
   const houses = buildHouses(state, w, M, { animatedIds });
   scene.add(houses.group);
@@ -438,7 +440,7 @@ async function setup(data) {
       tg.cam = church.cam;
       tg.banner = tg.id === 'cathedral' ? 'The Cathedral' : 'The Chapel';
     } else if (tg.kind === 'event') {
-      const st = buildStory({ story: tg.story, w, state, M, buildings, houses, nature, yFn, seed: state.seed, water });
+      const st = buildStory({ story: tg.story, w, state, M, buildings, houses, animated, nature, yFn, seed: state.seed, water });
       if (!st) continue;
       scene.add(st.group);
       st.setWindow?.(tg.t0, tg.t1);
@@ -450,6 +452,7 @@ async function setup(data) {
       if (st.fog) tg.fog = st.fog; // a thicker fog for this shot
       if (st.work) tg.work = st.work; // arrows hitting the targets
       if (st.focus) tg.pos.copy(st.focus);
+      if (st.footer) tg.footer = st.footer; // a small line at the bottom (the raid: "Subscribe to join the defense")
       stories.push({ st, tg });
     } else if (tg.kind === 'ambient') {
       const st = ambientScene(tg.id, tg.hero);
@@ -574,9 +577,11 @@ function applyFrame(ctx, t) {
   const ct = ctx.caravan && plan.targets.find((x) => x.kind === 'caravan');
   if (ct) ctx.caravan.update(t, ct.t0, ct.t1);
   let quiet = false; // a guard scene on the castle walls is on: no other guards walking through it
+  let empty = false; // the night of the raid: nobody in the streets but its own people
   for (const { st, tg } of ctx.stories || []) {
     st.update(t, tg.t0, tg.t1);
     if (st.quietCastle && t >= tg.t0 - 0.1 && t <= tg.t1 + 0.1) quiet = true;
+    if (st.quietTown && t >= tg.t0 - 0.1 && t <= tg.t1 + 0.1) empty = true;
     if (st.bannerAt) tg.banner = st.bannerAt(t, tg.t0, tg.t1); // a title that changes (the New Year countdown)
   }
   const ev = evaluate(plan, t);
@@ -614,7 +619,8 @@ function applyFrame(ctx, t) {
   }
   water.userData.uniforms.time.value = t;
   life.update(t, { night, camera, wind: [1, 0.35], viewportH: renderer.domElement.height });
-  life.hideGuards(quiet || !!ctx.galleryQuiet);
+  life.hideGuards(quiet || empty || !!ctx.galleryQuiet);
+  life.hideWalkers(empty);
   houses.updateLod(camera);
   nature.updateLod(camera);
   env.composer.render();

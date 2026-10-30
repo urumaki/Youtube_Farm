@@ -24,6 +24,7 @@ function mats(M) {
     green: std('#3f5a2a'), purple: std('#4a2766'), blue: std('#24346e'), plume: std('#b3262e'), feather: std('#f2efe6'),
     veil: std('#e8e4d8', { transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false }),
     glass: std('#cfe3ea', { roughness: 0.1, metalness: 0.3 }),
+    bandana: std('#5e1518', { side: THREE.DoubleSide }),
   };
   return M.outfit;
 }
@@ -151,6 +152,15 @@ const OUTFITS = {
   jester: (O, M) => [jesterCap(M)],
 };
 const BY_COLOR = new Map(Object.entries(OUTFITS).map(([job, f]) => [JOBS[job].color.toLowerCase(), f]));
+// owner 2026-10-30: the raiders of the night raid (stories/raid.js), no job of the kingdom: black clothes, a black bandana
+// knotted round the head with its ends hanging at the back, a dark red one over the nose and mouth
+export const BANDIT = '#1b181a';
+BY_COLOR.set(BANDIT, (O) => [[[new THREE.SphereGeometry(0.195, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.46).scale(1, 0.95, 1.05).translate(0, 1.05, -0.01), O.black],
+  [new THREE.SphereGeometry(0.06, 8, 6).translate(0, 1.13, -0.19), O.black],
+  [boxGeo(0.07, 0.2, 0.02).rotateX(0.25).rotateZ(0.2).translate(-0.04, 1.02, -0.22), O.black], [boxGeo(0.06, 0.17, 0.02).rotateX(0.25).rotateZ(-0.25).translate(0.05, 1.03, -0.21), O.black]],
+  [[new THREE.CylinderGeometry(0.175, 0.2, 0.19, 14, 1, true, -Math.PI * 0.6, Math.PI * 1.2).translate(0, 0.95, 0.01), O.bandana],
+    [new THREE.ConeGeometry(0.09, 0.14, 3).rotateX(Math.PI).scale(1, 1, 0.4).translate(0, 0.8, 0.17), O.bandana],
+    [cylGeo(0.19, 0.2, 0.04, 14).translate(0, 0.86, 0), O.black]]]);
 
 /** Puts on the outfit of the job whose colour the tunic has (nothing for a colour that is no job's). */
 export function dress(P, color, M, { seated = false, ground = false } = {}) {

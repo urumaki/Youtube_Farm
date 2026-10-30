@@ -15,7 +15,9 @@ function pickTrack(kind, dir, generate) {
 }
 
 export function mixSoundtrack({ narration, outDir, seed, date, weather, cues = [], duration = 30 }) {
-  const music = pickTrack('music', outDir, (f) => writeMusic(f, seed, date));
+  // the night of the raid has its own drums (music.js makeRaidMusic)
+  const mood = cues.some((c) => c.id === 'raid_arrow') ? 'raid' : null;
+  const music = mood ? writeMusic(path.join(outDir, 'music_raid.wav'), seed, date, mood) : pickTrack('music', outDir, (f) => writeMusic(f, seed, date));
   // effects follow the camera; a custom assets/audio/ambience.* file replaces the whole effects track
   const amb = pickTrack('ambience', outDir, (f) => makeSfxTrack(f, { cues, seed, date, weather, duration, workDir: outDir }));
   const out = path.join(outDir, 'soundtrack.m4a');
