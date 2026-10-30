@@ -141,8 +141,8 @@ const OUTFITS = {
   stablehand: (O) => [HATS.straw(O)],
   adviser: (O, M) => [HATS.chaperon(O, O.purple), chain(O, M.gold), O.purple],
   miner: (O) => [HATS.hood(O, O.grey), apron(O.leather, 0.55, -0.02)],
-  // owner 2026-10-30: the librarian in a dark robe and a brown cap
-  librarian: (O) => [HATS.pileus(O, O.brown), [], O.felt],
+  // owner 2026-10-30: the librarian in a brown cap (no robe, the owner says)
+  librarian: (O) => [HATS.pileus(O, O.brown)],
   // owner 2026-10-25: clergy (a red stole; the bishop a mitre with a gold band)
   priest: (O, M) => [null, [[boxGeo(0.16, 0.85, 0.04).translate(0, 0.42, 0.29), M.clothRed]]],
   bishop: (O, M) => [[[new THREE.ConeGeometry(0.23, 0.62, 4).scale(1, 1, 0.7).translate(0, 1.47, 0), M.clothIvory],

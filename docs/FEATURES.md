@@ -360,7 +360,7 @@ Add new owner decisions here.
   pushes in from the back of the room over the students' heads. Test: `npm run render -- --real --subs 2310 --gallery
   scholar:lecture`.
 - Librarian (owner 2026-10-30, by request only: librarian, library, bibliotecario, "keeper of books"; before, these asked
-  for the scholar): in a dark robe and a brown cap. Once the University stands, inside its library (`librarian:
+  for the scholar): in a brown cap, no robe (owner). Once the University stands, inside its library (`librarian:
   ['library']`, `NEEDS.library`; `buildLibraryRoom` in `room.js`, an indoor scene like the lecture, placed on the
   University's lawn the other side of the gate from the scholar): puts a red book back in a gap on a tall shelf, shelves
   full of books of many colours on the back and left walls, a rolling ladder, a reading table with candles where two
