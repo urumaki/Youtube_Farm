@@ -285,9 +285,10 @@ Add new owner decisions here.
   of work scenes and visits (`output/gallery/`), in the croft of the first named villager.
 - Hashtags (owner 2026-10-20): at most 5 per video, title and description together, none repeated
   (`#shorts` in the title, four niche tags in the description; tested).
-- Title (owner 2026-10-29, `metadata` in `src/publish/index.js`): the day, the hook for new viewers, the numbers:
-  "Day 14 · Your name could be in this kingdom 👑 +140 villagers #shorts" (before: "Your name could be in this kingdom 👑
-  Day 14 · +70 villagers #shorts", and before that "Day 14: +70 villagers — 2310 in the kingdom 👑").
+- Title (owner 2026-10-29, `metadata` in `src/publish/index.js`): the hook first for new viewers, the numbers after:
+  "Your name could be in this kingdom 👑 Day 14 · +70 villagers #shorts" (before: "Day 14: +70 villagers — 2310 in the kingdom 👑").
+  Tried on 2026-10-29 with the day first ("Day 14 · Your name could be in this kingdom 👑 +140 villagers #shorts"):
+  that short flopped, so the owner went back to the hook first on 2026-10-30.
 - In-between goals (owner, 2026-10-20): tier at 175 (Town Crier + Crier's Stand) and 750 (Executioner,
   who chops cabbages, + Pillory). Their structures are virtual lots on the market square (`onPlaza`), so
   house plots never move. Only add tiers above the current population, or existing villagers change job.
