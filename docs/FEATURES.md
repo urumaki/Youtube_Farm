@@ -288,7 +288,8 @@ Add new owner decisions here.
 - Title (owner 2026-10-29, `metadata` in `src/publish/index.js`): the hook first for new viewers, the numbers after:
   "Your name could be in this kingdom 👑 Day 14 · +70 villagers #shorts" (before: "Day 14: +70 villagers — 2310 in the kingdom 👑").
   Tried on 2026-10-29 with the day first ("Day 14 · Your name could be in this kingdom 👑 +140 villagers #shorts"):
-  that short flopped, so the owner went back to the hook first on 2026-10-30.
+  that short flopped, so the owner went back to the hook first on 2026-10-30, then the same day to the first title of
+  all: "Day 15: +X villagers — N in the kingdom 👑 #shorts" (`#shorts` kept for the hashtag count).
 - In-between goals (owner, 2026-10-20): tier at 175 (Town Crier + Crier's Stand) and 750 (Executioner,
   who chops cabbages, + Pillory). Their structures are virtual lots on the market square (`onPlaza`), so
   house plots never move. Only add tiers above the current population, or existing villagers change job.
