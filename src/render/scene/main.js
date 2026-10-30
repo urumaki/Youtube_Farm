@@ -26,7 +26,7 @@ import { buildBoat, buildRiverbank, buildNightWatch, buildStroll } from './away.
 import { povCamera } from './pov.js';
 import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
-import { buildSweepRoom, buildLectureRoom } from './room.js';
+import { buildSweepRoom, buildLectureRoom, buildLibraryRoom } from './room.js';
 import { huntSpot } from '../../sim/wall.js';
 import { buildQueue } from './queue.js';
 import { heightAt, WATER_LEVEL } from '../../sim/world.js';
@@ -193,6 +193,8 @@ async function setup(data) {
     scholar: ['university', 6, -3, { y: 0.12 }], cooper: ['cooperage', 0, 3.6], bellfounder: ['bell_foundry', 0, 3.8], clockmaker: ['clock_tower', 0, 4.2],
     // owner 2026-10-29: the miner at the Mine's rock face, beside the adit
     miner: ['mine', 4.5, 2.6, { back: true }],
+    // owner 2026-10-30: the librarian on the University's lawn, the other side of its gate from the scholar
+    librarian: ['university', -6, -3, { y: 0.12 }],
   };
   // farmers work in one of the fields (owner 2026-10-23), on the crop (its surface is 0.12 m above the ground); the
   // odd ones, which have no hay bales in summer and autumn (buildFields in buildings.js)
@@ -345,7 +347,7 @@ async function setup(data) {
   const workSceneOnly = ({ job, variant, anchor, ax, az, away, id, face, t0 = 0, floorAt = null }) => {
     // inside a building (the Bakery) the room stands on its floor
     if (indoorScene(job, variant)) {
-      const build = job === 'chimneysweep' ? buildSweepRoom : job === 'scholar' ? buildLectureRoom : buildBakehouse;
+      const build = { chimneysweep: buildSweepRoom, scholar: buildLectureRoom, librarian: buildLibraryRoom }[job] || buildBakehouse;
       return build({ variant, anchor, away, M, seed: state.seed, id, heightAt: floorAt || ((x, z) => heightAt(w, x, z)), rig, color: JOBS.scholar.color });
     }
     const make = variant === 'dummy' ? buildDummyDrill : buildWorkScene;

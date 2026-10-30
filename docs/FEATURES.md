@@ -358,6 +358,15 @@ Add new owner decisions here.
   their books, one raises a hand now and then; tall windows with daylight. No visitor, never the POV shot. The camera
   pushes in from the back of the room over the students' heads. Test: `npm run render -- --real --subs 2310 --gallery
   scholar:lecture`.
+- Librarian (owner 2026-10-30, by request only: librarian, library, bibliotecario, "keeper of books"; before, these asked
+  for the scholar): in a dark robe and a brown cap. Once the University stands, inside its library (`librarian:
+  ['library']`, `NEEDS.library`; `buildLibraryRoom` in `room.js`, an indoor scene like the lecture, placed on the
+  University's lawn the other side of the gate from the scholar): puts a red book back in a gap on a tall shelf, shelves
+  full of books of many colours on the back and left walls, a rolling ladder, a reading table with candles where two
+  scholars read and turn their pages; the camera walks up to the librarian between the shelves and the table. Before the
+  University (and with a visitor), writes the catalogue at a desk in the croft (`desk`). Cavan357 and ChezzKahn, who had
+  asked for it, set from scholar to librarian in the state. Test: `npm run render -- --real --subs 2500 --gallery
+  "librarian:library,librarian"`.
 - The jobs given by the old keywords set right in `state/kingdom.json` (owner 2026-10-29, `ffd110a`): each villager's own
   requests read again by hand; 26 changed (14 tax collectors made by "my lord", guards made by "sir", thanks read as a
   request), 6 who never asked for a job back to the job they were born to. "Bozo" ("I come for bread") is the drunkard (beggar), the owner says.

@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { Builder, boxGeo, cylGeo } from './kit.js';
 import { buildWorkScene } from './work.js';
+import { rand01 } from '../../sim/prng.js';
 
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 // Room frame: origin at the sweep's spot on the floor, +z toward the camera; the fireplace in the back wall (-z)
@@ -199,6 +200,143 @@ export function buildLectureRoom({ variant, anchor, away, M, seed, id, heightAt,
         P.r.g.rotation.set(up ? -2.9 : -1.05 + 0.08 * Math.sin(t * 5 + i), 0, up ? 0.1 : 0.05 * Math.sin(t * 3 + i));
         P.l.g.rotation.set(-0.95, 0, 0);
         P.head.rotation.x = up ? -0.1 : 0.3 + 0.25 * Math.max(0, Math.sin(t * 0.8 + i * 1.7));
+      }
+      for (const { l, i } of lights) {
+        l.visible = !!inside;
+        l.intensity = inside ? i : 0;
+      }
+    },
+  };
+}
+
+// The University's library (owner 2026-10-30): the named librarian puts a book back on a tall shelf, reaching up to the
+// gap it came from; shelves full of books along the back and left walls, a rolling ladder, a long reading table with
+// candles where two scholars read and turn their pages. Like the lecture room: it stands at the librarian's place on the
+// University's lawn and is only seen during the shot (own camera, a hard cut in and out).
+const LIB = { X0: -3.4, X1: 3.4, Z0: -1.4, Z1: 5.6, CEIL: 4.4 };
+const SHELF = { depth: 0.42, levels: [0.12, 0.62, 1.12, 1.62, 2.12, 2.62, 3.12], top: 3.6 };
+const SPINES = ['#7a2a22', '#2f4a3a', '#2c3b5e', '#6b4a2a', '#8a6a2a', '#4a2f45', '#3b3328'];
+
+export function buildLibraryRoom({ variant, anchor, away, M, seed, id, heightAt, rig, color }) {
+  const { X0, X1, Z0, Z1, CEIL } = LIB;
+  const room = new THREE.Group();
+  const yaw = Math.atan2(Math.cos(away), Math.sin(away)); // local +z along `away`, toward the camera
+  room.rotation.y = yaw;
+  room.position.copy(anchor);
+  room.updateMatrixWorld(true);
+  let hi = -Infinity;
+  const v = new THREE.Vector3();
+  for (let i = 0; i <= 4; i++) for (let k = 0; k <= 4; k++) {
+    room.localToWorld(v.set(X0 + (X1 - X0) * (i / 4), 0, Z0 + (Z1 - Z0) * (k / 4)));
+    hi = Math.max(hi, heightAt(v.x, v.z));
+  }
+  room.position.y = hi + 0.12;
+  room.updateMatrixWorld(true);
+  const toWorld = (x, y, z) => room.localToWorld(new THREE.Vector3(x, y, z));
+
+  const mats = { ...M, daylight: new THREE.MeshBasicMaterial({ color: '#dfe8ef' }) };
+  SPINES.forEach((c, i) => { mats[`spine${i}`] = new THREE.MeshStandardMaterial({ color: c, roughness: 0.85 }); });
+  const b = new Builder();
+  const W = X1 - X0, D = Z1 - Z0, cx = (X0 + X1) / 2, cz = (Z0 + Z1) / 2;
+  b.add('woodDark', boxGeo(W, 0.06, D, 2), cx, -0.03, cz);
+  for (const x of [X0 - WALL / 2, X1 + WALL / 2]) b.add('stone', boxGeo(WALL, CEIL, D + 2 * WALL), x, CEIL / 2, cz);
+  for (const z of [Z0 - WALL / 2, Z1 + WALL / 2]) b.add('stone', boxGeo(W, CEIL, WALL), cx, CEIL / 2, z);
+  b.add('plaster', boxGeo(W + 2 * WALL, 0.12, D + 2 * WALL), cx, CEIL + 0.06, cz);
+  for (let z = Z0 + 0.9; z < Z1; z += 1.5) b.add('woodDark', boxGeo(W, 0.24, 0.26), cx, CEIL - 0.12, z);
+  // a run of shelves along a wall: uprights, boards, and the books on them, of many heights and colours, now and then one
+  // leaning; `gap` leaves the place the librarian's book goes back to. `place(geo, u, y)` puts a piece u metres along the wall
+  const r = (k) => rand01(seed, 'library', id, k);
+  const shelves = (len, place, gap = null) => {
+    const bays = Math.round(len / 1.2);
+    for (let i = 0; i <= bays; i++) b.add('woodDark', place(boxGeo(0.07, SHELF.top, SHELF.depth), (len * i) / bays, SHELF.top / 2));
+    for (const y of [...SHELF.levels, SHELF.top]) b.add('wood', place(boxGeo(len, 0.04, SHELF.depth), len / 2, y - 0.02));
+    SHELF.levels.forEach((y, li) => {
+      for (let u = 0.06, k = 0; u < len - 0.12; k++) {
+        const key = `${len}:${li}:${k}`;
+        const wd = 0.05 + 0.04 * r(`w${key}`), h = 0.28 + 0.14 * r(`h${key}`);
+        if (gap && li === gap.level && Math.abs(u - gap.u) < 0.15) { u += 0.3; continue; }
+        if (r(`e${key}`) < 0.04) { u += 0.15; continue; } // an empty slot now and then
+        const lean = r(`l${key}`) < 0.06 ? 0.22 : 0;
+        b.add(`spine${Math.floor(r(`c${key}`) * SPINES.length)}`, place(boxGeo(wd, h, SHELF.depth - 0.08).rotateZ(lean), u + wd / 2 + lean * 0.12, y + h / 2));
+        u += wd + 0.008 + lean * 0.2;
+      }
+    });
+  };
+  // the back wall (along +x from X0) and the left wall (along +z from the back shelves, as far as the reading table)
+  const GAP = { level: 4, u: 2.8 }; // the shelf at 2.12 m, in reach of the librarian's raised arm
+  const back = (geo, u, y) => geo.translate(X0 + 0.1 + u, y, Z0 + SHELF.depth / 2);
+  const left = (geo, u, y) => geo.rotateY(Math.PI / 2).translate(X0 + SHELF.depth / 2, y, Z0 + SHELF.depth + 0.1 + u);
+  shelves(W - 0.2, back, GAP);
+  shelves(3.6, left);
+  // the rolling ladder against the back shelves, leaning in at the top
+  const LX = 1.7;
+  for (const s of [-1, 1]) b.add('woodDark', boxGeo(0.06, 3.7, 0.07).rotateX(-0.2), LX + s * 0.24, 1.82, Z0 + SHELF.depth + 0.42);
+  for (let y = 0.3; y < 3.5; y += 0.36) b.add('wood', boxGeo(0.5, 0.04, 0.05), LX, y, Z0 + SHELF.depth + 0.79 - y * 0.2);
+  // the long reading table with benches, open books, a pile of books, a candle at each end
+  const TX = 1.9, TZ = 3.2, TL = 2.6; // to the right, clear of the camera
+  b.add('wood', boxGeo(1.1, 0.07, TL), TX, 0.78, TZ);
+  for (const dx of [-0.45, 0.45]) for (const dz of [-1.15, 1.15]) b.add('woodDark', boxGeo(0.08, 0.76, 0.08), TX + dx, 0.38, TZ + dz);
+  for (const s of [-1, 1]) {
+    b.add('wood', boxGeo(0.34, 0.06, TL - 0.2), TX + s * 0.85, 0.45, TZ);
+    for (const dz of [-1.0, 1.0]) b.add('woodDark', boxGeo(0.3, 0.44, 0.07), TX + s * 0.85, 0.22, TZ + dz);
+  }
+  for (const [dx, dz] of [[-0.25, -0.5], [0.25, 0.6]]) b.add('clothIvory', boxGeo(0.3, 0.03, 0.4), TX + dx, 0.83, TZ + dz);
+  for (let i = 0; i < 4; i++) b.add(`spine${i}`, boxGeo(0.22, 0.06, 0.3), TX + 0.1, 0.85 + i * 0.06, TZ - 1.0 + (i % 2) * 0.02);
+  for (const dz of [-1.05, 1.05]) {
+    b.add('clothIvory', cylGeo(0.035, 0.035, 0.18, 8), TX - 0.3, 0.9, TZ + dz);
+    b.add('flame', new THREE.ConeGeometry(0.028, 0.07, 6), TX - 0.3, 1.03, TZ + dz);
+  }
+  // tall windows with daylight down the right wall
+  for (const z of [0.6, 2.6, 4.6]) {
+    b.add('daylight', boxGeo(0.04, 1.9, 0.8), X1 - 0.01, 2.4, z);
+    for (const y of [1.45, 3.35]) b.add('woodDark', boxGeo(0.1, 0.08, 1.0), X1 - 0.05, y, z);
+    b.add('woodDark', boxGeo(0.1, 1.9, 0.06), X1 - 0.05, 2.4, z);
+  }
+  room.add(b.build(mats));
+
+  const lights = [
+    { l: new THREE.PointLight('#dfe6ee', 0, 12, 1.3), p: [X1 - 1.0, 2.6, 1.0], i: 10 }, // daylight from the windows
+    { l: new THREE.PointLight('#dfe6ee', 0, 12, 1.3), p: [X1 - 1.0, 2.6, 4.0], i: 8 },
+    { l: new THREE.PointLight('#ffd7a0', 0, 7, 1.6), p: [TX, 2.3, TZ], i: 2 }, // the candles
+    { l: new THREE.PointLight('#ffe2b8', 0, 7, 1.5), p: [-1.0, 3.0, Z0 + 2.0], i: 4 }, // on the shelves
+  ];
+  for (const { l, p } of lights) { l.position.set(...p); l.visible = false; room.add(l); }
+
+  // two scholars reading at the table, facing each other across it; now and then one turns a page
+  const readers = [-1, 1].map((s, i) => {
+    const P = rig(M, color, { seated: true });
+    P.root.position.set(TX + s * 0.85, 0, TZ + (i ? 0.6 : -0.5));
+    P.root.rotation.y = -s * Math.PI / 2;
+    room.add(P.root);
+    return { P, i };
+  });
+
+  // the librarian at the back shelves, half turned to the camera, reaching up to the gap with the book
+  const LZ = Z0 + SHELF.depth + 0.55, GX = X0 + 0.1 + GAP.u;
+  const ws = buildWorkScene({ job: 'librarian', variant, anchor: toWorld(GX, 0, LZ), face: yaw + Math.PI + 0.55, M, seed, id });
+  room.attach(ws.group);
+  const look = toWorld(GX, 1.75, LZ);
+  const cam = (u) => {
+    const k = ease(u);
+    return { pos: toWorld(THREE.MathUtils.lerp(0.35, 0.05, k), THREE.MathUtils.lerp(2.0, 1.85, k), THREE.MathUtils.lerp(Z1 - 1.0, 2.0, k)), look, fov: FOV };
+  };
+  room.visible = false;
+  return {
+    ...ws,
+    group: new THREE.Group(), // the librarian is part of the room
+    room,
+    cam,
+    floorAt: () => room.position.y,
+    focus: toWorld(GX, 1.4, LZ),
+    labelPos: toWorld(GX, 2.75, LZ + 0.15),
+    update(t, inside) {
+      room.visible = !!inside;
+      ws.update(t);
+      for (const { P, i } of readers) {
+        const turn = Math.max(0, Math.sin(t * 0.6 + i * 2.1)) ** 6; // a page turned now and then
+        P.r.g.rotation.set(-0.95 - 0.35 * turn, 0, -0.5 * turn);
+        P.l.g.rotation.set(-0.95, 0, 0);
+        P.head.rotation.x = 0.35 + 0.05 * Math.sin(t * 0.9 + i);
       }
       for (const { l, i } of lights) {
         l.visible = !!inside;

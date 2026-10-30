@@ -36,6 +36,8 @@ export const VARIANTS = {
   hunter: ['boar', 'stag'], shepherd: ['pen', 'pasture'], engineer: ['site'], falconer: ['meadow'],
   // owner 2026-10-29: a scholar also teaches the other scholars in a classroom of the University once it stands
   scholar: ['desk', 'lecture'],
+  // owner 2026-10-30: the librarian shelves books in the University's library once it stands (else at a desk in the croft)
+  librarian: ['library'],
 };
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
 // the fisherman always fishes on the river (owner 2026-10-22): from a jetty with a rod or a net, or in a boat
@@ -51,7 +53,7 @@ const SUMMER = new Set(['fields', 'wheat', 'pasture']);
 export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished
 const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop', inside: 'tavern', stand: 'crier_stand',
-  square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth', lecture: 'university' };
+  square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth', lecture: 'university', library: 'university' };
 // croft scenes no longer used once the building stands (the innkeeper's barrel in the croft, once the tavern is open)
 const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
 // the same for one job only (owner 2026-10-25): knights train in the lists of the Tournament Ground once it stands, no
@@ -62,8 +64,8 @@ const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tourname
 // owner 2026-10-29: the shots through a villager's eyes are off for now (two bodies showed one inside the other); saves that
 // planned one render the usual shot (timeline.js), test renders can still ask for one with --pov
 export const POV_ON = false;
-const POV_AWAY = new Set(['inside', 'inn', 'house', 'lecture']);
-const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture']);
+const POV_AWAY = new Set(['inside', 'inn', 'house', 'lecture', 'library']);
+const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library']);
 // buildings with no shot of their own: no engineer stands in front of them
 const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');

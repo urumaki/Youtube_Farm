@@ -321,10 +321,18 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
   assert.deepEqual(wantsFromText('Can I be a minor in the cave'), ['miner']);
   assert.deepEqual(wantsFromText('I be mining.'), ['miner']);
   assert.deepEqual(wantsFromText('this one is mine, a minor detail'), []);
+  // owner 2026-10-30: the librarian is a job of its own, in the University's library once it stands
+  assert.deepEqual(wantsFromText('can I work in the library'), ['librarian']);
+  assert.deepEqual(wantsFromText('voglio fare il bibliotecario'), ['librarian']);
+  const { availableJobs } = await import('../src/sim/requests.js');
+  const { sceneReady } = await import('../src/sim/scenes.js');
+  assert.ok(availableJobs(10).has('librarian'), 'by request only, from the first day');
+  const uni = { day: 20, date: '2026-11-03', buildings: [{ id: 'university', status: 'done' }] };
+  assert.ok(sceneReady(uni, 'library', 'librarian') && !sceneReady({ ...uni, buildings: [] }, 'library', 'librarian'));
   // the older comments read again (2026-10-29): "sir" is how people speak; the job they have is not the one they ask for
   const older = {
     'Im the town crier but can I be a teacher as well': 'teacher', 'Great sir, may I be a blacksmith please': 'blacksmith',
-    'Hello sir I am chezzkahn and I would like to be a librarian': 'scholar', 'could I be a army engineer': 'engineer',
+    'Hello sir I am chezzkahn and I would like to be a librarian': 'librarian', 'could I be a army engineer': 'engineer',
     'may I be an academic so I may study engineering': 'scholar', 'can I be kight plssss': 'guard', 'to be the king’s night': 'guard',
     'Can i be a men at arms': 'guard', 'May I serve as a defender of the city?': 'guard', 'can I be a crossbowman': 'fletcher',
     'a metalsmith named xc': 'blacksmith', 'Can i be a goldsmith?': 'blacksmith', 'a craftman': 'carpenter', 'a woodworker?': 'carpenter',

@@ -82,6 +82,8 @@ export const JOBS = {
   adviser: { label: 'Royal Adviser', color: '#4a2e5e', requestOnly: true },
   // asked for in the comments of 2026-10-28 (owner 2026-10-29), by request only
   miner: { label: 'Miner', color: '#5b5650', requestOnly: true },
+  // owner 2026-10-30, by request only: keeps the books of the University's library
+  librarian: { label: 'Librarian', color: '#4e3b5c', requestOnly: true },
 };
 
 export const BUILDINGS = {

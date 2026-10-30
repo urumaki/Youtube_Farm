@@ -36,7 +36,9 @@ const KEYWORDS = [
   [/merchant|\bbanker|banchier|money\s*(changer|lender)|\btrader|\bshop|mercante|negozi|head of trade|\btrade\b|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
   [/\bsailor|\bpirate|marinaio|pirata/, 'fisherman'],
   [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
-  [/scholar|\bscribe|librar|studioso|scientist|physicist|academic|scienziat|inventor|professor|professore/, 'scholar'],
+  [/scholar|\bscribe|studioso|scientist|physicist|academic|scienziat|inventor|professor|professore/, 'scholar'],
+  // owner 2026-10-30: the librarian is a job of its own (before, a scholar)
+  [/librar|bibliotecari|keeper of (the )?books/, 'librarian'],
   [/doctor|healer|physician|medico|guaritore|\bmedic\b|pediatric|clinic/, 'physician'],
   [/apothecar|\bapo\w*th\w*ry|alchemist|alchimista|\bchemist|\bchimico|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
   // running the town was the reeve's job (the council, politics, the law); owner 2026-10-23: the tax collector's now

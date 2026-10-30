@@ -245,6 +245,10 @@ Object.assign(JOB_SCENES, {
   'crier:proclaim': { period: 2.6, raise: -1.15, down: -1.15, bend: -0.05, sound: 'none', tool: null, props: 'crowd', read: true, smooth: true, turn: 0.45, radius: 6.8 },
   // owner 2026-10-29: the scholar lecturing at the front of a classroom of the University (room.js), pointing and gesturing
   'scholar:lecture': { period: 2.6, raise: -2.3, down: -0.7, bend: -0.05, sound: 'none', tool: null, props: 'none', smooth: true, left: -0.5, turn: 0.35 },
+  // owner 2026-10-30: the librarian puts a book back on a tall shelf of the University's library (room.js), or before the
+  // University stands, writes up the catalogue at a desk in the croft
+  librarian: { period: 1.2, raise: -1.3, down: -1.08, bend: 0.18, sound: 'none', tool: null, props: 'desk', smooth: true, left: -1.05 },
+  'librarian:library': { period: 3.0, raise: -2.7, down: -1.35, bend: -0.06, sound: 'none', tool: 'book', props: 'none', smooth: true, left: -0.55 },
   priest: { period: 3.0, raise: -2.4, down: -0.5, bend: 0.05, sound: 'none', tool: null, props: 'shrine', smooth: true, left: -1.0 },
   'priest:bless': { period: 2.2, raise: -2.3, down: -0.9, bend: 0, fx: 'splash', sound: 'none', tool: null, props: 'none', smooth: true, left: -1.0, turn: 0.4 },
   'priest:preach': { period: 2.8, raise: -2.6, down: -0.8, bend: -0.05, sound: 'none', tool: null, props: 'crowd', smooth: true, left: -1.0, turn: 0.45, radius: 6.8 },
@@ -371,6 +375,9 @@ export function toolGeo(kind, M) {
   } else if (kind === 'paddle') {
     add(cylGeo(0.025, 0.025, 1.5, 6).translate(-0.12, -0.4, 0.03), wood); // between the hands, both on the shaft
     add(boxGeo(0.12, 0.35, 0.03).translate(-0.12, -1.2, 0.03), M.wood);
+  } else if (kind === 'book') { // a closed book held by its spine, the cover red, the pages showing at the edge
+    add(boxGeo(0.07, 0.3, 0.22).translate(0, -0.08, 0.1), M.clothRed);
+    add(boxGeo(0.055, 0.28, 0.01).translate(0, -0.08, 0.215), M.clothIvory);
   } else if (kind === 'loaf') {
     add(new THREE.SphereGeometry(0.13, 10, 8).scale(1.5, 0.75, 1).translate(0, -0.03, 0.1), M.hay);
   } else if (kind === 'fish') {
