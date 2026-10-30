@@ -12,15 +12,15 @@ const KEYWORDS = [
   [/\bbrew|\bmead\b|\bale\b|\bbeer|\bbirr|idromele|winery|wine\s*maker|vintner|moonshine/, 'brewer'],
   [/tavern|\binn\b|innkeeper|bar\s*keep|bartender|taverna|\boste\b|\bpub\b/, 'innkeeper'],
   [/warrior|\bfighter|\bsword|\bwarlord|guerrier|combattent|spadaccin/, 'guard'],
-  [/\bbeggar|\bdrunk|\bdrink|sit all day|mendicant|ubriac|homeless|senza\s*tetto|vagabond|\btramp\b|\bhobo/, 'beggar'],
-  [/weirdo|\bweird\b|\bfool\b|crazy|lunatic|\bscemo|\bmatto|\bidiot|nitwit/, 'jester'],
+  [/\bbeggar|\bbegger|\bdrunk|\bdrink|sit all day|mendicant|ubriac|homeless|senza\s*tetto|vagabond|\btramp\b|\bhobo/, 'beggar'],
+  [/weirdo|\bweird\b|\bfool\b|crazy(?!\s+(begg|drunk|hobo|tramp))|lunatic|\bscemo|\bmatto|\bidiot|nitwit/, 'jester'],
   [/jester|\bclown|juggl|giullare|buffone/, 'jester'],
   [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b|crossbow|long\s*bow|frecce|arciere/, 'fletcher'],
   // owner 2026-10-28: a Knight, a Cavalier and the Captain of the Guard are only won at the tournaments, so asking makes a guard
   // (2026-10-29: "teutonic Kinght", "kight", "the king's night", paladin, "chief of war", men-at-arms, a defender of the city;
   // "sir" alone is how people speak to the king, "an army engineer" asks for the engineer)
-  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|general|\barmy(?!\s*engineer)|captain|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
-  [/\bguard|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
+  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|general|\barmy(?!\s*engineer)|captain(?!\s+of\s+(a|the)\s+(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
+  [/\bguard|towns?guard|\b(flag|standard|banner)\s*bearer|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
   [/chapel|church|cathedral|cappella|chiesa/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
   [/carpenter|\bbuilder|falegname|carpentiere|craftsman|craftsmen|craftm[ae]n|artisan|artigian|wood\s*worker|\bcarvers?\b|shipwright|ship\s*builder/, 'carpenter'],
@@ -33,8 +33,8 @@ const KEYWORDS = [
   [/\bfarm(?!ing tools?)|\bcrops?\b|contadin|agricolt/, 'farmer'],
   [/\bpeasant|bracciant|\bcitizen|cittadin|commoner|gardener|grounds?\s*keeper|groudnskeeper|giardinier|labou?rer/, 'peasant'],
   // the banker is a money changer until the Bank (2026-10-29)
-  [/merchant|\bbanker|banchier|money\s*(changer|lender)|\btrader|\bshop|mercante|negozi|head of trade|\btrade\b|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
-  [/\bsailor|\bpirate|marinaio|pirata/, 'fisherman'],
+  [/merchant|\bbanker|banchier|money\s*(changer|lender)|\btrader|\bshop|mercante|negozi|head of trade|(?<!ministry of )\btrade\b|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
+  [/\bsailor|\bpirate|captain of (a|the) (ship|boat|vessel)|\bsea\s*captain|ship'?s captain|marinaio|pirata/, 'fisherman'],
   [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
   [/scholar|\bscribe|studioso|scientist|physicist|academic|scienziat|inventor|professor|professore/, 'scholar'],
   // owner 2026-10-30: the librarian is a job of its own (before, a scholar)
@@ -49,9 +49,9 @@ const KEYWORDS = [
   [/\badmiral|ammiraglio/, 'fisherman'],
   // new jobs asked for in the comments of 2026-10-22 (owner 2026-10-23, by request only)
   [/hunter|\bhunt(ing)?\b|cacciator|\bcaccia\b/, 'hunter'],
-  [/butcher|macellai|\bmeat\b/, 'butcher'],
+  [/butcher|slaughter|macellai|\bmeat\b/, 'butcher'],
   [/engineer|egineer|mechanic|ingegner|\bsiege|trebuchet|catapult/, 'engineer'],
-  [/shep+h?[ae]rd|\bsheep|rancher|\bgoats?\b|\bbarn\b|livestock|raise animals|\bpastore|pecor|allevator/, 'shepherd'],
+  [/shep+h?[ae]rd|\bsheep|\bherd(ing)?\s+(the\s+)?(pigs?|swine|ducks?|geese|goats?|cows?|cattle)|swine\s*herd|goat\s*herd|cow\s*herd|rancher|\bgoats?\b|\bbarn\b|livestock|raise animals|\bpastore|pecor|allevator/, 'shepherd'],
   [/\btanner|leather\s*worker|tannery|concia|cuoio/, 'tanner'],
   // no noble titles as jobs (owner): a lord or a landlord collects the taxes. "My lord", "my noble lord" and "signore" alone
   // are how people speak to the king, not a request (2026-10-29: "Hello my Lord, may I be a guard" made a tax collector)
@@ -64,7 +64,7 @@ const KEYWORDS = [
   [/bell\s*(founder|maker)|fonditore|campanar/, 'bellfounder'],
   [/clock\s*maker|\bclocks?\b|watch\s*maker|orologi/, 'clockmaker'],
   [/rat\s*catcher|\brats?\b|acchiappatopi|\btopi\b|\bratti\b/, 'ratcatcher'],
-  [/chimney\s*sweep|\bsweep|spazzacamin/, 'chimneysweep'],
+  [/chimney\s*sweep|(?<!(street|road)\s)\bsweep|spazzacamin/, 'chimneysweep'],
   [/falcon|\bhawk|falconier|\bfalco\b/, 'falconer'],
   [/\bcook|\bchef\b|\bcuoc[oa]|\bkitchen|\bcucina\b/, 'cook'],
   [/\bmayor|sindaco/, 'taxcollector'],
@@ -148,7 +148,7 @@ const COMPLAINT_RE = new RegExp([
   /\bwhere\s+(am i|is my|'?s my|are my)\b/, /\bwhere'?s my\b/, /\bwhere('?s| is| was) (me|i)\b/,
   /\bi'?m not (in|there|on)\b/, /\bi (wasn'?t|was not|am not) (in|there|shown|on)\b/, /\bnot (in )?(the|this) (video|short)\b/,
   /\b(no|not|without|missing)\s+my\s+(name|villager)\b/, /\bmy (name|villager)\s+(isn'?t|wasn'?t|is not|was not|never|didn'?t|did not)\b/,
-  /\bforgot (about )?me\b/, /\bwhere did my\b/,
+  /\bforgot (about )?me\b/, /\bstill not (in|on|part of) (the|this|your|ur) (village|kingdom|town|video)\b/, /\bstill (looking|searching) for (myself|me|my villager)\b/, /\bwhere did my\b/,
   /\bnon mi (vedo|trovo|avete|hai|si vede)\b/, /\bnon (c'?è|c'?era|vedo|trovo|si vede) (il )?mio\b/, /\bdove sono( io)?\b/, /\bio non (ci )?sono\b/, /\bmi (avete|hai) dimenticat/,
 ].map((r) => (typeof r === 'string' ? r : r.source)).join('|'), 'i');
 
@@ -184,7 +184,7 @@ export function rebelFromText(text) {
 
 // "call me Violet", "a carpenter named henry", "can I be a villager called sopita?", "chiamami Pino".
 // Only the chosen name is kept (cleaned and checked like any display name in simulate.js).
-const NAME_RE = /\b(?:call me|called|named|name me|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;
+const NAME_RE = /\b(?:(?:call me|called|named)(?: as)?|my name is sir|name me|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;
 const NOT_NAMES = new Set(['a', 'an', 'the', 'me', 'it', 'one', 'him', 'her', 'please', 'pls', 'plz', 'villager', 'something', 'anything',
   'by', 'like', 'as', 'too', 'now', 'here', 'my', 'mine', 'that', 'this', 'what', 'whatever', 'un', 'una', 'come', 'per', 'favore']);
 

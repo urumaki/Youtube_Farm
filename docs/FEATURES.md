@@ -368,6 +368,12 @@ Add new owner decisions here.
   University (and with a visitor), writes the catalogue at a desk in the croft (`desk`). Cavan357 and ChezzKahn, who had
   asked for it, set from scholar to librarian in the state. Test: `npm run render -- --real --subs 2500 --gallery
   "librarian:library,librarian"`.
+- From the comments on the day 14 video (owner 2026-10-30, `requests.js`): "begger" asks for the beggar, and "crazy"
+  before a beggar or drunk no longer makes a jester; "townsguard", flag or standard bearer ask for a guard; "captain of a
+  ship" and sea captain for the fisherman (a sailor), not a guard; herding pigs, ducks, goats or cows for the shepherd;
+  slaughter for the butcher, and "Ministry of Trade" is not a trade. Street sweeper still asks for nothing (it had become
+  a chimney sweep). Names: "be named as X" and "my name is sir X". Complaints: "still not in this village", "still
+  looking for myself". Not made: toilet scrubber, noble, witch.
 - The jobs given by the old keywords set right in `state/kingdom.json` (owner 2026-10-29, `ffd110a`): each villager's own
   requests read again by hand; 26 changed (14 tax collectors made by "my lord", guards made by "sir", thanks read as a
   request), 6 who never asked for a job back to the job they were born to. "Bozo" ("I come for bread") is the drunkard (beggar), the owner says.

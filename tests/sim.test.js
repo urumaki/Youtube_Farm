@@ -327,6 +327,18 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
   const { availableJobs } = await import('../src/sim/requests.js');
   const { sceneReady } = await import('../src/sim/scenes.js');
   assert.ok(availableJobs(10).has('librarian'), 'by request only, from the first day');
+  // the comments on the day 14 video (owner 2026-10-30)
+  const day14 = {
+    'I want to be a crazy begger in a wine barrel': 'beggar', 'Day 5 of asking to be a townsguard': 'guard', 'Day 1 of asking to be a captain of a ship': 'fisherman',
+    'can I be the captain of the guard': 'guard', 'I wish to be a flag bearer my lord.': 'guard', 'a place to herd pigs and ducks': 'shepherd',
+    'Letter to the Ministry of Trade: I wish to be a slaughter man': 'butcher', 'I want to be a crazy guy': 'jester',
+  };
+  for (const [text, job] of Object.entries(day14)) assert.deepEqual(wantsFromText(text), [job], text);
+  assert.deepEqual(wantsFromText('with my trusty broom, let me do my street sweeper duties'), [], 'no street sweeper job');
+  assert.equal(nameFromText('My king may i be named as GeorgeK. May i be born into your kingdom'), 'GeorgeK');
+  assert.equal(nameFromText('For my name is sir gwain I am a knight'), 'Gwain');
+  const { complainsFromText } = await import('../src/sim/requests.js');
+  assert.ok(complainsFromText('I subscribed Bruh I’m still not in this village') && complainsFromText('Still looking for myself'));
   const uni = { day: 20, date: '2026-11-03', buildings: [{ id: 'university', status: 'done' }] };
   assert.ok(sceneReady(uni, 'library', 'librarian') && !sceneReady({ ...uni, buildings: [] }, 'library', 'librarian'));
   // the older comments read again (2026-10-29): "sir" is how people speak; the job they have is not the one they ask for
