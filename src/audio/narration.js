@@ -152,6 +152,7 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   const pick = (a) => r.pick(a);
   if (diff.story?.id === 'raid') return raidScript(state, diff, pick);
   if (diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds) return grandJoustScript(diff);
+  if (diff.story?.id === 'dayinlife') return dayInLifeScript(diff);
   // never the same line twice in one video (two buildings begun the same day)
   const said = new Set();
   const fresh = (a) => { const free = a.filter((f) => !said.has(f)), x = r.pick(free.length ? free : a); said.add(x); return x; };
@@ -322,6 +323,25 @@ function grandJoustScript(diff) {
     ['Unhorsed! We have a champion!', 18.5],
     ['Kneel... and rise, a Knight of the kingdom!', 21.9],
     ['Hear the crowd roar! Long live the new Knight!', 25.9],
+  ];
+  const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
+  const text = sentences.map((x) => x.text).join(' ');
+  return { sentences, text, words: words(text) };
+}
+
+/**
+ * A day in the life (owner 2026-11-01): its own script, one line at the start of each shot (DAY_SHOTS in
+ * src/render/scene/stories/dayinlife.js); the last line runs into the first, as the video loops. The name stays on screen.
+ */
+function dayInLifeScript(diff) {
+  const lines = [
+    [`Day ${diff.day}. Today we step inside the head of a scholar.`, 0.4],
+    ['Morning. Never without a book, not even on the road.', 4.7],
+    ['The great doors of the University swing open.', 9.2],
+    ['In the halls, everyone is arguing about something.', 12.7],
+    ['The lesson begins. Every word goes into the book.', 17.2],
+    ['Night falls. One more page by candlelight...', 21.7],
+    ['...until the moon becomes the sun, and it all begins again.', 26.2],
   ];
   const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
   const text = sentences.map((x) => x.text).join(' ');

@@ -183,7 +183,7 @@ export async function testRender(args, log = console) {
     diff.scenes = state.scenes = { ...diff.scenes, pov: f ? { id: f.id, mode: args.pov, forced: true } : null };
   }
   // the weather the story brings or needs, as the daily simulation does
-  const sky = { storm: 'rain', christmas: 'snow', snowballs: 'snow', fogboat: 'fog' }[args.story?.split(':')[0]];
+  const sky = { storm: 'rain', christmas: 'snow', snowballs: 'snow', fogboat: 'fog', dayinlife: 'clear' }[args.story?.split(':')[0]];
   if (sky) diff.weather = state.weather = sky;
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));
   if (args.gallery) {

@@ -77,6 +77,11 @@ export function rig(M, color, { seated = false, walk = false, ground = false } =
   return P;
 }
 
+/** Bends a rig's head (and what is on it) forward by `a` about the neck: its geometry sits 1.04 m up the body's origin. */
+export function nod(P, a) {
+  for (const m of [P.head, P.hat]) { m.rotation.x = a; m.position.set(0, 1.04 * (1 - Math.cos(a)), -1.04 * Math.sin(a)); }
+}
+
 
 // a soft round dot, so particles are not drawn as squares (made once, in the browser only)
 let dotTexture = null;

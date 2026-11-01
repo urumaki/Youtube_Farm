@@ -1183,3 +1183,30 @@ test('the Grand Joust (owner 2026-11-01): a knockout of eight guards that takes 
     assert.notEqual(pickStory(k)?.id, 'joust');
   }
 });
+
+test('a day in the life (owner 2026-11-01): a named scholar\'s day takes the whole video, keeps the counter and loops', async () => {
+  const { storyFor, STORIES, takesOver } = await import('../src/sim/stories.js');
+  const { makePlan } = await import('../src/render/scene/timeline.js');
+  const THREE = await import('three');
+  const kingdom = (jobs) => ({
+    seed: SEED, date: '2026-11-04', day: 20, subscriberCount: 1200, weather: 'clear', storyLog: {},
+    buildings: [{ id: 'university', status: 'done' }], houses: [],
+    villagers: jobs.map((job, id) => ({ id, job })),
+    names: Object.fromEntries(jobs.map((_, id) => [id, { name: `V${id}`, day: 1 + id }])),
+  });
+  const s = kingdom(['farmer', 'scholar', 'guard', 'scholar']);
+  const day = storyFor(s, 'dayinlife');
+  assert.equal(day.job, 'scholar');
+  assert.equal(s.villagers[day.hero.id].job, 'scholar');
+  assert.ok(day.hero.name);
+  assert.ok(takesOver({ id: 'dayinlife' }));
+  // only with a named scholar and the University standing, never on a day a building must be shown
+  assert.equal(storyFor(kingdom(['farmer', 'guard']), 'dayinlife'), null);
+  assert.ok(STORIES.dayinlife.needs(s) && !STORIES.dayinlife.needs(s, { buildingShots: 1 }) && !STORIES.dayinlife.needs({ ...s, buildings: [] }));
+  // the shots fill the 30 seconds one after the other and keep the counter at the start (overlay.js)
+  const plan = makePlan({ state: s, diff: { story: day, added: [] }, houses: { shapes: new Map() }, castle: { keep: new THREE.Vector3() } });
+  assert.ok(plan.takeover && plan.stats);
+  assert.deepEqual(plan.targets.map((t) => t.id), ['dive', 'walk', 'gate', 'corridor', 'lecture', 'candle', 'loop'].map((x) => `dayinlife_${x}`));
+  plan.targets.forEach((t, i) => assert.equal(t.t0, i ? plan.targets[i - 1].t1 : 0));
+  assert.equal(plan.end, 30);
+});

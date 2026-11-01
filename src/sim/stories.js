@@ -112,6 +112,13 @@ export const STORIES = {
   raid: { minPop: 500, cooldown: 30, weight: 3, urgent: true, takeover: true, steps: ['attack', 'rescue'],
     needs: (s, o = {}) => built(s, 'wall2') && teamOf(s, GUARDS).length >= 5 && !['rain', 'snow'].includes(s.weather) && !o.buildingShots
       && !Object.values(STORIES).some((x) => x.date === tomorrow(s)) },
+  // owner 2026-11-01: a day in the life of one named villager takes the whole video, keeping the counter and the day line at
+  // the start (src/render/scene/stories/dayinlife.js): the camera drops from the sun into their head, then their day, and
+  // the night's moon turns back into the sun so the video loops. So far the scholar: the lane with an open book, the
+  // University's great doors, its corridor full of talk, a lecture, reading by candlelight. Never on a day the video must
+  // show a building
+  dayinlife: { minPop: 1000, cooldown: 14, weight: 3, takeover: true,
+    needs: (s, o = {}) => built(s, 'university') && namedVillagers(s).some((n) => n.job === 'scholar') && !['rain', 'snow', 'fog'].includes(s.weather) && !o.buildingShots },
 };
 const tomorrow = (s) => new Date(Date.parse(s.date) + 86400000).toISOString().slice(5, 10);
 
@@ -396,6 +403,13 @@ const BUILD = {
     if (rowers.length < 2) return null;
     const crowd = roleCast(state, r, named.map((n) => n.job), 4, rowers);
     return { rowers, crowd, winner: r.pick(rowers).id, cast: [...rowers, ...crowd] };
+  },
+  dayinlife(state, r) {
+    // one of the newest named scholars
+    const scholars = namedVillagers(state).filter((n) => n.job === 'scholar').slice(0, 12);
+    if (!scholars.length) return null;
+    const hero = r.pick(scholars);
+    return { job: 'scholar', hero, cast: [hero] };
   },
   raid(state, r, arc) {
     if (arc?.step === 'rescue') {

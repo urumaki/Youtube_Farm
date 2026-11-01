@@ -36,6 +36,7 @@ import { buildCensus } from './census.js';
 import { buildPies } from './pies.js';
 import { buildRegatta } from './regatta.js';
 import { buildRaid } from './raid.js';
+import { buildDayInLife } from './dayinlife.js';
 
 const BUILDERS = {
   quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween,
@@ -44,6 +45,7 @@ const BUILDERS = {
   chicken: buildChicken, windmill: buildWindmill, tugofwar: buildTugOfWar, haycart: buildHayCart, snowballs: buildSnowballs,
   rebel: buildRebel, race: buildJoust, joust: buildJoust, ship: buildShip, bell: buildBell, fogboat: buildFogBoat, census: buildCensus, pies: buildPies, regatta: buildRegatta,
   decree: buildDecree, raid: buildRaid, // the raid: one scene per shot (story.shot, raid.js)
+  dayinlife: buildDayInLife, // a villager's day: one scene per shot too (dayinlife.js)
 };
 
 // later steps of a story told over several days (src/sim/stories.js) with a scene of their own; the other

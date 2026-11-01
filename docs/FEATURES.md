@@ -116,6 +116,21 @@ Add new owner decisions here.
   once the final is won and all through the new Knight's ride. The champion comes to be knighted in plate armour
   (`plateArmor` in `outfits.js`: polished breastplate with a gold ridge and belt, pauldrons, vambraces, gauntlets,
   greaves, blue surcoat and cape, an open-faced helmet with a blue and white plume) and rides the lists in it.
+  A day in the life (owner 2026-11-01): one named villager's day takes the whole video like the Grand Joust (`dayinlife`
+  in `stories.js`, `takeover: true`; `DAY_SHOTS` and the scenes in `stories/dayinlife.js`), but it keeps the counter and
+  the day line at the start (`plan.stats`, `ev.stats` in `overlay.js`). So far only the scholar (`story.job`; one of the
+  newest named scholars, once the University stands, no rain, snow or fog, never on a day a building must be shown,
+  cooldown 14). Shots: the camera looks at the sun, tilts down over the lane to the University and drops into the
+  scholar's head, the big name and job label over it (0-4.5 s); he walks the lane reading an open book (to 9 s); the
+  gatehouse's great doors swing open and he walks in (to 12.5 s); a vaulted corridor, scholars talking in twos and
+  threes, the background voices (`chatter` bed) (to 17 s); the lecture (room.js, he takes notes in the front row) (to
+  21.5 s); night in his room inside the gatehouse, reading by candlelight at a desk under a closed arched window, the
+  moon in its panes (to 26 s); the camera flies out through the window toward the moon, the moon turns into the sun and
+  the last frame is the first one (the video loops). Own narration (`dayInLifeScript`, the last line runs into the
+  first), title "Day N: A day as a Scholar 📜 ...". Shot options this added: a story's big label (`label`, `labelPos`,
+  `labelFrom`), the light changing through a shot (`phaseAt`), from inside to outside (`interiorAt`), a shot's near
+  plane (`camera.near`), eye-level shots (`low`). Test with `npm run render -- --real --subs N --built university
+  --story dayinlife --stills 2.6,6,10,14,19,23,27.5,29.5` (forced, the day is clear).
   The games at the Tournament Ground (owner 2026-10-27, reworked 2026-10-28): two events of their own, the chariot race
   (`race`) and the joust (`joust`), each over two days once the Tournament Ground stands (no rain or snow, cooldown 14).
   Day 1 (`announce`, scene `stories/games.js` on the crier's dais of `proclaim.js`): the town crier reads the

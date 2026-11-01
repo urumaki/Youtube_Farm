@@ -4,7 +4,7 @@
 // like the bakehouse in bakery.js: own camera, wide lens, a hard cut in and out). A pure function of t.
 import * as THREE from 'three';
 import { Builder, boxGeo, cylGeo } from './kit.js';
-import { buildWorkScene } from './work.js';
+import { buildWorkScene, nod } from './work.js';
 import { rand01 } from '../../sim/prng.js';
 
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
@@ -199,7 +199,7 @@ export function buildLectureRoom({ variant, anchor, away, M, seed, id, heightAt,
         const up = i === hand && Math.sin(t * 0.7 + 1) > 0.55;
         P.r.g.rotation.set(up ? -2.9 : -1.05 + 0.08 * Math.sin(t * 5 + i), 0, up ? 0.1 : 0.05 * Math.sin(t * 3 + i));
         P.l.g.rotation.set(-0.95, 0, 0);
-        P.head.rotation.x = up ? -0.1 : 0.3 + 0.25 * Math.max(0, Math.sin(t * 0.8 + i * 1.7));
+        nod(P, up ? -0.1 : 0.3 + 0.25 * Math.max(0, Math.sin(t * 0.8 + i * 1.7)));
       }
       for (const { l, i } of lights) {
         l.visible = !!inside;
@@ -336,7 +336,7 @@ export function buildLibraryRoom({ variant, anchor, away, M, seed, id, heightAt,
         const turn = Math.max(0, Math.sin(t * 0.6 + i * 2.1)) ** 6; // a page turned now and then
         P.r.g.rotation.set(-0.95 - 0.35 * turn, 0, -0.5 * turn);
         P.l.g.rotation.set(-0.95, 0, 0);
-        P.head.rotation.x = 0.35 + 0.05 * Math.sin(t * 0.9 + i);
+        nod(P, 0.35 + 0.05 * Math.sin(t * 0.9 + i));
       }
       for (const { l, i } of lights) {
         l.visible = !!inside;

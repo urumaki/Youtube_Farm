@@ -461,6 +461,11 @@ async function setup(data) {
       if (st.work) tg.work = st.work; // arrows hitting the targets
       if (st.focus) tg.pos.copy(st.focus);
       if (st.footer) tg.footer = st.footer; // a small line at the bottom (the raid: "Subscribe to join the defense")
+      // the big name label over one person (a villager's day, dayinlife.js), from a part of the shot on
+      if (st.label) Object.assign(tg, { label: st.label, labelPos: st.labelPos, labelFrom: st.labelFrom });
+      if (st.phaseAt) tg.phaseAt = st.phaseAt; // the light changing through the shot
+      if (st.low) tg.low = true; // filmed from eye level and below, like the villagers at work
+      if (st.interiorAt) tg.interiorAt = st.interiorAt; // from inside a building to outside
       stories.push({ st, tg });
     } else if (tg.kind === 'ambient') {
       const st = ambientScene(tg.id, tg.hero);
@@ -593,13 +598,14 @@ function applyFrame(ctx, t) {
     if (st.bannerAt) tg.banner = st.bannerAt(t, tg.t0, tg.t1); // a title that changes (the New Year countdown)
   }
   const ev = evaluate(plan, t);
-  const inside = ev.active?.kind === 'tavern' || ev.active?.kind === 'church' || !!ev.active?.interior;
+  const indoor = ev.active?.interiorAt ? ev.active.interiorAt(ev.activeU) : ev.active?.kind === 'tavern' || ev.active?.kind === 'church' || ev.active?.interior ? 1 : 0;
+  const inside = indoor > 0;
   if (ctx.tavern) ctx.tavern.update(t, ev.active?.kind === 'tavern');
   if (ctx.church) ctx.church.update(t, ev.active?.kind === 'church');
   for (const { ws, tg } of ctx.interiors || []) ws.update(t, ev.active === tg);
   // flights between shots can dip into a hill: keep the camera a few metres above the ground (less in the
   // villager shots, which film people from eye level and below)
-  const low = !ev.flying && ev.active?.kind === 'villager';
+  const low = !ev.flying && (ev.active?.kind === 'villager' || !!ev.active?.low);
   const ground = heightAt(ctx.w, ev.camera.pos.x, ev.camera.pos.z) + (low ? 0.6 : 3);
   if (!inside && ev.camera.pos.y < ground) ev.camera.pos.y = ground;
   setFov(camera, ev.camera.fov);
@@ -609,10 +615,10 @@ function applyFrame(ctx, t) {
   // head it sits in taken away (pov.js)
   const pov = !ev.flying && ev.active?.povRig ? ev.active : null;
   for (const tg of ctx.povs || []) tg.povRig.hide(tg === pov && camera.position.distanceTo(tg.povRig.eye(povEye)) < 0.45);
-  const near = pov ? 0.05 : 1;
+  const near = pov ? 0.05 : ev.camera.near || 1; // a shot's own near plane (close to a face or into a head, dayinlife.js)
   if (camera.near !== near) { camera.near = near; camera.updateProjectionMatrix(); }
   camera.updateMatrixWorld();
-  const night = env.set(ev.phase, ev.camera.look, ev.shadowRadius, t, inside ? 1 : 0, ev.flying ? 0 : ev.active?.fog || 0);
+  const night = env.set(ev.phase, ev.camera.look, ev.shadowRadius, t, indoor, ev.flying ? 0 : ev.active?.fog || 0);
   M.setNight(night);
   castle.update(t, { bridgeOpen: ev.bridge });
   for (const [id, a] of animated) a.set(ev.progress.has('h' + id) ? ev.progress.get('h' + id) : 1);

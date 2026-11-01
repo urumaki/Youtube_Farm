@@ -481,6 +481,15 @@ const SCENES = {
   ev_joust_semi: [['hooves', 0.55], ['cheer', 0.45]],
   ev_joust_final: [['hooves', 0.6], ['cheer', 0.55]],
   ev_joust_outro: [['fanfare', 0.45], ['cheer', 0.6], ['hooves', 0.3]],
+  // a day in the life (owner 2026-11-01): the lane, the doors, the talk in the corridor (the background voices), the quiet
+  // lecture, the night
+  ev_dayinlife_dive: [['breeze', 0.5], ['birds', 0.35]],
+  ev_dayinlife_walk: [['birds', 0.45], ['chatter', 0.12]],
+  ev_dayinlife_gate: [['creak', 0.6], ['birds', 0.25]],
+  ev_dayinlife_corridor: [['chatter', 0.75]],
+  ev_dayinlife_lecture: [['chatter', 0.12]],
+  ev_dayinlife_candle: [['fire', 0.12], ['breeze', 0.2]],
+  ev_dayinlife_loop: [['breeze', 0.45]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],

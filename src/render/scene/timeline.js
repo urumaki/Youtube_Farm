@@ -6,6 +6,7 @@ import { CASTLE } from '../../sim/world.js';
 import { NIGHT_STORIES, storyCue } from './stories/index.js';
 import { RAID_SHOTS } from './stories/raid.js';
 import { JOUST_SHOTS } from './stories/grandjoust.js';
+import { DAY_SHOTS } from './stories/dayinlife.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
 import { BAKEHOUSE_VARIANTS } from './bakery.js';
@@ -37,13 +38,16 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   // the night raid takes the whole video (owner 2026-10-30): its shots one after the other with hard cuts, no hook; the
   // second day ends with the usual wide shot and call to action, the first runs to the end. So does the Grand Joust (owner
   // 2026-11-01): the riders, the champion's three bouts, the crowning, the new Knight, the bracket drawn over them
-  const ownShots = diff.story?.id === 'raid' ? RAID_SHOTS[diff.story.step] : diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds ? JOUST_SHOTS : null;
+  // A villager's day (owner 2026-11-01, dayinlife.js) too, but it keeps the counter and the day line at the start (`stats`)
+  // and stays in daylight unless a shot says otherwise
+  const day = diff.story?.id === 'dayinlife' ? DAY_SHOTS[diff.story.job] : null;
+  const ownShots = diff.story?.id === 'raid' ? RAID_SHOTS[diff.story.step] : diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds ? JOUST_SHOTS : day;
   if (ownShots) {
     const own = ownShots.map(([shot, t0, t1]) => ({
       kind: 'event', id: `${diff.story.id}_${shot}`, story: { ...diff.story, shot, ...(shot === 'crown' ? { step: 'crown' } : {}) }, pos: castle.keep.clone(), radius: 12, front: 0,
       label: null, labels: [], cut: true, t0, t1, ...(diff.story.rounds ? { bracket: bracketAt(diff.story, shot) } : {}),
     }));
-    return { targets: own, ...kingdomBox(houses), story: null, dusk: 0.8, start: 0, end: ownShots.at(-1)[2], takeover: true };
+    return { targets: own, ...kingdomBox(houses), story: null, dusk: day ? 0 : 0.8, start: 0, end: ownShots.at(-1)[2], takeover: true, stats: !!day };
   }
   // Days with named villagers follow the owner's order: the caravan opens the video (no castle hook),
   // then a few seconds of new buildings, then the named villagers at work. New houses are not shown
@@ -398,6 +402,7 @@ export function evaluate(plan, t) {
   let pose;
   const start = plan.start ?? HOOK, end = plan.end ?? UPDATE_END;
   out.takeover = !!plan.takeover && t < end; // the raid's own shots: no counter, credits or call to action over them
+  out.stats = !!plan.stats; // ...but a villager's day keeps the counter and the day line
   if (t < start) {
     pose = mixPose(HOOK_FROM, HOOK_TO, easeOut(t / HOOK));
     out.shadowRadius = 140;
@@ -416,6 +421,7 @@ export function evaluate(plan, t) {
     out.active = tg;
     out.activeU = u;
     if (tg.phase !== undefined) out.phase = tg.phase; // dusk scenes (cut in and out)
+    if (tg.phaseAt) out.phase = tg.phaseAt(u); // a shot whose light changes (night to day, dayinlife.js)
   } else if (t < WIDE_END) {
     const last = orbitPose(plan.targets.at(-1), 1);
     const wide = widePose(plan, (t - UPDATE_END) / (WIDE_END - UPDATE_END));

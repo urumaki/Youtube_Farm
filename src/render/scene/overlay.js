@@ -126,10 +126,10 @@ export function createOverlay(root, data) {
 
   return {
     update(t, ev, camera) {
-      // the raid's own shots (ev.takeover) open without the counter
-      const hook = t < 2.2 && !ev.takeover, wide = ev.section === 'wide', ctaOn = ev.section === 'cta';
+      // the raid's own shots (ev.takeover) open without the counter; a villager's day keeps it (ev.stats)
+      const hook = t < 2.2 && (!ev.takeover || ev.stats), wide = ev.section === 'wide', ctaOn = ev.section === 'cta';
       counter.style.opacity = hook || wide ? 1 : 0;
-      day.style.opacity = ev.takeover ? 0 : '';
+      day.style.opacity = ev.takeover && !ev.stats ? 0 : '';
       counter.style.transform = `scale(${hook ? 0.92 + 0.08 * Math.min(1, t / 0.4) : 0.8}) translateY(${wide ? -10 : 0}px)`;
       counter.style.transformOrigin = '50% 0';
       const shown = hook ? Math.round(diff.from + (pop - diff.from) * Math.min(1, t / 1.2)) : pop;
@@ -143,7 +143,7 @@ export function createOverlay(root, data) {
       for (const [, el] of labelEls) el.style.display = 'none';
       const tg = ev.active;
       // after a flight the villager is tiny until the camera has landed in front of them
-      const u0 = tg?.kind === 'villager' && !tg.cut && !tg.cutIn ? 0.4 : 0.12;
+      const u0 = tg?.labelFrom ?? (tg?.kind === 'villager' && !tg.cut && !tg.cutIn ? 0.4 : 0.12);
       // a shot of two villagers has a second label, for the guest, once they have walked in
       // a building going up keeps its big label over the builders' name tags (owner 2026-10-24)
       const site = tg?.kind === 'building';
