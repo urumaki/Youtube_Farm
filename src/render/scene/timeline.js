@@ -274,14 +274,23 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
 
 /**
  * The bracket drawn over a shot of the Grand Joust (overlay.js): the rounds, the riders' names, how many rounds are decided
- * so far, the bout being ridden, big (the lined-up riders, the end) or small (the start of a bout), or none.
+ * so far, the bout being ridden: big (the lined-up riders, the end) or a bout's (its start and its end, overlay.js), or none.
  */
 function bracketAt(story, shot) {
   const names = Object.fromEntries(story.riders.map((r) => [r.id, r.name]));
   const round = { quarter: 0, semi: 1, final: 2 }[shot];
+  if (shot === 'intro' || shot === 'outro') {
+    const done = shot === 'outro';
+    return { rounds: story.rounds, names, mode: 'big', decided: done ? story.rounds.length : 0, current: null, champion: done ? story.winner : null };
+  }
   const bout = round !== undefined ? story.rounds[round].find((b) => b.a === story.winner || b.b === story.winner) : null;
-  const mode = shot === 'intro' || shot === 'outro' ? 'big' : bout ? 'small' : null;
-  return mode && { rounds: story.rounds, names, decided: shot === 'outro' ? story.rounds.length : round ?? 0, current: bout ? [bout.a, bout.b] : null, mode, champion: shot === 'outro' ? story.winner : null };
+  if (!bout) return null;
+  // in a bout: the pair outlined as it begins; from `from` (the loser down, grandjoust.js) the round decided, the champion's
+  // new place outlined
+  return {
+    rounds: story.rounds, names, mode: 'round', decided: round, current: [bout.a, bout.b], champion: null,
+    end: { from: 0.78, decided: round + 1, current: [story.winner], champion: round === story.rounds.length - 1 ? story.winner : null },
+  };
 }
 
 /** The kingdom's extent, for the wide shot. */

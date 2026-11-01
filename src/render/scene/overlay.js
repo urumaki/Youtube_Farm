@@ -46,13 +46,13 @@ const CSS = `
 #ov .credits .n i{display:block;font-family:'Inter',sans-serif;font-style:normal;font-weight:700;font-size:calc(var(--fs) * .55);letter-spacing:1px;color:#e3b23c;text-transform:uppercase}
 #ov .day{position:absolute;left:0;top:0;font-weight:700;font-size:30px;color:#fff;opacity:.92;text-shadow:0 2px 8px rgba(0,0,0,.9)}
 #ov .cap{position:absolute;left:0;right:0;bottom:30px;text-align:center}
-#ov .bracket{position:absolute;left:0;width:860px;height:470px;transform-origin:50% 0}
-#ov .bracket .bx{position:absolute;width:190px;height:36px;background:#e4e4e4;color:#1a1a1a;font-weight:800;font-size:18px;line-height:36px;padding:0 8px 0 18px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.35)}
-#ov .bracket .bx::before{content:'';position:absolute;left:0;top:0;bottom:0;width:9px;background:#1c1c1c}
+#ov .bracket{position:absolute;left:0;top:120px;width:860px;height:520px}
+#ov .bracket .bx{position:absolute;width:200px;height:46px;background:#e4e4e4;color:#1a1a1a;font-weight:800;font-size:22px;line-height:46px;padding:0 6px 0 17px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+#ov .bracket .bx::before{content:'';position:absolute;left:0;top:0;bottom:0;width:11px;background:#1c1c1c}
 #ov .bracket .bx.up::before{background:#22c02c}
 #ov .bracket .bx.now{outline:4px solid #e3b23c}
 #ov .bracket .bx.out{opacity:.55}
-#ov .bracket .ttl{position:absolute;right:0;top:-6px;font-family:'Cinzel',serif;font-weight:700;font-size:38px;line-height:1;color:#fff4d6;text-align:right;text-shadow:0 3px 0 #6b4a12,0 5px 16px rgba(0,0,0,.85);padding-right:22px;border-right:10px solid #22c02c}
+#ov .bracket .ttl{position:absolute;right:0;top:-6px;font-family:'Cinzel',serif;font-weight:700;font-size:44px;line-height:1;color:#fff4d6;text-align:right;text-shadow:0 3px 0 #6b4a12,0 5px 16px rgba(0,0,0,.85);padding-right:22px;border-right:10px solid #22c02c}
 #ov .foot{position:absolute;left:0;right:0;bottom:230px;text-align:center;font-weight:800;font-size:34px;letter-spacing:1px;color:#fff4d6;text-shadow:0 2px 0 #000,0 3px 12px rgba(0,0,0,.95)}
 #ov .cap span{display:inline-block;margin:0 8px;font-weight:900;font-size:64px;line-height:1.15;color:#fff;text-shadow:0 0 6px #000,0 4px 0 #000,0 6px 18px rgba(0,0,0,.9);-webkit-text-stroke:2px #000}
 #ov .cap span.on{color:#ffd35a}
@@ -187,16 +187,16 @@ export function createOverlay(root, data) {
       // many small name tags (the caravan): nearest first, hidden when they would overlap
       for (const el of tagEls) el.style.display = 'none';
       banner.style.opacity = 0;
-      // the Grand Joust's bracket (owner 2026-11-01): big over the riders lined up and at the end, small as a bout begins
-      const bk = tg?.bracket;
+      // the Grand Joust's bracket (owner 2026-11-01): over the riders lined up and at the end; in a bout, as it begins (the
+      // pair about to ride outlined) and again once the loser is down (the round decided, the champion's new place
+      // outlined), so it stays up across the cut from one round to the next and can be read (owner's second look)
+      const bk0 = tg?.bracket, u = ev.activeU;
+      const late = !!bk0?.end && u >= bk0.end.from;
+      const bk = bk0 && (late ? { ...bk0, ...bk0.end } : bk0);
       const key = bk ? JSON.stringify([bk.decided, bk.current, bk.champion, bk.mode]) : null;
       if (key !== bracketKey) { bracketKey = key; bracket.innerHTML = bk ? bracketHTML(bk) : ''; }
-      if (bk) {
-        const small = bk.mode === 'small';
-        bracket.style.top = small ? '120px' : '150px'; // the small one under the shot's title
-        bracket.style.transform = small ? 'scale(0.55)' : 'none';
-        bracket.style.opacity = small ? Math.max(0, Math.min(1, (ev.activeU - 0.02) * 10, (0.3 - ev.activeU) * 10)) : Math.max(0, Math.min(1, (ev.activeU - 0.05) * 8, (0.97 - ev.activeU) * 12));
-      } else bracket.style.opacity = 0;
+      bracket.style.opacity = !bk ? 0 : bk.mode === 'big' ? Math.max(0, Math.min(1, (u - 0.05) * 8, (0.97 - u) * 12))
+        : late ? Math.max(0, Math.min(1, (u - bk.from) * 10, (0.995 - u) * 40)) : Math.max(0, Math.min(1, u * 40, (0.3 - u) * 10));
       foot.textContent = tg?.footer || '';
       foot.style.opacity = tg?.footer ? Math.max(0, Math.min(1, (ev.activeU - 0.05) * 6, (0.97 - ev.activeU) * 12)) : 0;
       // the builders' tags wait for the flight into the shot to end
@@ -251,7 +251,8 @@ export function createOverlay(root, data) {
  * decided, the champion and a cup at the end; lines join each pair to the one who went on. No backdrop (owner 2026-11-01).
  */
 function bracketHTML(b) {
-  const BW = 190, BH = 36, X = [0, 222, 444, 666], TOP = 60, GAP = 50;
+  // as wide as the safe area (860), the boxes as tall and the names as big as fit (owner's second look: readable)
+  const BW = 200, BH = 46, X = [0, 220, 440, 660], TOP = 60, GAP = 58;
   const ys = [Array.from({ length: 8 }, (_, i) => TOP + i * GAP)];
   for (let k = 1; k <= 3; k++) ys.push(ys[k - 1].filter((_, i) => i % 2 === 0).map((y, i) => (y + ys[k - 1][2 * i + 1]) / 2));
   const cols = [b.rounds[0].flatMap((bt) => [bt.a, bt.b])];
@@ -263,14 +264,15 @@ function bracketHTML(b) {
   cols.forEach((col, k) => col.forEach((id, i) => {
     const y = ys[k][i];
     const cls = ['bx', id !== null && (wentOn(k, id) || (k === 3 && b.champion)) ? 'up' : '', id !== null && out(k, id) ? 'out' : '', id !== null && b.current?.includes(id) && k === (b.decided) ? 'now' : ''].filter(Boolean).join(' ');
-    html += `<div class="${cls}" style="left:${X[k]}px;top:${y}px">${id === null ? '' : esc(b.names[id] || '')}</div>`;
+    const name = id === null ? '' : b.names[id] || '';
+    html += `<div class="${cls}" style="left:${X[k]}px;top:${y}px;font-size:${name.length > 15 ? 16 : name.length > 12 ? 18 : 21}px">${esc(name)}</div>`;
     if (k < 3 && i % 2 === 0) {
       const y1 = y + BH / 2, y2 = ys[k][i + 1] + BH / 2, xm = X[k] + BW + 16, yn = ys[k + 1][i / 2] + BH / 2;
       lines += `<polyline points="${X[k] + BW},${y1} ${xm},${y1} ${xm},${y2} ${X[k] + BW},${y2}" /><polyline points="${xm},${yn} ${X[k + 1]},${yn}" />`;
     }
   }));
-  const cup = b.champion ? `<svg style="position:absolute;left:${X[3] + 55}px;top:${ys[3][0] + 52}px" width="80" height="90" viewBox="0 0 80 90"><path d="M18 6h44v18c0 16-10 28-22 28S18 40 18 24z" fill="#e3b23c" stroke="#6b4a12" stroke-width="3"/><path d="M18 12H6c0 14 6 20 14 20M62 12h12c0 14-6 20-14 20" fill="none" stroke="#e3b23c" stroke-width="5"/><rect x="34" y="52" width="12" height="14" fill="#e3b23c"/><rect x="22" y="66" width="36" height="12" rx="2" fill="#e3b23c" stroke="#6b4a12" stroke-width="3"/></svg>` : '';
-  return `<svg style="position:absolute;left:0;top:0" width="860" height="470"><g fill="none" stroke="#f4f0e6" stroke-width="3" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,.8))">${lines}</g></svg>`
+  const cup = b.champion ? `<svg style="position:absolute;left:${X[3] + 55}px;top:${ys[3][0] + 60}px" width="90" height="100" viewBox="0 0 80 90"><path d="M18 6h44v18c0 16-10 28-22 28S18 40 18 24z" fill="#e3b23c" stroke="#6b4a12" stroke-width="3"/><path d="M18 12H6c0 14 6 20 14 20M62 12h12c0 14-6 20-14 20" fill="none" stroke="#e3b23c" stroke-width="5"/><rect x="34" y="52" width="12" height="14" fill="#e3b23c"/><rect x="22" y="66" width="36" height="12" rx="2" fill="#e3b23c" stroke="#6b4a12" stroke-width="3"/></svg>` : '';
+  return `<svg style="position:absolute;left:0;top:0" width="860" height="520"><g fill="none" stroke="#f4f0e6" stroke-width="3" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,.8))">${lines}</g></svg>`
     + (b.mode === 'big' ? '<div class="ttl">THE GRAND<br>JOUST</div>' : '') + html + cup;
 }
 

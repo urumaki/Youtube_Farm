@@ -309,13 +309,19 @@ function raidScript(state, diff, pick) {
 function grandJoustScript(diff) {
   const n = diff.story.riders.length, word = { 8: 'Eight', 4: 'Four', 2: 'Two' }[n] || String(n);
   const joined = diff.story.joined || 0;
+  // owner 2026-11-01 (second look): more lines through the bouts, for the thrill; no call to "!join" at the end (that is
+  // the announcement's), the blows at about 6.4, 11.9 and 18.2 s (grandjoust.js)
   const lines = [
     [`The Grand Joust! ${word} guards ride for one title.`, 0.4],
     [joined ? `${joined === 1 ? 'One of them' : `${joined} of them`} answered the call. Lances down!` : 'The first round. Lances down!', 3.9],
+    ['What a blow! Out of the saddle!', 6.5],
     ['The semi-final! Only four are left.', 9.4],
+    ['Crack! Down he goes, into the sand!', 12.0],
     ['The final! The winner becomes a Knight.', 14.9],
+    ['One last charge... for glory!', 16.9],
+    ['Unhorsed! We have a champion!', 18.5],
     ['Kneel... and rise, a Knight of the kingdom!', 21.9],
-    ['Guards, comment join with an exclamation mark to ride next!', 25.9],
+    ['Hear the crowd roar! Long live the new Knight!', 25.9],
   ];
   const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
   const text = sentences.map((x) => x.text).join(' ');

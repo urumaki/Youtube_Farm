@@ -919,6 +919,9 @@ test('"!join" (owner 2026-10-29): only guards go on the list of entrants for the
   state.guardCaptain = 17;
   const c = (id, extra = {}, h = 10) => ({ author: `a${id}`, name: `V${id}`, at: `${dateOf(2)}T${h}:00:00Z`, wants: [], join: true, ...extra });
   named(19, 'farmer'); named(20, 'guard');
+  // owner 2026-11-01: only on the comments of the announcement (the games' results are next); none other day
+  assert.deepEqual(advance(structuredClone(state), { subscribers: 600, date: dateOf(2), commenters: [c(15)] }).state.gamesEntrants, []);
+  state.storyArc = { id: 'joust', step: 'results', day: state.day + 30 }; // (not run today, so the list stays to be seen)
   const r = advance(state, { subscribers: 600, date: dateOf(2), commenters: [c(15), c(15, {}, 11), c(16), c(17), c(18, { wants: ['guard'] }),
     c(19, { wants: ['guard'], join: false }, '09'), c(19), c(20, { wants: ['baker'] })] });
   // 16 is a farmer, 17 the Captain; 18 and 19 were made guards today (in the same comment, or an earlier one), 20 is a

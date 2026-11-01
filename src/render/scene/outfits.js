@@ -18,7 +18,7 @@ function mats(M) {
   const std = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, ...o });
   M.outfit = {
     straw: std('#d9bf7a'), leather: std('#5b3b22'), leatherLight: std('#8a5f3a'), linen: std('#ece4cf'), white: std('#f4f0e6'),
-    steel: std('#b9bec4', { roughness: 0.35, metalness: 0.75 }), mail: std('#8d9298', { roughness: 0.5, metalness: 0.6 }),
+    steel: std('#b9bec4', { roughness: 0.35, metalness: 0.75 }), steelBoth: std('#b9bec4', { roughness: 0.35, metalness: 0.75, side: THREE.DoubleSide }), mail: std('#8d9298', { roughness: 0.5, metalness: 0.6 }),
     black: std('#151214'), soot: std('#3a312c', { roughness: 0.95 }), felt: std('#3b2f28'), navy: std('#22344f'), wool: std('#7d2a24'),
     brown: std('#5e4630'), grey: std('#77746c'), canvas: std('#a59d88'), clay: std('#9a5f42'), blood: std('#8e2c25'),
     green: std('#3f5a2a'), purple: std('#4a2766'), blue: std('#24346e'), plume: std('#b3262e'), feather: std('#f2efe6'),
@@ -178,6 +178,55 @@ export function dress(P, color, M, { seated = false, ground = false } = {}) {
   }
   for (const part of body) mesh(part, part[2] === 'l' ? P.l.g : part[2] === 'r' ? P.r.g : P.body);
   if (robeMat && !seated && !ground) for (const part of robe(robeMat)) mesh(part, P.body);
+}
+
+/**
+ * Plate armour for the new Knight of the Grand Joust (owner 2026-11-01): from the crowning in the throne room on (throne.js)
+ * and as he rides the lists after it (grandjoust.js). A polished breastplate with a gold ridge and belt, pauldrons,
+ * vambraces and gauntlets, a blue surcoat skirt and cape, and (standing) greaves and an open-faced helmet with a blue and
+ * white plume. Seated on a horse: no skirt or greaves, a shorter cape, and the rider's own helmet (no `helmet`).
+ */
+export function plateArmor(P, M, { seated = false, helmet = true } = {}) {
+  const O = mats(M);
+  const mesh = ([geo, mat], parent) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; parent.add(m); return m; };
+  const body = [
+    [cylGeo(0.205, 0.27, 0.44, 16).translate(0, 0.62, 0), O.steel], // the breastplate
+    [new THREE.SphereGeometry(0.21, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.3, 0.5, 0.95).translate(0, 0.83, 0), O.steel],
+    [boxGeo(0.035, 0.42, 0.03).rotateX(-0.15).translate(0, 0.62, 0.25), M.gold], // its ridge
+    [cylGeo(0.11, 0.17, 0.1, 14).translate(0, 0.9, 0), O.steel], // the gorget
+    [cylGeo(0.272, 0.276, 0.05, 16).translate(0, 0.42, 0), M.gold], // the belt
+    [cylGeo(0.28, 0.31, 0.1, 16).translate(0, 0.35, 0), O.steel], // the faulds
+    [cylGeo(0.3, 0.33, 0.1, 16).translate(0, 0.26, 0), O.steel],
+    // the cape from the shoulders, falling clear of the back
+    seated ? [boxGeo(0.56, 0.75, 0.025).rotateX(0.12).translate(0, 0.47, -0.33), M.clothBlue] : [boxGeo(0.56, 1.1, 0.025).rotateX(0.12).translate(0, 0.3, -0.34), M.clothBlue],
+    [new THREE.SphereGeometry(0.05, 8, 6).translate(0, 0.84, -0.22), M.gold],
+  ];
+  if (!seated) body.push([cylGeo(0.32, 0.37, 0.36, 16, 1, true).translate(0, 0.03, 0), M.clothBlue]); // the surcoat skirt
+  for (const part of body) mesh(part, P.body);
+  for (const arm of [P.r, P.l]) for (const part of [
+    [new THREE.SphereGeometry(0.14, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55).scale(1.05, 0.95, 1.15), O.steel], // the pauldron
+    [cylGeo(0.125, 0.135, 0.07, 12).translate(0, -0.1, 0), O.steel],
+    [new THREE.SphereGeometry(0.1, 10, 8).translate(0, -0.3, 0), O.steel], // the elbow
+    [cylGeo(0.088, 0.098, 0.26, 10).translate(0, -0.46, 0), O.steel], // the vambrace
+    [new THREE.SphereGeometry(0.075, 8, 6).scale(1, 1.2, 1).translate(0, -0.66, 0), O.steel], // the gauntlet
+  ]) mesh(part, arm.g);
+  for (const leg of P.legs || []) for (const part of [
+    [cylGeo(0.095, 0.1, 0.22, 10).translate(0, -0.12, 0), O.steel], // the cuisse
+    [new THREE.SphereGeometry(0.1, 10, 8).translate(0, -0.26, 0), O.steel], // the knee
+    [cylGeo(0.095, 0.1, 0.26, 10).translate(0, -0.42, 0), O.steel], // the greave
+    [boxGeo(0.15, 0.09, 0.27).translate(0, -0.56, 0.04), O.steel], // the sabaton
+  ]) mesh(part, leg);
+  if (helmet) {
+    for (const c of [...P.hat.children]) c.visible = false;
+    for (const part of [
+      [new THREE.SphereGeometry(0.205, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 1.1, 1.05).translate(0, 1.08, 0), O.steel],
+      // the sides and the back, open at the face
+      [new THREE.SphereGeometry(0.21, 16, 8, Math.PI / 2 + 0.75, Math.PI * 2 - 1.5, Math.PI / 2, 0.55).translate(0, 1.08, 0), O.steelBoth],
+      [new THREE.TorusGeometry(0.21, 0.018, 6, 20).rotateX(Math.PI / 2).translate(0, 1.09, 0), M.gold],
+      [new THREE.SphereGeometry(0.08, 8, 6).scale(1, 2.8, 0.8).rotateX(-0.6).translate(0.04, 1.42, -0.1), O.feather], // the plume
+      [new THREE.SphereGeometry(0.07, 8, 6).scale(1, 2.6, 0.8).rotateX(-0.75).translate(-0.05, 1.4, -0.14), M.clothBlue],
+    ]) mesh(part, P.hat);
+  }
 }
 
 function jesterCap(M) {

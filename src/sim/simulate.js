@@ -5,7 +5,7 @@ import { availableJobs } from './requests.js';
 import { TIERS, BUILDINGS, JOBS, COMMISSIONS, jobFor, houseCapacity, tiersReached, mergedJob } from './tiers.js';
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
-import { pickStory, takesOver } from './stories.js';
+import { pickStory, takesOver, GAMES } from './stories.js';
 import { pickFeatured, shownJobs, markShown } from './featured.js';
 import { planScenes, tavernToday, churchToday, staleJob, introVariant } from './scenes.js';
 import { planWall2, wallBlockers, insideWall2, crossesFields } from './wall.js';
@@ -301,12 +301,14 @@ function assignNames(s, commenters, blocked, diff) {
       if (c.rebel && id !== undefined) { s.names[id].rebelDay = s.day; diff.rebels.push({ id: Number(id), name: s.names[id].name }); }
       else if (c.rebel && q) q.rebel = true;
       // "!join" (owner 2026-10-29): only a villager who was a guard before today enters the games, and is one still after
-      // this comment's own request; never one made a guard today, never the Captain of the Guard
+      // this comment's own request; never one made a guard today, never the Captain of the Guard. Owner 2026-11-01: only
+      // in the comments on the announcement (the day before the results), so the list is empty for the next games
+      const gameOpen = s.storyArc?.step === 'results' && s.storyArc.id in GAMES;
       const isGuard = () => (s.villagers[id]?.job ?? s.names[id].job) === 'guard';
       const guardBefore = id !== undefined && isGuard() && s.names[id].requestDay !== s.day && Number(id) !== s.guardCaptain;
       if (id !== undefined && wants.length) applyRequest(id, wants);
       else if (wants.length && q) q.wants = wants;
-      if (c.join && guardBefore && isGuard() && !s.gamesEntrants.includes(Number(id))) {
+      if (c.join && gameOpen && guardBefore && isGuard() && !s.gamesEntrants.includes(Number(id))) {
         s.gamesEntrants.push(Number(id));
         diff.joins.push({ id: Number(id), name: s.names[id].name });
       }

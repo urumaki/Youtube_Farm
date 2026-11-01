@@ -10,6 +10,7 @@ import { rand01 } from '../../../sim/prng.js';
 import { rig, particles } from '../work.js';
 import { castTag, ease, clamp01 } from './common.js';
 import { mount, gallop, stands, COLORS, COATS } from './joust.js';
+import { plateArmor } from '../outfits.js';
 
 export const JOUST_SHOTS = [['intro', 0, 3.5], ['quarter', 3.5, 9], ['semi', 9, 14.5], ['final', 14.5, 21.5], ['crown', 21.5, 25.5], ['outro', 25.5, 30]];
 const ROUND = { quarter: 0, semi: 1, final: 2 };
@@ -29,6 +30,26 @@ function warp(n1, slow) {
   const act = (s) => (s < n1 ? s : s < n1 + slow ? n1 + (s - n1) * SLOW : n1 + slow * SLOW + (s - n1 - slow));
   const real = (a) => (a < n1 ? a : a < n1 + slow * SLOW ? n1 + (a - n1) / SLOW : a - slow * SLOW + slow);
   return { act, real };
+}
+
+/**
+ * Petals and ribbons thrown from the stands over the lists for the champion (owner 2026-11-01, second look: more show):
+ * red, gold and white, falling and swaying, again and again. Returns update(t, k), k 0..1 how many are in the air.
+ */
+function petals(group, seed, box = [-10, 10, -9, 8]) {
+  const N = 60, sets = ['#d8343a', '#f2d04b', '#f4f0e6'].map((c) => { const p = particles(N, c, 0.17, false); group.add(p); return p; });
+  return (t, k) => sets.forEach((p, j) => {
+    const arr = p.geometry.attributes.position.array;
+    for (let i = 0; i < N; i++) {
+      const r1 = rand01(seed, 'pet1', j, i), r2 = rand01(seed, 'pet2', j, i), r3 = rand01(seed, 'pet3', j, i);
+      if (r3 > k) { arr[i * 3 + 1] = -1e4; continue; }
+      const f = (t * (0.28 + 0.12 * r2) + r3) % 1; // its fall, from high over the lists to the sand
+      arr[i * 3] = lerp(box[0], box[1], r1) + 0.5 * Math.sin(t * 2.3 + i);
+      arr[i * 3 + 1] = 8.5 - 8.3 * f;
+      arr[i * 3 + 2] = lerp(box[2], box[3], r2) + 0.4 * Math.cos(t * 1.9 + i * 1.7);
+    }
+    p.geometry.attributes.position.needsUpdate = true;
+  });
 }
 
 function lot(buildings) {
@@ -75,6 +96,13 @@ function bout({ story, M, buildings, seed }, round, T) {
   const FALL = 0.7; // action seconds from the blow to the ground
   const tmp = new THREE.Vector3();
   const saddle = new THREE.Vector3(0, 1.2, -0.12);
+  const shower = final ? petals(group, seed) : null;
+  // each round seen another way (owner's second look): side on from the near stands, low along the tilt, a crane coming down
+  const wide = [
+    (u) => ({ pos: toWorld(-0.8 + 1.6 * u, 6, 17), look: toWorld(0, 2.4, -1.5) }),
+    (u) => ({ pos: toWorld(-12 + 4 * u, 3.0, 8.5), look: toWorld(0.5, 1.8, 0) }),
+    (u) => ({ pos: toWorld(-3 + 5 * u, 9 - 3.5 * u, 15 - 2 * u), look: toWorld(0, 1.8, 0) }),
+  ][round];
   return {
     group,
     labels,
@@ -86,9 +114,13 @@ function bout({ story, M, buildings, seed }, round, T) {
       const s = u * T;
       const k = clamp01((s - N1 + 0.35) / 0.5) * clamp01((N1 + SLOWS + 0.5 - s) / 0.6);
       const e = ease(k);
-      const wide = { pos: toWorld(-0.8 + 1.6 * u, 6, 17), look: toWorld(0, 2.4, -1.5) };
+      const w = wide(u);
       const close = { pos: toWorld(3.2, 2.5, 7.2), look: toWorld(0.2, 2.1, 0) };
-      return { pos: wide.pos.lerp(close.pos, e), look: wide.look.lerp(close.look, e) };
+      const pos = w.pos.lerp(close.pos, e);
+      // the camera shaken by the blow (in action time, so slowly through the slow motion)
+      const d = act(s) - MEET;
+      if (d > 0) { const a = 0.12 * Math.exp(-5 * d); pos.x += a * Math.sin(d * 55); pos.y += a * Math.sin(d * 70 + 1); }
+      return { pos, look: w.look.lerp(close.look, e) };
     },
     update(t, t0, t1) {
       const on = t >= t0 - 0.2 && t <= t1 + 0.2;
@@ -145,6 +177,7 @@ function bout({ story, M, buildings, seed }, round, T) {
       }
       dust.geometry.attributes.position.needsUpdate = true;
       cheer(t, after ? 1 : 0.35);
+      shower?.(t, after ? clamp01((since - FALL) / 0.6) : 0);
       for (const l of riderTags) {
         l.pos.copy(l.P.root.getWorldPosition(tmp)).setY(tmp.y + 1.55);
         l.sub = after && since > FALL ? (l.c.id === won.id ? (final ? 'Wins the joust!' : 'Rides on!') : 'Out!') : l.sub0;
@@ -202,14 +235,15 @@ function outro({ story, M, buildings, seed }) {
   const m = mount(M, colorOf(story, champ.id), coatOf(story, champ.id));
   group.add(m.h.g);
   m.tip.visible = false; // the lance broken in the final
+  plateArmor(m.R, M, { seated: true, helmet: false }); // a Knight now, in his armour (throne.js)
   const tag = { ...castTag(champ, 'A new Knight!'), pos: new THREE.Vector3() };
+  const shower = petals(group, seed, [-14, 12, -10, 6]);
   labels.push(tag);
   const tmp = new THREE.Vector3();
   return {
     group,
     labels,
     banner: 'A new Knight!',
-    footer: 'Guards: comment !join to ride next',
     focus: toWorld(0, 1.6, -4),
     cam(u) {
       const x = -12 + 20 * u;
@@ -226,6 +260,7 @@ function outro({ story, M, buildings, seed }) {
       m.lance.rotation.x = -1.3;
       m.R.r.g.rotation.set(-2.6 + 0.2 * Math.sin(t * 6), 0, 0.15);
       cheer(t, 1);
+      shower(t, 1);
       group.updateMatrixWorld(true);
       tag.pos.copy(m.R.root.getWorldPosition(tmp)).setY(tmp.y + 1.6);
     },

@@ -98,7 +98,7 @@ Add new owner decisions here.
   riders lined up before the far stand (0-3.5 s), the champion's quarter-final, semi-final and final (to 21.5 s: a charge,
   the last strides and the blow in slow motion with the camera closing in, the loser knocked out of the saddle onto the
   sand, where he sits up dazed and waves; the winner rides on, lance up), the King knights him in the throne room
-  (throne.js, to 25.5 s), the new Knight rides along the lists (to 30 s, "Guards: comment !join to ride next"). The
+  (throne.js, to 25.5 s), the new Knight rides along the lists (to 30 s). The
   bracket of the eight names (`bracketHTML` in `overlay.js`, like the owner's picture: grey boxes, a black bar, a green bar
   for who went on, lines joining each pair, no backdrop): big over the line-up and the end (with the champion and a cup),
   small at the start of each bout with that bout's two names outlined. Own narration (`grandJoustScript`, names on screen
@@ -106,6 +106,16 @@ Add new owner decisions here.
   The day of 2026-11-01 (blueberry9333 knighted, DawleyTownFc in the final) was set as such a bracket in its saved story,
   the other six riders from those who had commented "!join". Test with `npm run render -- --real --subs N --story
   joust:results` or `--day 2026-11-01`.
+  Owner's second look (2026-11-01): no "!join" call at the end, in the footer or the narration (that is the
+  announcement's). The bracket as wide as the safe area (860 px) with taller boxes and bigger names (smaller for long
+  ones), shown in every bout as it begins (the pair outlined) and again once the loser is down (from 0.78 of the shot:
+  the round decided, the champion's new place outlined; after the final the cup), so it stays up across the cut from
+  one round to the next. More narration through the bouts (at the blows of about 6.4, 11.9 and 18.2 s and before the
+  final charge). More show: each round seen another way (side on from the near stands, wide and low along the tilt, a
+  crane coming down for the final), the camera shaken by the blow, red, gold and white petals thrown from the stands
+  once the final is won and all through the new Knight's ride. The champion comes to be knighted in plate armour
+  (`plateArmor` in `outfits.js`: polished breastplate with a gold ridge and belt, pauldrons, vambraces, gauntlets,
+  greaves, blue surcoat and cape, an open-faced helmet with a blue and white plume) and rides the lists in it.
   The games at the Tournament Ground (owner 2026-10-27, reworked 2026-10-28): two events of their own, the chariot race
   (`race`) and the joust (`joust`), each over two days once the Tournament Ground stands (no rain or snow, cooldown 14).
   Day 1 (`announce`, scene `stories/games.js` on the crier's dais of `proclaim.js`): the town crier reads the
@@ -114,7 +124,9 @@ Add new owner decisions here.
   (`joinFromText` in `requests.js`, a fixed regex; a plain "join" does not count), from a commenter whose villager is a
   guard since before that day and still one after that comment (never one made a guard that day, never the Captain of
   the Guard) puts the villager once on `state.gamesEntrants`
-  (`simulate.js`, `diff.joins`); the list is emptied when a game is run. Day 2 (`results`): the riders are drawn
+  (`simulate.js`, `diff.joins`); the list is emptied when a game is run. Owner 2026-11-01: a "!join" counts only in the
+  comments read on the results day, the ones on the announcement (`gameOpen` in `simulate.js`), so the list is empty for
+  the next games. Day 2 (`results`): the riders are drawn
   (`drawGuards` in `stories.js`) among the guards on the list (still guards that day), then the other named guards fill
   the places left (owner: fill with random guards); each draw is weighted
   by seniority, the guard named longest ago 1.9, the newest 1.0, the rest in proportion. Only named guards, never the
