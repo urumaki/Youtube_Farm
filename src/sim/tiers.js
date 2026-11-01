@@ -6,14 +6,16 @@ import { hash } from './prng.js';
 // Jobs folded into another (owner 2026-10-22: the same work under two names). The tiers keep their old
 // weights, so every other villager keeps their job; jobFor, the saves (migrate) and the comments map these.
 // Owner 2026-10-23: the mayor and the reeve collect the taxes, the weaver is a tailor, the chronicler a scholar,
-// the admiral a sailor (and so a fisherman).
+// the admiral a sailor. Owner 2026-11-01: the sailor is a job of its own again, by request (the Harbor stands); the sailors
+// the Harbor tier draws (and its admiral) stay fishermen (DRAWN), so no villager changes job.
 export const MERGED = {
-  warrior: 'guard', sailor: 'fisherman', toolsmith: 'blacksmith', weirdo: 'jester',
-  mayor: 'taxcollector', reeve: 'taxcollector', weaver: 'tailor', chronicler: 'scholar', admiral: 'fisherman',
+  warrior: 'guard', toolsmith: 'blacksmith', weirdo: 'jester',
+  mayor: 'taxcollector', reeve: 'taxcollector', weaver: 'tailor', chronicler: 'scholar', admiral: 'sailor',
 };
 export const mergedJob = (job) => MERGED[job] || job;
+const DRAWN = { sailor: 'fisherman', admiral: 'fisherman' };
 // an earned job (a Knight, a Cavalier) is never drawn: the villager is a guard
-const drawnJob = (job) => (JOBS[mergedJob(job)]?.earned ? 'guard' : mergedJob(job));
+const drawnJob = (job) => { const j = DRAWN[job] || mergedJob(job); return JOBS[j]?.earned ? 'guard' : j; };
 
 export const JOBS = {
   peasant: { label: 'Peasant', color: '#8a7a5c' },
@@ -30,7 +32,8 @@ export const JOBS = {
   miller: { label: 'Miller', color: '#c9c1a8' },
   carpenter: { label: 'Carpenter', color: '#9c6b3c' },
   reeve: { label: 'Reeve', color: '#4b3a6b' },
-  sailor: { label: 'Sailor', color: '#1f4e79' },
+  // owner 2026-11-01, by request only: works the ships at the Harbor (before, a fisherman)
+  sailor: { label: 'Sailor', color: '#1f4e79', requestOnly: true },
   // earned (owner 2026-10-28): only the winners at the Tournament Ground's games hold these, the joust's a Knight, the chariot
   // race's a Cavalier. Never drawn for a villager, never given on request: both are a guard instead (jobFor, requests.js)
   knight: { label: 'Knight', color: '#b0b7c0', earned: true },

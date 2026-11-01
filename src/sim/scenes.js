@@ -38,6 +38,8 @@ export const VARIANTS = {
   scholar: ['desk', 'lecture'],
   // owner 2026-10-30: the librarian shelves books in the University's library once it stands (else at a desk in the croft)
   librarian: ['library'],
+  // owner 2026-11-01: the sailor on the Harbor's quay (else in the croft) coils a rope, or hauls in a line at a bollard
+  sailor: ['coil', 'haul'],
 };
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
 // the fisherman always fishes on the river (owner 2026-10-22): from a jetty with a rod or a net, or in a boat
@@ -53,7 +55,7 @@ const SUMMER = new Set(['fields', 'wheat', 'pasture']);
 export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished
 const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop', inside: 'tavern', stand: 'crier_stand',
-  square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth', lecture: 'university', library: 'university' };
+  square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth', lecture: 'university', library: 'university', haul: 'harbor' };
 // croft scenes no longer used once the building stands (the innkeeper's barrel in the croft, once the tavern is open)
 const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
 // the same for one job only (owner 2026-10-25): knights train in the lists of the Tournament Ground once it stands, no

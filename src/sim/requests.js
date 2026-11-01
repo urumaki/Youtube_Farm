@@ -34,7 +34,8 @@ const KEYWORDS = [
   [/\bpeasant|bracciant|\bcitizen|cittadin|commoner|gardener|grounds?\s*keeper|groudnskeeper|giardinier|labou?rer/, 'peasant'],
   // the banker is a money changer until the Bank (2026-10-29)
   [/merchant|\bbanker|banchier|money\s*(changer|lender)|\btrader|\bshop|mercante|negozi|head of trade|(?<!ministry of )\btrade\b|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
-  [/\bsailor|\bpirate|captain of (a|the) (ship|boat|vessel)|\b(sea|boat|ship)\s*captain|ship'?s captain|marinaio|pirata/, 'fisherman'],
+  // owner 2026-11-01: the sailor is a job of its own (before, a fisherman)
+  [/\bsailor|\bseaman|\bseamen|\bdeck\s*hand|\bpirate|captain of (a|the) (ship|boat|vessel)|\b(sea|boat|ship)\s*captain|ship'?s captain|marinaio|pirata/, 'sailor'],
   [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
   [/scholar|\bscribe|studioso|scientist|physicist|academic|scienziat|inventor|professor|professore/, 'scholar'],
   // owner 2026-10-30: the librarian is a job of its own (before, a scholar)
@@ -46,7 +47,7 @@ const KEYWORDS = [
   // jobs folded into another (owner 2026-10-23): the weaver into the tailor, the chronicler into the scholar, the admiral into the sailor
   [/\bweaver|\bweav(e|ing)\b|\bloom\b|tessitor|telaio/, 'tailor'],
   [/chronicler|historian|\bhistory\b|cronista|\bstorico/, 'scholar'],
-  [/\badmiral|ammiraglio/, 'fisherman'],
+  [/\badmiral|ammiraglio/, 'sailor'],
   // new jobs asked for in the comments of 2026-10-22 (owner 2026-10-23, by request only)
   [/hunter|\bhunt(ing)?\b|cacciator|\bcaccia\b/, 'hunter'],
   [/butcher|slaughter|macellai|\bmeat\b/, 'butcher'],

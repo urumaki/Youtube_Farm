@@ -271,6 +271,14 @@ async function setup(data) {
     }
     const lists = variant === 'dummy' && ['knight', 'warrior', 'cavalier'].includes(job) && done('tournament');
     if (lists) return { ...atLot(lists, 12, -7), face: undefined };
+    // owner 2026-11-01: the sailor on the middle pier of the Harbor (deck 0.73 m up, buildings.js harbor), facing along the
+    // quay, the moored cog behind him (the camera on the other side of the pier)
+    const harbor = job === 'sailor' && done('harbor');
+    if (harbor) {
+      const e = harbor.toWorld([1, 0, 0]).sub(harbor.toWorld([0, 0, 0])).normalize();
+      const anchor = harbor.toWorld([-0.4, 0, 17.5]).setY(harbor.base + 0.73);
+      return { anchor, ax: e.x, az: e.z, floorAt: () => harbor.base + 0.73 };
+    }
     const place = PLACES[job] && done(PLACES[job][0]);
     if (place) return { ...atLot(place, ...PLACES[job].slice(1)), face: undefined };
     if (job === 'farmer' && fieldCount > 1 && state.buildings.some((b) => b.id === 'fields')) return atField(id);

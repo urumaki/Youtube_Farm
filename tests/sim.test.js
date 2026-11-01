@@ -329,7 +329,7 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
   assert.ok(availableJobs(10).has('librarian'), 'by request only, from the first day');
   // the comments on the day 14 video (owner 2026-10-30)
   const day14 = {
-    'I want to be a crazy begger in a wine barrel': 'beggar', 'Day 5 of asking to be a townsguard': 'guard', 'Day 1 of asking to be a captain of a ship': 'fisherman',
+    'I want to be a crazy begger in a wine barrel': 'beggar', 'Day 5 of asking to be a townsguard': 'guard', 'Day 1 of asking to be a captain of a ship': 'sailor',
     'can I be the captain of the guard': 'guard', 'I wish to be a flag bearer my lord.': 'guard', 'a place to herd pigs and ducks': 'shepherd',
     'Letter to the Ministry of Trade: I wish to be a slaughter man': 'butcher', 'I want to be a crazy guy': 'jester',
   };
@@ -743,7 +743,7 @@ test('jobs folded on 2026-10-23: mayor and reeve collect taxes, weaver, chronicl
   const { obbOverlap, grow } = await import('../src/sim/geometry.js');
   const index = (job) => TIERS.find((t) => t.unique.includes(job)).at - 1 + TIERS.find((t) => t.unique.includes(job)).unique.indexOf(job);
   for (const [job, to] of [['reeve', 'taxcollector'], ['mayor', 'taxcollector'], ['chronicler', 'scholar'], ['admiral', 'fisherman']]) assert.equal(jobFor(SEED, index(job)), to);
-  for (const [text, job] of [['can I be the mayor', 'taxcollector'], ['I want to be a weaver', 'tailor'], ['make me the chronicler', 'scholar'], ['admiral please', 'fisherman']]) assert.deepEqual(wantsFromText(text), [job]);
+  for (const [text, job] of [['can I be the mayor', 'taxcollector'], ['I want to be a weaver', 'tailor'], ['make me the chronicler', 'scholar'], ['admiral please', 'sailor']]) assert.deepEqual(wantsFromText(text), [job]);
   assert.ok(availableJobs(300).has('taxcollector'), 'tax collectors from 250');
   // the Counting House and the Apothecary's Shop stand on free ground by a street
   const w = world(SEED);
@@ -1131,16 +1131,26 @@ test('the night raid (owner 2026-10-30): two days that take the whole video, a g
   for (let d = 0; d < 40; d++) assert.notEqual(pickStory({ ...later, date: `2026-12-${String(1 + (d % 28)).padStart(2, '0')}`, storyLog: { raid: s.day + 1 } })?.id, 'raid');
 });
 
-test('comments of 2026-10-31 (owner 2026-11-01): buying from someone and questions about others are no request; a boat captain fishes', async () => {
+test('comments of 2026-10-31 (owner 2026-11-01): buying from someone and questions about others are no request; a boat captain sails', async () => {
   const { wantsFromText } = await import('../src/sim/requests.js');
   const first = (t) => wantsFromText(t)[0] ?? null;
   for (const [t, job] of Object.entries({
     'Can I buy a Lance and Armor upgrade from blacksmith?': null, 'Can I get a crossbow from the craft smith': null,
     'Wait a second... why is a bishop drinking\n\nSide note when is the tournament?': null, 'Are there ranks for the guards': null,
-    '(also where are the stonemasons?)': null, 'Day 3 of asking to be a boat captain': 'fisherman', 'Ordinary Citizen Will Take a job of Hunter': 'hunter',
+    '(also where are the stonemasons?)': null, 'Day 3 of asking to be a boat captain': 'sailor', 'Ordinary Citizen Will Take a job of Hunter': 'hunter',
     // still requests
     'can I get a blacksmith job': 'blacksmith', 'can I have a job as a blacksmith': 'blacksmith', 'Day-2 my lord can i be a blacksmith': 'blacksmith',
     'May I be a wandering trader that sells wood to the carpenter': 'merchant', 'a citizen': 'peasant', 'can I be the captain of the guard': 'guard',
     'promote me from farmer to blacksmith': 'blacksmith',
   })) assert.equal(first(t), job, t);
+});
+
+test('the sailor, a job of its own by request (owner 2026-11-01): asked for, works at the Harbor; nobody drawn changes job', async () => {
+  const { wantsFromText, availableJobs } = await import('../src/sim/requests.js');
+  const { VARIANTS } = await import('../src/sim/scenes.js');
+  for (const t of ['can I be a sailor', 'Day 2 of asking to be a seaman', 'make me a deckhand', 'I want to be a pirate', 'admiral please', 'voglio fare il marinaio']) assert.deepEqual(wantsFromText(t), ['sailor'], t);
+  assert.ok(availableJobs(10).has('sailor'), 'by request at any size');
+  assert.deepEqual(VARIANTS.sailor, ['coil', 'haul']);
+  // the Harbor tier still draws fishermen where it drew sailors: the same jobs as before for every villager
+  for (let i = 0; i < 6000; i++) assert.notEqual(jobFor(SEED, i), 'sailor');
 });

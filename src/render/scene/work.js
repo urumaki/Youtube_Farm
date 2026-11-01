@@ -248,6 +248,9 @@ Object.assign(JOB_SCENES, {
   // owner 2026-10-30: the librarian puts a book back on a tall shelf of the University's library (room.js), or before the
   // University stands, writes up the catalogue at a desk in the croft
   librarian: { period: 1.2, raise: -1.3, down: -1.08, bend: 0.18, sound: 'none', tool: null, props: 'desk', smooth: true, left: -1.05 },
+  // owner 2026-11-01: the sailor coils a rope down on the quay, hand over hand, or hauls in a line round a bollard, leaning back
+  sailor: { period: 1.5, raise: -1.25, down: -0.85, bend: 0.32, sound: 'none', tool: null, props: 'ropecoil', stir: true, both: true, radius: 6.2 },
+  'sailor:haul': { period: 1.7, raise: -1.55, down: -0.75, bend: -0.22, sound: 'none', tool: null, props: 'bollard', push: true, both: true, radius: 6.2 },
   'librarian:library': { period: 3.0, raise: -2.7, down: -1.35, bend: -0.06, sound: 'none', tool: 'book', props: 'none', smooth: true, left: -0.55 },
   priest: { period: 3.0, raise: -2.4, down: -0.5, bend: 0.05, sound: 'none', tool: null, props: 'shrine', smooth: true, left: -1.0 },
   'priest:bless': { period: 2.2, raise: -2.3, down: -0.9, bend: 0, fx: 'splash', sound: 'none', tool: null, props: 'none', smooth: true, left: -1.0, turn: 0.4 },
@@ -753,6 +756,29 @@ function buildProps(kind, M, add, anim = [], holder = null) {
         pot.scale.y = 0.45 + 0.55 * Math.min(1, (t % 6) / 4);
       });
       return new THREE.Vector3(0, 0.92, 0.62);
+    }
+    case 'ropecoil': { // a coil of rope on the quay growing as it is laid down, the line running up into the hands, a barrel
+      const turns = [];
+      for (let i = 0; i < 6; i++) turns.push(add(new THREE.TorusGeometry(0.34 - i * 0.01, 0.035, 6, 20).rotateX(Math.PI / 2).translate(0, 0.04 + i * 0.065, 0.7), M.hay));
+      const line = add(cylGeo(0.02, 0.02, 1, 5).translate(0, 0.5, 0), M.hay);
+      add(cylGeo(0.3, 0.27, 0.8, 14).translate(1.0, 0.4, 0.35), M.wood);
+      add(new THREE.TorusGeometry(0.3, 0.02, 4, 16).rotateX(Math.PI / 2).translate(1.0, 0.7, 0.35), M.iron);
+      anim.push((t, c) => {
+        const n = 2 + Math.floor((t % 9) / 1.5); // a turn more every coil of the arms
+        turns.forEach((m, i) => { m.visible = i < n; });
+        line.position.set(0.25 * Math.cos(c * Math.PI * 2), 0.05 + n * 0.065, 0.7 + 0.25 * Math.sin(c * Math.PI * 2));
+        line.scale.y = 1.0 - n * 0.065;
+        line.rotation.x = -0.25;
+      });
+      return new THREE.Vector3(0, 0.3, 0.7);
+    }
+    case 'bollard': { // a mooring bollard in front, the line round it running back past him up to the moored ship
+      add(cylGeo(0.2, 0.24, 0.6, 12).translate(0, 0.3, 0.9), M.iron);
+      add(cylGeo(0.28, 0.28, 0.08, 12).translate(0, 0.62, 0.9), M.iron);
+      add(new THREE.TorusGeometry(0.24, 0.04, 6, 14).rotateX(Math.PI / 2).translate(0, 0.42, 0.9), M.hay);
+      add(cylGeo(0.035, 0.035, 5.0, 5).translate(0, 2.5, 0).rotateX(-Math.PI / 2 - 0.32).translate(0.55, 0.42, 0.9), M.hay); // back to the ship
+      add(cylGeo(0.03, 0.03, 0.75, 5).rotateX(-1.2).translate(0, 0.62, 0.55), M.hay); // the slack end, in the hands
+      return new THREE.Vector3(0, 0.5, 0.9);
     }
     case 'last': { // a low bench with a shoe on an iron last
       add(boxGeo(1.2, 0.45, 0.5).translate(0.2, 0.22, 0.65), M.wood);

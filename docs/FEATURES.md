@@ -343,6 +343,14 @@ Add new owner decisions here.
   Jobs folded together (owner 2026-10-22, `MERGED` in `tiers.js`): Warrior into Guard, Sailor into
   Fisherman, Toolsmith into Blacksmith, Town Weirdo into Jester. The tier weights are unchanged (so no other
   villager changes job); `jobFor`, `migrate` (names, requests waiting) and the comment keywords map them.
+  The Sailor is a job of its own again (owner 2026-11-01, the Harbor stands): by request only (sailor, seaman, deckhand,
+  pirate, a boat or ship captain, admiral, marinaio), the Admiral folds into the Sailor; the Harbor tier's draws of
+  "sailor" and its admiral stay fishermen (`DRAWN` in `tiers.js`), so no villager changes job. Scenes (`VARIANTS.sailor`):
+  `coil` (a rope laid down in a growing coil, hands circling, a barrel beside) and `haul` (hauling the line round a
+  bollard, leaning back, the line running back up to the ship; needs the Harbor). Once the Harbor stands both are on its
+  middle pier (lot -0.4, 0.73, 17.5, `workPlace` in `main.js`), facing along the quay with the moored cog and its sail behind
+  him; before, in the croft. A red knitted cap (`outfits.js`). LiamMossor, who asked for a boat captain, made a sailor.
+  Test with `npm run render -- --real --subs 2700 --gallery "sailor:coil,sailor:haul"`.
   Also added 2026-10-22, each with a work scene: 850 Potter + Potter's Stall, 1750 Cobbler + Cobbler's
   Stall (market square), 2000 Cooper + Cooperage (East Ward square), 3000 Beekeeper + Beehives (corner of
   a field west of the castle), 4000 Bell Founder + Bell Foundry (North Ward square), 7500 Clockmaker +
