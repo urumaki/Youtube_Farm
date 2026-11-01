@@ -91,6 +91,21 @@ Add new owner decisions here.
   villagers pelt them with tomatoes that stick, the hooded executioner brings the axe down on the cabbage on the block as a
   warning and the rebel flinches. Synced sounds: the axe (a whoosh, then a deep thunk) and each tomato's splat (`hits` on
   the story's `work`, `makeSfxTrack`). Test with `--story rebel`.
+  The Grand Joust (owner 2026-11-01): the joust's results day is a knockout of eight guards that takes the whole video like
+  the night raid (`takeover: ['results']`, `takesOver` in `stories.js`; `JOUST_SHOTS` in `stories/grandjoust.js`). Eight
+  riders drawn as before (`drawGuards`: those who commented "!join" first, `GAMES.joust.riders` 8; the joust needs eight
+  named guards), the whole bracket decided that day, each bout 50/50 (`knockout`), the champion made a Knight. Shots: the
+  riders lined up before the far stand (0-3.5 s), the champion's quarter-final, semi-final and final (to 21.5 s: a charge,
+  the last strides and the blow in slow motion with the camera closing in, the loser knocked out of the saddle onto the
+  sand, where he sits up dazed and waves; the winner rides on, lance up), the King knights him in the throne room
+  (throne.js, to 25.5 s), the new Knight rides along the lists (to 30 s, "Guards: comment !join to ride next"). The
+  bracket of the eight names (`bracketHTML` in `overlay.js`, like the owner's picture: grey boxes, a black bar, a green bar
+  for who went on, lines joining each pair, no backdrop): big over the line-up and the end (with the champion and a cup),
+  small at the start of each bout with that bout's two names outlined. Own narration (`grandJoustScript`, names on screen
+  only), title "Day N: The Grand Joust ⚔️ ...", lance and fall sounds synced. At least 14 days apart (cooldown 14, tested).
+  The day of 2026-11-01 (blueberry9333 knighted, DawleyTownFc in the final) was set as such a bracket in its saved story,
+  the other six riders from those who had commented "!join". Test with `npm run render -- --real --subs N --story
+  joust:results` or `--day 2026-11-01`.
   The games at the Tournament Ground (owner 2026-10-27, reworked 2026-10-28): two events of their own, the chariot race
   (`race`) and the joust (`joust`), each over two days once the Tournament Ground stands (no rain or snow, cooldown 14).
   Day 1 (`announce`, scene `stories/games.js` on the crier's dais of `proclaim.js`): the town crier reads the

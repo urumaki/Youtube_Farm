@@ -475,6 +475,12 @@ const SCENES = {
   ev_raid_chase: [['chatter', 0.5], ['breeze', 0.3]],
   ev_raid_return: [['cheer', 0.7], ['chatter', 0.3]],
   ev_raid_crier: [['bell', 0.4], ['cheer', 0.5]],
+  // the Grand Joust (owner 2026-11-01): the lances and the falls are synced hits
+  ev_joust_intro: [['fanfare', 0.55], ['cheer', 0.5], ['chatter', 0.3]],
+  ev_joust_quarter: [['hooves', 0.55], ['cheer', 0.4]],
+  ev_joust_semi: [['hooves', 0.55], ['cheer', 0.45]],
+  ev_joust_final: [['hooves', 0.6], ['cheer', 0.55]],
+  ev_joust_outro: [['fanfare', 0.45], ['cheer', 0.6], ['hooves', 0.3]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],
@@ -573,15 +579,17 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
       R[a + i] += mono[i] * env * gr;
     }
   };
-  // the night of the raid has no birds, no drawbridge and no chime: its own shots fill the whole video
+  // the night of the raid has no birds, no drawbridge and no chime: its own shots fill the whole video (the Grand Joust
+  // has its own opening and end too: no drawbridge or chime)
   const raid = cues.some((c) => c.id === 'raid_arrow');
+  const own = raid || cues.some((c) => c.id === 'joust_intro');
   // quiet beds for the whole video
   place(sound('breeze', duration, r, workDir), 0, raid ? 0.15 : 0.05, 0, 1, 1);
   if (!raid) place(sound('birds', duration, r, workDir), 0, 0.22, 0.2, 1, 1);
   if (weather === 'rain') place(sound('rain', duration, r, workDir), 0, 0.35, 0, 1, 1);
   // hook: the drawbridge chain runs down and the bridge lands
-  if (!raid) place(sound('chain', 1.7, r, workDir), 0.05, 0.3, 0.3, 0.1, 0.2);
-  if (!raid) place(sound('thud', 0.8, r, workDir), 1.75, 0.55, 0.3, 0.005, 0.3);
+  if (!own) place(sound('chain', 1.7, r, workDir), 0.05, 0.3, 0.3, 0.1, 0.2);
+  if (!own) place(sound('thud', 0.8, r, workDir), 1.75, 0.55, 0.3, 0.005, 0.3);
   // the shots
   for (const cue of cues) {
     const scene = sceneFor(cue);
@@ -600,9 +608,9 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
     for (const [ts, kind] of cue.hits) place(hit(kind, r), ts - 0.005 - (kind === 'axe' ? AXE_LEAD : 0), ['axe', 'ram', 'crash'].includes(kind) ? 0.95 : 0.5, cue.pan ?? 0, 0.002, 0.3);
   }
   // wide shot: a distant bell if the kingdom has one; chains again as the bridge rises for the loop
-  if (cues.some((c) => c.hasChapel)) place(sound('bell', 4.5, r, workDir), 23.9, 0.18, -0.3, 0.2, 1.2);
-  if (!raid) place(sound('chime', 1.2, r, workDir), 27.1, 0.4, 0, 0.005, 0.5);
-  if (!raid) place(sound('chain', 1.7, r, workDir), 28.2, 0.25, 0.3, 0.1, 0.4);
+  if (cues.some((c) => c.hasChapel) && !own) place(sound('bell', 4.5, r, workDir), 23.9, 0.18, -0.3, 0.2, 1.2);
+  if (!own) place(sound('chime', 1.2, r, workDir), 27.1, 0.4, 0, 0.005, 0.5);
+  if (!own) place(sound('chain', 1.7, r, workDir), 28.2, 0.25, 0.3, 0.1, 0.4);
   // the arrow's whoosh into the roof at the start of the raid
   if (raid) place(hit('axe', r), 0.62 - AXE_LEAD, 0.7, -0.3, 0.002, 0.3);
   // gentle limiter

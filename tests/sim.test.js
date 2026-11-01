@@ -837,7 +837,7 @@ test('the games at the Tournament Ground (owner 2026-10-28): announced, guards w
   const { joinFromText } = await import('../src/sim/requests.js');
   const { rng } = await import('../src/sim/prng.js');
   for (const id of ['race', 'joust']) assert.deepEqual(STORIES[id].steps, ['announce', 'results']);
-  assert.deepEqual([GAMES.race.riders, GAMES.joust.riders], [4, 2]);
+  assert.deepEqual([GAMES.race.riders, GAMES.joust.riders], [4, 8]); // owner 2026-11-01: the Grand Joust, eight guards
   // guards 0-11 named on days 1-12 (0 the oldest); 1 is the Captain of the Guard; 12 a farmer
   const kingdom = (date, weather = 'clear') => ({
     seed: SEED, date, day: 20, subscriberCount: 600, weather, storyLog: {}, guardCaptain: 1,
@@ -872,7 +872,7 @@ test('the games at the Tournament Ground (owner 2026-10-28): announced, guards w
   const ratio = counts.get(0) / counts.get(11);
   assert.ok(ratio > 1.65 && ratio < 2.2, `oldest vs newest ${ratio.toFixed(2)}`);
   // the results: the winner gets the title of the game
-  for (const [id, title, n] of [['race', 'cavalier', 4], ['joust', 'knight', 2]]) {
+  for (const [id, title, n] of [['race', 'cavalier', 4], ['joust', 'knight', 8]]) {
     const s = kingdom('2026-11-04');
     s.gamesEntrants = [3];
     const res = storyFor(s, `${id}:results`);
@@ -1153,4 +1153,30 @@ test('the sailor, a job of its own by request (owner 2026-11-01): asked for, wor
   assert.deepEqual(VARIANTS.sailor, ['coil', 'haul']);
   // the Harbor tier still draws fishermen where it drew sailors: the same jobs as before for every villager
   for (let i = 0; i < 6000; i++) assert.notEqual(jobFor(SEED, i), 'sailor');
+});
+
+test('the Grand Joust (owner 2026-11-01): a knockout of eight guards that takes the whole video, at least 14 days apart', async () => {
+  const { storyFor, STORIES, takesOver, pickStory } = await import('../src/sim/stories.js');
+  const kingdom = () => ({
+    seed: SEED, date: '2026-11-04', day: 20, subscriberCount: 600, weather: 'clear', storyLog: {}, guardCaptain: 1,
+    buildings: [{ id: 'tournament', status: 'done' }], houses: [], gamesEntrants: [4, 9],
+    villagers: Array.from({ length: 13 }, (_, id) => ({ id, job: id === 12 ? 'farmer' : 'guard' })),
+    names: Object.fromEntries(Array.from({ length: 13 }, (_, id) => [id, { name: `V${id}`, day: 1 + id }])),
+  });
+  const s = kingdom();
+  const res = storyFor(s, 'joust:results');
+  assert.equal(res.riders.length, 8);
+  assert.deepEqual(res.rounds.map((r) => r.length), [4, 2, 1]);
+  // every bout's winner goes on, the last one is the champion, made a Knight
+  for (let k = 1; k < 3; k++) res.rounds[k].forEach((bt, i) => assert.deepEqual([bt.a, bt.b], [res.rounds[k - 1][2 * i].winner, res.rounds[k - 1][2 * i + 1].winner]));
+  assert.equal(res.rounds[2][0].winner, res.winner);
+  assert.equal(s.villagers[res.winner].job, 'knight');
+  assert.ok(res.riders.some((x) => x.id === 4) && res.riders.some((x) => x.id === 9), 'the guards who commented !join ride');
+  assert.ok(takesOver({ id: 'joust', step: 'results' }) && !takesOver({ id: 'joust', step: 'announce' }) && takesOver({ id: 'raid', step: 'attack' }));
+  assert.equal(STORIES.joust.cooldown, 14);
+  // not drawn again within 14 days of the last one
+  for (let d = 1; d < 14; d++) {
+    const k = { ...kingdom(), day: 20 + d, date: `2026-11-${String(4 + d).padStart(2, '0')}`, storyLog: { joust: 20 } };
+    assert.notEqual(pickStory(k)?.id, 'joust');
+  }
 });

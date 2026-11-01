@@ -46,6 +46,13 @@ const CSS = `
 #ov .credits .n i{display:block;font-family:'Inter',sans-serif;font-style:normal;font-weight:700;font-size:calc(var(--fs) * .55);letter-spacing:1px;color:#e3b23c;text-transform:uppercase}
 #ov .day{position:absolute;left:0;top:0;font-weight:700;font-size:30px;color:#fff;opacity:.92;text-shadow:0 2px 8px rgba(0,0,0,.9)}
 #ov .cap{position:absolute;left:0;right:0;bottom:30px;text-align:center}
+#ov .bracket{position:absolute;left:0;width:860px;height:470px;transform-origin:50% 0}
+#ov .bracket .bx{position:absolute;width:190px;height:36px;background:#e4e4e4;color:#1a1a1a;font-weight:800;font-size:18px;line-height:36px;padding:0 8px 0 18px;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+#ov .bracket .bx::before{content:'';position:absolute;left:0;top:0;bottom:0;width:9px;background:#1c1c1c}
+#ov .bracket .bx.up::before{background:#22c02c}
+#ov .bracket .bx.now{outline:4px solid #e3b23c}
+#ov .bracket .bx.out{opacity:.55}
+#ov .bracket .ttl{position:absolute;right:0;top:-6px;font-family:'Cinzel',serif;font-weight:700;font-size:38px;line-height:1;color:#fff4d6;text-align:right;text-shadow:0 3px 0 #6b4a12,0 5px 16px rgba(0,0,0,.85);padding-right:22px;border-right:10px solid #22c02c}
 #ov .foot{position:absolute;left:0;right:0;bottom:230px;text-align:center;font-weight:800;font-size:34px;letter-spacing:1px;color:#fff4d6;text-shadow:0 2px 0 #000,0 3px 12px rgba(0,0,0,.95)}
 #ov .cap span{display:inline-block;margin:0 8px;font-weight:900;font-size:64px;line-height:1.15;color:#fff;text-shadow:0 0 6px #000,0 4px 0 #000,0 6px 18px rgba(0,0,0,.9);-webkit-text-stroke:2px #000}
 #ov .cap span.on{color:#ffd35a}
@@ -67,12 +74,14 @@ export function createOverlay(root, data) {
     <div class="banner"></div>
     <div class="credits"><div class="roll"></div></div>
     <div class="cta"><div class="big">${s.cta1}<br>${s.cta2}</div><div class="btn">${s.btn}</div><div class="cmt">${s.cmt}</div></div>
+    <div class="bracket"></div>
     <div class="foot"></div>
     <div class="cap"></div>
   </div>`;
   root.appendChild(ov);
   const $ = (q) => ov.querySelector(q);
-  const banner = $('.banner'), foot = $('.foot');
+  const banner = $('.banner'), foot = $('.foot'), bracket = $('.bracket');
+  let bracketKey = null;
   const tagEls = [];
   const counter = $('.counter'), num = $('.num'), unit = $('.unit'), delta = $('.delta'), goal = $('.goal'), cta = $('.cta'), cap = $('.cap'), day = $('.day');
   const diff = data.diff;
@@ -178,6 +187,16 @@ export function createOverlay(root, data) {
       // many small name tags (the caravan): nearest first, hidden when they would overlap
       for (const el of tagEls) el.style.display = 'none';
       banner.style.opacity = 0;
+      // the Grand Joust's bracket (owner 2026-11-01): big over the riders lined up and at the end, small as a bout begins
+      const bk = tg?.bracket;
+      const key = bk ? JSON.stringify([bk.decided, bk.current, bk.champion, bk.mode]) : null;
+      if (key !== bracketKey) { bracketKey = key; bracket.innerHTML = bk ? bracketHTML(bk) : ''; }
+      if (bk) {
+        const small = bk.mode === 'small';
+        bracket.style.top = small ? '120px' : '150px'; // the small one under the shot's title
+        bracket.style.transform = small ? 'scale(0.55)' : 'none';
+        bracket.style.opacity = small ? Math.max(0, Math.min(1, (ev.activeU - 0.02) * 10, (0.3 - ev.activeU) * 10)) : Math.max(0, Math.min(1, (ev.activeU - 0.05) * 8, (0.97 - ev.activeU) * 12));
+      } else bracket.style.opacity = 0;
       foot.textContent = tg?.footer || '';
       foot.style.opacity = tg?.footer ? Math.max(0, Math.min(1, (ev.activeU - 0.05) * 6, (0.97 - ev.activeU) * 12)) : 0;
       // the builders' tags wait for the flight into the shot to end
@@ -225,6 +244,34 @@ export function createOverlay(root, data) {
       if (c) [...cap.children].forEach((sp, i) => sp.classList.toggle('on', t >= c.words[i].s && t < c.words[i].e + 0.05));
     },
   };
+}
+
+/**
+ * The bracket of the Grand Joust as HTML: the eight riders on the left, each round's winners to the right as far as it is
+ * decided, the champion and a cup at the end; lines join each pair to the one who went on. No backdrop (owner 2026-11-01).
+ */
+function bracketHTML(b) {
+  const BW = 190, BH = 36, X = [0, 222, 444, 666], TOP = 60, GAP = 50;
+  const ys = [Array.from({ length: 8 }, (_, i) => TOP + i * GAP)];
+  for (let k = 1; k <= 3; k++) ys.push(ys[k - 1].filter((_, i) => i % 2 === 0).map((y, i) => (y + ys[k - 1][2 * i + 1]) / 2));
+  const cols = [b.rounds[0].flatMap((bt) => [bt.a, bt.b])];
+  b.rounds.forEach((r, k) => cols.push(k < b.decided ? r.map((bt) => bt.winner) : r.map(() => null)));
+  // who went on from each column (their box gets the green bar), who is out
+  const wentOn = (k, id) => k < b.decided && b.rounds[k].some((bt) => bt.winner === id);
+  const out = (k, id) => k < b.decided && b.rounds[k].some((bt) => (bt.a === id || bt.b === id) && bt.winner !== id);
+  let html = '', lines = '';
+  cols.forEach((col, k) => col.forEach((id, i) => {
+    const y = ys[k][i];
+    const cls = ['bx', id !== null && (wentOn(k, id) || (k === 3 && b.champion)) ? 'up' : '', id !== null && out(k, id) ? 'out' : '', id !== null && b.current?.includes(id) && k === (b.decided) ? 'now' : ''].filter(Boolean).join(' ');
+    html += `<div class="${cls}" style="left:${X[k]}px;top:${y}px">${id === null ? '' : esc(b.names[id] || '')}</div>`;
+    if (k < 3 && i % 2 === 0) {
+      const y1 = y + BH / 2, y2 = ys[k][i + 1] + BH / 2, xm = X[k] + BW + 16, yn = ys[k + 1][i / 2] + BH / 2;
+      lines += `<polyline points="${X[k] + BW},${y1} ${xm},${y1} ${xm},${y2} ${X[k] + BW},${y2}" /><polyline points="${xm},${yn} ${X[k + 1]},${yn}" />`;
+    }
+  }));
+  const cup = b.champion ? `<svg style="position:absolute;left:${X[3] + 55}px;top:${ys[3][0] + 52}px" width="80" height="90" viewBox="0 0 80 90"><path d="M18 6h44v18c0 16-10 28-22 28S18 40 18 24z" fill="#e3b23c" stroke="#6b4a12" stroke-width="3"/><path d="M18 12H6c0 14 6 20 14 20M62 12h12c0 14-6 20-14 20" fill="none" stroke="#e3b23c" stroke-width="5"/><rect x="34" y="52" width="12" height="14" fill="#e3b23c"/><rect x="22" y="66" width="36" height="12" rx="2" fill="#e3b23c" stroke="#6b4a12" stroke-width="3"/></svg>` : '';
+  return `<svg style="position:absolute;left:0;top:0" width="860" height="470"><g fill="none" stroke="#f4f0e6" stroke-width="3" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,.8))">${lines}</g></svg>`
+    + (b.mode === 'big' ? '<div class="ttl">THE GRAND<br>JOUST</div>' : '') + html + cup;
 }
 
 function esc(s) {

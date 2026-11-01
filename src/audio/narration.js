@@ -151,6 +151,7 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   const r = rng(seed, 'narration', diff.date, 'en'); // 'en' keeps the draws of the days already published
   const pick = (a) => r.pick(a);
   if (diff.story?.id === 'raid') return raidScript(state, diff, pick);
+  if (diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds) return grandJoustScript(diff);
   // never the same line twice in one video (two buildings begun the same day)
   const said = new Set();
   const fresh = (a) => { const free = a.filter((f) => !said.has(f)), x = r.pick(free.length ? free : a); said.add(x); return x; };
@@ -295,6 +296,26 @@ function raidScript(state, diff, pick) {
     ['Look whose house is burning.', 18.4],
     ['By morning, three houses were gone.', 24.4],
     [e.missing ? 'And one villager was missing.' : 'And the bandits were gone.', 26.6],
+  ];
+  const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
+  const text = sentences.map((x) => x.text).join(' ');
+  return { sentences, text, words: words(text) };
+}
+
+/**
+ * The Grand Joust (owner 2026-11-01): its own script, each line at the start of its shot (JOUST_SHOTS in
+ * src/render/scene/stories/grandjoust.js). Names stay on screen.
+ */
+function grandJoustScript(diff) {
+  const n = diff.story.riders.length, word = { 8: 'Eight', 4: 'Four', 2: 'Two' }[n] || String(n);
+  const joined = diff.story.joined || 0;
+  const lines = [
+    [`The Grand Joust! ${word} guards ride for one title.`, 0.4],
+    [joined ? `${joined === 1 ? 'One of them' : `${joined} of them`} answered the call. Lances down!` : 'The first round. Lances down!', 3.9],
+    ['The semi-final! Only four are left.', 9.4],
+    ['The final! The winner becomes a Knight.', 14.9],
+    ['Kneel... and rise, a Knight of the kingdom!', 21.9],
+    ['Guards, comment join with an exclamation mark to ride next!', 25.9],
   ];
   const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
   const text = sentences.map((x) => x.text).join(' ');

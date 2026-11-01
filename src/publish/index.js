@@ -16,7 +16,8 @@ export function metadata({ state, diff }) {
   const d = diff.delta;
   // owner 2026-10-30: back to the day's numbers (the hook-first titles of 2026-10-29 did worse)
   // owner 2026-10-30: the two days of the night raid say what happened first
-  const raid = diff.story?.id === 'raid' ? { attack: 'The kingdom was attacked tonight 🔥 ', rescue: 'The guards brought them home 🛡️ ' }[diff.story.step] || '' : '';
+  const raid = diff.story?.id === 'raid' ? { attack: 'The kingdom was attacked tonight 🔥 ', rescue: 'The guards brought them home 🛡️ ' }[diff.story.step] || ''
+    : diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds ? 'The Grand Joust ⚔️ ' : ''; // owner 2026-11-01
   const title = `Day ${state.day}: ${raid}${d >= 0 ? '+' : ''}${d} villagers — ${state.subscriberCount} in the kingdom 👑 #shorts`;
   const description = `Every subscriber is one villager of Subscriber Kingdom. Subscribe to move in!\n${DESCRIPTION_TAGS}`;
   return { title, description, tags: ['subscriber kingdom', 'medieval', 'kingdom builder', 'castle', 'shorts'] };

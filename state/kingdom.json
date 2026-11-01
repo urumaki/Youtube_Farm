@@ -21834,10 +21834,52 @@
     "joined": true
    },
    {
+    "id": 763,
+    "name": "FrankieFerreira",
+    "job": "guard",
+    "day": 14,
+    "joined": true
+   },
+   {
+    "id": 13,
+    "name": "The_Knight_Of_Dice",
+    "job": "guard",
+    "day": 3,
+    "joined": true
+   },
+   {
+    "id": 213,
+    "name": "LuciusVon",
+    "job": "guard",
+    "day": 8,
+    "joined": true
+   },
+   {
     "id": 790,
     "name": "DawleyTownFc",
     "job": "guard",
     "day": 14,
+    "joined": true
+   },
+   {
+    "id": 810,
+    "name": "WilliamBabicki",
+    "job": "guard",
+    "day": 15,
+    "joined": true
+   },
+   {
+    "id": 255,
+    "name": "RezaSchuette",
+    "job": "guard",
+    "day": 8,
+    "joined": true
+   },
+   {
+    "id": 282,
+    "name": "Some_eandom_guy",
+    "job": "guard",
+    "day": 8,
     "joined": true
    }
   ],
@@ -21886,7 +21928,7 @@
    }
   ],
   "winner": 510,
-  "joined": 2,
+  "joined": 8,
   "cast": [
    {
     "id": 510,
@@ -21896,10 +21938,52 @@
     "joined": true
    },
    {
+    "id": 763,
+    "name": "FrankieFerreira",
+    "job": "guard",
+    "day": 14,
+    "joined": true
+   },
+   {
+    "id": 13,
+    "name": "The_Knight_Of_Dice",
+    "job": "guard",
+    "day": 3,
+    "joined": true
+   },
+   {
+    "id": 213,
+    "name": "LuciusVon",
+    "job": "guard",
+    "day": 8,
+    "joined": true
+   },
+   {
     "id": 790,
     "name": "DawleyTownFc",
     "job": "guard",
     "day": 14,
+    "joined": true
+   },
+   {
+    "id": 810,
+    "name": "WilliamBabicki",
+    "job": "guard",
+    "day": 15,
+    "joined": true
+   },
+   {
+    "id": 255,
+    "name": "RezaSchuette",
+    "job": "guard",
+    "day": 8,
+    "joined": true
+   },
+   {
+    "id": 282,
+    "name": "Some_eandom_guy",
+    "job": "guard",
+    "day": 8,
     "joined": true
    },
    {
@@ -21944,6 +22028,49 @@
     "job": "stonemason",
     "day": 17
    }
+  ],
+  "rounds": [
+   [
+    {
+     "a": 510,
+     "b": 763,
+     "winner": 510
+    },
+    {
+     "a": 13,
+     "b": 213,
+     "winner": 213
+    },
+    {
+     "a": 790,
+     "b": 810,
+     "winner": 790
+    },
+    {
+     "a": 255,
+     "b": 282,
+     "winner": 282
+    }
+   ],
+   [
+    {
+     "a": 510,
+     "b": 213,
+     "winner": 510
+    },
+    {
+     "a": 790,
+     "b": 282,
+     "winner": 790
+    }
+   ],
+   [
+    {
+     "a": 510,
+     "b": 790,
+     "winner": 510
+    }
+   ]
   ]
  },
  "featured": [

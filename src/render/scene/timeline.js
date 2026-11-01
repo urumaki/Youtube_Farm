@@ -5,6 +5,7 @@ import { BUILDINGS, JOBS, tavernScene } from '../../sim/tiers.js';
 import { CASTLE } from '../../sim/world.js';
 import { NIGHT_STORIES, storyCue } from './stories/index.js';
 import { RAID_SHOTS } from './stories/raid.js';
+import { JOUST_SHOTS } from './stories/grandjoust.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
 import { BAKEHOUSE_VARIANTS } from './bakery.js';
@@ -34,13 +35,15 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   for (const a of diff.added) if (!addedByHouse.has(a.house)) addedByHouse.set(a.house, a);
   const jobLabel = (j) => JOBS[j]?.label || j;
   // the night raid takes the whole video (owner 2026-10-30): its shots one after the other with hard cuts, no hook; the
-  // second day ends with the usual wide shot and call to action, the first runs to the end
-  if (diff.story?.id === 'raid' && RAID_SHOTS[diff.story.step]) {
-    const shots = RAID_SHOTS[diff.story.step];
-    const raid = shots.map(([shot, t0, t1]) => ({
-      kind: 'event', id: `raid_${shot}`, story: { ...diff.story, shot }, pos: castle.keep.clone(), radius: 12, front: 0, label: null, labels: [], cut: true, t0, t1,
+  // second day ends with the usual wide shot and call to action, the first runs to the end. So does the Grand Joust (owner
+  // 2026-11-01): the riders, the champion's three bouts, the crowning, the new Knight, the bracket drawn over them
+  const ownShots = diff.story?.id === 'raid' ? RAID_SHOTS[diff.story.step] : diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds ? JOUST_SHOTS : null;
+  if (ownShots) {
+    const own = ownShots.map(([shot, t0, t1]) => ({
+      kind: 'event', id: `${diff.story.id}_${shot}`, story: { ...diff.story, shot, ...(shot === 'crown' ? { step: 'crown' } : {}) }, pos: castle.keep.clone(), radius: 12, front: 0,
+      label: null, labels: [], cut: true, t0, t1, ...(diff.story.rounds ? { bracket: bracketAt(diff.story, shot) } : {}),
     }));
-    return { targets: raid, ...kingdomBox(houses), story: null, dusk: 0.8, start: 0, end: shots.at(-1)[2], takeover: true };
+    return { targets: own, ...kingdomBox(houses), story: null, dusk: 0.8, start: 0, end: ownShots.at(-1)[2], takeover: true };
   }
   // Days with named villagers follow the owner's order: the caravan opens the video (no castle hook),
   // then a few seconds of new buildings, then the named villagers at work. New houses are not shown
@@ -267,6 +270,18 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   // overcast days keep more light at the end so the wide shot stays readable
   const dusk = ['fog', 'rain', 'snow', 'cloudy'].includes(diff.weather) ? 0.55 : 0.8;
   return { targets, center, extent, story, dusk, start };
+}
+
+/**
+ * The bracket drawn over a shot of the Grand Joust (overlay.js): the rounds, the riders' names, how many rounds are decided
+ * so far, the bout being ridden, big (the lined-up riders, the end) or small (the start of a bout), or none.
+ */
+function bracketAt(story, shot) {
+  const names = Object.fromEntries(story.riders.map((r) => [r.id, r.name]));
+  const round = { quarter: 0, semi: 1, final: 2 }[shot];
+  const bout = round !== undefined ? story.rounds[round].find((b) => b.a === story.winner || b.b === story.winner) : null;
+  const mode = shot === 'intro' || shot === 'outro' ? 'big' : bout ? 'small' : null;
+  return mode && { rounds: story.rounds, names, decided: shot === 'outro' ? story.rounds.length : round ?? 0, current: bout ? [bout.a, bout.b] : null, mode, champion: shot === 'outro' ? story.winner : null };
 }
 
 /** The kingdom's extent, for the wide shot. */

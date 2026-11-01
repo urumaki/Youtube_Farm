@@ -13,10 +13,12 @@ import { boxGeo, cylGeo } from '../kit.js';
 import { rig, particles } from '../work.js';
 import { horse } from './royal.js';
 import { castTag, ease, clamp01 } from './common.js';
+import { buildGrandJoust } from './grandjoust.js';
 
 const CROWD = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d', '#a0522d', '#56606e', '#c2a15a', '#4a6a64', '#b5476b'];
-const COLORS = ['#9b1b30', '#1d2f6f', '#2f6b3a', '#c27a1d']; // each rider's colours (cloth, shield, chariot)
-const COATS = ['#6b4226', '#2a2522', '#9a9590', '#a0582c']; // bay, black, grey, chestnut
+// each rider's colours (cloth, shield, chariot); the Grand Joust's eight riders use all of them (grandjoust.js)
+export const COLORS = ['#9b1b30', '#1d2f6f', '#2f6b3a', '#c27a1d', '#5b2a6e', '#1f6f73', '#8a8a2a', '#6e3b1d'];
+export const COATS = ['#6b4226', '#2a2522', '#9a9590', '#a0582c']; // bay, black, grey, chestnut
 const WIN = { race: 0.8, joust: 0.74 }; // the share of the shot when the winner is known
 const lerp = THREE.MathUtils.lerp;
 
@@ -25,13 +27,13 @@ function mat(M, color) {
   m.color.set(color);
   return m;
 }
-const gallop = (h, ph, amp = 0.6) => {
+export const gallop = (h, ph, amp = 0.6) => {
   h.legs.forEach((l, j) => { l.rotation.x = amp * Math.sin(ph + (j < 2 ? 0 : Math.PI * 0.8) + (j % 2) * 0.5); });
   h.g.position.y = amp * 0.12 * Math.abs(Math.sin(ph)); // every horse stands at y = 0 in its parent
 };
 
 /** A rider on a horse (faces +z): helmet, shield on the left arm, a lance couched under the right arm. */
-function mount(M, color, coat) {
+export function mount(M, color, coat) {
   const h = horse(M, { coat, cloth: color });
   const R = rig(M, color, { seated: true });
   R.root.position.set(0, 1.2, -0.12); // hips on the saddle
@@ -82,7 +84,9 @@ function chariot(M, color, coat) {
   return { g, h, wheels, D };
 }
 
-export function buildJoust({ story, M, buildings, seed }) {
+export function buildJoust(args) {
+  const { story, M, buildings, seed } = args;
+  if (story.shot) return buildGrandJoust(args); // the Grand Joust's own shots (owner 2026-11-01)
   const it0 = buildings.items.tournament;
   if (!it0) return null;
   const kind = story.id === 'race' ? 'race' : 'joust';
@@ -95,33 +99,7 @@ export function buildJoust({ story, M, buildings, seed }) {
   const labels = [];
   const tagOf = (c, P, k) => labels.push({ ...castTag(c), P, c, sub0: castTag(c).sub, h: k, pos: new THREE.Vector3() });
 
-  // ------------------------------------------------------------------ the far stand: named villagers in the front rows
-  const spectators = [];
-  const named = story.crowd || [];
-  let next = 0;
-  for (let k = 0; k < 4; k++) {
-    const n = 15 - k;
-    for (let i = 0; i < n; i++) {
-      const slot = k * 20 + i;
-      if (rand01(seed, 'joust-seat', slot) < 0.22 && k > 0) continue; // a few empty seats
-      const c = k < 2 && i % 2 === 0 && next < named.length ? named[next++] : null;
-      const color = c ? JOBS[c.job]?.color || '#7a6a55' : CROWD[Math.floor(rand01(seed, 'joust-c', slot) * CROWD.length)];
-      const P = rig(M, color, { seated: true });
-      const x = -12 + (24 * (i + 0.5)) / n + (rand01(seed, 'joust-x', slot) - 0.5) * 0.5;
-      P.root.position.set(x, 1.2 + 0.9 * k - 0.47, -(24 + 1.6 * k) + 0.45);
-      group.add(P.root);
-      spectators.push({ P, ph: rand01(seed, 'joust-ph', slot) * 6, k });
-      if (c) labels.push({ ...castTag(c), pos: toWorld(x, 1.2 + 0.9 * k + 1.1, -(24 + 1.6 * k) + 0.45), crowd: true });
-    }
-  }
-  const cheer = (t, loud) => {
-    for (const s of spectators) {
-      const ph = t * 7 + s.ph, up = loud * (0.6 + 0.4 * Math.sin(ph * 0.7));
-      s.P.r.g.rotation.set(lerp(-0.5, -2.8, up) + 0.2 * Math.sin(ph), 0, -0.1);
-      s.P.l.g.rotation.set(s.ph > 3 ? lerp(-0.5, -2.6, up) : -0.4, 0, 0.1);
-      s.P.root.position.y = 1.2 + 0.9 * s.k - 0.47 + (loud > 0.5 ? 0.08 * Math.abs(Math.sin(ph)) : 0);
-    }
-  };
+  const { cheer } = stands({ group, M, story, seed, toWorld, labels });
   const riders = story.riders || [];
   if (!riders.length) return null;
 
@@ -257,4 +235,39 @@ export function buildJoust({ story, M, buildings, seed }) {
       },
     };
   }
+}
+
+/**
+ * The far stand of the Tournament Ground (lot frame): four rows of spectators, the named villagers of story.crowd in the
+ * front rows with name tags (pushed onto labels). Returns { cheer(t, loud) }.
+ */
+export function stands({ group, M, story, seed, toWorld, labels }) {
+  const spectators = [];
+  const named = story.crowd || [];
+  let next = 0;
+  for (let k = 0; k < 4; k++) {
+    const n = 15 - k;
+    for (let i = 0; i < n; i++) {
+      const slot = k * 20 + i;
+      if (rand01(seed, 'joust-seat', slot) < 0.22 && k > 0) continue; // a few empty seats
+      const c = k < 2 && i % 2 === 0 && next < named.length ? named[next++] : null;
+      const color = c ? JOBS[c.job]?.color || '#7a6a55' : CROWD[Math.floor(rand01(seed, 'joust-c', slot) * CROWD.length)];
+      const P = rig(M, color, { seated: true });
+      const x = -12 + (24 * (i + 0.5)) / n + (rand01(seed, 'joust-x', slot) - 0.5) * 0.5;
+      P.root.position.set(x, 1.2 + 0.9 * k - 0.47, -(24 + 1.6 * k) + 0.45);
+      group.add(P.root);
+      spectators.push({ P, ph: rand01(seed, 'joust-ph', slot) * 6, k });
+      if (c) labels.push({ ...castTag(c), pos: toWorld(x, 1.2 + 0.9 * k + 1.1, -(24 + 1.6 * k) + 0.45), crowd: true });
+    }
+  }
+  return {
+    cheer(t, loud) {
+      for (const s of spectators) {
+        const ph = t * 7 + s.ph, up = loud * (0.6 + 0.4 * Math.sin(ph * 0.7));
+        s.P.r.g.rotation.set(lerp(-0.5, -2.8, up) + 0.2 * Math.sin(ph), 0, -0.1);
+        s.P.l.g.rotation.set(s.ph > 3 ? lerp(-0.5, -2.6, up) : -0.4, 0, 0.1);
+        s.P.root.position.y = 1.2 + 0.9 * s.k - 0.47 + (loud > 0.5 ? 0.08 * Math.abs(Math.sin(ph)) : 0);
+      }
+    },
+  };
 }

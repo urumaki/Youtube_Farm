@@ -79,7 +79,9 @@ export const STORIES = {
   // joust, then the King names the winner in the throne room: a Cavalier for the race, a Knight for the joust. Only named
   // guards ride, never the Captain of the Guard
   race: { minPop: 100, cooldown: 14, weight: 3, needs: (s) => built(s, 'tournament') && jousters(s).length >= 4 && !['rain', 'snow'].includes(s.weather), steps: ['announce', 'results'] },
-  joust: { minPop: 100, cooldown: 14, weight: 3, needs: (s) => built(s, 'tournament') && jousters(s).length >= 2 && !['rain', 'snow'].includes(s.weather), steps: ['announce', 'results'] },
+  // owner 2026-11-01: the joust's results day is the Grand Joust, a knockout of eight guards that takes the whole video
+  // (`takeover` on that step, timeline.js; raid.js style), at least 14 days apart
+  joust: { minPop: 100, cooldown: 14, weight: 3, takeover: ['results'], needs: (s) => built(s, 'tournament') && jousters(s).length >= 8 && !['rain', 'snow'].includes(s.weather), steps: ['announce', 'results'] },
   // owner 2026-10-27 (stories with a beginning and an end keep viewers watching): six more.
   // A merchant ship sails into the harbor with named villagers waving on the quay, the next day named porters unload it,
   // then it sails away
@@ -112,6 +114,12 @@ export const STORIES = {
       && !Object.values(STORIES).some((x) => x.date === tomorrow(s)) },
 };
 const tomorrow = (s) => new Date(Date.parse(s.date) + 86400000).toISOString().slice(5, 10);
+
+/** True when the story ({ id, step }) takes the whole video (the raid; the Grand Joust's results day). */
+export function takesOver(story) {
+  const t = story && STORIES[story.id]?.takeover;
+  return t === true || (Array.isArray(t) && t.includes(story.step));
+}
 const GUARDS = ['guard', 'knight'], LAND = ['farmer', 'peasant', 'shepherd'];
 const teamOf = (s, jobs) => namedVillagers(s).filter((n) => jobs.includes(n.job));
 const STORY_CHANCE = 0.5;
@@ -471,7 +479,7 @@ function jousters(state) {
 }
 
 // how many ride in each game, and what the winner is made
-export const GAMES = { race: { riders: 4, title: 'cavalier' }, joust: { riders: 2, title: 'knight' } };
+export const GAMES = { race: { riders: 4, title: 'cavalier' }, joust: { riders: 8, title: 'knight', bracket: true } };
 
 /**
  * The entrants of a game (owner 2026-10-28): n named guards drawn without replacement, first among those who commented
@@ -510,12 +518,27 @@ function game(state, r, arc, id) {
   const riders = drawGuards(state, r, GAMES[id].riders);
   if (riders.length < 2) return null;
   state.gamesEntrants = []; // the game is run: the next games take new entries
-  const winner = r.pick(riders).id;
+  // the Grand Joust (owner 2026-11-01): a knockout in the order drawn, each bout 50/50, the rounds decided now
+  const rounds = GAMES[id].bracket ? knockout(riders, r) : null;
+  const winner = rounds ? rounds.at(-1)[0].winner : r.pick(riders).id;
   promote(state, winner, GAMES[id].title);
   // seven named villagers in the stands (with the riders, few enough tags that all show at once)
   const pool = namedVillagers(state).filter((n) => !riders.some((x) => x.id === n.id)).slice(0, 30), crowd = [];
   while (crowd.length < 7 && pool.length) crowd.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
-  return { game: id, day: since, riders, crowd, winner, joined: riders.filter((x) => x.joined).length, cast: [...riders, ...crowd] };
+  return { game: id, day: since, riders, ...(rounds ? { rounds } : {}), crowd, winner, joined: riders.filter((x) => x.joined).length, cast: [...riders, ...crowd] };
+}
+
+/** A knockout over the riders (as many as a power of two allows, in order): rounds of bouts { a, b, winner }. */
+function knockout(riders, r) {
+  let field = riders.slice(0, 2 ** Math.floor(Math.log2(riders.length))).map((x) => x.id);
+  const rounds = [];
+  while (field.length > 1) {
+    const bouts = [];
+    for (let i = 0; i < field.length; i += 2) bouts.push({ a: field[i], b: field[i + 1], winner: r.chance(0.5) ? field[i] : field[i + 1] });
+    rounds.push(bouts);
+    field = bouts.map((bt) => bt.winner);
+  }
+  return rounds;
 }
 
 /** The champion of the games becomes a Knight (owner 2026-10-27), the winner of the chariot race a Cavalier (2026-10-28). */
