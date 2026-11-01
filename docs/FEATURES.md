@@ -130,7 +130,14 @@ Add new owner decisions here.
   first), title "Day N: A day as a Scholar 📜 ...". Shot options this added: a story's big label (`label`, `labelPos`,
   `labelFrom`), the light changing through a shot (`phaseAt`), from inside to outside (`interiorAt`), a shot's near
   plane (`camera.near`), eye-level shots (`low`). Test with `npm run render -- --real --subs N --built university
-  --story dayinlife --stills 2.6,6,10,14,19,23,27.5,29.5` (forced, the day is clear).
+  --story dayinlife --stills 3,6,10,14,19,23,27.5,29.5` (forced, the day is clear).
+  Owner's first look (2026-11-01): the camera stays in the scholar's eyes (pov.js) from the drop into his head (now one
+  smooth curve in behind his head, no cut to black) to the flight out of the window: the book in his hands (placed between
+  them each frame), the doors swinging open before him (a pause while they open; a painted passage behind them, since the
+  gatehouse's own door stands there), the corridor's talkers wearing the names of the kingdom's other named scholars
+  (`story.others`, nearest first), his own page in the lecture and by the candle. Every student in the lecture now has an
+  ink bottle beside the book and a quill (`quill` in room.js), bends over the desk and writes. Local renders need the
+  Kokoro Python: a worktree without `.env` falls back to no voice, so pass `PYTHON=tools/venv/Scripts/python.exe`.
   The games at the Tournament Ground (owner 2026-10-27, reworked 2026-10-28): two events of their own, the chariot race
   (`race`) and the joust (`joust`), each over two days once the Tournament Ground stands (no rain or snow, cooldown 14).
   Day 1 (`announce`, scene `stories/games.js` on the crier's dais of `proclaim.js`): the town crier reads the

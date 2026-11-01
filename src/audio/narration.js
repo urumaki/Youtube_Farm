@@ -337,7 +337,7 @@ function dayInLifeScript(diff) {
   const lines = [
     [`Day ${diff.day}. Today we step inside the head of a scholar.`, 0.4],
     ['Morning. Never without a book, not even on the road.', 4.7],
-    ['The great doors of the University swing open.', 9.2],
+    ['The great doors of the University swing open.', 8.6],
     ['In the halls, everyone is arguing about something.', 12.7],
     ['The lesson begins. Every word goes into the book.', 17.2],
     ['Night falls. One more page by candlelight...', 21.7],

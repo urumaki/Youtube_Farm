@@ -145,7 +145,10 @@ export function buildLectureRoom({ variant, anchor, away, M, seed, id, heightAt,
     for (const x of [-2.6, 0, 2.6]) b.add('woodDark', boxGeo(0.08, 0.45, 0.35), x, 0.22, z + 0.1);
     b.add('wood', boxGeo(5.6, 0.05, 0.5).rotateX(0.18), 0, 0.78, z - 0.55);
     for (const x of [-2.6, 0, 2.6]) b.add('woodDark', boxGeo(0.08, 0.76, 0.4), x, 0.38, z - 0.55);
-    for (const x of seats) b.add('clothIvory', boxGeo(0.42, 0.03, 0.3).rotateX(0.18), x, 0.82, z - 0.55);
+    for (const x of seats) {
+      b.add('clothIvory', boxGeo(0.42, 0.03, 0.3).rotateX(0.18), x, 0.82, z - 0.55);
+      b.add('iron', cylGeo(0.035, 0.042, 0.07, 8), x + 0.5, 0.86, z - 0.62); // the ink bottle at the writing hand (owner 2026-11-01)
+    }
   }
   // tall windows with daylight down the right wall, a candle stand by the lectern
   for (const z of [0.8, 3.1, 5.0]) {
@@ -171,6 +174,7 @@ export function buildLectureRoom({ variant, anchor, away, M, seed, id, heightAt,
     const P = rig(M, color, { seated: true });
     P.root.position.set(x + (r ? 0.12 : -0.1), 0, z + 0.12);
     P.root.rotation.y = Math.PI + (x ? -Math.sign(x) * 0.12 : 0);
+    P.l.hand.add(quill(M)); // the rig's `l` arm is the right hand (it faces +z)
     room.add(P.root);
     students.push({ P, i: r * 3 + k });
   }));
@@ -190,6 +194,8 @@ export function buildLectureRoom({ variant, anchor, away, M, seed, id, heightAt,
     room,
     cam,
     floorAt: () => room.position.y,
+    students, // { P, i }: the front row's middle seat is i 1 (a villager's day sits there, stories/dayinlife.js)
+    asker: hand,
     focus: toWorld(0, 1.4, 0.25),
     labelPos: toWorld(0, 2.75, 0.4),
     update(t, inside) {
@@ -197,8 +203,11 @@ export function buildLectureRoom({ variant, anchor, away, M, seed, id, heightAt,
       ws.update(t);
       for (const { P, i } of students) {
         const up = i === hand && Math.sin(t * 0.7 + 1) > 0.55;
-        P.r.g.rotation.set(up ? -2.9 : -1.05 + 0.08 * Math.sin(t * 5 + i), 0, up ? 0.1 : 0.05 * Math.sin(t * 3 + i));
-        P.l.g.rotation.set(-0.95, 0, 0);
+        // writing (owner 2026-11-01): bent over the desk, the quill on the page in small strokes, the hand moving along the line
+        P.body.rotation.x = up ? 0.05 : 0.25;
+        // (the bend at the hips swings the arms back: more lift here)
+        P.l.g.rotation.set(up ? -0.6 : -1.2 + 0.03 * Math.sin(t * 11 + i), up ? 0 : 0.14 * Math.sin(t * 1.7 + i * 2.1), up ? -0.1 : 0.35 + 0.02 * Math.sin(t * 13 + i)); // in over the page
+        P.r.g.rotation.set(up ? -2.9 : -1.1, 0, up ? 0.1 : -0.25); // holding the page, or a hand up
         nod(P, up ? -0.1 : 0.3 + 0.25 * Math.max(0, Math.sin(t * 0.8 + i * 1.7)));
       }
       for (const { l, i } of lights) {
@@ -207,6 +216,19 @@ export function buildLectureRoom({ variant, anchor, away, M, seed, id, heightAt,
       }
     },
   };
+}
+
+/**
+ * A goose quill held in a hand (the arm along -y): the nib down at the page, the long white feather standing up out of the
+ * fingers (local +z: up when the arm reaches forward to write), so it shows from the writer's own eyes too.
+ */
+export function quill(M) {
+  const g = new THREE.Group();
+  const nib = new THREE.Mesh(cylGeo(0.005, 0.009, 0.07, 6).rotateX(Math.PI / 2).translate(0, -0.05, -0.02), M.iron);
+  const shaft = new THREE.Mesh(cylGeo(0.006, 0.006, 0.3, 6).rotateX(Math.PI / 2).translate(0, -0.03, 0.14), M.clothIvory);
+  const vane = new THREE.Mesh(boxGeo(0.006, 0.055, 0.22).translate(0, -0.005, 0.19), M.clothIvory);
+  for (const m of [nib, shaft, vane]) { m.rotation.x = 0.35; g.add(m); }
+  return g;
 }
 
 // The University's library (owner 2026-10-30): the named librarian puts a book back on a tall shelf, reaching up to the

@@ -409,7 +409,8 @@ const BUILD = {
     const scholars = namedVillagers(state).filter((n) => n.job === 'scholar').slice(0, 12);
     if (!scholars.length) return null;
     const hero = r.pick(scholars);
-    return { job: 'scholar', hero, cast: [hero] };
+    // the other named scholars talking in the corridor wear their names (owner 2026-11-01)
+    return { job: 'scholar', hero, cast: [hero], others: roleCast(state, r, ['scholar'], 8, [hero]) };
   },
   raid(state, r, arc) {
     if (arc?.step === 'rescue') {
