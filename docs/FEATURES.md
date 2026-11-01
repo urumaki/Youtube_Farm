@@ -418,6 +418,14 @@ Add new owner decisions here.
   slaughter for the butcher, and "Ministry of Trade" is not a trade. Street sweeper still asks for nothing (it had become
   a chimney sweep). Names: "be named as X" and "my name is sir X". Complaints: "still not in this village", "still
   looking for myself". Not made: toilet scrubber, noble, witch.
+- From the comments on the day 16 video (owner 2026-11-01, `requests.js`, read by the 2026-11-01 run): buying from someone
+  is no request ("can I buy armor from the blacksmith", "get a crossbow from the craft smith"; `NOT_ASKED`, unless "job",
+  "role"... follows the job word), nor is a question about others ("why is a bishop drinking", "where are the
+  stonemasons", "are there ranks for the guards"); a boat or ship captain asks for the fisherman; the job after "a job
+  of", "work as"... comes first ("ordinary citizen, will take a job of hunter": `JOB_OF`). Set right in
+  `state/kingdom.json` and `state/history/2026-11-01.json`: Furina-Nunsa8849 and The_Knight_Of_Dice back to guard (made
+  blacksmith and bishop by those remarks), AlfredoMaglasang hunter (was peasant), LiamMossor fisherman (asked for a boat
+  captain, was left a guard). The day 17 video (2026-11-01) was still private, its comments not read yet.
 - The jobs given by the old keywords set right in `state/kingdom.json` (owner 2026-10-29, `ffd110a`): each villager's own
   requests read again by hand; 26 changed (14 tax collectors made by "my lord", guards made by "sir", thanks read as a
   request), 6 who never asked for a job back to the job they were born to. "Bozo" ("I come for bread") is the drunkard (beggar), the owner says.

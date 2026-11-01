@@ -19,7 +19,7 @@ const KEYWORDS = [
   // owner 2026-10-28: a Knight, a Cavalier and the Captain of the Guard are only won at the tournaments, so asking makes a guard
   // (2026-10-29: "teutonic Kinght", "kight", "the king's night", paladin, "chief of war", men-at-arms, a defender of the city;
   // "sir" alone is how people speak to the king, "an army engineer" asks for the engineer)
-  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|general|\barmy(?!\s*engineer)|captain(?!\s+of\s+(a|the)\s+(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
+  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|general|\barmy(?!\s*engineer)|(?<!(boat|ship|sea)\s?)captain(?!\s+of\s+(a|the)\s+(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
   [/\bguard|towns?guard|\b(flag|standard|banner)\s*bearer|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
   [/chapel|church|cathedral|cappella|chiesa/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
@@ -34,7 +34,7 @@ const KEYWORDS = [
   [/\bpeasant|bracciant|\bcitizen|cittadin|commoner|gardener|grounds?\s*keeper|groudnskeeper|giardinier|labou?rer/, 'peasant'],
   // the banker is a money changer until the Bank (2026-10-29)
   [/merchant|\bbanker|banchier|money\s*(changer|lender)|\btrader|\bshop|mercante|negozi|head of trade|(?<!ministry of )\btrade\b|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
-  [/\bsailor|\bpirate|captain of (a|the) (ship|boat|vessel)|\bsea\s*captain|ship'?s captain|marinaio|pirata/, 'fisherman'],
+  [/\bsailor|\bpirate|captain of (a|the) (ship|boat|vessel)|\b(sea|boat|ship)\s*captain|ship'?s captain|marinaio|pirata/, 'fisherman'],
   [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
   [/scholar|\bscribe|studioso|scientist|physicist|academic|scienziat|inventor|professor|professore/, 'scholar'],
   // owner 2026-10-30: the librarian is a job of its own (before, a scholar)
@@ -86,6 +86,19 @@ const KEYWORDS = [
 const WISH = /\b(when|once|until|till|if|after)\s+(there|we|they|you|the kingdom|it)\b[^.!?,]*$|\bquando\s+ci\s+sar[àa]nno?\b[^.!?,]*$/;
 // "I'm the town crier but can I be a teacher": the job they have, said before asking for another, is not the request
 const NOW_BEFORE = /\b(i'?m|im|i am)\s+(the\s+|a\s+|an\s+)?(town\s+|local\s+)?$/, NOW_AFTER = /^[\w\s'-]{0,25}\bbut\b/;
+// owner 2026-11-01, from the comments of 2026-10-31: buying from someone is no request ("can I buy armor from the
+// blacksmith", "get a crossbow from the craft smith": a guard was made a blacksmith), nor a question about others ("why is
+// a bishop drinking", "where are the stonemasons", "are there ranks for the guards": a guard was made a bishop)
+const NOT_ASKED = new RegExp([
+  /\bfrom\s+(the\s+|a\s+|an\s+|my\s+|our\s+|your\s+|this\s+|that\s+)?(\w+\s+)?$/.source,
+  /\b(buy|purchase|order|borrow|get|have)\s+(a|an|some|the|my|new|me|more)?\s*((?!job|role|position|work|career|chance|spot|place|apprentic)\w+\s+){0,3}$/.source,
+  /\b(why|where|when|how|who|what)\s+(is|are|was|were|does|do|did)\s+(a|an|the|my|our|all|those|these|that|this)?\s*(\w+\s+)?$/.source,
+  /\b(is|are)\s+there\b[^.!?]*$/.source,
+].join('|'));
+// ...unless a word like "job" follows the job: "can I get a blacksmith job" asks for the blacksmith
+const JOB_AFTER = /^[\w-]*\s+(job|role|position|apprenticeship|work)\b/;
+// "Ordinary citizen, will take a job of hunter": the job named after "a job of", "work as"... is the request, whatever came first
+const JOB_OF = /\b(job|work|career|role|position|post)\s+(of|as)\s+(a\s+|an\s+|the\s+)?$/;
 
 // Comment text is untrusted input. It is never run, never passed to a shell, a template or a language model:
 // only the fixed regexes in this file read it, and then it is dropped. plainText() makes it safe to scan: a
@@ -109,11 +122,12 @@ export function wantsFromText(text) {
       if (m.index >= nameAt[0] && m.index < nameAt[1]) continue;
       if (WISH.test(t.slice(Math.max(0, m.index - 60), m.index))) continue;
       if (NOW_BEFORE.test(t.slice(Math.max(0, m.index - 20), m.index)) && NOW_AFTER.test(t.slice(m.index))) continue;
-      hits.push([m.index, job]);
+      if (NOT_ASKED.test(t.slice(Math.max(0, m.index - 50), m.index)) && !JOB_AFTER.test(t.slice(m.index))) continue;
+      hits.push([JOB_OF.test(t.slice(Math.max(0, m.index - 25), m.index)) ? -1 : m.index, job, m.index]);
       break;
     }
   }
-  return [...new Set(hits.sort((a, b) => a[0] - b[0]).map((h) => h[1]))];
+  return [...new Set(hits.sort((a, b) => a[0] - b[0] || a[2] - b[2]).map((h) => h[1]))];
 }
 
 /** Jobs a villager can take today: everything unlocked by the reached tiers, plus the request-only ones; never an earned one. */

@@ -1130,3 +1130,17 @@ test('the night raid (owner 2026-10-30): two days that take the whole video, a g
   const later = { ...ok, storyLog: { raid: s.day + 1 }, day: s.day + 20, storyArc: null };
   for (let d = 0; d < 40; d++) assert.notEqual(pickStory({ ...later, date: `2026-12-${String(1 + (d % 28)).padStart(2, '0')}`, storyLog: { raid: s.day + 1 } })?.id, 'raid');
 });
+
+test('comments of 2026-10-31 (owner 2026-11-01): buying from someone and questions about others are no request; a boat captain fishes', async () => {
+  const { wantsFromText } = await import('../src/sim/requests.js');
+  const first = (t) => wantsFromText(t)[0] ?? null;
+  for (const [t, job] of Object.entries({
+    'Can I buy a Lance and Armor upgrade from blacksmith?': null, 'Can I get a crossbow from the craft smith': null,
+    'Wait a second... why is a bishop drinking\n\nSide note when is the tournament?': null, 'Are there ranks for the guards': null,
+    '(also where are the stonemasons?)': null, 'Day 3 of asking to be a boat captain': 'fisherman', 'Ordinary Citizen Will Take a job of Hunter': 'hunter',
+    // still requests
+    'can I get a blacksmith job': 'blacksmith', 'can I have a job as a blacksmith': 'blacksmith', 'Day-2 my lord can i be a blacksmith': 'blacksmith',
+    'May I be a wandering trader that sells wood to the carpenter': 'merchant', 'a citizen': 'peasant', 'can I be the captain of the guard': 'guard',
+    'promote me from farmer to blacksmith': 'blacksmith',
+  })) assert.equal(first(t), job, t);
+});

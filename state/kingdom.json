@@ -15091,8 +15091,8 @@
    "name": "The_Knight_Of_Dice",
    "author": "UCRn79g9kHNpn1avTlvMH2vA",
    "day": 3,
-   "job": "bishop",
-   "requestDay": 17,
+   "job": "guard",
+   "requestDay": 16,
    "complainDay": 12,
    "joinDay": 13
   },
@@ -16948,7 +16948,7 @@
    "name": "LiamMossor",
    "author": "UCVsjhdwrD2RVr37baTQFdkQ",
    "day": 8,
-   "job": "guard",
+   "job": "fisherman",
    "requestDay": 17,
    "complainDay": 17
   },
@@ -19911,8 +19911,8 @@
    "name": "Furina-Nunsa8849",
    "author": "UCT8tsuNp430lZfNwitheX8A",
    "day": 14,
-   "job": "blacksmith",
-   "requestDay": 17
+   "job": "guard",
+   "requestDay": 16
   },
   "751": {
    "name": "spidermoth_shadowstal…",
@@ -20701,7 +20701,7 @@
    "name": "AlfredoMaglasang",
    "author": "UCKyh7wACyRIOT9jAJZbteeQ",
    "day": 17,
-   "job": "peasant",
+   "job": "hunter",
    "requestDay": 17
   },
   "877": {
