@@ -13,7 +13,7 @@ import { wantsFromText, nameFromText, complainsFromText } from './sim/requests.j
 import { buildScript, sentenceAnchors } from './audio/narration.js';
 import { synthesize, captionPhrases } from './audio/tts/index.js';
 import { mixSoundtrack, VOICE_DELAY } from './audio/mix.js';
-import { renderVideo, renderStills, renderGallery, sceneCues } from './render/capture.js';
+import { renderVideo, renderStills, renderGallery, preparePage } from './render/capture.js';
 import { publish } from './publish/index.js';
 
 export function today() {
@@ -70,27 +70,34 @@ export function summarizeDiff(diff) {
 export async function produceVideo(state, diff, { out, quality, tts, log = console, workDir, needVoice = false } = {}) {
   const dir = workDir || path.join('.cache', 'work', `${state.date}_en_${state.subscriberCount}`);
   fs.mkdirSync(dir, { recursive: true });
-  // the shot plan first, so each sentence can wait for the shot it talks about
-  const cues = await sceneCues({ mode: 'video', state, diff, quality }, { log });
-  const script = buildScript(state, diff, { shots: cues });
-  log.log(`[audio] script (${script.words} words): ${script.text}`);
-  const anchors = sentenceAnchors(script.sentences, cues);
-  const sentences = script.sentences.map((s, i) => ({ ...s, at: anchors[i] === null ? null : anchors[i] - VOICE_DELAY }));
-  const voice = await synthesize(sentences, { outDir: dir, provider: tts, log });
-  log.log(`[audio] ${voice.provider} narration ${voice.duration.toFixed(2)} s`);
-  // owner 2026-10-29: a saved day made again always has the narrator (no silent video when the voice could not run)
-  if (needVoice && voice.provider === 'none') throw new Error('no narrator voice (is PYTHON set in .env for Kokoro?); pass --tts none for a silent test');
-  const captions = captionPhrases(voice.words, VOICE_DELAY);
-  const data = { mode: 'video', state, diff, captions, quality };
-  const audio = async (stats) => {
-    const file = mixSoundtrack({ narration: voice.file, outDir: dir, seed: state.seed, date: state.date, weather: diff.weather, cues: stats?.cues || [] });
-    log.log(`[audio] soundtrack mixed with ${stats?.cues?.length || 0} camera cues`);
-    return file;
-  };
-  const result = await renderVideo(data, out, { audio, log });
-  if (result.errors.length) log.error(`[render] browser console errors: ${result.errors.join(' | ')}`);
-  fs.writeFileSync(out.replace(/\.mp4$/, '.json'), JSON.stringify({ date: state.date, subscribers: state.subscriberCount, script: script.text, tts: voice.provider, captions, stats: result.stats, renderSeconds: result.seconds }, null, 1));
-  return { out, script, voice, result };
+  // the shot plan first, so each sentence can wait for the shot it talks about; the same page renders frames later
+  const prepared = await preparePage({ mode: 'video', state, diff, quality }, { log });
+  let handed = false;
+  try {
+    const cues = prepared.stats.cues || [];
+    const script = buildScript(state, diff, { shots: cues });
+    log.log(`[audio] script (${script.words} words): ${script.text}`);
+    const anchors = sentenceAnchors(script.sentences, cues);
+    const sentences = script.sentences.map((s, i) => ({ ...s, at: anchors[i] === null ? null : anchors[i] - VOICE_DELAY }));
+    const voice = await synthesize(sentences, { outDir: dir, provider: tts, log });
+    log.log(`[audio] ${voice.provider} narration ${voice.duration.toFixed(2)} s`);
+    // owner 2026-10-29: a saved day made again always has the narrator (no silent video when the voice could not run)
+    if (needVoice && voice.provider === 'none') throw new Error('no narrator voice (is PYTHON set in .env for Kokoro?); pass --tts none for a silent test');
+    const captions = captionPhrases(voice.words, VOICE_DELAY);
+    const data = { mode: 'video', state, diff, captions, quality };
+    const audio = async (stats) => {
+      const file = mixSoundtrack({ narration: voice.file, outDir: dir, seed: state.seed, date: state.date, weather: diff.weather, cues: stats?.cues || [] });
+      log.log(`[audio] soundtrack mixed with ${stats?.cues?.length || 0} camera cues`);
+      return file;
+    };
+    handed = true; // renderVideo closes it
+    const result = await renderVideo(data, out, { audio, log, prepared });
+    if (result.errors.length) log.error(`[render] browser console errors: ${result.errors.join(' | ')}`);
+    fs.writeFileSync(out.replace(/\.mp4$/, '.json'), JSON.stringify({ date: state.date, subscribers: state.subscriberCount, script: script.text, tts: voice.provider, captions, stats: result.stats, renderSeconds: result.seconds }, null, 1));
+    return { out, script, voice, result };
+  } finally {
+    if (!handed) await prepared.browser.close();
+  }
 }
 
 /** --real: the next day of the real kingdom in state/ (never saved), with --names as today's commenters. */

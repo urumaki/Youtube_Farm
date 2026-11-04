@@ -13,8 +13,13 @@ export const WIDTH = 1080, HEIGHT = 1920;
 
 const GL_ARGS = ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--disable-gpu-vsync', '--force-color-profile=srgb'];
 
+// The page is bundled once per process: workers opening at the same time would otherwise rewrite dist/render.html
+// while another browser is loading it.
+let pageFile = null;
+const renderPage = () => (pageFile ??= buildRenderPage().catch((e) => { pageFile = null; throw e; }));
+
 export async function openPage({ log = console } = {}) {
-  const page_file = await buildRenderPage();
+  const page_file = await renderPage();
   const launch = { args: GL_ARGS };
   if (process.env.CHROMIUM_PATH) launch.executablePath = process.env.CHROMIUM_PATH;
   const browser = await chromium.launch(launch);
@@ -43,6 +48,21 @@ export async function sceneCues(data, { log = console } = {}) {
     return (await setupScene(page, data)).cues || [];
   } finally {
     await browser.close();
+  }
+}
+
+/**
+ * A video's page set up before the narration exists: its shot plan (stats.cues) now, and worker 0 of renderVideo
+ * later (pass it as `prepared`), so the scene is not built twice. The captions are handed over then (the overlay
+ * reads data.captions only while frames render). Close it (browser.close()) if it never reaches renderVideo.
+ */
+export async function preparePage(data, { log = console } = {}) {
+  const p = await openPage({ log });
+  try {
+    return { ...p, stats: await setupScene(p.page, data) };
+  } catch (e) {
+    await p.browser.close();
+    throw e;
   }
 }
 
@@ -88,7 +108,7 @@ export async function renderGallery(data, items, times, outDir) {
 /** Render the full video. audioFile (optional) is muxed; output is exactly 30.0 s, 30 fps, H.264 + AAC.
  * Frames are split across `workers` browser processes (each with its own software-GL process), written
  * as numbered JPEGs, then encoded in order. Every frame depends only on its time, so splitting is exact. */
-export async function renderVideo(data, outFile, { audioFile, audio, log = console, frames = FPS * DURATION, workers = defaultWorkers() } = {}) {
+export async function renderVideo(data, outFile, { audioFile, audio, log = console, frames = FPS * DURATION, workers = defaultWorkers(), prepared = null } = {}) {
   fs.mkdirSync(path.dirname(outFile), { recursive: true });
   const tmp = fs.mkdtempSync(path.join(path.dirname(outFile), '.frames-'));
   const t0 = Date.now();
@@ -98,20 +118,31 @@ export async function renderVideo(data, outFile, { audioFile, audio, log = conso
   try {
     const n = Math.max(1, Math.min(workers, 8));
     const chunk = Math.ceil(frames / n);
-    await Promise.all(Array.from({ length: n }, async (_, w) => {
-      const { browser, page, errors: errs } = await openPage({ log });
+    let failed = false; // one worker failed: the others stop instead of rendering frames nobody will encode
+    const results = await Promise.allSettled(Array.from({ length: n }, async (_, w) => {
+      const reuse = w === 0 && prepared;
+      const { browser, page, errors: errs } = reuse ? prepared : await openPage({ log });
       try {
-        const st = await setupScene(page, data);
+        let st;
+        if (reuse) {
+          st = prepared.stats;
+          await page.evaluate((c) => { window.__ctx.data.captions = c; }, data.captions || []);
+        } else st = await setupScene(page, data);
         if (w === 0) { stats = st; log.log?.(`[render] scene ready in ${st.setupMs} ms: ${JSON.stringify(st)}`); }
-        for (let f = w * chunk; f < Math.min(frames, (w + 1) * chunk); f++) {
+        for (let f = w * chunk; f < Math.min(frames, (w + 1) * chunk) && !failed; f++) {
           fs.writeFileSync(path.join(tmp, `f${String(f).padStart(5, '0')}.jpg`), await captureFrame(page, f, 'jpeg'));
           if (++done % 60 === 0) log.log?.(`[render] ${done}/${frames} frames (${((Date.now() - t0) / 1000).toFixed(0)} s, ${n} workers)`);
         }
+      } catch (e) {
+        failed = true;
+        throw e;
       } finally {
         errors.push(...errs);
         await browser.close();
       }
     }));
+    const bad = results.find((r) => r.status === 'rejected');
+    if (bad) throw bad.reason;
     // the soundtrack can depend on what the scene showed (cues from setup)
     if (!audioFile && audio) audioFile = await audio(stats);
     const args = ['-y', '-loglevel', 'error', '-framerate', String(FPS), '-i', path.join(tmp, 'f%05d.jpg')];
