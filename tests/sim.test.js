@@ -1148,6 +1148,26 @@ test('comments of 2026-10-31 (owner 2026-11-01): buying from someone and questio
   })) assert.equal(first(t), job, t);
 });
 
+test('comments of 2026-11-03 (owner 2026-11-04): visiting, robbing, cursing, a church as a place and things on their way are no request; more complaints', async () => {
+  const { wantsFromText, nameFromText, complainsFromText } = await import('../src/sim/requests.js');
+  for (const [t, jobs] of Object.entries({
+    'Mi Lord i shall visit The blacksmith for new tools...': [], 'i want to rob a fisherman and cattle as a villager named thief': [],
+    'BLOODY TAX COLLECTOR': [], 'Im a bakler also im nailing a pice of paper on the churches doors': ['baker'],
+    'i sure hope the bee hives get here before the first group ventures out, as a merchant id love to stock up on hunny': ['merchant'],
+    'Im already a baker but I want 2 jobs. Can I also be a blacksmith?': ['blacksmith'], 'May I be the mine worker?': ['miner'],
+    'Im subscribe l want to be a woodcuter': ['woodcutter'], 'Can i be a mine builder': ['miner', 'carpenter'],
+    // still requests
+    'can I help build the church': ['stonemason'], 'I want to be a beekeeper': ['beekeeper'], 'make me a bloody guard': ['guard'],
+    'can I work at the tavern?': ['innkeeper'],
+  })) assert.deepEqual(wantsFromText(t), jobs, t);
+  assert.equal(nameFromText('as a villager named thief'), null);
+  for (const t of ['Can I be in the next one plz', 'still haven’t seen my guard self yet', 'I havent seen my name', 'Just wondering, have i become a butcher yet',
+    'I am unsure if I have found employment at the mines', 'Day 5 Ov asking to be the owner of the mine', 'I think part nine of asking to be the pioneer of aviation'])
+    assert.ok(complainsFromText(t), t);
+  for (const t of ['A great and glorius day today within the kingdom', 'I shall start my Job immediately', 'My lord when will the next tourney be'])
+    assert.ok(!complainsFromText(t), t);
+});
+
 test('the sailor, a job of its own by request (owner 2026-11-01): asked for, works at the Harbor; nobody drawn changes job', async () => {
   const { wantsFromText, availableJobs } = await import('../src/sim/requests.js');
   const { VARIANTS } = await import('../src/sim/scenes.js');

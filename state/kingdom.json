@@ -15311,7 +15311,7 @@
    "day": 3,
    "job": "guard",
    "requestDay": 20,
-   "complainDay": 12,
+   "complainDay": 20,
    "joinDay": 13
   },
   "14": {
@@ -15410,7 +15410,9 @@
   "29": {
    "name": "StefBaars",
    "author": "UC8ym8oeYxjesTwEu2nrFeOg",
-   "day": 4
+   "day": 4,
+   "job": "woodcutter",
+   "requestDay": 20
   },
   "30": {
    "name": "MichaelMartinez",
@@ -16442,7 +16444,7 @@
    "name": "FinnTomkinson",
    "author": "UCMdEw1gC78o9WkrGXxeHpVg",
    "day": 8,
-   "job": "baker",
+   "job": "blacksmith",
    "requestDay": 19
   },
   "194": {
@@ -16621,8 +16623,8 @@
    "name": "BENDYX20II",
    "author": "UCpKdhBONsE8GuMptsy7xh1A",
    "day": 8,
-   "job": "taxcollector",
-   "requestDay": 19,
+   "job": "ratcatcher",
+   "requestDay": 12,
    "complainDay": 12
   },
   "220": {
@@ -16795,7 +16797,8 @@
   "245": {
    "name": "Tabs_oregine",
    "author": "UCLj2JiwMpSH0hzIUe_czOrw",
-   "day": 8
+   "day": 8,
+   "complainDay": 20
   },
   "246": {
    "name": "Ivan",
@@ -17628,7 +17631,7 @@
    "name": "srojok19",
    "author": "UC_zL95i9FqNlEY7XhyoYb-A",
    "day": 8,
-   "job": "stonemason",
+   "job": "baker",
    "requestDay": 19,
    "complainDay": 16
   },
@@ -18549,8 +18552,8 @@
    "name": "Simonheller",
    "author": "UCOy2KhSn2YCd1dU-IPLaYwA",
    "day": 10,
-   "job": "blacksmith",
-   "requestDay": 20
+   "job": "carpenter",
+   "requestDay": 10
   },
   "510": {
    "name": "blueberry9333",
@@ -19034,7 +19037,8 @@
    "author": "UCiDrO0KzeC9aPOWaAN5tLFQ",
    "day": 11,
    "job": "butcher",
-   "requestDay": 18
+   "requestDay": 18,
+   "complainDay": 20
   },
   "585": {
    "name": "Louies_antiques",
@@ -19088,7 +19092,8 @@
    "author": "UClCqg_0ytguAWI5jM6ZaKeQ",
    "day": 11,
    "job": "miner",
-   "requestDay": 18
+   "requestDay": 18,
+   "complainDay": 20
   },
   "593": {
    "name": "TheFrogBogg",
@@ -20263,15 +20268,15 @@
   "770": {
    "name": "Lone_Unit1",
    "author": "UC1uOjNeYA7KvNG5v8LXAbtg",
-   "day": 14
+   "day": 14,
+   "complainDay": 19
   },
   "771": {
    "name": "griffin0045",
    "author": "UCdUIcPmHB9V7j2IIc8gohmw",
    "day": 14,
-   "job": "apprentice",
-   "requestDay": 19,
-   "wants": "beekeeper"
+   "job": "merchant",
+   "requestDay": 19
   },
   "772": {
    "name": "ItovBlackheart",
@@ -20925,10 +20930,10 @@
    "day": 17
   },
   "876": {
-   "name": "Thief",
+   "name": "AlfredoMaglasang",
    "author": "UCKyh7wACyRIOT9jAJZbteeQ",
    "day": 17,
-   "job": "fisherman",
+   "job": "jester",
    "requestDay": 20
   },
   "877": {
@@ -21105,7 +21110,8 @@
   "906": {
    "name": "tea827",
    "author": "UCU7Jwk9xQ5v5rl9uzNyPW6Q",
-   "day": 17
+   "day": 17,
+   "complainDay": 20
   },
   "907": {
    "name": "arghyasreeroychowdhur…",
@@ -21115,7 +21121,8 @@
   "908": {
    "name": "Gnb13",
    "author": "UCe59wZhn8Aa_ax6U_xWqz8Q",
-   "day": 17
+   "day": 17,
+   "complainDay": 20
   },
   "909": {
    "name": "JonalynMillare",
@@ -21238,7 +21245,9 @@
   "929": {
    "name": "Sorij",
    "author": "UChlpOVnxH3s0dN64wsDchZg",
-   "day": 19
+   "day": 19,
+   "job": "miner",
+   "requestDay": 19
   },
   "930": {
    "name": "ragebaiter3457",

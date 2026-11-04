@@ -483,6 +483,18 @@ Add new owner decisions here.
   `state/kingdom.json` and `state/history/2026-11-01.json`: Furina-Nunsa8849 and The_Knight_Of_Dice back to guard (made
   blacksmith and bishop by those remarks), AlfredoMaglasang hunter (was peasant), LiamMossor fisherman (asked for a boat
   captain, was left a guard). The day 17 video (2026-11-01) was still private, its comments not read yet.
+- From the comments on the day 18 and day 19 videos (owner 2026-11-04, `requests.js`; 132 comments, read by the 2026-11-03
+  and 2026-11-04 runs): visiting or robbing someone is no request ("i shall visit the blacksmith for new tools", "rob a
+  fisherman"), nor "for new tools", nor a curse at the start of a comment ("BLOODY TAX COLLECTOR") (`NOT_ASKED`); a church
+  named as a place ("on the church doors") asks for nothing; something on its way is no request ("hope the bee hives get
+  here", `ARRIVES`); "I'm already a baker but... can I also be a blacksmith" asks for the blacksmith (`NOW_BEFORE`); "mine
+  worker", "mine builder" ask for the miner; "bakler", "woodcuter". A villain's name is never taken ("named thief":
+  `NOT_NAMES`). Complaints: "part nine of asking", "Day 5 Ov asking", "haven't seen my name / my guard self", "can I be in
+  the next one", "have i become a butcher yet", "unsure if I have found employment". Set right in `state/kingdom.json` and
+  `state/history/2026-11-04.json`: griffin0045 merchant (was made an apprentice beekeeper), srojok19 baker (stonemason),
+  Simonheller carpenter (blacksmith), BENDYX20II rat catcher (tax collector), AlfredoMaglasang named so again and a jester as
+  asked (renamed "Thief", fisherman), FinnTomkinson blacksmith, Sorij miner, StefBaars woodcutter; the seven missed
+  complaints got their `complainDay`. Not changed (no effect: the villager has that job already): "gurd", "crusaider".
 - The jobs given by the old keywords set right in `state/kingdom.json` (owner 2026-10-29, `ffd110a`): each villager's own
   requests read again by hand; 26 changed (14 tax collectors made by "my lord", guards made by "sir", thanks read as a
   request), 6 who never asked for a job back to the job they were born to. "Bozo" ("I come for bread") is the drunkard (beggar), the owner says.

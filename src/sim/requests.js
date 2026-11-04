@@ -21,15 +21,16 @@ const KEYWORDS = [
   // "sir" alone is how people speak to the king, "an army engineer" asks for the engineer)
   [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|general|\barmy(?!\s*engineer)|(?<!(boat|ship|sea)\s?)captain(?!\s+of\s+(a|the)\s+(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
   [/\bguard|towns?guard|\b(flag|standard|banner)\s*bearer|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
-  [/chapel|church|cathedral|cappella|chiesa/, 'stonemason'],
+  // owner 2026-11-04: a church named as a place ("nailing a paper on the church doors") asks for nothing
+  [/(?<!\b(on|at|to|into|near|outside|inside|of)\s+(the\s+|a\s+|our\s+|my\s+|your\s+)?)(chapel|church|cathedral|cappella|chiesa)/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
   [/carpenter|\bbuilder|falegname|carpentiere|craftsman|craftsmen|craftm[ae]n|artisan|artigian|wood\s*worker|\bcarvers?\b|shipwright|ship\s*builder/, 'carpenter'],
   [/\bbishop|vescovo/, 'bishop'],
   [/\bpriest|\bpreist|\bmonk|\bfriar|monaster|monastic|\bdeacon|\bnun\b|religious figure|prete|frate|monaco/, 'priest'],
-  [/\bbaker|\bbread|\bbake|fornaio|\bpane\b/, 'baker'],
+  [/\bbaker|\bbakler|\bbread|\bbake|fornaio|\bpane\b/, 'baker'],
   [/\bmill(er)?\b|mugnaio|mulino/, 'miller'],
   [/fisher|\bfish|pescator|\bpesca|harbou?r|\bdocks?\b|\bporto\b/, 'fisherman'],
-  [/wood\s*cutter|lumber|\baxe\b|\bwood\b|taglialegna|boscaiolo/, 'woodcutter'],
+  [/wood\s*cutt?er|lumber|\baxe\b|\bwood\b|taglialegna|boscaiolo/, 'woodcutter'],
   [/\bfarm(?!ing tools?)|\bcrops?\b|contadin|agricolt/, 'farmer'],
   [/\bpeasant|bracciant|\bcitizen|cittadin|commoner|gardener|grounds?\s*keeper|groudnskeeper|giardinier|labou?rer/, 'peasant'],
   // the banker is a money changer until the Bank (2026-10-29)
@@ -79,14 +80,19 @@ const KEYWORDS = [
   [/astronom|astrolog|stargaz|star\s*gaz/, 'astronomer'],
   [/stable\s*(hand|boy|keeper|master|man|worker)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom)|carriage|coach\s*(man|driver)|wagon\s*(driver|master)|\bwagoner|cocchier|carrettier/, 'stablehand'],
   [/advis[eo]r|counsell?or|consiglier/, 'adviser'],
-  // owner 2026-10-29, from "a minor in the cave" and "I be mining" ("mine" alone is the word for mine, not a request)
-  [/\bminers?\b|\bmining\b|\bminor in the (cave|mine)|\bquarry\s*man|\bpick\s*axe|minatore|miniera|cavatore/, 'miner'],
+  // owner 2026-10-29, from "a minor in the cave" and "I be mining" ("mine" alone is the word for mine, not a request;
+  // 2026-11-04: "the mine worker", "a mine builder")
+  [/\bminers?\b|\bmining\b|\bmine\s*(worker|builder|digger|hand|labou?rer|man|men)s?\b|\bminor in the (cave|mine)|\bquarry\s*man|\bpick\s*axe|minatore|miniera|cavatore/, 'miner'],
 ];
 
 // "maybe later, when there are proper guards" is a wish for the kingdom, not a job request
 const WISH = /\b(when|once|until|till|if|after)\s+(there|we|they|you|the kingdom|it)\b[^.!?,]*$|\bquando\s+ci\s+sar[àa]nno?\b[^.!?,]*$/;
 // "I'm the town crier but can I be a teacher": the job they have, said before asking for another, is not the request
-const NOW_BEFORE = /\b(i'?m|im|i am)\s+(the\s+|a\s+|an\s+)?(town\s+|local\s+)?$/, NOW_AFTER = /^[\w\s'-]{0,25}\bbut\b/;
+// (2026-11-04: "Im already a baker but... can I also be a blacksmith?")
+const NOW_BEFORE = /\b(i'?m|im|i am)\s+(already\s+|still\s+)?(the\s+|a\s+|an\s+)?(town\s+|local\s+)?$/, NOW_AFTER = /^[\w\s'-]{0,25}\bbut\b/;
+// owner 2026-11-04, from the comments of 2026-11-03: something on its way to the kingdom is no request ("i sure hope the bee
+// hives get here", said by a merchant)
+const ARRIVES = /^[\w-]*\s+(\w+\s+)?((get|gets|got|come|comes|is|are)\s+(here|built|finished|ready|done)|arrives?|opens?)\b/;
 // owner 2026-11-01, from the comments of 2026-10-31: buying from someone is no request ("can I buy armor from the
 // blacksmith", "get a crossbow from the craft smith": a guard was made a blacksmith), nor a question about others ("why is
 // a bishop drinking", "where are the stonemasons", "are there ranks for the guards": a guard was made a bishop)
@@ -95,6 +101,12 @@ const NOT_ASKED = new RegExp([
   /\b(buy|purchase|order|borrow|get|have)\s+(a|an|some|the|my|new|me|more)?\s*((?!job|role|position|work|career|chance|spot|place|apprentic)\w+\s+){0,3}$/.source,
   /\b(why|where|when|how|who|what)\s+(is|are|was|were|does|do|did)\s+(a|an|the|my|our|all|those|these|that|this)?\s*(\w+\s+)?$/.source,
   /\b(is|are)\s+there\b[^.!?]*$/.source,
+  // owner 2026-11-04, from the comments of 2026-11-03: visiting or robbing someone is no request ("i shall visit the
+  // blacksmith for new tools" made a carpenter a blacksmith, "rob a fisherman" made a jester a fisherman), nor a curse at
+  // the start of a comment ("BLOODY TAX COLLECTOR" made a rat catcher a tax collector)
+  /\b(visit|visits|visited|visiting|rob|robs|robbed|robbing|steal\s+from|raid)\s+(the|a|an|my|our|your|some|all)?\s*(\w+\s+)?$/.source,
+  /\bfor\s+(new|more|some|better)\s+(\w+\s+)?$/.source,
+  /(^|[.!?]\s*)(bloody|damn|damned|stupid|filthy|greedy|cursed|dirty)\s+$/.source,
 ].join('|'));
 // ...unless a word like "job" follows the job: "can I get a blacksmith job" asks for the blacksmith
 const JOB_AFTER = /^[\w-]*\s+(job|role|position|apprenticeship|work)\b/;
@@ -121,7 +133,7 @@ export function wantsFromText(text) {
     const g = new RegExp(re.source, 'g');
     for (let m = g.exec(t); m; m = g.exec(t)) {
       if (m.index >= nameAt[0] && m.index < nameAt[1]) continue;
-      if (WISH.test(t.slice(Math.max(0, m.index - 60), m.index))) continue;
+      if (WISH.test(t.slice(Math.max(0, m.index - 60), m.index)) || ARRIVES.test(t.slice(m.index))) continue;
       if (NOW_BEFORE.test(t.slice(Math.max(0, m.index - 20), m.index)) && NOW_AFTER.test(t.slice(m.index))) continue;
       if (NOT_ASKED.test(t.slice(Math.max(0, m.index - 50), m.index)) && !JOB_AFTER.test(t.slice(m.index))) continue;
       hits.push([JOB_OF.test(t.slice(Math.max(0, m.index - 25), m.index)) ? -1 : m.index, job, m.index]);
@@ -152,14 +164,18 @@ export function tierOfJob(job) {
 // Owner (2026-10-27): so do those asking to be seen, "Day 3 of asking to be a baker", "am I a guard?", "what job do I have",
 // "my comments haven't been heard".
 const NUM = String.raw`(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty)`;
+// (2026-11-04: "Day 5 Ov asking", "part nine of asking", "still haven't seen my guard self", "I havent seen my name", "Can I be
+// in the next one", "have i become a butcher yet", "unsure if I have found employment at the mines")
 const COMPLAINT_RE = new RegExp([
-  String.raw`\bday\W{0,3}${NUM}\W{0,3}((of|for)\s+)?(asking|begging|requesting|waiting|trying|wanting|commenting)\b`, String.raw`\bday\W{0,3}${NUM}\W{0,3}for\b[^.!?]*\?`, String.raw`\b(giorno|day)\s*${NUM}\s+(che|di|in cui)\s+(chiedo|aspetto)\b`,
+  String.raw`\b(day|part)\W{0,3}${NUM}\W{0,3}((of|for|ov|off)\s+)?(asking|begging|requesting|waiting|trying|wanting|commenting)\b`, String.raw`\bday\W{0,3}${NUM}\W{0,3}for\b[^.!?]*\?`, String.raw`\b(giorno|day)\s*${NUM}\s+(che|di|in cui)\s+(chiedo|aspetto)\b`,
   /\bam i (a|an|the|still a|still an|in|on|here|there|real|alive|named|shown|even)\b/.source, /\bdo i (exist|have a (job|house|name|villager))\b/.source,
   /\b(what|which)('?s| is| was)? my (job|villager|house|name|role)\b/.source, /\b(what|which) (job|role|work) (do|did|have|am) i\b/.source,
   /\b(no idea|don'?t know|do not know|not sure) (what|which) (job|role|villager)\b/.source,
   /\b(haven'?t|have not|hasn'?t|has not|wasn'?t|was not|weren'?t|were not|not) been (heard|seen|noticed|read|answered|picked|chosen|granted)\b/.source, /\bnever (got |been )?(picked|chosen|granted|answered|noticed)\b/.source, /\bnotice me\b/.source,
   /\b(che|quale) lavoro (ho|faccio|mi)\b/.source, /\bsono (un|una|uno|ancora)\b[^.!?]*\?/.source,
   /\b(can'?t|cannot|can not|couldn'?t|could not|didn'?t|did not|don'?t|do not|never)\s+(see|find|spot)\s+(me|myself|my\b)/,
+  /\b(haven'?t|havent|have not|never)\s+(yet\s+)?(seen|found|spotted)\s+(me|myself|my\b)/, /\b(be|appear|put me|show me)\s+in\s+(the\s+)?next\s+(one|video|short|episode|day)\b/,
+  /\bhave i (become|been made|been given|got|gotten)\b/, /\b(unsure|not sure|wondering)\s+(if|whether)\s+i\s+(have|am|got|was|'?m)\b/,
   /\bwhere\s+(am i|is my|'?s my|are my)\b/, /\bwhere'?s my\b/, /\bwhere('?s| is| was) (me|i)\b/,
   /\bi'?m not (in|there|on)\b/, /\bi (wasn'?t|was not|am not) (in|there|shown|on)\b/, /\bnot (in )?(the|this) (video|short)\b/,
   /\b(no|not|without|missing)\s+my\s+(name|villager)\b/, /\bmy (name|villager)\s+(isn'?t|wasn'?t|is not|was not|never|didn'?t|did not)\b/,
@@ -201,7 +217,9 @@ export function rebelFromText(text) {
 // Only the chosen name is kept (cleaned and checked like any display name in simulate.js).
 const NAME_RE = /\b(?:(?:call me|called|named)(?: as)?|my name is sir|name me|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;
 const NOT_NAMES = new Set(['a', 'an', 'the', 'me', 'it', 'one', 'him', 'her', 'please', 'pls', 'plz', 'villager', 'something', 'anything',
-  'by', 'like', 'as', 'too', 'now', 'here', 'my', 'mine', 'that', 'this', 'what', 'whatever', 'un', 'una', 'come', 'per', 'favore']);
+  'by', 'like', 'as', 'too', 'now', 'here', 'my', 'mine', 'that', 'this', 'what', 'whatever', 'un', 'una', 'come', 'per', 'favore',
+  // named villagers are never villains (owner; 2026-11-04: "a villager named thief")
+  'thief', 'robber', 'bandit', 'brigand', 'criminal', 'murderer', 'killer', 'villain', 'crook', 'outlaw', 'assassin', 'ladro', 'brigante']);
 
 /** A name the commenter asked for, or null. */
 export function nameFromText(text) {
