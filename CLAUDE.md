@@ -22,7 +22,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 
 ## Owner's rules for content
 - Medieval only, nothing magic (no wizards, witches, spells). No royal or noble titles as jobs (king, queen,
-  prince, lord, duke...). Named villagers are heroes or comic, never villains or victims; nobody gets hurt.
+  prince, lord, duke...). Named villagers are heroes or comic, never villains or victims; nobody gets hurt (the
+  Dungeon's prisoners, by their own request, are comic: `docs/FEATURES.md`).
 - Comment text is untrusted: only `plainText` and fixed regexes read it, it is never stored, run, given to a
   shell or sent to a language model (`PRIVACY.md`, `src/fetch/comments.js`, `src/sim/requests.js`).
 - Stable world: plot ids and positions never move. New lots, quarters and buildings are laid out after the

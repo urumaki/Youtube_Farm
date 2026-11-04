@@ -1151,7 +1151,8 @@ test('comments of 2026-10-31 (owner 2026-11-01): buying from someone and questio
 test('comments of 2026-11-03 (owner 2026-11-04): visiting, robbing, cursing, a church as a place and things on their way are no request; more complaints', async () => {
   const { wantsFromText, nameFromText, complainsFromText } = await import('../src/sim/requests.js');
   for (const [t, jobs] of Object.entries({
-    'Mi Lord i shall visit The blacksmith for new tools...': [], 'i want to rob a fisherman and cattle as a villager named thief': [],
+    // (robbing: a cell in the Dungeon from 2026-11-04, never the job of the one robbed)
+    'Mi Lord i shall visit The blacksmith for new tools...': [], 'i want to rob a fisherman and cattle as a villager named thief': ['prisoner'],
     'BLOODY TAX COLLECTOR': [], 'Im a bakler also im nailing a pice of paper on the churches doors': ['baker'],
     'i sure hope the bee hives get here before the first group ventures out, as a merchant id love to stock up on hunny': ['merchant'],
     'Im already a baker but I want 2 jobs. Can I also be a blacksmith?': ['blacksmith'], 'May I be the mine worker?': ['miner'],
@@ -1166,6 +1167,27 @@ test('comments of 2026-11-03 (owner 2026-11-04): visiting, robbing, cursing, a c
     assert.ok(complainsFromText(t), t);
   for (const t of ['A great and glorius day today within the kingdom', 'I shall start my Job immediately', 'My lord when will the next tourney be'])
     assert.ok(!complainsFromText(t), t);
+});
+
+test('the Dungeon (owner 2026-11-04): at 3250, a thief or a usurper asks for a cell, nobody is drawn a prisoner, its scenes need it built', async () => {
+  const { TIERS, JOBS, jobFor, BUILDINGS } = await import('../src/sim/tiers.js');
+  const { wantsFromText, availableJobs, tierOfJob } = await import('../src/sim/requests.js');
+  const { VARIANTS, sceneReady } = await import('../src/sim/scenes.js');
+  const { dungeonScene, indoorScene } = await import('../src/render/scene/timeline.js');
+  const tier = TIERS.find((t) => t.id === 'dungeon');
+  assert.deepEqual([tier.at, tier.buildings, tier.unique], [3250, ['dungeon'], []]);
+  assert.ok(BUILDINGS.dungeon && JOBS.prisoner && tierOfJob('prisoner') === tier);
+  assert.ok(!availableJobs(3249).has('prisoner') && availableJobs(3250).has('prisoner'));
+  for (let i = 0; i < 6000; i++) assert.notEqual(jobFor(7, i), 'prisoner');
+  for (const t of ['I want to be the town thief', 'Can i become robbers', 'Can I be a bandit king', 'Criminal pls', 'Make me steal', 'can i be a usurper', 'voglio fare il ladro'])
+    assert.equal(wantsFromText(t)[0], 'prisoner', t);
+  for (const t of ['can I be the jailer', 'make me the dungeon keeper']) assert.equal(wantsFromText(t)[0], 'guard', t);
+  assert.ok(VARIANTS.guard.includes('dungeon') && VARIANTS.prisoner.includes('cell'));
+  const state = (done) => ({ buildings: done ? [{ id: 'dungeon', status: 'done' }] : [], date: '2026-11-20' });
+  for (const v of ['dungeon', 'cell']) {
+    assert.ok(!sceneReady(state(false), v) && sceneReady(state(true), v), v);
+    assert.ok(dungeonScene(v) && indoorScene(v === 'cell' ? 'prisoner' : 'guard', v), v);
+  }
 });
 
 test('the sailor, a job of its own by request (owner 2026-11-01): asked for, works at the Harbor; nobody drawn changes job', async () => {

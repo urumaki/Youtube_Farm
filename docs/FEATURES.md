@@ -504,6 +504,27 @@ Add new owner decisions here.
   to a cart of ore, a spoil heap, a windlass over a shaft, on a dirt yard (`buildings.js` `mine`). Once it stands the
   miner works at its rock face (`PLACES` in `main.js`). Test: `npm run render -- --real --subs 2760 --stills 9.5,10.8`,
   `--built mine --gallery miner`.
+- The Dungeon (owner 2026-11-04): a goal at 3,250 ("Town of Iron Bars", after the Beehives, before the Bank), 2 days to
+  build. Cells under the castle, reached by stairs from inside its walls: the stair head stands in the castle courtyard
+  between the keep and the south wall's stair (`w.lots.dungeon`, a virtual lot laid out last in `world.js`), a squat stone
+  house with an arched door onto the dark of the steps, its iron gate open, a torch each side, two barred vents in the
+  paving (`buildings.js` `dungeon`). The commenters who ask to be a thief, a robber, a bandit, a brigand, a criminal, an
+  outlaw, a usurper, a traitor... (also "rob", "steal", Italian ladro, brigante...) get the new job Prisoner (`requests.js`;
+  a jailer, a turnkey or a dungeon keeper is a guard). Only by request: the tier's pool gives the prisoner weight 0, which
+  unlocks the job at 3,250 and never draws it, so nobody changes job; asked for before, an apprentice. The owner's rule that
+  named villagers are never villains: prisoners are comic and never hurt, and a villain's name ("named thief") is still never
+  taken. The scene (`dungeon.js`, like the library: a room deep under the stair head, own camera, a hard cut): a vaulted
+  corridor at the foot of the stairs, four barred cells each side with straw, a bucket, a plank bed, rings in the wall; a
+  guard comes down the last steps with a torch held high, a ring of keys at his belt, and walks along the corridor; his
+  torch is the warm light that shows the cells as he passes. In the cells: a prisoner with his arms through the bars, one
+  slumped on the straw against the wall, one running a tin cup along the bars, one waving at the torch, one with his head in
+  his hands. Two scenes (`scenes.js`): the guard's 'dungeon' (the named guard walking, the camera going back ahead of him by
+  the right-hand bars, looking across into the left-hand cell he passes; his label follows him) and the prisoner's 'cell'
+  (the camera across from the named prisoner's cell, the guard coming along and stopping there, the prisoner waving at
+  him); both need the Dungeon built. The other named prisoners sit in the cells with their name tags, the latest to ask
+  first (`tg.labels` with `keepLabel`). Before the Dungeon stands, a prisoner sulks against the back wall of his house
+  (`work.js` `prisoner`); the prisoner bareheaded, a rope belt (`outfits.js`). Test: `npm run render -- --subs 118 --from
+  72 --built dungeon --gallery "guard:dungeon,prisoner:cell"`; the stair head: `--real --subs 3260 --stills 9.6,10.9`.
 - All the public comments read again (owner 2026-10-29, 1,420 of them; comments with no job: 455 down to 414): "sir"
   alone is how people speak, not a knight ("a sir", "be a sir" still ask for it); "I'm the town crier but can I be a
   teacher" asks for the teacher (the job someone has, said before "but", is passed over); "army engineer" and "military

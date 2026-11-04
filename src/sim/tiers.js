@@ -87,6 +87,9 @@ export const JOBS = {
   miner: { label: 'Miner', color: '#5b5650', requestOnly: true },
   // owner 2026-10-30, by request only: keeps the books of the University's library
   librarian: { label: 'Librarian', color: '#4e3b5c', requestOnly: true },
+  // owner 2026-11-04: the commenters who ask to be a thief, a bandit, a usurper... sit in the cells of the Dungeon under the
+  // castle. Only by request (never drawn, see the 'dungeon' tier), from 3250 on; asked for before that, an apprentice
+  prisoner: { label: 'Prisoner', color: '#6b6250' },
 };
 
 export const BUILDINGS = {
@@ -116,6 +119,7 @@ export const BUILDINGS = {
   cooperage: { label: 'the Cooperage', days: 2 },
   apiary: { label: 'the Beehives', days: 1, plural: true },
   mine: { label: 'the Mine', days: 3 },
+  dungeon: { label: 'the Dungeon', days: 2 }, // owner 2026-11-04: cells under the castle, stairs down from its courtyard
   bank: { label: 'the Bank', days: 3 }, // owner 2026-10-27: the money changers' bench under a loggia, on the East Ward's square
   bell_foundry: { label: 'the Bell Foundry', days: 3 },
   clock_tower: { label: 'the Clock Tower', days: 10 },
@@ -162,6 +166,9 @@ export const TIERS = [
   // owner 2026-10-29: the Mine in the hills outside the walls, west of the Quarry
   { id: 'mine', at: 2750, title: 'Mining Town', unique: ['miner'], pool: { miner: 0.3 }, buildings: ['mine'], goal: 'the Mine opens in the hills' },
   { id: 'honey', at: 3000, title: 'Town of Honey', unique: ['beekeeper'], pool: { beekeeper: 0.3 }, buildings: ['apiary'], goal: 'the first beehives arrive' },
+  // owner 2026-11-04: the Dungeon under the castle. The prisoner's weight 0 only unlocks the job for requests (availableJobs):
+  // no villager is ever drawn a prisoner, nor does anyone change job
+  { id: 'dungeon', at: 3250, title: 'Town of Iron Bars', unique: [], pool: { prisoner: 0 }, buildings: ['dungeon'], goal: 'the Dungeon opens beneath the castle' },
   { id: 'coin', at: 3500, title: 'Town of Coin', unique: [], pool: {}, buildings: ['bank'], goal: 'the Bank opens its doors' }, // owner 2026-10-27
   { id: 'bells', at: 4000, title: 'Town of Bells', unique: ['bellfounder'], pool: { bellfounder: 0.2 }, buildings: ['bell_foundry'], goal: 'the Bell Foundry casts its first bell' },
   { id: 'learned', at: 5000, title: 'City of Song', unique: ['apothecary', 'bard'], pool: { apothecary: 0.3, bard: 0.6 }, buildings: ['district_south', 'apothecary_shop'], goal: 'the South Ward is founded' },

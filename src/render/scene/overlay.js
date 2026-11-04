@@ -147,7 +147,8 @@ export function createOverlay(root, data) {
       // a shot of two villagers has a second label, for the guest, once they have walked in
       // a building going up keeps its big label over the builders' name tags (owner 2026-10-24)
       const site = tg?.kind === 'building';
-      const bigLabels = tg && (!tg.labels || site) ? [[tg, tg.label, tg.labelPos, u0], [tg.label2, tg.label2, tg.labelPos2, Math.max(u0, 0.22)]].filter((l) => l[1]) : [];
+      // (the Dungeon's shot, owner 2026-11-04: the villager's big label and the other prisoners' tags)
+      const bigLabels = tg && (!tg.labels || site || tg.keepLabel) ? [[tg, tg.label, tg.labelPos, u0], [tg.label2, tg.label2, tg.labelPos2, Math.max(u0, 0.22)]].filter((l) => l[1]) : [];
       let first = null;
       for (const [key, label, pos, from] of bigLabels) {
         if (!(ev.activeU > from && ev.activeU < 0.97)) continue;

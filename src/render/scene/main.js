@@ -11,7 +11,7 @@ import { buildBuildings } from './buildings.js';
 import { buildNature } from './nature.js';
 import { buildLife } from './life.js';
 import { buildEnvironment } from './env.js';
-import { makePlan, evaluate, indoorScene, barScene, AWAY_VARIANTS } from './timeline.js';
+import { makePlan, evaluate, indoorScene, barScene, dungeonScene, AWAY_VARIANTS } from './timeline.js';
 import { createOverlay } from './overlay.js';
 import { buildWorkScene, sceneOf, rig } from './work.js';
 import { buildCaravan } from './caravan.js';
@@ -27,6 +27,7 @@ import { povCamera } from './pov.js';
 import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
 import { buildSweepRoom, buildLectureRoom, buildLibraryRoom } from './room.js';
+import { buildDungeon } from './dungeon.js';
 import { huntSpot } from '../../sim/wall.js';
 import { buildQueue } from './queue.js';
 import { heightAt, WATER_LEVEL } from '../../sim/world.js';
@@ -253,6 +254,11 @@ async function setup(data) {
     if (variant === 'counting' && buildings.items.counting_house) return atLot(buildings.items.counting_house, -2.3, 2.1);
     if (variant === 'shop' && buildings.items.apothecary_shop) return atLot(buildings.items.apothecary_shop, -1.6, 2.4);
     if (variant === 'booth' && buildings.items.physician_booth) return atLot(buildings.items.physician_booth, -1.6, 2.6);
+    // owner 2026-11-04: the Dungeon's corridor under its stair head in the castle courtyard, deep under the ground (dungeon.js)
+    if (dungeonScene(variant) && buildings.items.dungeon) {
+      const it = buildings.items.dungeon, e = it.toWorld([0, 0, 1]).sub(it.toWorld([0, 0, 0])).setY(0).normalize();
+      return { anchor: it.toWorld([0, 0, 0]), ax: e.x, az: e.z, floorAt: () => it.base - 14, face: undefined };
+    }
     // the priest blesses one of the fields
     if (variant === 'bless' && fieldCount > 1) return atField(id);
     // the crier up on the Crier's Stand, calling to the square
@@ -354,7 +360,13 @@ async function setup(data) {
     ws.update = (t, ...a) => { update(t, ...a); queue.update(t); };
     return ws;
   };
-  const workSceneOnly = ({ job, variant, anchor, ax, az, away, id, face, t0 = 0, floorAt = null }) => {
+  const workSceneOnly = ({ job, variant, anchor, ax, az, away, id, face, t0 = 0, t1 = t0 + 3, floorAt = null }) => {
+    // the Dungeon (owner 2026-11-04): the other named prisoners in the cells, the latest to ask first
+    if (dungeonScene(variant)) {
+      const cellmates = Object.entries(state.names || {}).filter(([k, n]) => n.job === 'prisoner' && Number(k) !== id)
+        .sort((a, b) => (b[1].requestDay ?? 0) - (a[1].requestDay ?? 0)).map(([, n]) => ({ name: n.name }));
+      return buildDungeon({ variant, anchor, away, M, seed: state.seed, id, heightAt: floorAt || ((x, z) => heightAt(w, x, z)), cellmates, t0, t1 });
+    }
     // inside a building (the Bakery) the room stands on its floor
     if (indoorScene(job, variant)) {
       const build = { chimneysweep: buildSweepRoom, scholar: buildLectureRoom, librarian: buildLibraryRoom }[job] || buildBakehouse;
@@ -409,13 +421,15 @@ async function setup(data) {
       const v = state.villagers[tg.id];
       const { anchor, ax, az, floorAt, face, cam, as } = workPlace(tg.sceneJob || v.job, houses.shapes.get(v.house), tg.variant, tg.id);
       tg.away = Math.atan2(az, ax);
-      const ws = workScene({ job: tg.sceneJob || v.job, variant: as ?? tg.variant, anchor, ax, az, away: tg.away, id: tg.id, face, t0: tg.t0, floorAt });
+      const ws = workScene({ job: tg.sceneJob || v.job, variant: as ?? tg.variant, anchor, ax, az, away: tg.away, id: tg.id, face, t0: tg.t0, t1: tg.t1, floorAt });
       scene.add(ws.group);
       if (ws.room) { scene.add(ws.room); interiors.push({ ws, tg }); tg.cam = (u) => ws.cam(u, !!tg.guest); } else { ws.shot = tg; ws.at = anchor.clone(); works.push(ws); }
       if (cam) tg.cam = cam; // a place with its own camera (down an alley)
       tg.work = ws;
       tg.pos.copy(ws.focus);
       tg.labelPos.copy(ws.labelPos);
+      if (ws.liveLabel) tg.labelPos = ws.labelPos; // the Dungeon's guard walks: his label goes with him
+      if (ws.labels?.length) { tg.labels = ws.labels; tg.keepLabel = true; } // the named prisoners in the other cells
       // at work, through their eyes: between the work and the hands, so both are in the view
       if (tg.pov === 'work') povFor(tg, ws.rig, (eye, fwd, out) => ws.workPoint(out).lerp(ws.rig.r.hand.getWorldPosition(povEye).lerp(ws.rig.l.hand.getWorldPosition(povHand), 0.5), 0.5));
       if (ws.radius) tg.radius = ws.radius;

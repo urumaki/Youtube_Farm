@@ -23,7 +23,9 @@ export { VARIANTS, AWAY_VARIANTS, pickVariant };
 // scenes inside a building (the baker's bakehouse, bakery.js; the chimney sweep's room, room.js): own camera, a hard cut
 // in and out
 export const indoorScene = (job, variant) => (job === 'baker' && BAKEHOUSE_VARIANTS.has(variant)) || (job === 'chimneysweep' && variant === 'house') ||
-  (job === 'scholar' && variant === 'lecture') || (job === 'librarian' && variant === 'library');
+  (job === 'scholar' && variant === 'lecture') || (job === 'librarian' && variant === 'library') || dungeonScene(variant);
+// the Dungeon under the castle (owner 2026-11-04, dungeon.js): a guard with a torch past the cells, or a prisoner in his cell
+export const dungeonScene = (variant) => variant === 'dungeon' || variant === 'cell';
 // the innkeeper or brewer behind the bar of the tavern, or the bard in its corner (tavern.js): own camera, a hard cut in
 // and out, the room's lamps
 export const barScene = (variant) => variant === 'inside' || variant === 'inn';
@@ -58,7 +60,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   for (const id of [...diff.buildingsStarted, ...diff.buildingsCompleted]) {
     const it = buildings.items[id];
     if (!it || targets.some((t) => t.id === id) || targets.length >= maxBuildings) continue;
-    const SMALL = ['crier_stand', 'pillory', 'tailor_stall', 'physician_booth', 'potter_stall', 'cobbler_stall', 'apiary'];
+    const SMALL = ['crier_stand', 'pillory', 'tailor_stall', 'physician_booth', 'potter_stall', 'cobbler_stall', 'apiary', 'dungeon'];
     const big = ['cathedral', 'palace', 'tournament', 'harbor', 'wall2', 'university', 'colossus', 'townhall', 'stone_bridge'].includes(id);
     targets.push({
       kind: 'building', id, pos: it.focus.clone(), radius: big ? 70 : SMALL.includes(id) ? 13 : 30, front: (it.lot?.rot ?? 0) + Math.PI / 2,

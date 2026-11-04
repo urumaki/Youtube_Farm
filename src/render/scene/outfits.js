@@ -152,6 +152,8 @@ const OUTFITS = {
     [cylGeo(0.215, 0.225, 0.07, 12).translate(0, 1.2, 0), M.gold]], [[boxGeo(0.16, 0.85, 0.04).translate(0, 0.42, 0.29), M.clothRed]]],
   // owner 2026-10-23: the jester's cap (two-coloured horns with bells)
   jester: (O, M) => [jesterCap(M)],
+  // owner 2026-11-04: the prisoner bareheaded in a drab tunic, a rope for a belt
+  prisoner: (O) => [[], [[cylGeo(0.24, 0.245, 0.05, 12).translate(0, 0.47, 0), O.brown]]],
 };
 const BY_COLOR = new Map(Object.entries(OUTFITS).map(([job, f]) => [JOBS[job].color.toLowerCase(), f]));
 // owner 2026-10-30: the raiders of the night raid (stories/raid.js), no job of the kingdom: black clothes, a black bandana

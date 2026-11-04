@@ -133,6 +133,9 @@ const JOB_SCENES = {
   // bottle; 'collapsed' is asleep on the ground, snoring; 'hat' stands by a crate raising a mug. `home`:
   // metres out from the house wall (not in the croft), `homeTurn`: yaw from facing the croft
   beggar: { period: 4.6, raise: -2.1, down: -0.6, bend: -0.2, sound: 'none', tool: 'bottle', props: 'slump', drink: true, left: -0.35, ground: true, home: 0.42, focusH: 0.75, labelH: 1.75, radius: 4.6 },
+  // owner 2026-11-04: a prisoner waiting for the Dungeon (or for its cells to be dug) sulks against the back wall of his
+  // house, arms on his knees; in the Dungeon he is seen in his cell (dungeon.js)
+  prisoner: { period: 5.2, raise: -0.75, down: -0.55, bend: 0.1, sound: 'none', tool: null, props: 'none', smooth: true, ground: true, home: 0.42, focusH: 0.75, labelH: 1.75, radius: 4.6 },
   weirdo: { period: 1.1, raise: -2.6, down: -0.4, bend: 0, sound: 'none', tool: null, props: 'none', dance: true },
   jester: { period: 0.9, raise: -1.2, down: -0.8, bend: 0, sound: 'none', tool: null, props: 'none', juggle: true },
   fletcher: { period: 0.6, raise: -1.35, down: -1.05, bend: 0.22, sound: 'none', tool: null, props: 'fletch', smooth: true, left: -1.15 },

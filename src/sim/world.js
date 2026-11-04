@@ -134,6 +134,9 @@ function buildWorld(seed) {
   placeStreetLot(w, 'counting_house', 6, 5, [...w.plots, ...w.finePlots, ...w.densePlots]);
   placeStreetLot(w, 'apothecary_shop', 6, 5, [...w.plots, ...w.finePlots, ...w.densePlots]);
   placeMine(w);
+  // owner 2026-11-04: the Dungeon's stair head in the castle courtyard, between the keep and the south wall's stair, its
+  // door north toward the keep (the cells are underground, dungeon.js). Inside the castle, laid out last: nothing moves
+  w.lots.dungeon = { id: 'dungeon', x: -12, z: 19.5, hw: 2.0, hd: 1.6, rot: Math.PI, virtual: true };
   return w;
 }
 

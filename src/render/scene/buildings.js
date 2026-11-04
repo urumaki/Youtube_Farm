@@ -1,7 +1,7 @@
 // Unlockable buildings on their reserved lots. Each builder works in lot-local coordinates
 // (x along the lot, z across, y up from the leveled foundation) and returns focus/smoke/light points.
 import * as THREE from 'three';
-import { Builder, boxGeo, cylGeo, gableGeo, pyramidGeo, lancetGeo, merlonLine, merlonRing } from './kit.js';
+import { Builder, boxGeo, cylGeo, gableGeo, pyramidGeo, lancetGeo, merlonLine, merlonRing, archGeo } from './kit.js';
 import { heightAt, WATER_LEVEL, CASTLE } from '../../sim/world.js';
 import { rand01 } from '../../sim/prng.js';
 import { planWall2, wallLayout } from '../../sim/wall.js';
@@ -176,6 +176,35 @@ const BUILD = {
     for (let i = 0; i < 10; i++) b.add('stone', boxGeo(1.6, 1.0, 1.0, 1), -12 + (i % 5) * 1.8, 0.5 + Math.floor(i / 5), 9);
     crane(b, 8, 6, 9);
     out.focusH = 4;
+  },
+  dungeon(b, lot, out) {
+    // the head of the Dungeon's stairs in the castle courtyard (owner 2026-11-04): a squat stone house over the stairwell, an
+    // arched doorway onto the dark of the steps going down, its iron gate swung open against the wall, a torch each side;
+    // two barred vents in the paving in front let air down to the cells (the cells themselves: dungeon.js)
+    b.add('stone', boxGeo(3.6, 2.4, 0.5), 0, 1.2, -1.25);
+    for (const s of [-1, 1]) {
+      b.add('stone', boxGeo(0.5, 2.4, 3.0), s * 1.55, 1.2, 0);
+      b.add('stone', boxGeo(0.85, 2.4, 0.5), s * 1.13, 1.2, 1.25);
+    }
+    b.add('stone', archGeo(1.4, 0.75, 0.5).rotateY(Math.PI / 2), 0, 1.65, 1.25);
+    b.add('stoneDark', boxGeo(4.0, 0.3, 3.4), 0, 2.55, 0);
+    b.add('stoneDark', boxGeo(4.2, 0.18, 0.4), 0, 2.4, 1.55);
+    b.add('window', boxGeo(1.4, 2.4, 0.06), 0, 1.15, 0.6); // the dark of the stairwell
+    b.add('stoneDark', boxGeo(1.4, 0.12, 0.6), 0, 0.06, 1.2); // the top step
+    // the gate, open flat against the front wall
+    for (let x = -0.85; x >= -2.05; x -= 0.15) b.add('iron', boxGeo(0.04, 1.95, 0.04), x, 1.0, 1.55);
+    for (const y of [0.15, 1.0, 1.9]) b.add('iron', boxGeo(1.3, 0.06, 0.05), -1.45, y, 1.55);
+    for (const s of [-1, 1]) {
+      b.add('iron', boxGeo(0.06, 0.06, 0.35), s * 1.05, 1.75, 1.65);
+      b.add('woodDark', cylGeo(0.04, 0.05, 0.5, 6), s * 1.05, 1.95, 1.8);
+      b.add('flame', new THREE.ConeGeometry(0.08, 0.26, 7), s * 1.05, 2.32, 1.8);
+      out.lights.push([s * 1.05, 2.3, 1.9]);
+      // a barred vent in the paving, the dark of a cell under it
+      b.add('stoneDark', boxGeo(1.0, 0.1, 0.6), s * 1.0, 0.05, 2.7);
+      b.add('window', boxGeo(0.8, 0.02, 0.4), s * 1.0, 0.105, 2.7);
+      for (let k = -2; k <= 2; k++) b.add('iron', boxGeo(0.03, 0.04, 0.42), s * 1.0 + k * 0.16, 0.13, 2.7);
+    }
+    out.focusH = 2.0;
   },
   mine(b, lot, out) {
     // a hill of rough rock with the adit cut into its face and framed in timber, a plank way out to a cart of ore, the

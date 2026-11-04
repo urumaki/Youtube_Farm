@@ -20,7 +20,8 @@ const KEYWORDS = [
   // (2026-10-29: "teutonic Kinght", "kight", "the king's night", paladin, "chief of war", men-at-arms, a defender of the city;
   // "sir" alone is how people speak to the king, "an army engineer" asks for the engineer)
   [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|general|\barmy(?!\s*engineer)|(?<!(boat|ship|sea)\s?)captain(?!\s+of\s+(a|the)\s+(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
-  [/\bguard|towns?guard|\b(flag|standard|banner)\s*bearer|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
+  // (2026-11-04: the jailer keeps the Dungeon, he is a guard)
+  [/\bguard|towns?guard|\bjail[eo]r|\bgaoler|turnkey|dungeon\s*(keeper|master|guard)|carcerier|secondin|\b(flag|standard|banner)\s*bearer|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
   // owner 2026-11-04: a church named as a place ("nailing a paper on the church doors") asks for nothing
   [/(?<!\b(on|at|to|into|near|outside|inside|of)\s+(the\s+|a\s+|our\s+|my\s+|your\s+)?)(chapel|church|cathedral|cappella|chiesa)/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
@@ -82,6 +83,8 @@ const KEYWORDS = [
   [/advis[eo]r|counsell?or|consiglier/, 'adviser'],
   // owner 2026-10-29, from "a minor in the cave" and "I be mining" ("mine" alone is the word for mine, not a request;
   // 2026-11-04: "the mine worker", "a mine builder")
+  // owner 2026-11-04: a thief, a bandit, a usurper... asks for a cell in the Dungeon (from 3250; before, an apprentice)
+  [/\bthie(f|ves)|\brobbers?\b|\brob\b|\bbandits?\b|brigand|criminal|\boutlaws?\b|\bcrooks?\b|pickpocket|burglar|smuggler|highwayman|\bpoacher|usurper|traitor|dissident|assassin|\bsteal(ing)?\b|\bprisoner|\bconvict\b|\bjail\b|\bgaol\b|\bdungeon\b|\bladr[oi]\b|brigant|\bbandit[oi]\b|criminal[ei]|fuorilegge|usurpator|traditor|prigionier|galeott|carcerat/, 'prisoner'],
   [/\bminers?\b|\bmining\b|\bmine\s*(worker|builder|digger|hand|labou?rer|man|men)s?\b|\bminor in the (cave|mine)|\bquarry\s*man|\bpick\s*axe|minatore|miniera|cavatore/, 'miner'],
 ];
 
