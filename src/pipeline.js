@@ -184,13 +184,18 @@ export async function testRender(args, log = console) {
     state.pendingConstruction = state.pendingConstruction.filter((p) => p.building !== id);
   }
   if (args.church) diff.scenes = state.scenes = { ...(diff.scenes || { variants: {}, ambient: null }), tavern: false, church: churchScene(state) };
+  // the Dungeon escape before anyone has asked to be a prisoner: three named villagers play them (a test render, never saved)
+  if (args.story?.split(':')[0] === 'escape') {
+    const free = Object.keys(state.names || {}).map(Number).filter((id) => id < state.villagers.length && !['guard', 'knight', 'cavalier'].includes(state.villagers[id].job));
+    if (free.filter((id) => state.villagers[id].job === 'prisoner').length < 2) for (const id of free.slice(-3)) state.villagers[id].job = 'prisoner';
+  }
   if (args.story) diff.story = state.story = storyFor(state, args.story);
   if (args.pov && diff.scenes) {
     const f = (diff.featured || []).find((x) => (args.pov === 'work' ? !AWAY_VARIANTS.has(diff.scenes.variants?.[x.id]) : !x.with));
     diff.scenes = state.scenes = { ...diff.scenes, pov: f ? { id: f.id, mode: args.pov, forced: true } : null };
   }
   // the weather the story brings or needs, as the daily simulation does
-  const sky = { storm: 'rain', christmas: 'snow', snowballs: 'snow', fogboat: 'fog', dayinlife: 'clear' }[args.story?.split(':')[0]];
+  const sky = { storm: 'rain', christmas: 'snow', snowballs: 'snow', fogboat: 'fog', dayinlife: 'clear', eclipse: 'clear' }[args.story?.split(':')[0]];
   if (sky) diff.weather = state.weather = sky;
   log.log('[sim] ' + JSON.stringify(summarizeDiff(diff)));
   if (args.gallery) {

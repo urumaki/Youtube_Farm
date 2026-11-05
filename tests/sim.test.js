@@ -1269,3 +1269,50 @@ test('a day in the life (owner 2026-11-01): a named scholar\'s day takes the who
   plan.targets.forEach((t, i) => assert.equal(t.t0, i ? plan.targets[i - 1].t1 : 0));
   assert.equal(plan.end, 30);
 });
+
+test('the Dungeon escape and the eclipse (owner 2026-11-05): the whole video, the subscribe line, then the goal', async () => {
+  const { storyFor, STORIES, takesOver } = await import('../src/sim/stories.js');
+  const { makePlan } = await import('../src/render/scene/timeline.js');
+  const { buildScript } = await import('../src/audio/narration.js');
+  const { metadata } = await import('../src/publish/index.js');
+  const THREE = await import('three');
+  const kingdom = (jobs, extra = {}) => ({
+    seed: SEED, date: '2026-11-06', day: 22, subscriberCount: 3300, weather: 'clear', storyLog: {},
+    buildings: [{ id: 'dungeon', status: 'done' }, { id: 'market', status: 'done' }], houses: [],
+    villagers: jobs.map((job, id) => ({ id, job })),
+    names: Object.fromEntries(jobs.map((_, id) => [id, { name: `V${id}`, day: 1 + id }])), ...extra,
+  });
+  const s = kingdom(['prisoner', 'guard', 'prisoner', 'baker', 'farmer', 'guard', 'prisoner']);
+  const esc = storyFor(s, 'escape');
+  assert.ok(esc.prisoners.length >= 2 && esc.prisoners.every((p) => s.villagers[p.id].job === 'prisoner'));
+  assert.ok(esc.guards.length && esc.guards.every((g) => s.villagers[g.id].job === 'guard'));
+  assert.equal(esc.baker.job, 'baker');
+  assert.ok(takesOver({ id: 'escape' }) && takesOver({ id: 'eclipse' }));
+  // the escape needs the Dungeon, two named prisoners and a named guard; neither story on a day a building must be shown
+  assert.equal(storyFor(kingdom(['prisoner', 'guard', 'farmer']), 'escape'), null);
+  assert.ok(STORIES.escape.needs(s) && !STORIES.escape.needs(s, { buildingShots: 1 }) && !STORIES.escape.needs({ ...s, buildings: [{ id: 'market', status: 'done' }] }));
+  // the eclipse: only on a clear day, someone to explain it (a named scholar, else a priest)
+  const e = kingdom(['farmer', 'priest', 'guard', 'baker', 'crier', 'miner'], { subscriberCount: 900 });
+  const ecl = storyFor(e, 'eclipse');
+  assert.equal(ecl.wise.job, 'priest');
+  assert.equal(ecl.crier.job, 'crier');
+  assert.ok(ecl.watchers.length >= 3);
+  assert.ok(STORIES.eclipse.needs(e) && !STORIES.eclipse.needs({ ...e, weather: 'cloudy' }) && !STORIES.eclipse.needs(e, { buildingShots: 1 }));
+  for (const [story, shots, title] of [[{ id: 'escape', ...esc }, ['dig', 'popup', 'alarm', 'chase', 'caught'], 'escaped'], [{ id: 'eclipse', ...ecl }, ['noon', 'bite', 'panic', 'total', 'light'], 'dark']]) {
+    // the shots one after the other, the counter at the start, the usual wide shot and call to action from 23.5 s
+    const plan = makePlan({ state: s, diff: { story, added: [] }, houses: { shapes: new Map() }, castle: { keep: new THREE.Vector3() } });
+    assert.ok(plan.takeover && plan.stats);
+    assert.deepEqual(plan.targets.map((t) => t.id), shots.map((x) => `${story.id}_${x}`));
+    plan.targets.forEach((t, i) => assert.equal(t.t0, i ? plan.targets[i - 1].t1 : 0));
+    assert.equal(plan.end, 23.5);
+    // the narrator: one line a shot, then the goal and the call to action; never a name
+    const script = buildScript(s, { day: 22, date: '2026-11-06', story, next: { remaining: 200, goal: 'the Honey House' }, added: [] });
+    assert.ok(script.sentences.some((x) => /villagers until|more villagers/.test(x.text)) && /subscribe/i.test(script.sentences.at(-1).text));
+    assert.ok(!/V\d/.test(script.text));
+    assert.ok(metadata({ state: { day: 22, subscriberCount: 3300 }, diff: { delta: 40, story } }).title.includes(title));
+  }
+  // the subscribe line at the bottom of every shot
+  const src = fs.readFileSync(new URL('../src/render/scene/stories/escape.js', import.meta.url), 'utf8') + fs.readFileSync(new URL('../src/render/scene/stories/eclipse.js', import.meta.url), 'utf8');
+  assert.equal((src.match(/'Subscribe to join the kingdom'/g) || []).length, 2);
+  assert.equal((src.match(/footer: FOOTER/g) || []).length, 6); // five shots of the escape, the eclipse's one scene for all
+});

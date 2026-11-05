@@ -490,6 +490,18 @@ const SCENES = {
   ev_dayinlife_lecture: [['chatter', 0.12]],
   ev_dayinlife_candle: [['fire', 0.12], ['breeze', 0.2]],
   ev_dayinlife_loop: [['breeze', 0.45]],
+  // the Dungeon escape (owner 2026-11-05): a quiet cell, the market, the horn, the chase, the cheers
+  ev_escape_dig: [['fire', 0.1], ['breeze', 0.2]],
+  ev_escape_popup: [['birds', 0.4], ['chatter', 0.3]],
+  ev_escape_alarm: [['fanfare', 0.35], ['chatter', 0.3]],
+  ev_escape_chase: [['chatter', 0.6], ['cheer', 0.25]],
+  ev_escape_caught: [['chatter', 0.45], ['cheer', 0.45]],
+  // the eclipse: the noon market falls silent in the dark, the bell, the cheers when the sun comes back
+  ev_eclipse_noon: [['birds', 0.45], ['chatter', 0.45]],
+  ev_eclipse_bite: [['chatter', 0.3], ['breeze', 0.3]],
+  ev_eclipse_panic: [['chatter', 0.6], ['bell', 0.35]],
+  ev_eclipse_total: [['breeze', 0.35]],
+  ev_eclipse_light: [['cheer', 0.7], ['birds', 0.35]],
   // everyday shots
   patrol: [['breeze', 0.45], ['chatter', 0.08]],
   sparring: [['chatter', 0.12]],

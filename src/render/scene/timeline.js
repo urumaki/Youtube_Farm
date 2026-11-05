@@ -7,6 +7,8 @@ import { NIGHT_STORIES, storyCue } from './stories/index.js';
 import { RAID_SHOTS } from './stories/raid.js';
 import { JOUST_SHOTS } from './stories/grandjoust.js';
 import { DAY_SHOTS } from './stories/dayinlife.js';
+import { ESCAPE_SHOTS } from './stories/escape.js';
+import { ECLIPSE_SHOTS } from './stories/eclipse.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
 import { BAKEHOUSE_VARIANTS } from './bakery.js';
@@ -42,14 +44,17 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   // 2026-11-01): the riders, the champion's three bouts, the crowning, the new Knight, the bracket drawn over them
   // A villager's day (owner 2026-11-01, dayinlife.js) too, but it keeps the counter and the day line at the start (`stats`)
   // and stays in daylight unless a shot says otherwise
-  const day = diff.story?.id === 'dayinlife' ? DAY_SHOTS[diff.story.job] : null;
+  // The Dungeon escape and the eclipse (owner 2026-11-05, escape.js, eclipse.js) keep the counter and the day line too, and
+  // end at 23.5 s with the usual wide shot, goal and call to action (in the light of their own day: `dusk`)
+  const OWN = { escape: [ESCAPE_SHOTS, 0.45], eclipse: [ECLIPSE_SHOTS, 0.3] }[diff.story?.id];
+  const day = diff.story?.id === 'dayinlife' ? DAY_SHOTS[diff.story.job] : OWN ? OWN[0] : null;
   const ownShots = diff.story?.id === 'raid' ? RAID_SHOTS[diff.story.step] : diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds ? JOUST_SHOTS : day;
   if (ownShots) {
     const own = ownShots.map(([shot, t0, t1]) => ({
       kind: 'event', id: `${diff.story.id}_${shot}`, story: { ...diff.story, shot, ...(shot === 'crown' ? { step: 'crown' } : {}) }, pos: castle.keep.clone(), radius: 12, front: 0,
       label: null, labels: [], cut: true, t0, t1, ...(diff.story.rounds ? { bracket: bracketAt(diff.story, shot) } : {}),
     }));
-    return { targets: own, ...kingdomBox(houses), story: null, dusk: day ? 0 : 0.8, start: 0, end: ownShots.at(-1)[2], takeover: true, stats: !!day };
+    return { targets: own, ...kingdomBox(houses), story: null, dusk: OWN ? OWN[1] : day ? 0 : 0.8, start: 0, end: ownShots.at(-1)[2], takeover: true, stats: !!day };
   }
   // Days with named villagers follow the owner's order: the caravan opens the video (no castle hook),
   // then a few seconds of new buildings, then the named villagers at work. New houses are not shown

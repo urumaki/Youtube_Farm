@@ -119,6 +119,21 @@ export const STORIES = {
   // show a building
   dayinlife: { minPop: 1000, cooldown: 14, weight: 3, takeover: true,
     needs: (s, o = {}) => built(s, 'university') && namedVillagers(s).some((n) => n.job === 'scholar') && !['rain', 'snow', 'fog'].includes(s.weather) && !o.buildingShots },
+  // owner 2026-11-05: two more stories that take the whole video (src/render/scene/stories/escape.js, eclipse.js), each
+  // with "Subscribe to join the kingdom" at the bottom of its shots. They keep the counter and the day line at the start and
+  // end with the usual wide shot, goal and call to action. Never on a day the video must show a building.
+  // The Dungeon escape: the named prisoners dig out of their cell with a spoon at night, come up through the paving of the
+  // market square in the morning, the named guards give chase between the stalls, and they are caught at the bread cart
+  // with their mouths full and marched back down, waving. Comic: nobody gets hurt
+  escape: { minPop: 3250, cooldown: 30, weight: 3, takeover: true,
+    needs: (s, o = {}) => built(s, 'dungeon') && built(s, 'market') && namedVillagers(s).filter((n) => n.job === 'prisoner').length >= 2
+      && teamOf(s, GUARDS).length >= 2 && !['rain', 'snow'].includes(s.weather) && !o.buildingShots },
+  // A solar eclipse at noon: the moon slides over the sun, the light fails, the square stops and stares, comic panic (a
+  // bucket on a head, someone under a cart, the bell rung), the dark with the sun's ring and the stars, a scholar (or a
+  // priest) explaining with a book that it is only the moon, then the light comes back and the town cheers. Nothing magic:
+  // the narrator says what it is. Only on a clear day
+  eclipse: { minPop: 500, cooldown: 45, weight: 2, takeover: true,
+    needs: (s, o = {}) => built(s, 'market') && s.weather === 'clear' && namedVillagers(s).length >= 4 && !o.buildingShots },
 };
 const tomorrow = (s) => new Date(Date.parse(s.date) + 86400000).toISOString().slice(5, 10);
 
@@ -411,6 +426,27 @@ const BUILD = {
     const hero = r.pick(scholars);
     // the other named scholars talking in the corridor wear their names (owner 2026-11-01)
     return { job: 'scholar', hero, cast: [hero], others: roleCast(state, r, ['scholar'], 8, [hero]) };
+  },
+  escape(state, r) {
+    // up to four named prisoners (the newest first), three named guards, the named baker at the cart when there is one, and
+    // the newest named villagers watching from the stalls
+    const prisoners = roleCast(state, r, ['prisoner'], 4);
+    const guards = roleCast(state, r, GUARDS, 3, prisoners);
+    if (prisoners.length < 2 || !guards.length) return null;
+    const baker = roleCast(state, r, ['baker'], 1, [...prisoners, ...guards])[0] || null;
+    const taken = [...prisoners, ...guards, ...(baker ? [baker] : [])];
+    const crowd = namedVillagers(state).filter((n) => !taken.some((x) => x.id === n.id)).slice(0, 5);
+    return { prisoners: prisoners.map(strip), guards: guards.map(strip), baker: baker && strip(baker), crowd: crowd.map(strip), cast: [...prisoners, ...guards, ...crowd].map(strip) };
+  },
+  eclipse(state, r) {
+    // the one who explains it: a named scholar, else a named priest or bishop, else a nameless scholar; the crier rings the
+    // bell; the newest named villagers (today's commenters first) look up in the square
+    const wise = roleCast(state, r, ['scholar'], 1)[0] || roleCast(state, r, ['priest', 'bishop'], 1)[0] || null;
+    const crier = roleCast(state, r, ['crier'], 1, wise ? [wise] : [])[0] || null;
+    const taken = [wise, crier].filter(Boolean);
+    const watchers = namedVillagers(state).filter((n) => !taken.some((x) => x.id === n.id)).slice(0, 6);
+    if (watchers.length < 3) return null;
+    return { wise: wise && strip(wise), crier: crier && strip(crier), watchers: watchers.map(strip), cast: [...watchers, ...taken].map(strip) };
   },
   raid(state, r, arc) {
     if (arc?.step === 'rescue') {

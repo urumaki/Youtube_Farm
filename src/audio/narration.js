@@ -153,6 +153,7 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   if (diff.story?.id === 'raid') return raidScript(state, diff, pick);
   if (diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds) return grandJoustScript(diff);
   if (diff.story?.id === 'dayinlife') return dayInLifeScript(diff);
+  if (diff.story?.id === 'escape' || diff.story?.id === 'eclipse') return takeoverScript(diff, pick);
   // never the same line twice in one video (two buildings begun the same day)
   const said = new Set();
   const fresh = (a) => { const free = a.filter((f) => !said.has(f)), x = r.pick(free.length ? free : a); said.add(x); return x; };
@@ -343,6 +344,33 @@ function dayInLifeScript(diff) {
     ['Night falls. One more page by candlelight...', 21.7],
     ['...until the moon becomes the sun, and it all begins again.', 26.2],
   ];
+  const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
+  const text = sentences.map((x) => x.text).join(' ');
+  return { sentences, text, words: words(text) };
+}
+
+/**
+ * The Dungeon escape and the eclipse (owner 2026-11-05): their own scripts, one line at the start of each shot
+ * (ESCAPE_SHOTS in src/render/scene/stories/escape.js, ECLIPSE_SHOTS in eclipse.js), then the goal and the call to action
+ * over the usual wide shot. Names stay on screen.
+ */
+function takeoverScript(diff, pick) {
+  const n = (x) => Number(x || 0).toLocaleString('en-US');
+  const lines = diff.story.id === 'escape' ? [
+    [`Day ${diff.day}. Midnight, in the Dungeon. A loose stone...`, 0.4],
+    ['Morning in the market. Something is coming up through the floor!', 4.8],
+    ['The cells are empty! The guards sound the alarm!', 9.2],
+    ['After them! Mind the cabbages!', 12.8],
+    ['Caught at the bread cart, with their mouths full. Back to the Dungeon!', 17.8],
+  ] : [
+    [`Day ${diff.day}. Noon in the market, and something is eating the sun.`, 0.4],
+    ['The moon is sliding over it. The day is going dark!', 4.8],
+    ['Panic in the square! Somebody ring the bell!', 9.2],
+    ['A total eclipse. Only the moon, hiding the sun for a moment.', 13.9],
+    ['And there it is! The sun is back!', 18.8],
+  ];
+  if (diff.next) lines.push([pick(L.goal)(n(diff.next.remaining), diff.next.goal), FIXED_AT.goal]);
+  lines.push([pick(L.cta), FIXED_AT.cta]);
   const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
   const text = sentences.map((x) => x.text).join(' ');
   return { sentences, text, words: words(text) };

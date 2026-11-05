@@ -220,7 +220,7 @@ export function createOverlay(root, data) {
         const items = tg.labels.map((lb, i) => {
           v.copy(lb.pos).project(camera);
           return { lb, x: (v.x * 0.5 + 0.5) * W - SAFE.left, y: (-v.y * 0.5 + 0.5) * H - SAFE.top, z: v.z, rank: (i - lead + n) % n };
-        }).filter((it) => it.z < 1 && it.x > -40 && it.x < sw + 40 && it.y > 130 && it.y < sh - 200).sort((a, b) => (caravan ? a.rank - b.rank : 0) || a.z - b.z);
+        }).filter((it) => !it.lb.hidden && it.z < 1 && it.x > -40 && it.x < sw + 40 && it.y > 130 && it.y < sh - 200).sort((a, b) => (caravan ? a.rank - b.rank : 0) || a.z - b.z);
         items.forEach((it, i) => {
           let el = tagEls[i];
           if (!el) { el = document.createElement('div'); ov.querySelector('.safe').appendChild(el); tagEls[i] = el; }

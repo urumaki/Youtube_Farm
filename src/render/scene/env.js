@@ -16,16 +16,27 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
   // Physical sky only feeds the environment map; the visible sky is a cheap gradient dome.
   const sky = new Sky();
   const su = sky.material.uniforms;
-  const domeU = { zenith: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, sunCol: { value: new THREE.Color() }, sunDir: { value: new THREE.Vector3() } };
+  // the moon of an eclipse (owner 2026-11-05, stories/eclipse.js): its direction, its angular radius and how dark it is
+  const domeU = { zenith: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, sunCol: { value: new THREE.Color() }, sunDir: { value: new THREE.Vector3() },
+    moonDir: { value: new THREE.Vector3(0, -1, 0) }, ecl: { value: 0 } };
   const dome = new THREE.Mesh(new THREE.SphereGeometry(20000, 32, 16), new THREE.ShaderMaterial({
     side: THREE.BackSide, depthWrite: false, fog: false, uniforms: domeU,
     vertexShader: 'varying vec3 vDir; void main(){ vDir = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position,1.0); gl_Position = p.xyww; }',
-    fragmentShader: `uniform vec3 zenith; uniform vec3 horizon; uniform vec3 sunCol; uniform vec3 sunDir; varying vec3 vDir;
+    fragmentShader: `uniform vec3 zenith; uniform vec3 horizon; uniform vec3 sunCol; uniform vec3 sunDir; uniform vec3 moonDir; uniform float ecl; varying vec3 vDir;
       void main(){
+        vec3 d = normalize(vDir);
         float h = max(vDir.y, 0.0);
         vec3 c = mix(horizon, zenith, pow(h, 0.55));
-        float s = max(dot(normalize(vDir), normalize(sunDir)), 0.0);
-        c += sunCol * (pow(s, 600.0) * 4.0 + pow(s, 12.0) * 0.35 + pow(s, 3.0) * 0.12 * (1.0 - h));
+        float s = max(dot(d, normalize(sunDir)), 0.0);
+        // the moon's disc (a little larger than the sun's bright core), dark against the sky
+        float moon = smoothstep(0.99716, 0.99724, dot(d, normalize(moonDir)));
+        c += sunCol * (pow(s, 600.0) * 4.0 * (1.0 - moon) * (1.0 - 0.97 * ecl) + (pow(s, 12.0) * 0.35 + pow(s, 3.0) * 0.12 * (1.0 - h)) * (1.0 - 0.9 * ecl));
+        // the corona round the hidden sun, and the brightest stars, in the dark of the eclipse
+        c += vec3(1.0, 0.96, 0.88) * pow(ecl, 4.0) * (pow(s, 400.0) * 3.0 + pow(s, 80.0) * 0.8) * (1.0 - moon);
+        vec3 q = floor(d * 380.0);
+        float star = step(0.9975, fract(sin(dot(q, vec3(12.9898, 78.233, 37.719))) * 43758.5453));
+        c += vec3(0.9) * star * smoothstep(0.55, 1.0, ecl) * smoothstep(0.05, 0.3, h);
+        c = mix(c, vec3(0.012, 0.014, 0.022), moon);
         if (vDir.y < 0.0) c = horizon * 0.92;
         gl_FragColor = vec4(c, 1.0);
         #include <tonemapping_fragment>
@@ -124,9 +135,10 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
     /**
      * phase 0 = afternoon, 1 = dusk; focus = point the shadows should cover; radius = shadow extent;
      * interior 1 = the camera is inside a building lit by its own lamps (the tavern); fog: a thicker fog for one shot (the
-     * boat lost in the fog, stories/fogboat.js), as an exponential density
+     * boat lost in the fog, stories/fogboat.js), as an exponential density; eclipse: how far the moon has come over the sun
+     * (0 = not at all, 1 = total, owner 2026-11-05, stories/eclipse.js)
      */
-    set(phase, focus, radius, t, interior = 0, fog = 0) {
+    set(phase, focus, radius, t, interior = 0, fog = 0, eclipse = 0) {
       const el = THREE.MathUtils.degToRad(THREE.MathUtils.lerp(33, 1.5, phase));
       const az = THREE.MathUtils.lerp(0.95, 0.35, phase); // from the south-east toward the south-west
       sunDir.set(Math.cos(el) * Math.sin(az + 0.6), Math.sin(el), Math.cos(el) * Math.cos(az + 0.6)).normalize();
@@ -147,6 +159,20 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
       domeU.horizon.value.setRGB(...hor.map((v, i) => THREE.MathUtils.lerp(v, horD[i], phase)));
       domeU.sunCol.value.copy(sun.color).multiplyScalar(overcast ? 0.25 : 1);
       domeU.sunDir.value.copy(sunDir);
+      // the eclipse: the moon slides in from the west of the sun; the light fails only in the last part, as it does
+      const dark = THREE.MathUtils.smoothstep(eclipse, 0.3, 0.97);
+      domeU.ecl.value = dark;
+      if (eclipse > 0) {
+        const side = new THREE.Vector3().crossVectors(sunDir, UP).normalize();
+        domeU.moonDir.value.copy(sunDir).addScaledVector(side, (1 - eclipse) * 0.2).normalize();
+        sun.intensity *= 1 - 0.95 * dark;
+        hemi.intensity *= 1 - 0.72 * dark;
+        scene.environmentIntensity *= 1 - 0.7 * dark;
+        domeU.zenith.value.lerp(ECL_ZENITH, dark);
+        domeU.horizon.value.lerp(ECL_HORIZON, dark * 0.85);
+        bloom.enabled = true;
+        bloom.strength = Math.max(bloom.strength, 0.55 * dark);
+      } else domeU.moonDir.value.set(0, -1, 0);
       scene.fog.color.copy(domeU.horizon.value).multiplyScalar(0.97);
       const alt = Math.max(1, camera.position.y);
       // high wide shots look through much less haze, so the whole town stays readable on foggy days
@@ -159,7 +185,7 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
       sc.left = sc.bottom = -radius; sc.right = sc.top = radius;
       sc.updateProjectionMatrix();
       for (const c of clouds) c.position.x = c.userData.base.x + (t || 0) * 3;
-      for (const c of clouds) c.material.color.setScalar(1 - 0.45 * phase);
+      for (const c of clouds) c.material.color.setScalar((1 - 0.45 * phase) * (1 - 0.75 * dark));
       if (interior > 0) {
         // indoors: no sun, little sky light, the room's own warm lamps do the work; candles bloom
         sun.intensity *= 1 - interior;
@@ -170,7 +196,9 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
         bloom.enabled = true;
         bloom.strength = Math.max(bloom.strength, 0.4 * interior);
       }
-      return night;
+      return Math.max(night, 0.9 * dark); // lamps and windows lit in the dark of an eclipse
     },
   };
 }
+const UP = new THREE.Vector3(0, 1, 0);
+const ECL_ZENITH = new THREE.Color(0.02, 0.03, 0.07), ECL_HORIZON = new THREE.Color(0.5, 0.33, 0.26);

@@ -37,6 +37,8 @@ import { buildPies } from './pies.js';
 import { buildRegatta } from './regatta.js';
 import { buildRaid } from './raid.js';
 import { buildDayInLife } from './dayinlife.js';
+import { buildEscape } from './escape.js';
+import { buildEclipse } from './eclipse.js';
 
 const BUILDERS = {
   quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween,
@@ -46,6 +48,7 @@ const BUILDERS = {
   rebel: buildRebel, race: buildJoust, joust: buildJoust, ship: buildShip, bell: buildBell, fogboat: buildFogBoat, census: buildCensus, pies: buildPies, regatta: buildRegatta,
   decree: buildDecree, raid: buildRaid, // the raid: one scene per shot (story.shot, raid.js)
   dayinlife: buildDayInLife, // a villager's day: one scene per shot too (dayinlife.js)
+  escape: buildEscape, eclipse: buildEclipse, // the Dungeon escape and the eclipse: one scene per shot (escape.js, eclipse.js)
 };
 
 // later steps of a story told over several days (src/sim/stories.js) with a scene of their own; the other

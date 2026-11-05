@@ -138,6 +138,35 @@ Add new owner decisions here.
   (`story.others`, nearest first), his own page in the lecture and by the candle. Every student in the lecture now has an
   ink bottle beside the book and a quill (`quill` in room.js), bends over the desk and writes. Local renders need the
   Kokoro Python: a worktree without `.env` falls back to no voice, so pass `PYTHON=tools/venv/Scripts/python.exe`.
+  Two more stories that take the whole video (owner 2026-11-05: "Subscribe to join the kingdom" at the bottom of
+  every one of their shots, `footer`). Like a day in the life, they keep the counter and the day line at the start
+  (`plan.stats`). Unlike it, they end at 23.5 s with the usual wide shot, goal and call to action (`OWN` in `makePlan`,
+  `timeline.js`; the wide shot in the light of their own day, `dusk`). Both have their own narration (`takeoverScript`
+  in `narration.js`: one line a shot, then the goal and the call to action, names never read aloud), title and sounds
+  (`ev_escape_*`, `ev_eclipse_*` in `sfx.js`). Never on a day a building must be shown.
+  - The Dungeon escape (`escape`, `stories/escape.js`, `ESCAPE_SHOTS`): from 3,250, once the Dungeon stands, with at
+    least two named prisoners and a named guard, no rain or snow, cooldown 30, weight 3. Shots: at night in a cell (a
+    set under the stair head), a named prisoner pulls the loose stone out of the back wall and crawls into the tunnel
+    behind it, the other named prisoner after him (0-4.5 s); in the morning a paving slab of the market square lifts,
+    the prisoners climb out one by one and tiptoe off, a woman drops her basket (to 9 s); a named guard runs up out of
+    the Dungeon's stairs and blows his horn, two more after him (to 12.5 s); the chase between the stalls, a prisoner
+    leaps a barrel, a guard slips on the cabbages of a tipped cart and sits down (to 17.5 s); caught at the bread cart
+    with their mouths full (the named baker behind it when there is one), hands up, and marched off chewing and waving
+    (to 23.5 s). Up to four named prisoners, three named guards (`story.prisoners`, `guards`, `baker`). Comic: nobody
+    gets hurt. Title "Day N: The prisoners escaped! ⛓️ ...". Test before anyone is a prisoner: `--story escape` makes
+    three named villagers prisoners for the render only (`testRender` in `pipeline.js`):
+    `npm run render -- --real --subs 3300 --built dungeon --story escape --stills 1.5,3.8,6.5,8.3,11,13.5,15.8,19,22.5`.
+  - The solar eclipse (`eclipse`, `stories/eclipse.js`, `ECLIPSE_SHOTS`): from 500, only on a clear day, with at least
+    three named villagers, cooldown 45, weight 2. Noon in the market square, the camera tilts from the people up to the
+    sun as the moon's edge touches it (0-4.5 s); the light fails, the named villagers stop, stare and point (to 9 s);
+    comic panic: one runs in circles, one hides under the handcart, one walks about with a bucket on his head, the named
+    crier hurries across ringing his bell (to 13.5 s); the total eclipse, the black sun with its ring and the stars,
+    torches lit, the camera tilting down to a named scholar (else a priest or bishop) on a barrel, book held up, his tag
+    "It's only the moon!" (to 18.5 s); the light comes back and the square cheers (to 23.5 s). Nothing magic: the
+    narrator says it is the moon. The moon and the dark are `env.js`'s (`set(..., eclipse)`: the moon's disc slides over
+    the sun, the sun and sky light fail in the last part, the corona and the brightest stars come out, the town's lamps
+    light), driven by the shot's `eclipseAt(u)`. Title "Day N: The sun went dark at noon 🌑 ...". Test with
+    `npm run render -- --real --subs 3300 --story eclipse --stills 2,4.2,6.5,8.5,11,14.5,16.5,17.8,20,22.5` (forced clear).
   The games at the Tournament Ground (owner 2026-10-27, reworked 2026-10-28): two events of their own, the chariot race
   (`race`) and the joust (`joust`), each over two days once the Tournament Ground stands (no rain or snow, cooldown 14).
   Day 1 (`announce`, scene `stories/games.js` on the crier's dais of `proclaim.js`): the town crier reads the

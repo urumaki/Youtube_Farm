@@ -478,6 +478,7 @@ async function setup(data) {
       // the big name label over one person (a villager's day, dayinlife.js), from a part of the shot on
       if (st.label) Object.assign(tg, { label: st.label, labelPos: st.labelPos, labelFrom: st.labelFrom });
       if (st.phaseAt) tg.phaseAt = st.phaseAt; // the light changing through the shot
+      if (st.eclipseAt) tg.eclipseAt = st.eclipseAt; // the moon over the sun through the shot (eclipse.js)
       if (st.low) tg.low = true; // filmed from eye level and below, like the villagers at work
       if (st.interiorAt) tg.interiorAt = st.interiorAt; // from inside a building to outside
       stories.push({ st, tg });
@@ -632,7 +633,8 @@ function applyFrame(ctx, t) {
   const near = pov ? 0.05 : ev.camera.near || 1; // a shot's own near plane (close to a face or into a head, dayinlife.js)
   if (camera.near !== near) { camera.near = near; camera.updateProjectionMatrix(); }
   camera.updateMatrixWorld();
-  const night = env.set(ev.phase, ev.camera.look, ev.shadowRadius, t, indoor, ev.flying ? 0 : ev.active?.fog || 0);
+  const eclipse = ev.active?.eclipseAt && ev.section === 'update' ? ev.active.eclipseAt(ev.activeU) : 0;
+  const night = env.set(ev.phase, ev.camera.look, ev.shadowRadius, t, indoor, ev.flying ? 0 : ev.active?.fog || 0, eclipse);
   M.setNight(night);
   castle.update(t, { bridgeOpen: ev.bridge });
   for (const [id, a] of animated) a.set(ev.progress.has('h' + id) ? ev.progress.get('h' + id) : 1);
