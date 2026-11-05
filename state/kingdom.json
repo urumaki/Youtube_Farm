@@ -16605,7 +16605,8 @@
    "author": "UCj117KxQOJnsz3e-B35O61Q",
    "day": 7,
    "job": "guard",
-   "requestDay": 19
+   "requestDay": 19,
+   "complainDay": 21
   },
   "185": {
    "name": "Emty-handed",
@@ -19003,7 +19004,7 @@
    "name": "costcocrusaderking",
    "author": "UCRxP5pocD5pngbxoLqQItUg",
    "day": 10,
-   "job": "priest",
+   "job": "bishop",
    "requestDay": 21,
    "complainDay": 12
   },
@@ -19313,7 +19314,7 @@
    "day": 11,
    "job": "miner",
    "requestDay": 18,
-   "complainDay": 20
+   "complainDay": 21
   },
   "593": {
    "name": "TheFrogBogg",
@@ -20571,8 +20572,8 @@
    "name": "Voidvision",
    "author": "UCNBtGs3MC8nnhO17Zr-qFLw",
    "day": 14,
-   "job": "tailor",
-   "requestDay": 20
+   "job": "crier",
+   "requestDay": 21
   },
   "783": {
    "name": "mariceladuarte3092",
@@ -21345,7 +21346,9 @@
    "name": "Gnb13",
    "author": "UCe59wZhn8Aa_ax6U_xWqz8Q",
    "day": 17,
-   "complainDay": 20
+   "complainDay": 21,
+   "job": "miner",
+   "requestDay": 21
   },
   "909": {
    "name": "JonalynMillare",
@@ -21489,7 +21492,7 @@
    "name": "lolstar2569",
    "author": "UCD5MU7bbFp1d2VCuHfWw-xw",
    "day": 20,
-   "job": "guard",
+   "job": "beggar",
    "requestDay": 21
   },
   "933": {
@@ -21533,7 +21536,7 @@
    "requestDay": 20
   },
   "939": {
-   "name": "tortermer",
+   "name": "Torturle",
    "author": "UCF4RdkXOoJkxUfHlvK6XByg",
    "day": 20,
    "job": "guard",

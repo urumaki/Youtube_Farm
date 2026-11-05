@@ -1169,6 +1169,22 @@ test('comments of 2026-11-03 (owner 2026-11-04): visiting, robbing, cursing, a c
     assert.ok(!complainsFromText(t), t);
 });
 
+test('comments of 2026-11-04 (owner 2026-11-05): fighting someone is no request, the job after "request to be" first, more words and complaints', async () => {
+  const { wantsFromText, nameFromText, complainsFromText } = await import('../src/sim/requests.js');
+  for (const [t, jobs] of Object.entries({
+    "I wish to fight the knight at the tavern when he's drunk. Or just beg near the other beggars to make a union.": ['beggar'],
+    'as the first priest i request to be archbishop': ['bishop', 'priest'], "My lord can I be the town's messager? Please": ['crier'],
+    'Day 8 or 9 of asking to be the owner of the mine when it opens': ['miner'], 'Can i be...The enginner': ['engineer'],
+    'I subbed can I be a dumb person': ['jester'],
+    // still requests
+    'I want to fight as a knight': ['guard'], 'can I work at the tavern?': ['innkeeper'],
+  })) assert.deepEqual(wantsFromText(t), jobs, t);
+  assert.equal(nameFromText('Name me as torturle'), 'Torturle');
+  for (const t of ['Waht abot meee😢', 'I subscribed but I never got my job', 'I still wait for an employment in the mines', 'Day 8 or 9 of asking to be the owner of the mine'])
+    assert.ok(complainsFromText(t), t);
+  assert.ok(!complainsFromText('What about the mines, my lord?'));
+});
+
 test('the Dungeon (owner 2026-11-04): at 3250, a thief or a usurper asks for a cell, nobody is drawn a prisoner, its scenes need it built', async () => {
   const { TIERS, JOBS, jobFor, BUILDINGS } = await import('../src/sim/tiers.js');
   const { wantsFromText, availableJobs, tierOfJob } = await import('../src/sim/requests.js');

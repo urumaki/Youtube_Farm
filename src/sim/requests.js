@@ -13,7 +13,7 @@ const KEYWORDS = [
   [/tavern|\binn\b|innkeeper|bar\s*keep|bartender|taverna|\boste\b|\bpub\b/, 'innkeeper'],
   [/warrior|\bfighter|\bsword|\bwarlord|guerrier|combattent|spadaccin/, 'guard'],
   [/\bbeggar|\bbegger|\bdrunk|\bdrink|sit all day|mendicant|ubriac|homeless|senza\s*tetto|vagabond|\btramp\b|\bhobo/, 'beggar'],
-  [/weirdo|\bweird\b|\bfool\b|crazy(?!\s+(begg|drunk|hobo|tramp))|lunatic|\bscemo|\bmatto|\bidiot|nitwit/, 'jester'],
+  [/weirdo|\bweird\b|\bfool\b|\bdumb\s+(person|guy|man|one|villager)\b|crazy(?!\s+(begg|drunk|hobo|tramp))|lunatic|\bscemo|\bmatto|\bidiot|nitwit/, 'jester'],
   [/jester|\bclown|juggl|giullare|buffone/, 'jester'],
   [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b|crossbow|long\s*bow|frecce|arciere/, 'fletcher'],
   // owner 2026-10-28: a Knight, a Cavalier and the Captain of the Guard are only won at the tournaments, so asking makes a guard
@@ -26,7 +26,7 @@ const KEYWORDS = [
   [/(?<!\b(on|at|to|into|near|outside|inside|of)\s+(the\s+|a\s+|our\s+|my\s+|your\s+)?)(chapel|church|cathedral|cappella|chiesa)/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
   [/carpenter|\bbuilder|falegname|carpentiere|craftsman|craftsmen|craftm[ae]n|artisan|artigian|wood\s*worker|\bcarvers?\b|shipwright|ship\s*builder/, 'carpenter'],
-  [/\bbishop|vescovo/, 'bishop'],
+  [/\b(arch)?bishop|vescovo/, 'bishop'],
   [/\bpriest|\bpreist|\bmonk|\bfriar|monaster|monastic|\bdeacon|\bnun\b|religious figure|prete|frate|monaco/, 'priest'],
   [/\bbaker|\bbakler|\bbread|\bbake|fornaio|\bpane\b/, 'baker'],
   [/\bmill(er)?\b|mugnaio|mulino/, 'miller'],
@@ -51,9 +51,9 @@ const KEYWORDS = [
   [/chronicler|historian|\bhistory\b|cronista|\bstorico/, 'scholar'],
   [/\badmiral|ammiraglio/, 'sailor'],
   // new jobs asked for in the comments of 2026-10-22 (owner 2026-10-23, by request only)
-  [/hunter|\bhunt(ing)?\b|cacciator|\bcaccia\b/, 'hunter'],
+  [/hunter|\bhunt(ing)?\b|\bga[mn]e\s*(warden|keeper)|cacciator|\bcaccia\b/, 'hunter'],
   [/butcher|slaughter|macellai|\bmeat\b/, 'butcher'],
-  [/engineer|egineer|mechanic|ingegner|\bsiege|trebuchet|catapult/, 'engineer'],
+  [/engineer|egineer|enginn?e+r|mechanic|ingegner|\bsiege|trebuchet|catapult/, 'engineer'],
   [/shep+h?[ae]rd|\bsheep|\bherd(ing)?\s+(the\s+)?(pigs?|swine|ducks?|geese|goats?|cows?|cattle)|swine\s*herd|goat\s*herd|cow\s*herd|rancher|\bgoats?\b|\bbarn\b|livestock|raise animals|\bpastore|pecor|allevator/, 'shepherd'],
   [/\btanner|leather\s*worker|tannery|concia|cuoio/, 'tanner'],
   // no noble titles as jobs (owner): a lord or a landlord collects the taxes. "My lord", "my noble lord" and "signore" alone
@@ -72,7 +72,7 @@ const KEYWORDS = [
   [/\bcook|\bchef\b|\bcuoc[oa]|\bkitchen|\bcucina\b/, 'cook'],
   [/\bmayor|sindaco/, 'taxcollector'],
   [/executioner|headsman|\bboia\b|carnefice|giustiziere/, 'executioner'],
-  [/town\s*crier|\bcrier\b|town\s*speaker|\bherald|banditore|araldo|messaggero|messenger|courier|doomsayer|announcer|annunciator|news\s*(paper|boy|seller)|giornal/, 'crier'],
+  [/town\s*crier|\bcrier\b|town\s*speaker|\bherald|banditore|araldo|messaggero|messenger|messa?n?ger\b|courier|doomsayer|announcer|annunciator|news\s*(paper|boy|seller)|giornal/, 'crier'],
   // new jobs asked for in the comments up to 2026-10-25 (owner 2026-10-25, by request only)
   [/teacher|\btutor|school\s*master|insegnant|\bmaestr[oa]\b/, 'teacher'],
   [/philosoph|\bthinker|filosof/, 'philosopher'],
@@ -85,7 +85,7 @@ const KEYWORDS = [
   // 2026-11-04: "the mine worker", "a mine builder")
   // owner 2026-11-04: a thief, a bandit, a usurper... asks for a cell in the Dungeon (from 3250; before, an apprentice)
   [/\bthie(f|ves)|\brobbers?\b|\brob\b|\bbandits?\b|brigand|criminal|\boutlaws?\b|\bcrooks?\b|pickpocket|burglar|smuggler|highwayman|\bpoacher|usurper|traitor|dissident|assassin|\bsteal(ing)?\b|\bprisoner|\bconvict\b|\bjail\b|\bgaol\b|\bdungeon\b|\bladr[oi]\b|brigant|\bbandit[oi]\b|criminal[ei]|fuorilegge|usurpator|traditor|prigionier|galeott|carcerat/, 'prisoner'],
-  [/\bminers?\b|\bmining\b|\bmine\s*(worker|builder|digger|hand|labou?rer|man|men)s?\b|\bminor in the (cave|mine)|\bquarry\s*man|\bpick\s*axe|minatore|miniera|cavatore/, 'miner'],
+  [/\bminers?\b|\bmining\b|\bmine\s*(worker|builder|digger|hand|labou?rer|man|men|owner)s?\b|\bowner of the mines?\b|\bminor in the (cave|mine)|\bquarry\s*man|\bpick\s*axe|minatore|miniera|cavatore/, 'miner'],
 ];
 
 // "maybe later, when there are proper guards" is a wish for the kingdom, not a job request
@@ -109,12 +109,16 @@ const NOT_ASKED = new RegExp([
   // the start of a comment ("BLOODY TAX COLLECTOR" made a rat catcher a tax collector)
   /\b(visit|visits|visited|visiting|rob|robs|robbed|robbing|steal\s+from|raid)\s+(the|a|an|my|our|your|some|all)?\s*(\w+\s+)?$/.source,
   /\bfor\s+(new|more|some|better)\s+(\w+\s+)?$/.source,
+  // owner 2026-11-05, from the comments of 2026-11-04: nor is fighting someone ("I wish to fight the knight at the tavern when
+  // he's drunk. Or just beg near the other beggars" made a beggar a guard), the rest of that sentence included
+  /\b(fight|fighting|beat|punch|duel|challenge)\s+(the|a|an|that|this|some|his|her|every)\b[^.!?]*$/.source,
   /(^|[.!?]\s*)(bloody|damn|damned|stupid|filthy|greedy|cursed|dirty)\s+$/.source,
 ].join('|'));
 // ...unless a word like "job" follows the job: "can I get a blacksmith job" asks for the blacksmith
 const JOB_AFTER = /^[\w-]*\s+(job|role|position|apprenticeship|work)\b/;
 // "Ordinary citizen, will take a job of hunter": the job named after "a job of", "work as"... is the request, whatever came first
-const JOB_OF = /\b(job|work|career|role|position|post)\s+(of|as)\s+(a\s+|an\s+|the\s+)?$/;
+// (2026-11-05: "as the first priest i request to be archbishop": the job after "want / request to be" comes first)
+const JOB_OF = /\b(job|work|career|role|position|post)\s+(of|as)\s+(a\s+|an\s+|the\s+)?$|\b(want|wish|request|ask|like|love|hope)\s+to\s+(be|become)\s+(a\s+|an\s+|the\s+)?$/;
 
 // Comment text is untrusted input. It is never run, never passed to a shell, a template or a language model:
 // only the fixed regexes in this file read it, and then it is dropped. plainText() makes it safe to scan: a
@@ -170,7 +174,7 @@ const NUM = String.raw`(\d+|one|two|three|four|five|six|seven|eight|nine|ten|ele
 // (2026-11-04: "Day 5 Ov asking", "part nine of asking", "still haven't seen my guard self", "I havent seen my name", "Can I be
 // in the next one", "have i become a butcher yet", "unsure if I have found employment at the mines")
 const COMPLAINT_RE = new RegExp([
-  String.raw`\b(day|part)\W{0,3}${NUM}\W{0,3}((of|for|ov|off)\s+)?(asking|begging|requesting|waiting|trying|wanting|commenting)\b`, String.raw`\bday\W{0,3}${NUM}\W{0,3}for\b[^.!?]*\?`, String.raw`\b(giorno|day)\s*${NUM}\s+(che|di|in cui)\s+(chiedo|aspetto)\b`,
+  String.raw`\b(day|part)\W{0,3}${NUM}(\s+or\s+${NUM})?\W{0,3}((of|for|ov|off)\s+)?(asking|begging|requesting|waiting|trying|wanting|commenting)\b`, String.raw`\bday\W{0,3}${NUM}\W{0,3}for\b[^.!?]*\?`, String.raw`\b(giorno|day)\s*${NUM}\s+(che|di|in cui)\s+(chiedo|aspetto)\b`,
   /\bam i (a|an|the|still a|still an|in|on|here|there|real|alive|named|shown|even)\b/.source, /\bdo i (exist|have a (job|house|name|villager))\b/.source,
   /\b(what|which)('?s| is| was)? my (job|villager|house|name|role)\b/.source, /\b(what|which) (job|role|work) (do|did|have|am) i\b/.source,
   /\b(no idea|don'?t know|do not know|not sure) (what|which) (job|role|villager)\b/.source,
@@ -178,6 +182,8 @@ const COMPLAINT_RE = new RegExp([
   /\b(che|quale) lavoro (ho|faccio|mi)\b/.source, /\bsono (un|una|uno|ancora)\b[^.!?]*\?/.source,
   /\b(can'?t|cannot|can not|couldn'?t|could not|didn'?t|did not|don'?t|do not|never)\s+(see|find|spot)\s+(me|myself|my\b)/,
   /\b(haven'?t|havent|have not|never)\s+(yet\s+)?(seen|found|spotted)\s+(me|myself|my\b)/, /\b(be|appear|put me|show me)\s+in\s+(the\s+)?next\s+(one|video|short|episode|day)\b/,
+  // (2026-11-05: "Day 8 or 9 of asking", "Waht abot meee", "I never got my job", "I still wait for an employment in the mines")
+  /\bw[ha]{1,3}t\s+ab[ou]{1,2}t\s+me+\b/, /\bnever (got|had|received) (my|a) (job|villager|name|role)\b/, /\bstill wait(ing)? for (an? |my )?(employment|job|work|position|role|villager)\b/,
   /\bhave i (become|been made|been given|got|gotten)\b/, /\b(unsure|not sure|wondering)\s+(if|whether)\s+i\s+(have|am|got|was|'?m)\b/,
   /\bwhere\s+(am i|is my|'?s my|are my)\b/, /\bwhere'?s my\b/, /\bwhere('?s| is| was) (me|i)\b/,
   /\bi'?m not (in|there|on)\b/, /\bi (wasn'?t|was not|am not) (in|there|shown|on)\b/, /\bnot (in )?(the|this) (video|short)\b/,
@@ -218,7 +224,7 @@ export function rebelFromText(text) {
 
 // "call me Violet", "a carpenter named henry", "can I be a villager called sopita?", "chiamami Pino".
 // Only the chosen name is kept (cleaned and checked like any display name in simulate.js).
-const NAME_RE = /\b(?:(?:call me|called|named)(?: as)?|my name is sir|name me|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;
+const NAME_RE = /\b(?:(?:call me|called|named)(?: as)?|my name is sir|name me(?: as)?|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;
 const NOT_NAMES = new Set(['a', 'an', 'the', 'me', 'it', 'one', 'him', 'her', 'please', 'pls', 'plz', 'villager', 'something', 'anything',
   'by', 'like', 'as', 'too', 'now', 'here', 'my', 'mine', 'that', 'this', 'what', 'whatever', 'un', 'una', 'come', 'per', 'favore',
   // named villagers are never villains (owner; 2026-11-04: "a villager named thief")

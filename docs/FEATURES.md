@@ -495,6 +495,16 @@ Add new owner decisions here.
   Simonheller carpenter (blacksmith), BENDYX20II rat catcher (tax collector), AlfredoMaglasang named so again and a jester as
   asked (renamed "Thief", fisherman), FinnTomkinson blacksmith, Sorij miner, StefBaars woodcutter; the seven missed
   complaints got their `complainDay`. Not changed (no effect: the villager has that job already): "gurd", "crusaider".
+- From the comments on the day 20 video (owner 2026-11-05, `requests.js`; 63 comments, 56 read by the 2026-11-05 run; the
+  day 21 video was not public yet): fighting someone is no request, the rest of that sentence included ("I wish to fight
+  the knight at the tavern when he's drunk. Or just beg near the other beggars" asks for the beggar; "fight as a knight"
+  still asks for a guard); the job after "want / wish / request to be" comes first (`JOB_OF`: "as the first priest i request
+  to be archbishop" asks for the bishop); "archbishop", "messager" (crier), "owner of the mine" (miner), "game warden"
+  (hunter), "enginner", "a dumb person" (jester); a name after "name me as". Complaints: "Day 8 or 9 of asking", "waht abot
+  meee", "I never got my job", "I still wait for an employment". Set right in `state/kingdom.json` and
+  `state/history/2026-11-05.json`: Voidvision crier (was left a tailor), lolstar2569 beggar (made a guard), tortermer
+  renamed Torturle as asked, costcocrusaderking bishop (priest), Gnb13 miner; XiJi, Mr.EdwardEh and Gnb13 marked as
+  complaints.
 - The jobs given by the old keywords set right in `state/kingdom.json` (owner 2026-10-29, `ffd110a`): each villager's own
   requests read again by hand; 26 changed (14 tax collectors made by "my lord", guards made by "sir", thanks read as a
   request), 6 who never asked for a job back to the job they were born to. "Bozo" ("I come for bread") is the drunkard (beggar), the owner says.
