@@ -44,7 +44,7 @@ Add new owner decisions here.
   bad-word list): that is input, not output.
 - Story events (`src/sim/stories.js`, scenes in `src/render/scene/stories/`): at most one a day, 4.5 s shot
   right after the caravan, hard cut in and out, own camera, banner and name tags. Calendar events always
-  happen on their date (Halloween 31/10); otherwise ~50% of days, each kind with a cooldown
+  happen on their date (Halloween 31/10); otherwise ~65% of days (owner 2026-11-05, was 50%), each kind with a cooldown
   (`state.storyLog`). Done: quarrel in the square (chicken/goat/cabbage), merchant caravan on the
   south-east road, bandits at dusk on the mill track chased off by guards with named heroes, Halloween
   bonfire with named villagers in costume (ghost, scarecrow, pumpkin). Added 2026-10-20: house fire put out

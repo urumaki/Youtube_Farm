@@ -404,7 +404,8 @@ test('story events: deterministic, Halloween on its date, cooldowns kept, named 
     if (x.story.id === 'bandits') for (const c of x.story.cast) assert.ok(c.name, 'bandit heroes are named villagers');
   }
   const days = a.filter((x) => x.story).length;
-  assert.ok(days > 15 && days < 55, `stories on ${days} of 70 days`);
+  // 65% of the days (owner 2026-11-05), plus the calendar, the proclamations and the steps of the longer stories
+  assert.ok(days > 20 && days < 62, `stories on ${days} of 70 days`);
 });
 
 test('every named villager gets a turn on screen, two at a time when they work together', async () => {

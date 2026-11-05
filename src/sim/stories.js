@@ -2,7 +2,7 @@
 // merchant caravan, Halloween...). Deterministic: depends on the seed, the date and the state.
 // Tone (owner's rule): named villagers are heroes or comic characters, never villains or victims, and
 // nobody gets hurt. Calendar events always happen on their date; otherwise a story happens on about
-// half the days, each kind with its own cooldown so the same scene does not repeat too often.
+// two days in three (65%), each kind with its own cooldown so the same scene does not repeat too often.
 // Owner (2026-10-21): a story can go on for a few days, one step a day: the merchants arrive, dance round
 // the fire at night, then leave (`steps`). (The rule of no story on days with 15 or more new commenters was
 // dropped by the owner on 2026-10-22.)
@@ -129,7 +129,7 @@ export function takesOver(story) {
 }
 const GUARDS = ['guard', 'knight'], LAND = ['farmer', 'peasant', 'shepherd'];
 const teamOf = (s, jobs) => namedVillagers(s).filter((n) => jobs.includes(n.job));
-const STORY_CHANCE = 0.5;
+const STORY_CHANCE = 0.65; // owner 2026-11-05: 65% (was 50%)
 
 function built(state, id) {
   return state.buildings.some((b) => b.id === id && b.status === 'done');
