@@ -669,7 +669,7 @@ Add new owner decisions here.
   peasant; hobo: beggar; mechanic: engineer; academic: scholar; justiciar, prosecutor, lawman: tax collector. Still not
   read right: "the guards threw food at me... a city sweeper" (guard), "the inn needs a cook" (innkeeper). No job for:
   adventurer, assistant, aviation pioneer, crackhead, thief, assassin, wizard, witch, prince, queen.
-  Owner 2026-11-07, from the comments of 2026-11-06/07 (): no request for a job named as someone else's
+  Owner 2026-11-07, from the comments of 2026-11-06/07 (`tests/sim.test.js`): no request for a job named as someone else's
   ("the executioner's friend") or as taken ("blacksmith was taken so I want priest": "I want priest" is the request), after
   serving or sending someone ("serving a Swordmaster", "send in the knights"), after this/that/these/those ("this bow",
   "those filthy bandits") or "any" ("if any farmers have rats"); a plural thief, bandit... is someone else (the night
