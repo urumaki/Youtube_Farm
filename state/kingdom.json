@@ -1,10 +1,10 @@
 {
  "schemaVersion": 1,
  "seed": 3999547794,
- "day": 22,
- "date": "2026-11-06",
- "subscriberCount": 2890,
- "peakPopulation": 2890,
+ "day": 23,
+ "date": "2026-11-07",
+ "subscriberCount": 2960,
+ "peakPopulation": 2960,
  "countSource": "public",
  "houses": [
   {
@@ -8588,7 +8588,159 @@
     2886,
     2887,
     2888,
-    2889
+    2889,
+    2890,
+    2891,
+    2892
+   ]
+  },
+  {
+   "id": 552,
+   "plot": 200572,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 23,
+   "occupants": [
+    2893,
+    2894,
+    2895,
+    2896,
+    2897,
+    2898,
+    2899,
+    2900
+   ]
+  },
+  {
+   "id": 553,
+   "plot": 200573,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 23,
+   "occupants": [
+    2901,
+    2902,
+    2903,
+    2904,
+    2905,
+    2906,
+    2907,
+    2909
+   ]
+  },
+  {
+   "id": 554,
+   "plot": 100018,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 23,
+   "occupants": [
+    2908,
+    2910,
+    2928,
+    2944,
+    2951
+   ],
+   "fine": true
+  },
+  {
+   "id": 555,
+   "plot": 200574,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 23,
+   "occupants": [
+    2911,
+    2912,
+    2913,
+    2914,
+    2915,
+    2916,
+    2917,
+    2918
+   ]
+  },
+  {
+   "id": 556,
+   "plot": 200575,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 23,
+   "occupants": [
+    2919,
+    2920,
+    2921,
+    2922,
+    2923,
+    2924,
+    2925,
+    2926
+   ]
+  },
+  {
+   "id": 557,
+   "plot": 200576,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 23,
+   "occupants": [
+    2927,
+    2929,
+    2930,
+    2931,
+    2932,
+    2933,
+    2934,
+    2935
+   ]
+  },
+  {
+   "id": 558,
+   "plot": 200577,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 23,
+   "occupants": [
+    2936,
+    2937,
+    2938,
+    2939,
+    2940,
+    2941,
+    2942,
+    2943
+   ]
+  },
+  {
+   "id": 559,
+   "plot": 200578,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 23,
+   "occupants": [
+    2945,
+    2946,
+    2947,
+    2948,
+    2949,
+    2950,
+    2952,
+    2953
+   ]
+  },
+  {
+   "id": 560,
+   "plot": 200579,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 23,
+   "occupants": [
+    2954,
+    2955,
+    2956,
+    2957,
+    2958,
+    2959
    ]
   }
  ],
@@ -15234,6 +15386,115 @@
    "rot": -1.756842770015087,
    "facing": 1,
    "road": "lane5"
+  },
+  {
+   "id": 200572,
+   "x": 519.9724909193357,
+   "z": 125.77484363693806,
+   "y": 3.4139202931310537,
+   "yMin": 3.275572911507492,
+   "hw": 3.1971496251178904,
+   "hd": 8.110246946569532,
+   "rot": 2.213561699564666,
+   "facing": 1,
+   "road": "lane4"
+  },
+  {
+   "id": 200573,
+   "x": 746.6108443126632,
+   "z": 32.17454828199181,
+   "y": 3.289187001209909,
+   "yMin": 3.289187001209909,
+   "hw": 3.14014044185169,
+   "hd": 10.531129366485402,
+   "rot": 0.06544202304984245,
+   "facing": 1,
+   "road": "east"
+  },
+  {
+   "id": 100018,
+   "x": 180.9160094388037,
+   "z": 184.20480454521342,
+   "y": 2.8863460487698007,
+   "yMin": 2.713700479568355,
+   "hw": 7.355396689323243,
+   "hd": 13.746903514489532,
+   "rot": 0.10473454364586712,
+   "facing": 1,
+   "road": "noble_east2",
+   "fine": true
+  },
+  {
+   "id": 200574,
+   "x": 241.59898013877438,
+   "z": -485.7649977280718,
+   "y": 2.708589210414737,
+   "yMin": 2.5658441865187958,
+   "hw": 3.2677822501165794,
+   "hd": 10.413874018704519,
+   "rot": -1.9477132251995173,
+   "facing": 1,
+   "road": "lane127"
+  },
+  {
+   "id": 200575,
+   "x": 219.57355882467596,
+   "z": -462.7485230561352,
+   "y": 2.7656426236312766,
+   "yMin": 2.5854940751062037,
+   "hw": 3.4548974446253853,
+   "hd": 10.003773990785703,
+   "rot": -2.0298388140564914,
+   "facing": -1,
+   "road": "lane127"
+  },
+  {
+   "id": 200576,
+   "x": 338.8056603804372,
+   "z": -404.4953661545042,
+   "y": 3.4297576151656743,
+   "yMin": 3.404859679705129,
+   "hw": 2.8321931466460226,
+   "hd": 8.967229695990682,
+   "rot": 2.20042625160022,
+   "facing": 1,
+   "road": "lane130"
+  },
+  {
+   "id": 200577,
+   "x": 512.2924782066817,
+   "z": 136.60150108191846,
+   "y": 3.5567023603784307,
+   "yMin": 3.325828355665089,
+   "hw": 2.985912987566553,
+   "hd": 7.800263062235899,
+   "rot": 2.1966388959744116,
+   "facing": 1,
+   "road": "lane4"
+  },
+  {
+   "id": 200578,
+   "x": 356.1608967263639,
+   "z": -495.92688678497495,
+   "y": 3.6222150915553937,
+   "yMin": 3.539953716305842,
+   "hw": 3.0935362936230377,
+   "hd": 9.878316770889796,
+   "rot": -1.484085693952619,
+   "facing": -1,
+   "road": "lane31"
+  },
+  {
+   "id": 200579,
+   "x": 125.77235223653923,
+   "z": -267.83226775030244,
+   "y": 4.516624646894817,
+   "yMin": 4.324251953832994,
+   "hw": 3.2324510553386063,
+   "hd": 7.111124121816829,
+   "rot": 2.053485797018969,
+   "facing": -1,
+   "road": "lane128"
   }
  ],
  "buildings": [
@@ -15509,25 +15770,25 @@
  "pendingConstruction": [
   {
    "building": "cathedral",
-   "daysLeft": 6,
+   "daysLeft": 5,
    "daysTotal": 21
   }
  ],
- "weather": "rain",
+ "weather": "fog",
  "events": [
   {
    "type": "weather",
-   "weather": "rain",
+   "weather": "fog",
    "season": "autumn"
   },
   {
    "type": "construction",
    "building": "cathedral",
    "label": "the Cathedral",
-   "progress": 0.7142857142857143
+   "progress": 0.7619047619047619
   },
   {
-   "type": "market_day"
+   "type": "harvest"
   }
  ],
  "names": {
@@ -15611,7 +15872,7 @@
    "author": "UCRn79g9kHNpn1avTlvMH2vA",
    "day": 3,
    "job": "guard",
-   "requestDay": 20,
+   "requestDay": 23,
    "complainDay": 22,
    "joinDay": 13
   },
@@ -15627,7 +15888,7 @@
    "author": "UCA874Yq3SyM7tAJb806wGYg",
    "day": 3,
    "job": "blacksmith",
-   "requestDay": 7
+   "requestDay": 23
   },
   "16": {
    "name": "BàlintFodor",
@@ -15713,7 +15974,7 @@
    "author": "UC8ym8oeYxjesTwEu2nrFeOg",
    "day": 4,
    "job": "woodcutter",
-   "requestDay": 20
+   "requestDay": 23
   },
   "30": {
    "name": "MichaelMartinez",
@@ -16063,7 +16324,7 @@
    "author": "UCg6B1vTHDPanmz-EvB07eKw",
    "day": 7,
    "job": "apprentice",
-   "requestDay": 22,
+   "requestDay": 23,
    "wants": "prisoner"
   },
   "88": {
@@ -16231,7 +16492,7 @@
    "author": "UCzY-N6EGhuXG_Qt0gS3HZeg",
    "day": 7,
    "job": "guard",
-   "requestDay": 22,
+   "requestDay": 23,
    "rebelDay": 22
   },
   "114": {
@@ -16287,8 +16548,8 @@
    "name": "MOREneenee",
    "author": "UCru_J-b5G5vc5LCR8dDxMkw",
    "day": 7,
-   "job": "ratcatcher",
-   "requestDay": 19
+   "job": "farmer",
+   "requestDay": 23
   },
   "122": {
    "name": "GabrielP",
@@ -16690,7 +16951,7 @@
    "day": 7,
    "job": "guard",
    "requestDay": 19,
-   "complainDay": 21
+   "complainDay": 23
   },
   "185": {
    "name": "Emty-handed",
@@ -16836,7 +17097,7 @@
    "author": "UCUgGBYqFUni8U2qBYD7wpDg",
    "day": 8,
    "job": "guard",
-   "requestDay": 20,
+   "requestDay": 23,
    "complainDay": 19
   },
   "207": {
@@ -17016,7 +17277,7 @@
    "author": "UCAMmSVAJ_fyvkTyJIr02u8g",
    "day": 8,
    "job": "guard",
-   "requestDay": 21
+   "requestDay": 23
   },
   "233": {
    "name": "skulledsinger",
@@ -17170,7 +17431,7 @@
    "author": "UCi1DAGGHuyn-qQx1TugNOzA",
    "day": 8,
    "job": "guard",
-   "requestDay": 8
+   "requestDay": 23
   },
   "256": {
    "name": "Sketchfestgaming",
@@ -17312,8 +17573,8 @@
    "author": "UCuixh6sZ-0VEB4pjGfzzMkQ",
    "day": 8,
    "job": "scholar",
-   "requestDay": 21,
-   "complainDay": 21
+   "requestDay": 23,
+   "complainDay": 23
   },
   "277": {
    "name": "Someperson",
@@ -17397,7 +17658,7 @@
    "author": "UCSdVlxRXzAYGFUpwlnsVzsw",
    "day": 8,
    "job": "fisherman",
-   "requestDay": 22
+   "requestDay": 23
   },
   "290": {
    "name": "AnimatorMan",
@@ -17474,15 +17735,15 @@
    "author": "UCVsjhdwrD2RVr37baTQFdkQ",
    "day": 8,
    "job": "sailor",
-   "requestDay": 21,
-   "complainDay": 21
+   "requestDay": 23,
+   "complainDay": 23
   },
   "301": {
    "name": "RoyalHyrulean",
    "author": "UCgbIT6tvAIdG38Lfx68BurA",
    "day": 8,
    "job": "taxcollector",
-   "requestDay": 19
+   "requestDay": 23
   },
   "302": {
    "name": "squire",
@@ -18314,14 +18575,14 @@
    "author": "UCUT7_TwLWVG9BvE__dVwkcw",
    "day": 9,
    "job": "scholar",
-   "requestDay": 22
+   "requestDay": 23
   },
   "428": {
    "name": "uknown",
    "author": "UCgymzvodAoRCt0eya81AXoQ",
    "day": 9,
-   "job": "guard",
-   "requestDay": 15
+   "job": "stonemason",
+   "requestDay": 23
   },
   "429": {
    "name": "thatone_gunpladude",
@@ -18389,7 +18650,7 @@
    "author": "UCqb9VTkiwB-Xl336P_uFFWQ",
    "day": 9,
    "job": "guard",
-   "requestDay": 19
+   "requestDay": 23
   },
   "439": {
    "name": "amornj",
@@ -18760,7 +19021,7 @@
    "author": "UCrcmLt4WXQAxTxuIoHFgfGg",
    "day": 9,
    "job": "guard",
-   "requestDay": 19,
+   "requestDay": 23,
    "complainDay": 19
   },
   "496": {
@@ -19021,7 +19282,7 @@
    "author": "UCP0CK6Pkst3NASJJGgqlD4w",
    "day": 10,
    "job": "guard",
-   "requestDay": 14
+   "requestDay": 23
   },
   "535": {
    "name": "CharmaineNicholson",
@@ -19334,8 +19595,8 @@
    "name": "total0turtle",
    "author": "UCGJClYwlPCacetq5zLiB_rg",
    "day": 11,
-   "complainDay": 21,
-   "rebelDay": 21,
+   "complainDay": 23,
+   "rebelDay": 23,
    "pilloryDay": 21
   },
   "584": {
@@ -19757,7 +20018,7 @@
    "author": "UC6KZ-FF85He1HJ3K8kXnbpw",
    "day": 12,
    "job": "farmer",
-   "requestDay": 12
+   "requestDay": 23
   },
   "645": {
    "name": "MJPGAMING",
@@ -20671,8 +20932,8 @@
    "name": "God_of_greed_666",
    "author": "UCyEc_kheCCJWHSSmZpnh6vg",
    "day": 14,
-   "job": "taxcollector",
-   "requestDay": 22,
+   "job": "executioner",
+   "requestDay": 23,
    "complainDay": 16
   },
   "785": {
@@ -21243,8 +21504,8 @@
    "name": "AlfredoMaglasang",
    "author": "UCKyh7wACyRIOT9jAJZbteeQ",
    "day": 17,
-   "job": "jester",
-   "requestDay": 20
+   "job": "hunter",
+   "requestDay": 23
   },
   "877": {
    "name": "nertano2518",
@@ -21354,7 +21615,8 @@
   "894": {
    "name": "CamdenLit611",
    "author": "UCKvFc2EbnUMTEQELn6A7FIg",
-   "day": 17
+   "day": 17,
+   "complainDay": 23
   },
   "895": {
    "name": "Timmy-the-timtam",
@@ -21608,15 +21870,15 @@
    "author": "UCliB9PmTC2i35qCYiVlRz3Q",
    "day": 20,
    "job": "merchant",
-   "requestDay": 22,
-   "complainDay": 22
+   "requestDay": 23,
+   "complainDay": 23
   },
   "937": {
    "name": "Terra_4",
    "author": "UCxaWAaVHp0zfphDEcJagAkw",
    "day": 20,
    "job": "physician",
-   "requestDay": 20
+   "requestDay": 23
   },
   "938": {
    "name": "mrlastgun5275",
@@ -21638,7 +21900,7 @@
    "day": 20,
    "job": "apprentice",
    "wants": "prisoner",
-   "requestDay": 22
+   "requestDay": 23
   },
   "941": {
    "name": "kaisarambatron",
@@ -21871,6 +22133,179 @@
    "name": "ordnagameplay3445",
    "author": "UCKhT-U00N5jQJ0FH4PKgclQ",
    "day": 22
+  },
+  "979": {
+   "name": "10rodac10",
+   "author": "UCrGwNkiylZNKnrS1RGUiTMw",
+   "day": 23,
+   "job": "scholar",
+   "requestDay": 23
+  },
+  "980": {
+   "name": "YourAverageEesti",
+   "author": "UCd3inrdbXCBMFQl7kpW5m6g",
+   "day": 23
+  },
+  "981": {
+   "name": "22CopperOres",
+   "author": "UCZjCaRcqqx5uPdvM1geU14g",
+   "day": 23
+  },
+  "982": {
+   "name": "TIGERSROCKK2008",
+   "author": "UCToZUTVPFS4DNa9XuMQp9sQ",
+   "day": 23,
+   "job": "guard",
+   "requestDay": 23
+  },
+  "983": {
+   "name": "pvtramirezarmyramgers",
+   "author": "UCFaHjno5MClpSAykCvYUjHA",
+   "day": 23,
+   "job": "farmer",
+   "requestDay": 23
+  },
+  "984": {
+   "name": "Carlos",
+   "author": "UCvfGXKV9HXFn12MRo4zG6pg",
+   "day": 23
+  },
+  "985": {
+   "name": "Zero_011-edits",
+   "author": "UCB_VCxhMZtW6wozvZUOF0bQ",
+   "day": 23
+  },
+  "986": {
+   "name": "Fish-geo-dash",
+   "author": "UC2HIndA1P1rCf86Aa5lIj-A",
+   "day": 23
+  },
+  "987": {
+   "name": "Hooded_Skoloten",
+   "author": "UC4NWd_RXxApGi0Bb2Tvy2Sg",
+   "day": 23,
+   "job": "apprentice",
+   "wants": "prisoner",
+   "requestDay": 23
+  },
+  "988": {
+   "name": "theonlyshreddedcheese",
+   "author": "UCEUrwhpYpz5fzILffA7IwFA",
+   "day": 23,
+   "job": "scholar",
+   "requestDay": 23
+  },
+  "989": {
+   "name": "Superrmarioooo",
+   "author": "UC-dAgs6v9peB3pzB1uey4ng",
+   "day": 23
+  },
+  "990": {
+   "name": "CarsonOpiel",
+   "author": "UCdLjFo5GB2W5UDxBn7mwwGA",
+   "day": 23,
+   "job": "carpenter",
+   "requestDay": 23
+  },
+  "991": {
+   "name": "HDF",
+   "author": "UCh0QLL2_b7GA9NOFLYLw0-g",
+   "day": 23
+  },
+  "992": {
+   "name": "randomguh",
+   "author": "UCHlJOTbRCeH8aAKREfMaLzg",
+   "day": 23
+  },
+  "993": {
+   "name": "Justus",
+   "author": "UCghxc3Cpl0fA-s8J5esBgoQ",
+   "day": 23
+  },
+  "994": {
+   "name": "clairesun4313",
+   "author": "UC2yYwVb-423Uhi5oJ7kVssQ",
+   "day": 23,
+   "job": "guard",
+   "requestDay": 23
+  },
+  "995": {
+   "name": "That_Person-1_1",
+   "author": "UCRhl3mxT0ZdID6O8D0MZFpA",
+   "day": 23
+  },
+  "996": {
+   "name": "graze8876",
+   "author": "UCF_LgsNvxMjxvs1_xF6VHHg",
+   "day": 23
+  },
+  "997": {
+   "name": "Hellnah",
+   "author": "UCFTs7ZaBhPq_40JbZUVU7bg",
+   "day": 23,
+   "job": "taxcollector",
+   "requestDay": 23
+  },
+  "998": {
+   "name": "CapCutMeme",
+   "author": "UCpKNPOZ26ste9RspzUrM_oA",
+   "day": 23,
+   "job": "taxcollector",
+   "requestDay": 23
+  },
+  "999": {
+   "name": "ColbeyBevill",
+   "author": "UCoznfIhcEv_2X5IYxfaMZ9g",
+   "day": 23
+  },
+  "1000": {
+   "name": "JavierJacobo",
+   "author": "UCpM_BqiCwnmWhQUR0MplvbQ",
+   "day": 23
+  },
+  "1001": {
+   "name": "BenjaminMollica",
+   "author": "UCQTj0qMJPh_eaxbClTFboxA",
+   "day": 23
+  },
+  "1002": {
+   "name": "jvsgamesandanimation5…",
+   "author": "UC3C7arNxUvOvysx-keK1X1A",
+   "day": 23,
+   "job": "farmer",
+   "requestDay": 23
+  },
+  "1003": {
+   "name": "myiastephens6303",
+   "author": "UC4EhWDIDSVx1mVTSKQk03gw",
+   "day": 23
+  },
+  "1004": {
+   "name": "GN___175",
+   "author": "UCxLibTfDbvelsVmgNXMLNCQ",
+   "day": 23,
+   "job": "blacksmith",
+   "requestDay": 23
+  },
+  "1005": {
+   "name": "milkymik3",
+   "author": "UCX7L9dC2Wl97pYS3XKxdObA",
+   "day": 23
+  },
+  "1006": {
+   "name": "ItsConnorF",
+   "author": "UCfRsyKt9DZNZODaXKp_9vqg",
+   "day": 23
+  },
+  "1007": {
+   "name": "SOAPEATERSTEFANDIGEŠA…",
+   "author": "UCvLVtDHHAxhx4oXakesEXMA",
+   "day": 23
+  },
+  "1008": {
+   "name": "IthielStephenDiente",
+   "author": "UCMwiLAKcebgYirTPljwc-hw",
+   "day": 23
   }
  },
  "nameQueue": [],
@@ -22853,9 +23288,39 @@
   "UCFGThMEKYevdBOor4MINodw",
   "UCEPL2AtOVwot6xcmNt1A12w",
   "UCucl6WioqqZKkpTdsd05LOQ",
-  "UCKhT-U00N5jQJ0FH4PKgclQ"
+  "UCKhT-U00N5jQJ0FH4PKgclQ",
+  "UCrGwNkiylZNKnrS1RGUiTMw",
+  "UCd3inrdbXCBMFQl7kpW5m6g",
+  "UCZjCaRcqqx5uPdvM1geU14g",
+  "UCToZUTVPFS4DNa9XuMQp9sQ",
+  "UCFaHjno5MClpSAykCvYUjHA",
+  "UCvfGXKV9HXFn12MRo4zG6pg",
+  "UCB_VCxhMZtW6wozvZUOF0bQ",
+  "UC2HIndA1P1rCf86Aa5lIj-A",
+  "UC4NWd_RXxApGi0Bb2Tvy2Sg",
+  "UCEUrwhpYpz5fzILffA7IwFA",
+  "UC-dAgs6v9peB3pzB1uey4ng",
+  "UCdLjFo5GB2W5UDxBn7mwwGA",
+  "UCh0QLL2_b7GA9NOFLYLw0-g",
+  "UCHlJOTbRCeH8aAKREfMaLzg",
+  "UCghxc3Cpl0fA-s8J5esBgoQ",
+  "UC2yYwVb-423Uhi5oJ7kVssQ",
+  "UCRhl3mxT0ZdID6O8D0MZFpA",
+  "UCF_LgsNvxMjxvs1_xF6VHHg",
+  "UCFTs7ZaBhPq_40JbZUVU7bg",
+  "UCpKNPOZ26ste9RspzUrM_oA",
+  "UCoznfIhcEv_2X5IYxfaMZ9g",
+  "UCpM_BqiCwnmWhQUR0MplvbQ",
+  "UCQTj0qMJPh_eaxbClTFboxA",
+  "UC3C7arNxUvOvysx-keK1X1A",
+  "UC4EhWDIDSVx1mVTSKQk03gw",
+  "UCxLibTfDbvelsVmgNXMLNCQ",
+  "UCX7L9dC2Wl97pYS3XKxdObA",
+  "UCfRsyKt9DZNZODaXKp_9vqg",
+  "UCvLVtDHHAxhx4oXakesEXMA",
+  "UCMwiLAKcebgYirTPljwc-hw"
  ],
- "commentsSeen": "2026-11-06T09:27:34Z",
+ "commentsSeen": "2026-11-07T09:50:05Z",
  "storyLog": {
   "royal": 12,
   "proclaim": 18,
@@ -22863,50 +23328,148 @@
   "decree": 14,
   "joust": 17,
   "halloween": 16,
-  "flood": 20
+  "flood": 20,
+  "raid": 23
  },
- "story": null,
- "featured": [
-  {
-   "id": 906,
-   "name": "tea827",
-   "job": "peasant",
-   "today": false,
-   "with": {
-    "id": 936,
-    "name": "lorenzo4797",
-    "job": "merchant",
-    "today": false
-   },
-   "pair": "visit"
+ "story": {
+  "id": "raid",
+  "step": "attack",
+  "gate": {
+   "x": -145.1701218823414,
+   "z": -209.63093031605558,
+   "rot": -0.2808275710853523,
+   "side": "north"
   },
-  {
-   "id": 629,
-   "name": "GankaiSchiza",
-   "job": "fletcher",
-   "today": false,
-   "with": {
-    "id": 13,
-    "name": "The_Knight_Of_Dice",
+  "houses": [
+   205,
+   199,
+   101
+  ],
+  "owner": {
+   "id": 967,
+   "name": "martinsharp4384",
+   "job": "scholar",
+   "day": 22
+  },
+  "guard": {
+   "id": 1007,
+   "name": "SOAPEATERSTEFANDIGEŠA…",
+   "job": "guard",
+   "day": 23
+  },
+  "defenders": [
+   {
+    "id": 955,
+    "name": "Sutartthegoat",
     "job": "guard",
-    "today": false
+    "day": 21
    },
-   "pair": "arrows"
+   {
+    "id": 1003,
+    "name": "myiastephens6303",
+    "job": "guard",
+    "day": 23
+   },
+   {
+    "id": 982,
+    "name": "TIGERSROCKK2008",
+    "job": "guard",
+    "day": 23
+   },
+   {
+    "id": 994,
+    "name": "clairesun4313",
+    "job": "guard",
+    "day": 23
+   }
+  ],
+  "missing": {
+   "id": 219,
+   "name": "BENDYX20II",
+   "job": "ratcatcher",
+   "day": 8
   },
-  {
-   "id": 245,
-   "name": "Tabs_oregine",
-   "job": "farmer",
-   "today": false,
-   "with": {
-    "id": 592,
-    "name": "Mr.EdwardEh",
-    "job": "miner",
-    "today": false
+  "chain": [
+   {
+    "id": 979,
+    "name": "10rodac10",
+    "job": "scholar",
+    "day": 23
    },
-   "pair": "visit"
-  }
- ],
+   {
+    "id": 980,
+    "name": "YourAverageEesti",
+    "job": "fisherman",
+    "day": 23
+   },
+   {
+    "id": 981,
+    "name": "22CopperOres",
+    "job": "merchant",
+    "day": 23
+   }
+  ],
+  "bandits": 50,
+  "guardCount": 25,
+  "population": 2960,
+  "cast": [
+   {
+    "id": 1007,
+    "name": "SOAPEATERSTEFANDIGEŠA…",
+    "job": "guard",
+    "day": 23
+   },
+   {
+    "id": 955,
+    "name": "Sutartthegoat",
+    "job": "guard",
+    "day": 21
+   },
+   {
+    "id": 1003,
+    "name": "myiastephens6303",
+    "job": "guard",
+    "day": 23
+   },
+   {
+    "id": 982,
+    "name": "TIGERSROCKK2008",
+    "job": "guard",
+    "day": 23
+   },
+   {
+    "id": 994,
+    "name": "clairesun4313",
+    "job": "guard",
+    "day": 23
+   },
+   {
+    "id": 967,
+    "name": "martinsharp4384",
+    "job": "scholar",
+    "day": 22
+   },
+   {
+    "id": 979,
+    "name": "10rodac10",
+    "job": "scholar",
+    "day": 23
+   },
+   {
+    "id": 980,
+    "name": "YourAverageEesti",
+    "job": "fisherman",
+    "day": 23
+   },
+   {
+    "id": 981,
+    "name": "22CopperOres",
+    "job": "merchant",
+    "day": 23
+   }
+  ]
+ },
+ "featured": [],
  "lastShown": {
   "13": 22,
   "46": 6,
@@ -22982,10 +23545,144 @@
  },
  "storyArc": {
   "id": "raid",
-  "step": "attack",
-  "day": 23,
-  "owner": true,
-  "missing": 219
+  "step": "rescue",
+  "day": 24,
+  "data": {
+   "gate": {
+    "x": -145.1701218823414,
+    "z": -209.63093031605558,
+    "rot": -0.2808275710853523,
+    "side": "north"
+   },
+   "houses": [
+    205,
+    199,
+    101
+   ],
+   "owner": {
+    "id": 967,
+    "name": "martinsharp4384",
+    "job": "scholar",
+    "day": 22
+   },
+   "guard": {
+    "id": 1007,
+    "name": "SOAPEATERSTEFANDIGEŠA…",
+    "job": "guard",
+    "day": 23
+   },
+   "defenders": [
+    {
+     "id": 955,
+     "name": "Sutartthegoat",
+     "job": "guard",
+     "day": 21
+    },
+    {
+     "id": 1003,
+     "name": "myiastephens6303",
+     "job": "guard",
+     "day": 23
+    },
+    {
+     "id": 982,
+     "name": "TIGERSROCKK2008",
+     "job": "guard",
+     "day": 23
+    },
+    {
+     "id": 994,
+     "name": "clairesun4313",
+     "job": "guard",
+     "day": 23
+    }
+   ],
+   "missing": {
+    "id": 219,
+    "name": "BENDYX20II",
+    "job": "ratcatcher",
+    "day": 8
+   },
+   "chain": [
+    {
+     "id": 979,
+     "name": "10rodac10",
+     "job": "scholar",
+     "day": 23
+    },
+    {
+     "id": 980,
+     "name": "YourAverageEesti",
+     "job": "fisherman",
+     "day": 23
+    },
+    {
+     "id": 981,
+     "name": "22CopperOres",
+     "job": "merchant",
+     "day": 23
+    }
+   ],
+   "bandits": 50,
+   "guardCount": 25,
+   "population": 2960,
+   "cast": [
+    {
+     "id": 1007,
+     "name": "SOAPEATERSTEFANDIGEŠA…",
+     "job": "guard",
+     "day": 23
+    },
+    {
+     "id": 955,
+     "name": "Sutartthegoat",
+     "job": "guard",
+     "day": 21
+    },
+    {
+     "id": 1003,
+     "name": "myiastephens6303",
+     "job": "guard",
+     "day": 23
+    },
+    {
+     "id": 982,
+     "name": "TIGERSROCKK2008",
+     "job": "guard",
+     "day": 23
+    },
+    {
+     "id": 994,
+     "name": "clairesun4313",
+     "job": "guard",
+     "day": 23
+    },
+    {
+     "id": 967,
+     "name": "martinsharp4384",
+     "job": "scholar",
+     "day": 22
+    },
+    {
+     "id": 979,
+     "name": "10rodac10",
+     "job": "scholar",
+     "day": 23
+    },
+    {
+     "id": 980,
+     "name": "YourAverageEesti",
+     "job": "fisherman",
+     "day": 23
+    },
+    {
+     "id": 981,
+     "name": "22CopperOres",
+     "job": "merchant",
+     "day": 23
+    }
+   ]
+  }
  },
  "sceneLog": {
   "tavern": 20,
@@ -23020,12 +23717,8 @@
  },
  "scenes": {
   "tavern": false,
-  "church": null,
-  "variants": {
-   "245": "hoe",
-   "629": "fletch",
-   "906": "spade"
-  },
+  "church": false,
+  "variants": {},
   "ambient": null,
   "pov": null
  },
@@ -23164,9 +23857,9 @@
  },
  "nextPlot": 195,
  "plotsV": 2,
- "nextDense": 572,
+ "nextDense": 580,
  "buildQueue": [],
- "nextFine": 18,
+ "nextFine": 19,
  "guardCaptain": 88,
  "gamesEntrants": [],
  "ennoble": [
@@ -23174,5 +23867,6 @@
    "id": 0,
    "day": 23
   }
- ]
+ ],
+ "riddleSolvers": []
 }
