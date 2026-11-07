@@ -641,7 +641,9 @@ export function pickStory(state, { unlocked = [], buildingShots = 0 } = {}) {
       state.storyLog[arc.id] = state.day;
       if (arc.step === undefined) return { id: arc.id, ...story };
       const steps = STORIES[arc.id].steps, k = steps.indexOf(arc.step);
-      if (k + 1 < steps.length) state.storyArc = { id: arc.id, step: steps[k + 1], day: state.day + 1, data: arc.data };
+      // a story the owner starts at its first step (owner 2026-11-07: the raid) hands today's story on to the next step, as
+      // one begun by chance does
+      if (k + 1 < steps.length) state.storyArc = { id: arc.id, step: steps[k + 1], day: state.day + 1, data: arc.data ?? (k === 0 ? story : undefined) };
       return { id: arc.id, step: arc.step, ...story };
     }
   }

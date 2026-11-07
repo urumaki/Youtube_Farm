@@ -184,7 +184,9 @@ Add new owner decisions here.
   Captain of the Guard; the race needs four, the joust two (`GAMES`). The owner can set a game for a day:
   `state.storyArc = { id: 'joust', step: 'announce', day, owner: true }` (in kingdom.json and the latest history file) comes
   before the calendar and a new goal's proclamation (`pickStory`); owner 2026-10-29: the joust announced on 2026-10-30,
-  the results after Halloween. The race (four chariots on the far straight) or the
+  the results after Halloween. Owner 2026-11-07: the night raid forced the same way for day 23 (`{ id: 'raid', step: 'attack',
+  day: 23, owner: true }`); a story the owner starts at its first step now hands that day's story on to the next step
+  (the rescue needs it), as one begun by chance does. The race (four chariots on the far straight) or the
   joust (two riders over the tilt: the winner's lance breaks on the shield, the loser rocks in the saddle, nobody falls;
   scene `stories/joust.js`), then a second shot in the new throne room (`stories/throne.js`, step `crown`, added by
   `timeline.js`): the winner walks up the red carpet between the other riders and named villagers, kneels, the King

@@ -1316,3 +1316,14 @@ test('the Dungeon escape and the eclipse (owner 2026-11-05): the whole video, th
   assert.equal((src.match(/'Subscribe to join the kingdom'/g) || []).length, 2);
   assert.equal((src.match(/footer: FOOTER/g) || []).length, 6); // five shots of the escape, the eclipse's one scene for all
 });
+
+test('a story the owner starts at its first step hands that day\'s story on to the next step (owner 2026-11-07: the raid)', async () => {
+  const { pickStory } = await import('../src/sim/stories.js');
+  const state = { seed: SEED, date: '2026-11-07', day: 23, subscriberCount: 900, weather: 'clear', storyLog: {}, buildings: [], houses: [], villagers: [], names: {},
+    storyArc: { id: 'merchants', step: 'arrive', day: 23, owner: true } };
+  const s = pickStory(state);
+  assert.equal(s.id, 'merchants');
+  assert.equal(s.step, 'arrive');
+  assert.equal(state.storyArc.step, 'camp');
+  assert.ok(state.storyArc.data && state.storyArc.data.cast !== undefined);
+});

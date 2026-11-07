@@ -22980,7 +22980,12 @@
   "936": 22,
   "938": 20
  },
- "storyArc": null,
+ "storyArc": {
+  "id": "raid",
+  "step": "attack",
+  "day": 23,
+  "owner": true
+ },
  "sceneLog": {
   "tavern": 20,
   "blacksmith:bellows": 19,
