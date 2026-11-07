@@ -121,6 +121,8 @@ export const BUILDINGS = {
   mine: { label: 'the Mine', days: 3 },
   dungeon: { label: 'the Dungeon', days: 2 }, // owner 2026-11-04: cells under the castle, stairs down from its courtyard
   baths: { label: 'the Baths', days: 2, plural: true }, // owner 2026-11-07: steaming pools near the market square
+  // owner 2026-11-07: begun by the first scholars who solve the King's riddle, on the day they become Engineers (stories.js)
+  engineer_workshop: { label: "the Engineers' Workshop", days: 2 },
   bank: { label: 'the Bank', days: 3 }, // owner 2026-10-27: the money changers' bench under a loggia, on the East Ward's square
   bell_foundry: { label: 'the Bell Foundry', days: 3 },
   clock_tower: { label: 'the Clock Tower', days: 10 },

@@ -1,7 +1,7 @@
 // The daily cycle and test renders, shared by scripts/daily.js and scripts/render.js.
 import fs from 'node:fs';
 import path from 'node:path';
-import { genesis, advance } from './sim/simulate.js';
+import { genesis, advance, beginWorkshop } from './sim/simulate.js';
 import { storyFor } from './sim/stories.js';
 import { pickFeatured, shownJobs } from './sim/featured.js';
 import { churchScene } from './sim/tiers.js';
@@ -196,6 +196,7 @@ export async function testRender(args, log = console) {
     state.riddleSolvers = Object.keys(state.names || {}).map(Number).filter((id) => state.villagers[id]?.job === 'scholar').slice(0, 2);
   }
   if (args.story) diff.story = state.story = storyFor(state, args.story);
+  if (args.story === 'riddle:answer') beginWorkshop(state, diff); // the Engineers' Workshop, as the daily simulation does
   if (args.show) { diff.buildingsCompleted = [...args.show]; diff.buildingsStarted = []; }
   if (args.pov && diff.scenes) {
     const f = (diff.featured || []).find((x) => (args.pov === 'work' ? !AWAY_VARIANTS.has(diff.scenes.variants?.[x.id]) : !x.with));

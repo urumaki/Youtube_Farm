@@ -148,6 +148,9 @@ function buildWorld(seed) {
   // owner 2026-11-07: the Baths, on the free ground nearest the market square, after the manors (virtual, as they are)
   placeStreetLot(w, 'baths', 9, 7, all);
   if (w.lots.baths) Object.assign(w.lots.baths, { virtual: true, clearTrees: true });
+  // owner 2026-11-07: the Engineers' Workshop (the King's riddle, stories.js), after the Baths, the same way
+  placeStreetLot(w, 'engineer_workshop', 6, 5, all);
+  if (w.lots.engineer_workshop) Object.assign(w.lots.engineer_workshop, { virtual: true, clearTrees: true });
   return w;
 }
 

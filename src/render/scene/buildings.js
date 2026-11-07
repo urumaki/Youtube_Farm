@@ -178,6 +178,41 @@ export const BUILD = { // (exported for the overlap check, scripts/zfight.js)
     crane(b, 8, 6, 9);
     out.focusH = 4;
   },
+  engineer_workshop(b, lot, out) {
+    // the Engineers' Workshop (owner 2026-11-07, the King's riddle): a stone ground floor with a wide timber door and a timber
+    // upper floor under a red roof, a hoist beam over the door; in the yard in front a model trebuchet on its trestle, a big
+    // wooden gear wheel leaning on the wall and a table with the plans pinned open (front, +z, faces the street)
+    b.add('stone', boxGeo(9, 3.2, 6), -1, 1.6, -2.2);
+    b.add('timber', boxGeo(9.4, 2.6, 6.4), -1, 4.5, -2.2);
+    b.add('roofRed', gableGeo(10.2, 7.2, 3), -1, 5.8, -2.2);
+    door(b, -1, 0.82, 2.4, 2.6, 0, { frame: 'woodDark' });
+    windowsRow(b, -4.6, 2.6, 4.6, 1.05, 3, 'windowWarm');
+    b.add('woodDark', boxGeo(0.25, 0.25, 1.8), -1, 5.3, 1.6); // the hoist beam, a rope and a hook down from it
+    b.add('clothIvory', boxGeo(0.04, 1.6, 0.04), -1, 4.4, 2.4);
+    b.add('iron', boxGeo(0.18, 0.28, 0.08), -1, 3.5, 2.4);
+    // the model trebuchet: a trestle, two uprights, the arm cocked with its counterweight box
+    b.add('wood', boxGeo(2.2, 0.9, 1.0), 3.4, 0.45, 2.8);
+    for (const z of [2.45, 3.15]) b.add('woodDark', boxGeo(0.12, 1.3, 0.12), 3.4, 1.55, z);
+    b.add('woodDark', boxGeo(0.1, 0.1, 0.9), 3.4, 2.15, 2.8);
+    b.add('wood', boxGeo(2.4, 0.08, 0.08).rotateZ(0.5), 3.4, 2.15, 2.8);
+    b.add('woodDark', boxGeo(0.4, 0.4, 0.4), 2.35, 1.6, 2.8);
+    // the gear wheel against the wall, its teeth round the rim
+    const R = 1.25;
+    b.add('wood', new THREE.TorusGeometry(R, 0.12, 6, 24), 4.9, R + 0.05, 0.95);
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      b.add('woodDark', boxGeo(0.22, 0.28, 0.2).rotateZ(a), 4.9 + Math.cos(a) * (R + 0.18), R + 0.05 + Math.sin(a) * (R + 0.18), 0.95);
+    }
+    for (const a of [0, Math.PI / 2]) b.add('woodDark', boxGeo(2 * R, 0.12, 0.1).rotateZ(a), 4.9, R + 0.05, 0.95);
+    // the plans on a table, held flat by two stones
+    b.add('wood', boxGeo(1.8, 0.1, 1.0), -4.6, 0.95, 2.6);
+    for (const [x, z] of [[-5.3, 2.2], [-3.9, 2.2], [-5.3, 3.0], [-3.9, 3.0]]) b.add('woodDark', boxGeo(0.1, 0.9, 0.1), x, 0.45, z);
+    b.add('clothIvory', boxGeo(1.3, 0.02, 0.8), -4.6, 1.01, 2.6);
+    for (const z of [2.4, 2.6, 2.8]) b.add('clothBlue', boxGeo(1.0, 0.025, 0.03), -4.6, 1.02, z);
+    for (const x of [-5.15, -4.05]) b.add('stoneDark', boxGeo(0.14, 0.1, 0.14), x, 1.07, 2.3);
+    out.lights.push([-1, 2.6, 1.2]);
+    out.focusH = 4;
+  },
   baths(b, lot, out) {
     // the Baths (owner 2026-11-07): a stone bathhouse with tall arched windows, a slate roof and a dome over the hot room,
     // two chimneys for the furnaces, and in front an open pool behind a stone rim, columns at its corners, steam rising

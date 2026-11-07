@@ -133,6 +133,11 @@ const L = {
     (b) => `The masons start work on ${b}.`, (b) => `By royal decree, ${b} will be built!`, (b) => `Work begins on ${b}!`, (b) => `Up goes ${b}!`],
   completed: [(b) => `${cap(b)} is finally complete!`, (b) => `${cap(b)} opens its doors today!`, (b) => `The last stone is set: ${b} is done!`,
     (b) => `The scaffolding comes down from ${b}.`, (b) => `${cap(b)} stands finished at last.`, (b) => `The builders put down their tools: ${b} is ready!`, (b) => `${cap(b)} is done!`],
+  // buildings with a plural name (the Baths, the Beehives; owner 2026-11-07: they were told "the fields are ready to sow")
+  completedPlural: [(b) => `${cap(b)} are finally complete!`, (b) => `${cap(b)} open today!`, (b) => `The scaffolding comes down from ${b}.`,
+    (b) => `The builders put down their tools: ${b} are ready!`],
+  // the Engineers' Workshop, begun by the scholars who solved the King's riddle (owner 2026-11-07)
+  workshop: ['The new Engineers break ground for their workshop!', 'And the new Engineers begin their very own workshop!'],
   progress: [(b, p) => `${cap(b)} is ${p} percent built.`, (b, p) => `Work on ${b} goes on: ${p} percent done.`, (b, p) => `${cap(b)} is rising, ${p} percent so far.`],
   milestone: [(m) => `We passed ${m} villagers!`],
   goal: [(n, g) => `${n} more villagers until ${g}.`, (n, g) => `Just ${n} more villagers and ${g}.`],
@@ -234,10 +239,13 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   if (diff.housesRebuilt.length) add(pick(L.rebuilt)(diff.housesRebuilt.length), 'rebuilt', 5);
   // the raised house has its own shot: its sentence is kept, or the narrator is silent over it
   if (diff.housesRaised?.length) addT(L.raised, [diff.housesRaised.length], 'raised', shots.some((c) => c.raised) ? 8 : 7);
-  for (const b of diff.buildingsStarted.slice(0, 2)) addT(L.unlocked, [bname(b)], 'unlocked', 8, null, b, fresh);
+  for (const b of diff.buildingsStarted.slice(0, 2)) {
+    if (b === 'engineer_workshop' && diff.story?.workshop) add(pick(L.workshop), 'unlocked', 8, null, b);
+    else addT(L.unlocked, [bname(b)], 'unlocked', 8, null, b, fresh);
+  }
   for (const b of diff.buildingsCompleted.slice(0, 2)) {
-    if (BUILDINGS[b].plural) add('The fields are ready to sow!', 'completed', 8, null, b);
-    else addT(L.completed, [bname(b)], 'completed', 8, null, b, fresh);
+    if (b === 'fields') add('The fields are ready to sow!', 'completed', 8, null, b);
+    else addT(BUILDINGS[b].plural ? L.completedPlural : L.completed, [bname(b)], 'completed', 8, null, b, fresh);
   }
   if (diff.housesAbandoned.length) add(pick(L.abandoned)(diff.housesAbandoned.length), 'abandoned', 7);
   if (diff.housesRuined.length) add(pick(L.ruined)(diff.housesRuined.length), 'ruined', 7);

@@ -186,6 +186,8 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   let room = Object.keys(s.names || {}).length > 0 ? SHOWN_STARTS : SHOWN_STARTS + 1;
   // a day whose story takes the whole video (the day after the raid, the Grand Joust; owner 2026-10-30): nothing begins
   if (takesOver(s.storyArc) && s.storyArc.day <= day) room = 0;
+  // the answer to the King's riddle keeps a shot free for the Engineers' Workshop (planDay; owner 2026-11-07)
+  if (s.storyArc?.id === 'riddle' && s.storyArc.step === 'answer' && s.storyArc.day <= day && !s.buildings.some((b) => b.id === 'engineer_workshop')) room = Math.max(0, room - 1);
   const waiting = [];
   for (const q of s.buildQueue) {
     const shot = !NO_SHOT.has(q.id);
@@ -222,6 +224,7 @@ export function planDay(s, prev, diff) {
   const shownBuildings = new Set([...diff.buildingsStarted, ...diff.buildingsCompleted]).size;
   diff.story = pickStory(s, { unlocked: diff.unlocked || [], buildingShots: shownBuildings });
   s.story = diff.story;
+  beginWorkshop(s, diff);
   // the storm brings the rain to the whole video, Christmas Eve the snow
   const sky = { storm: 'rain', christmas: 'snow' }[diff.story?.id];
   if (sky) {
@@ -238,6 +241,20 @@ export function planDay(s, prev, diff) {
   markShown(s, diff.featured);
   diff.scenes = planScenes(s, { featured: diff.featured, tavern, church, avoidJobs: diff.avoidJobs, buildingShots: Math.min(2, shownBuildings) });
   s.scenes = diff.scenes;
+}
+
+/**
+ * Owner 2026-11-07: the scholars who solved the King's riddle, Engineers from today, begin the Engineers' Workshop (the video
+ * shows it right after the crier; timeline.js). Once: when it stands, the next riddles have no building.
+ */
+export function beginWorkshop(s, diff) {
+  if (diff.story?.id !== 'riddle' || diff.story.step !== 'answer' || !diff.story.winners?.length) return;
+  if (s.buildings.some((b) => b.id === 'engineer_workshop')) return;
+  const days = BUILDINGS.engineer_workshop.days;
+  s.buildings.push({ id: 'engineer_workshop', tier: 'riddle', status: 'construction', startedDay: s.day, doneDay: null, daysTotal: days });
+  s.pendingConstruction.push({ building: 'engineer_workshop', daysLeft: days, daysTotal: days });
+  diff.buildingsStarted.push('engineer_workshop');
+  diff.story.workshop = true;
 }
 
 /**

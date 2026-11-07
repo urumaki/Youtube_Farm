@@ -64,7 +64,9 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const people = (diff.named || []).length > 0 || Object.keys(state.names || {}).length > 0;
   const maxBuildings = people ? 2 : 3;
   // 1) buildings unlocked or finished today: a new building is the day's headline
-  for (const id of [...diff.buildingsStarted, ...diff.buildingsCompleted]) {
+  // (the Engineers' Workshop begun by the riddle's new Engineers first: it follows the crier, owner 2026-11-07)
+  const workshop = diff.story?.workshop ? ['engineer_workshop'] : [];
+  for (const id of [...workshop, ...diff.buildingsStarted, ...diff.buildingsCompleted]) {
     const it = buildings.items[id];
     if (!it || targets.some((t) => t.id === id) || targets.length >= maxBuildings) continue;
     const SMALL = ['crier_stand', 'pillory', 'tailor_stall', 'physician_booth', 'potter_stall', 'cobbler_stall', 'apiary', 'dungeon'];
@@ -268,9 +270,15 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   const last = (n) => state.lastShown?.[n.id] ?? -1;
   const pool = named.filter((n) => !onScreen.has(n.id))
     .sort((a, b) => (trade(a) < 0) - (trade(b) < 0) || last(a) - last(b) || a.id - b.id);
+  // (the riddle's new Engineers at the Engineers' Workshop they begin, before anyone else; owner 2026-11-07)
+  const winners = diff.story?.workshop ? (diff.story.winners || []).map((w) => named.find((n) => n.id === w.id)).filter(Boolean) : [];
   for (const tg of targets) {
-    if (tg.kind !== 'building' || !pool.length) continue;
-    tg.builders = crewRoles(pool.splice(0, tg.crew ?? 4).map((n) => ({ id: n.id, name: n.name, job: n.job, sub: jobSub(n), trade: n.job === 'apprentice' ? n.wants : n.job })));
+    if (tg.kind !== 'building') continue;
+    const first = tg.id === 'engineer_workshop' ? winners : [];
+    const crew = [...first, ...pool.filter((n) => !first.includes(n)).slice(0, Math.max(0, (tg.crew ?? 4) - first.length))];
+    for (const n of crew) if (pool.includes(n)) pool.splice(pool.indexOf(n), 1);
+    if (!crew.length) continue;
+    tg.builders = crewRoles(crew.map((n) => ({ id: n.id, name: n.name, job: n.job, sub: first.includes(n) ? 'New Engineer!' : jobSub(n), trade: n.job === 'apprentice' ? n.wants : n.job })));
   }
 
   const { center, extent } = kingdomBox(houses);

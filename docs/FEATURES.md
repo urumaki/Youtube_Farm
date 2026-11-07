@@ -181,7 +181,7 @@ Add new owner decisions here.
   it: "Hear ye! The King has a riddle, and a reward for whoever solves it. ... Scholars: comment exclamation mark answer,
   and your answer!" (a longer shot, weight 4.4). Day 2 (`answer`): the crier reads the answer ("The answer: the
   jester"), the first two named scholars who answered right on the riddle's video stand in front, "Now an Engineer!", and
-  are made Engineers (their job; `promote`); nobody right: "Nobody solved the riddle!". How to answer: a comment with
+  are made Engineers (their job; `promote`); nobody right: "Nobody solved the riddle!". Right after the crier (owner 2026-11-07), the first time anyone solves a riddle: the Engineers' Workshop is begun (`engineer_workshop`, two days to build, a lot of its own after the Baths in `world.js`), its building shot "Construction begins" with the new Engineers on the site first ("New Engineer!", `timeline.js`) and the line "The new Engineers break ground for their workshop!"; the construction step keeps a building shot free for it on the answer day (`simulate.js`). Once built, later riddles have no building. How to answer: a comment with
   "!answer" and the answer after it, to the end of the line or the next "!" (`answerFromText` in `requests.js`: only the
   riddles' fixed regexes read it, nothing of the text is kept, and the answer is taken out of the comment before its job
   and name requests are read, so "!answer the jester" never asks to be a jester). Only from a villager who was a scholar
