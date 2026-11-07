@@ -269,6 +269,29 @@ test('untrusted input: names that look like code or a prompt are never used, com
   checkInvariants(r.state);
 });
 
+test('comment job requests read wrong on 2026-11-06/07 (owner 2026-11-07)', async () => {
+  const { wantsFromText: w, rebelFromText } = await import('../src/sim/requests.js');
+  const first = (t) => w(t)[0] || '';
+  assert.equal(first('If any farmers are having problems with rats then I may help you, I have cats for rent'), 'ratcatcher');
+  assert.equal(first('Sorry didn’t realize blacksmith was taken so I want priest'), 'priest');
+  assert.equal(first('since I’m serving a Swordmaster I have a new idea, I’m still a guard but for a promotion, a Archer'), 'fletcher');
+  assert.equal(first('I’ll make sure to put this bow to good use!'), '');
+  assert.equal(first('I’ll be the executioner’s friend'), '');
+  assert.equal(first('Can i be a crusaider for the church/chapel?'), 'guard');
+  assert.equal(first('Can I be bailiff'), 'taxcollector');
+  assert.equal(first('I wish to fight, instead of begging for booze'), 'guard');
+  assert.equal(first("I wish to fight the knight at the tavern when he's drunk. Or just beg near the other beggars"), 'beggar');
+  assert.equal(first('Send in the knights now'), '');
+  // the night raid's bandits are others; a bandit, a band of brigands, "become robbers" are the commenter
+  assert.equal(first('we will have our revenge on the bandits raise a militia'), 'guard');
+  assert.equal(first('For bandits they certainly did a lot of damage'), '');
+  assert.equal(first('a militia to defeat those filthy bandits!'), 'guard');
+  assert.equal(first('Could I be a thief'), 'prisoner');
+  assert.equal(first('I shall form a band of Brigands to raid the storage'), 'prisoner');
+  assert.equal(first('Can i become robbers'), 'prisoner');
+  assert.equal(rebelFromText('I shall raise up my own army and eradicate the entire kingdom.'), true);
+});
+
 test('comment job requests: granted when unlocked, apprentice (then promoted) when not, existing villagers can switch', async () => {
   const { wantsFromText } = await import('../src/sim/requests.js');
   const W = (author, name, text, at) => ({ author, name, at, wants: wantsFromText(text) });

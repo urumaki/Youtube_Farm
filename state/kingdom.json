@@ -15871,7 +15871,7 @@
    "name": "The_Knight_Of_Dice",
    "author": "UCRn79g9kHNpn1avTlvMH2vA",
    "day": 3,
-   "job": "guard",
+   "job": "fletcher",
    "requestDay": 23,
    "complainDay": 22,
    "joinDay": 13
@@ -16548,7 +16548,7 @@
    "name": "MOREneenee",
    "author": "UCru_J-b5G5vc5LCR8dDxMkw",
    "day": 7,
-   "job": "farmer",
+   "job": "ratcatcher",
    "requestDay": 23
   },
   "122": {
@@ -18581,7 +18581,7 @@
    "name": "uknown",
    "author": "UCgymzvodAoRCt0eya81AXoQ",
    "day": 9,
-   "job": "stonemason",
+   "job": "guard",
    "requestDay": 23
   },
   "429": {
@@ -20932,7 +20932,7 @@
    "name": "God_of_greed_666",
    "author": "UCyEc_kheCCJWHSSmZpnh6vg",
    "day": 14,
-   "job": "executioner",
+   "job": "taxcollector",
    "requestDay": 23,
    "complainDay": 16
   },
@@ -22086,7 +22086,9 @@
   "970": {
    "name": "Bobith",
    "author": "UCQBBJm-Q07-9phJBTaVbIiQ",
-   "day": 22
+   "day": 22,
+   "job": "taxcollector",
+   "requestDay": 23
   },
   "971": {
    "name": "flexible",

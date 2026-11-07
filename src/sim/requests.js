@@ -20,11 +20,13 @@ const KEYWORDS = [
   // owner 2026-10-28: a Knight, a Cavalier and the Captain of the Guard are only won at the tournaments, so asking makes a guard
   // (2026-10-29: "teutonic Kinght", "kight", "the king's night", paladin, "chief of war", men-at-arms, a defender of the city;
   // "sir" alone is how people speak to the king, "an army engineer" asks for the engineer)
-  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|general|\barmy(?!\s*engineer)|(?<!(boat|ship|sea)\s?)captain(?!\s+of\s+(a|the)\s+(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusader|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
+  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|general|\barmy(?!\s*engineer)|(?<!(boat|ship|sea)\s?)captain(?!\s+of\s+(a|the)\s+(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusa+i?der|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
   // (2026-11-04: the jailer keeps the Dungeon, he is a guard)
+  // (2026-11-07: "I wish to fight, instead of begging for booze")
+  [/\b(want|wish|like|ready|here|eager)\s+to\s+fight\b(?!\s+(the|a|an|that|this|him|her|them|with|against|some|every|his|my|your)\b)/, 'guard'],
   [/\bguard|towns?guard|\bjail[eo]r|\bgaoler|turnkey|dungeon\s*(keeper|master|guard)|carcerier|secondin|\b(flag|standard|banner)\s*bearer|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
   // owner 2026-11-04: a church named as a place ("nailing a paper on the church doors") asks for nothing
-  [/(?<!\b(on|at|to|into|near|outside|inside|of)\s+(the\s+|a\s+|our\s+|my\s+|your\s+)?)(chapel|church|cathedral|cappella|chiesa)/, 'stonemason'],
+  [/(?<!\b(on|at|to|into|near|outside|inside|of|for)\s+(the\s+|a\s+|our\s+|my\s+|your\s+)?)(chapel|church|cathedral|cappella|chiesa)/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
   [/carpenter|\bbuilder|falegname|carpentiere|craftsman|craftsmen|craftm[ae]n|artisan|artigian|wood\s*worker|\bcarvers?\b|shipwright|ship\s*builder/, 'carpenter'],
   [/\b(arch)?bishop|vescovo/, 'bishop'],
@@ -46,7 +48,7 @@ const KEYWORDS = [
   [/doctor|healer|physician|medico|guaritore|\bmedic\b|pediatric|clinic/, 'physician'],
   [/apothecar|\bapo\w*th\w*ry|alchemist|alchimista|\bchemist|\bchimico|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
   // running the town was the reeve's job (the council, politics, the law); owner 2026-10-23: the tax collector's now
-  [/\breeve\b|\bcouncil\b|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice|justiciar|prosecutor|\blawman/, 'taxcollector'],
+  [/\breeve\b|\bcouncil\b|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice|justiciar|prosecutor|\blawman|\bbailiff/, 'taxcollector'],
   // jobs folded into another (owner 2026-10-23): the weaver into the tailor, the chronicler into the scholar, the admiral into the sailor
   [/\bweaver|\bweav(e|ing)\b|\bloom\b|tessitor|telaio/, 'tailor'],
   [/chronicler|historian|\bhistory\b|cronista|\bstorico/, 'scholar'],
@@ -114,12 +116,25 @@ const NOT_ASKED = new RegExp([
   // he's drunk. Or just beg near the other beggars" made a beggar a guard), the rest of that sentence included
   /\b(fight|fighting|beat|punch|duel|challenge)\s+(the|a|an|that|this|some|his|her|every)\b[^.!?]*$/.source,
   /(^|[.!?]\s*)(bloody|damn|damned|stupid|filthy|greedy|cursed|dirty)\s+$/.source,
+  // owner 2026-11-07, from the comments of 2026-11-06/07: serving someone ("since I'm serving a Swordmaster" made a guard who
+  // asked to be an archer a guard again), sending someone ("send in the knights"), "this bow", "those filthy bandits", and
+  // "if any farmers are having problems with rats" (a rat catcher made a farmer) are no requests
+  /\b(serve|serves|serving|served|work for|working for|follow|following)\s+(the|a|an|my|our|your)?\s*(\w+\s+)?$/.source,
+  /\b(send|sends|sent|sending|summon)\s+(in\s+|out\s+)?(the|a|an|our|my|more|some|your)?\s*(\w+\s+)?$/.source,
+  /\b(this|that|these|those)\s+(\w+\s+)?$/.source, /\bany\s+(\w+\s+)?$/.source,
 ].join('|'));
+// a job named as someone else's ("I'll be the executioner's friend"), or as taken ("blacksmith was taken so I want priest"), is
+// no request for it (owner 2026-11-07)
+const NOT_MINE = /^[\w-]*('s|s')\s/, TAKEN = /^[\w-]*\s+(was|is|were|are)\s+(already\s+)?(taken|full|gone)\b/;
+// a thief, a bandit... asks for a cell; the bandits, those thieves (the night raid's, 2026-11-07) are others
+const OTHERS = /^(\w+s|ladri|banditi|briganti|criminali|prigionieri|usurpatori|traditori|carcerati|galeotti)\b/;
+// ...unless the commenter is one of them ('a band of brigands', 'can i become robbers', 'join the bandits')
+const ONE_OF = /\b(band|gang|group|crew|one|leader|member|chief|head|captain|king)\s+of\s+(the\s+|those\s+)?$|\b(be|become|join|joining|am|i'?m|we'?re|we are)\s+(the\s+|a\s+|one\s+of\s+the\s+)?$/;
 // ...unless a word like "job" follows the job: "can I get a blacksmith job" asks for the blacksmith
 const JOB_AFTER = /^[\w-]*\s+(job|role|position|apprenticeship|work)\b/;
 // "Ordinary citizen, will take a job of hunter": the job named after "a job of", "work as"... is the request, whatever came first
 // (2026-11-05: "as the first priest i request to be archbishop": the job after "want / request to be" comes first)
-const JOB_OF = /\b(job|work|career|role|position|post)\s+(of|as)\s+(a\s+|an\s+|the\s+)?$|\b(want|wish|request|ask|like|love|hope)\s+to\s+(be|become)\s+(a\s+|an\s+|the\s+)?$/;
+const JOB_OF = /\b(job|work|career|role|position|post)\s+(of|as)\s+(a\s+|an\s+|the\s+)?$|\b(want|wish|request|ask|like|love|hope)\s+to\s+(be|become)\s+(a\s+|an\s+|the\s+)?$|\b(i|we)\s+(now\s+)?(want|choose|pick|take)\s+(a\s+|an\s+|the\s+)?$/;
 
 // Comment text is untrusted input. It is never run, never passed to a shell, a template or a language model:
 // only the fixed regexes in this file read it, and then it is dropped. plainText() makes it safe to scan: a
@@ -144,6 +159,7 @@ export function wantsFromText(text) {
       if (WISH.test(t.slice(Math.max(0, m.index - 60), m.index)) || ARRIVES.test(t.slice(m.index))) continue;
       if (NOW_BEFORE.test(t.slice(Math.max(0, m.index - 20), m.index)) && NOW_AFTER.test(t.slice(m.index))) continue;
       if (NOT_ASKED.test(t.slice(Math.max(0, m.index - 50), m.index)) && !JOB_AFTER.test(t.slice(m.index))) continue;
+      if (NOT_MINE.test(t.slice(m.index + m[0].length)) || TAKEN.test(t.slice(m.index + m[0].length)) || (job === 'prisoner' && OTHERS.test(t.slice(m.index)) && !ONE_OF.test(t.slice(Math.max(0, m.index - 30), m.index)))) continue;
       hits.push([JOB_OF.test(t.slice(Math.max(0, m.index - 25), m.index)) ? -1 : m.index, job, m.index]);
       break;
     }
@@ -202,7 +218,7 @@ export function complainsFromText(text) {
 // (2026-10-27): at most once every 7 days the newest one spends a day in the pillory, pelted with tomatoes (stories.js).
 const KING = String.raw`(the |our |this |that |your |his |my |da |le )?(king|kingdom|crown|throne|monarchy|majesty|ruler)`;
 const REBEL_RE = new RegExp([
-  String.raw`\b(overthrow|over throw|overthrown|overthrowing|kill|killing|murder|assassinate|dethrone|depose|behead|usurp|topple|betray|defeat|destroy|stab|poison|take down|takedown)\s+${KING}\b`,
+  String.raw`\b(overthrow|over throw|overthrown|overthrowing|kill|killing|murder|assassinate|dethrone|depose|behead|usurp|topple|betray|defeat|destroy|stab|poison|take down|takedown|eradicate|conquer|burn down)\s+(the entire |the whole |this whole )?${KING}\b`,
   String.raw`\bdown with ${KING}\b`, String.raw`\b(steal|take|seize|claim)\s+(the |your |the king'?s |his )?(crown|throne)\b`, String.raw`\bi('?ll| will| shall)\s+be (the )?(new )?king\b`,
   /\b(revolution|revolt|rebellion|rebel|rebels|uprising|insurrection|mutiny|treason|coup|anarchy|regicide|usurper|traitor)\b/.source,
   /\b(uccidere|uccido|ammazzare|ammazzo|rovesciare|rovescio|detronizzare|spodestare|tradire)\s+(il |del )?re\b/.source,
