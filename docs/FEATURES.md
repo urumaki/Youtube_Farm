@@ -168,7 +168,7 @@ Add new owner decisions here.
   place with no tree or house between it and the gate) (to 23.5 s). The march and the mausoleum are in a country of
   their own east of the map (x 7000, where the land is flat and the town's ground ends behind the fog: grass on the
   land's heights, a dirt road, copses, low hills), so nothing of the town gets in the way; the crypt under it.
-  "Subscribe to join the kingdom" at the bottom of every shot. Narration (`takeoverScript`): "The Crusaders ride out, a
+  "Subscribe to join the kingdom" at the bottom of the last shot only. Narration (`takeoverScript`): "The Crusaders ride out, a
   Knight at their head." / "Two guards answered the call. Shields up!" / "An old mausoleum, forgotten for a hundred
   years. The door creaks open..." / "Bandits! Four of them, guarding the relic!" / "Down they go, out cold!" / "The
   Golden Apple! The lost relic is ours!" / "The whole town cheers its Crusaders home!". Title "Day N: The Crusaders found
@@ -212,8 +212,8 @@ Add new owner decisions here.
   day, then id: `nobles()` in `stories.js`) lives in the k-th, and it stands in every video from then on (`buildings.js`
   `manor`). The first Noble: jeff-games-CW (#0, the kingdom's first villager), queued for day 23, so after the night raid
   (days 23-24). Test: `npm run render -- --real --subs N --story noble --stills ...` (the first queued villager).
-  Two more stories that take the whole video (owner 2026-11-05: "Subscribe to join the kingdom" at the bottom of
-  every one of their shots, `footer`). Like a day in the life, they keep the counter and the day line at the start
+  Two more stories that take the whole video (owner 2026-11-05: "Subscribe to join the kingdom" at the bottom,
+  `footer`; owner 2026-11-07: once, on the last story shot only, not on every shot: `main.js`). Like a day in the life, they keep the counter and the day line at the start
   (`plan.stats`). Unlike it, they end at 23.5 s with the usual wide shot, goal and call to action (`OWN` in `makePlan`,
   `timeline.js`; the wide shot in the light of their own day, `dusk`). Both have their own narration (`takeoverScript`
   in `narration.js`: one line a shot, then the goal and the call to action, names never read aloud), title and sounds
@@ -362,8 +362,9 @@ Add new owner decisions here.
   outside, then the northernmost); its way into the town (`gate.in`) is found by the wall itself, not toward the castle (wrong
   where the wall bends). On the night of the attack the houses outside the wall in front of the gate (45 m either side of
   the road, 90 m out: `outsideGate` in `raid.js`) are not drawn; they stand again the next morning. The bandits come out of
-  the woods along at most 12 lanes, so the trees stand between them. "Subscribe to join the kingdom" at the bottom of every
-  shot of both days (the fight keeps "...the defense"; not over the crier), the narrator says the woods on the gate's side,
+  the woods along at most 12 lanes, so the trees stand between them. "Subscribe to join the kingdom" at the bottom of the
+  last shot of day 1 only (owner 2026-11-07: once at the end, not on every shot; "...the defense" on the fight is gone; day 2
+  ends with the usual call to action), the narrator says the woods on the gate's side,
   and the last line of day 1 is "And one villager was missing. Was it you?". Test with
   `npm run render -- --real --subs N --story raid` and `--story raid:rescue` (stills: `--stills 0.4,4.5,8,13,16.5,20,26`).
   The people in a role are named villagers of that job when the kingdom has them (owner 2026-10-25, `roleCast` in

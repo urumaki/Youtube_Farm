@@ -121,7 +121,7 @@ export const STORIES = {
   dayinlife: { minPop: 1000, cooldown: 14, weight: 3, takeover: true,
     needs: (s, o = {}) => built(s, 'university') && namedVillagers(s).some((n) => n.job === 'scholar') && !['rain', 'snow', 'fog'].includes(s.weather) && !o.buildingShots },
   // owner 2026-11-05: two more stories that take the whole video (src/render/scene/stories/escape.js, eclipse.js), each
-  // with "Subscribe to join the kingdom" at the bottom of its shots. They keep the counter and the day line at the start and
+  // with "Subscribe to join the kingdom" at the bottom of their last shot. They keep the counter and the day line at the start and
   // end with the usual wide shot, goal and call to action. Never on a day the video must show a building.
   // The Dungeon escape: the named prisoners dig out of their cell with a spoon at night, come up through the paving of the
   // market square in the morning, the named guards give chase between the stalls, and they are caught at the bread cart

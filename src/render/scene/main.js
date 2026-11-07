@@ -477,7 +477,10 @@ async function setup(data) {
       if (st.fog) tg.fog = st.fog; // a thicker fog for this shot
       if (st.work) tg.work = st.work; // arrows hitting the targets
       if (st.focus) tg.pos.copy(st.focus);
-      if (st.footer) tg.footer = st.footer; // a small line at the bottom (the raid: "Subscribe to join the defense")
+      // a small line at the bottom; "Subscribe to join..." only once, on the video's last story shot (owner 2026-11-07: not on
+      // every shot)
+      const lastEvent = Math.max(...plan.targets.filter((x) => x.kind === 'event').map((x) => x.t0));
+      if (st.footer && (!/^Subscribe to join/.test(st.footer) || tg.t0 === lastEvent)) tg.footer = st.footer;
       // the big name label over one person (a villager's day, dayinlife.js), from a part of the shot on
       if (st.label) Object.assign(tg, { label: st.label, labelPos: st.labelPos, labelFrom: st.labelFrom });
       if (st.phaseAt) tg.phaseAt = st.phaseAt; // the light changing through the shot

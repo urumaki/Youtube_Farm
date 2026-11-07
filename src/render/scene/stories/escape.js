@@ -4,7 +4,7 @@
 // paving slab of the market square lifts and the prisoners climb out one by one and tiptoe off; a named guard runs up out
 // of the Dungeon's stairs blowing his horn, the others after him; the chase between the stalls (a prisoner leaps a barrel,
 // a guard slips on the cabbages and sits down); the prisoners caught at the bread cart with their mouths full, hands up,
-// and marched back, chewing and waving. Comic: nobody gets hurt. "Subscribe to join the kingdom" at the bottom of every shot.
+// and marched back, chewing and waving. Comic: nobody gets hurt. "Subscribe to join the kingdom" at the bottom (shown on the last shot only, main.js).
 import * as THREE from 'three';
 import { rand01 } from '../../../sim/prng.js';
 import { JOBS } from '../../../sim/tiers.js';

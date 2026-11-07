@@ -593,7 +593,6 @@ function fightShot({ story, w, state, M, seed, yFn, nature }) {
     group,
     labels,
     banner: null,
-    footer: 'Subscribe to join the defense',
     phase: NIGHT,
     quietTown: true,
     focus: F.toWorld(0, 6, -3),
@@ -1073,8 +1072,8 @@ export function buildRaid(args) {
   if (!f) return null;
   const st = f(args);
   if (st && st.phase === undefined) st.phase = step === 'attack' ? NIGHT : MORNING;
-  // owner 2026-11-07: "Subscribe to join the kingdom" at the bottom of every shot (the fight keeps "...the defense"; not
-  // over the crier, where the call to action comes)
+  // owner 2026-11-07: "Subscribe to join the kingdom" at the bottom, shown on the last shot only (main.js); not over the
+  // crier, where the call to action comes
   if (st && st.footer === undefined && shot !== 'crier') st.footer = 'Subscribe to join the kingdom';
   return st;
 }

@@ -4,7 +4,7 @@
 // in circles, one hides under the handcart, one puts a bucket on his head, the crier rings his bell); the dark of the
 // total eclipse, the sun's ring and the stars, the camera tilting down to a scholar (or a priest) on a barrel, book held up:
 // "it's only the moon!"; then the light comes back and the town cheers. The moon and the light are env.js's (`eclipseAt`).
-// Nothing magic. "Subscribe to join the kingdom" at the bottom of every shot.
+// Nothing magic. "Subscribe to join the kingdom" at the bottom (shown on the last shot only, main.js).
 import * as THREE from 'three';
 import { rand01 } from '../../../sim/prng.js';
 import { JOBS } from '../../../sim/tiers.js';
