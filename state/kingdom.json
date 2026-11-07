@@ -22984,7 +22984,8 @@
   "id": "raid",
   "step": "attack",
   "day": 23,
-  "owner": true
+  "owner": true,
+  "missing": 219
  },
  "sceneLog": {
   "tavern": 20,

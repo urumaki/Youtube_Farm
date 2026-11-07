@@ -479,7 +479,10 @@ const BUILD = {
     if (!guard) return null;
     // the missing villager: a named villager who is no guard (the guards free them the next day)
     const others = named.filter((n) => !GUARDS.includes(n.job) && n.id !== owner.id);
-    const missing = others.length ? r.pick(others.slice(0, 12)) : null;
+    // (the owner may name them: storyArc.missing, a villager id; owner 2026-11-07: BENDYX20II. The draw is still made, so the
+    // rest of the cast stays as it was)
+    const drawn = others.length ? r.pick(others.slice(0, 12)) : null;
+    const missing = (arc?.missing !== undefined && named.find((n) => n.id === arc.missing && n.id !== owner.id && n.id !== guard.id)) || drawn;
     // four more named guards on the wall and at the gate; the neighbours at the buckets in front of the burning house
     // (today's commenters first)
     const defenders = roleCast(state, r, GUARDS, 4, [owner, guard]);
