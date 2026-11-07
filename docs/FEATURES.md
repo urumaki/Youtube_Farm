@@ -138,6 +138,21 @@ Add new owner decisions here.
   (`story.others`, nearest first), his own page in the lecture and by the candle. Every student in the lecture now has an
   ink bottle beside the book and a quill (`quill` in room.js), bends over the desk and writes. Local renders need the
   Kokoro Python: a worktree without `.env` falls back to no voice, so pass `PYTHON=tools/venv/Scripts/python.exe`.
+  A Noble, by the owner's hand only (owner 2026-11-07; story `noble`, `manual: true`: never drawn by chance, never from a
+  comment). `node scripts/ennoble.js "<name>" [--day N]` (exact name, any case; `--list` shows the Nobles and the queue)
+  queues the villager in `state.ennoble` (kingdom.json and the latest history file). On that day (default: the next run),
+  or the first day after it that no owner story, urgent step, calendar event or new goal takes (`pickStory`), the King
+  gives the title in the throne room (`throne.js`, as for a Knight: the hero walks up the carpet past the newest named
+  villagers, kneels, the sword on each shoulder, "Now a Noble!"), then a second shot (`noble_manor`, `stories/manor.js`):
+  the camera on the sign by the garden gate, "NOBLE" in gold and the name under it (`plaqueTexture`), pulling back to the
+  manor (stone and timber, slate roof, a round corner tower with its pennant, a walled garden), the Noble waving at the
+  gate, the neighbours cheering. Narration: "By order of the King, one of our villagers kneels... and rises a Noble!" and
+  "And every Noble needs a manor. Read the name on the sign!" (names never read). An honour, not a job: the villager keeps
+  their job; `names[id].noble` is the day. The manors: `MANORS` (8) lots `manor0`... on free ground nearest the Noble
+  Quarter (`world.js`, laid out last; virtual, so the Second Wall's line never moves; `clearTrees`). The k-th Noble (by
+  day, then id: `nobles()` in `stories.js`) lives in the k-th, and it stands in every video from then on (`buildings.js`
+  `manor`). The first Noble: jeff-games-CW (#0, the kingdom's first villager), queued for day 23, so after the night raid
+  (days 23-24). Test: `npm run render -- --real --subs N --story noble --stills ...` (the first queued villager).
   Two more stories that take the whole video (owner 2026-11-05: "Subscribe to join the kingdom" at the bottom of
   every one of their shots, `footer`). Like a day in the life, they keep the counter and the day line at the start
   (`plan.stats`). Unlike it, they end at 23.5 s with the usual wide shot, goal and call to action (`OWN` in `makePlan`,

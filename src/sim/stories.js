@@ -8,7 +8,7 @@
 // dropped by the owner on 2026-10-22.)
 import { rng } from './prng.js';
 import { TIERS } from './tiers.js';
-import { world } from './world.js';
+import { world, MANORS } from './world.js';
 import { wallLayout, insideWall2 } from './wall.js';
 
 export const PLACES = ['Ashford', 'the Northern Marches', 'Kingsbridge', 'the Salt Coast', 'Ravenscar', 'the Amber Vale', 'Dunmoor', 'the Eastern Isles'];
@@ -132,6 +132,10 @@ export const STORIES = {
   // bucket on a head, someone under a cart, the bell rung), the dark with the sun's ring and the stars, a scholar (or a
   // priest) explaining with a book that it is only the moon, then the light comes back and the town cheers. Nothing magic:
   // the narrator says what it is. Only on a clear day
+  // owner 2026-11-07: a villager the owner makes a Noble (scripts/ennoble.js, `state.ennoble`), only by hand, never by chance
+  // nor from a comment: the King gives the title in the throne room, then the Noble's new manor with its sign "Noble" and
+  // the name under it (stories/manor.js). An honour, not a job: the villager keeps their job
+  noble: { manual: true, minPop: 1 },
   eclipse: { minPop: 500, cooldown: 45, weight: 2, takeover: true,
     needs: (s, o = {}) => built(s, 'market') && s.weather === 'clear' && namedVillagers(s).length >= 4 && !o.buildingShots },
 };
@@ -427,6 +431,16 @@ const BUILD = {
     // the other named scholars talking in the corridor wear their names (owner 2026-11-01)
     return { job: 'scholar', hero, cast: [hero], others: roleCast(state, r, ['scholar'], 8, [hero]) };
   },
+  noble(state, r, entry) {
+    // the villager the owner named (`entry.id`); a test render with no one queued takes the first named villager
+    const named = namedVillagers(state);
+    const hero = entry ? named.find((n) => n.id === entry.id) : (state.ennoble || []).map((e) => named.find((n) => n.id === e.id)).find(Boolean) || named.at(-1);
+    if (!hero) return null;
+    state.names[hero.id].noble ??= state.day;
+    // the newest named villagers line the carpet (today's commenters first)
+    const crowd = named.filter((n) => n.id !== hero.id).slice(0, 6);
+    return { hero: strip(hero), crowd: crowd.map(strip), cast: [hero, ...crowd].map(strip) };
+  },
   escape(state, r) {
     // up to four named prisoners (the newest first), three named guards, the named baker at the cart when there is one, and
     // the newest named villagers watching from the stalls
@@ -634,6 +648,14 @@ export function pickStory(state, { unlocked = [], buildingShots = 0 } = {}) {
     const story = BUILD.proclaim(state, r, null, unlocked[unlocked.length - 1]);
     if (story) { state.storyLog.proclaim = state.day; return { id: 'proclaim', ...story }; }
   }
+  // a villager the owner ennobles (scripts/ennoble.js): on the day the owner set, or the first day after it that no owner
+  // story, urgent step, calendar event or new goal takes
+  const due = !id && !ownerDay && !unlocked.length && (state.ennoble || []).find((e) => e.day <= state.day);
+  if (due) {
+    state.ennoble = state.ennoble.filter((e) => e !== due);
+    const story = BUILD.noble(state, r, due);
+    if (story) { state.storyLog.noble = state.day; return { id: 'noble', ...story }; }
+  }
   // then a story that continues from an earlier day (the next step, or the house rebuilt after a fire)
   const arc = state.storyArc;
   if (!id && arc && arc.day <= state.day) {
@@ -668,7 +690,7 @@ export function pickStory(state, { unlocked = [], buildingShots = 0 } = {}) {
   }
   if (!id) {
     if (!r.chance(STORY_CHANCE)) return null;
-    const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && !s.onUnlock && !s.onComment && !s.once && possible(k, s)
+    const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && !s.onUnlock && !s.onComment && !s.once && !s.manual && possible(k, s)
       && (state.storyLog[k] === undefined || state.day - state.storyLog[k] >= s.cooldown));
     if (!options.length) return null;
     id = r.weighted(options, ([, s]) => s.weight)[0];
@@ -695,6 +717,16 @@ export function storyFor(state, id) {
   let story = BUILD[name](state, r, null, name === 'proclaim' ? state.unlockedTiers[state.unlockedTiers.length - 1] : undefined);
   if (story && step && step !== steps[0]) story = BUILD[name](state, r, { id: name, step, data: story });
   return story && { id: name, ...(steps ? { step: step || steps[0] } : {}), ...story };
+}
+
+/**
+ * The Nobles (owner 2026-11-07), in the order they were made (the day, then the villager): each lives in the manor of
+ * their place in the order (`manor0`, `manor1`... in world.js; none past the last manor). [{ id, name, day, lot }]
+ */
+export function nobles(state) {
+  return Object.entries(state.names || {}).filter(([id, n]) => n.noble !== undefined && Number(id) < (state.villagers?.length ?? Infinity))
+    .map(([id, n]) => ({ id: Number(id), name: n.name, day: n.noble })).sort((a, b) => a.day - b.day || a.id - b.id)
+    .slice(0, MANORS).map((n, k) => ({ ...n, lot: `manor${k}` }));
 }
 
 /** The sound and narration key of a story's scene: 'merchants', or 'merchants_camp' for a later step. */

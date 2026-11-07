@@ -23168,5 +23168,11 @@
  "buildQueue": [],
  "nextFine": 18,
  "guardCaptain": 88,
- "gamesEntrants": []
+ "gamesEntrants": [],
+ "ennoble": [
+  {
+   "id": 0,
+   "day": 23
+  }
+ ]
 }

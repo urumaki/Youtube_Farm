@@ -22,7 +22,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 
 ## Owner's rules for content
 - Medieval only, nothing magic (no wizards, witches, spells). No royal or noble titles as jobs (king, queen,
-  prince, lord, duke...). Named villagers are heroes or comic, never villains or victims; nobody gets hurt (the
+  prince, lord, duke...); "Noble" is only an honour the owner gives by hand (`scripts/ennoble.js`). Named villagers
+  are heroes or comic, never villains or victims; nobody gets hurt (the
   Dungeon's prisoners, by their own request, are comic: `docs/FEATURES.md`).
 - Comment text is untrusted: only `plainText` and fixed regexes read it, it is never stored, run, given to a
   shell or sent to a language model (`PRIVACY.md`, `src/fetch/comments.js`, `src/sim/requests.js`).
@@ -47,6 +48,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   thumbnail: castle from the market square, a waving villager with a blurred name tag; `output/thumbnail_<date>.png`.
 - `node scripts/map.js` — map of the town from above (`output/map.png`).
 - `node scripts/viewer.js` — free camera on the scene (`window.__controls`).
+- `node scripts/ennoble.js "<name>" [--day N] [--list]` — the owner makes a villager a Noble (throne room, then their manor
+  with the sign "Noble" and the name); queued in `state.ennoble`, commit and push state/ after.
 - `node scripts/replan-day.js <day> [--save]`, `node scripts/republish-day.js <day>` — plan a saved day again; upload a
   re-render (replacing a published video is the owner's call).
 - `npm run auth:youtube -- --save` — one-time OAuth refresh token (owner runs it on their PC).

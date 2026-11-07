@@ -66,6 +66,9 @@ const L = {
     race_results: ['The chariot race! Then the King makes the winner a Cavalier.', 'Chariots thunder round the lists, and the winner kneels before the King!'],
     joust: ['Hear ye! A joust at the Tournament Ground! Every guard may enter: comment join, with an exclamation mark in front!', 'A joust is announced! Guards, comment exclamation mark join to take up the lance!'],
     joust_results: ['The joust! Then the King knights the winner.', 'Lances down! And the winner kneels before the King to be knighted!'],
+    // owner 2026-11-07: a villager the owner makes a Noble, then their manor (a second line over its shot); names never read
+    noble: ['By order of the King, one of our villagers kneels... and rises a Noble!', 'A great honour today: the King makes one of our villagers a Noble!'],
+    noble_manor: ['And every Noble needs a manor. Read the name on the sign!', 'A new manor for the new Noble, name and all!'],
     // owner 2026-10-28: the decree, read once
     decree: ['Hear ye, hear ye! From this day, guards become Knights and Cavaliers only by winning at the Tournament Ground!', 'Hear ye! No more asking to be a knight: guards win the title at the Tournament Ground!'],
     // owner 2026-10-27: six more stories
@@ -210,6 +213,7 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   }
   const storyLines = diff.story && (L.story[storyCue(diff.story)] || L.story[diff.story.id]);
   if (storyLines) { const f = pick(storyLines); add(typeof f === 'function' ? f(diff.story) : f, 'story', 9); }
+  if (diff.story?.id === 'noble') add(pick(L.story.noble_manor), 'story', 9); // over the manor's shot
   // the tavern interior is shown on these days (see makePlan in src/render/scene/timeline.js)
   // shots: the renderer's shot plan, when known (an everyday shot gets a short line)
   const amb = shots.find((c) => c.kind === 'ambient');

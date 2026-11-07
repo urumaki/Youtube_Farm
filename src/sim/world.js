@@ -137,6 +137,14 @@ function buildWorld(seed) {
   // owner 2026-11-04: the Dungeon's stair head in the castle courtyard, between the keep and the south wall's stair, its
   // door north toward the keep (the cells are underground, dungeon.js). Inside the castle, laid out last: nothing moves
   w.lots.dungeon = { id: 'dungeon', x: -12, z: 19.5, hw: 2.0, hd: 1.6, rot: Math.PI, virtual: true };
+  // owner 2026-11-07: the manors of the villagers the owner makes Nobles (scripts/ennoble.js), the k-th Noble in the k-th,
+  // on free ground along the Noble Quarter's streets. Laid out last, so nothing moves; virtual, so the Second Wall's line
+  // (laid out before them) never steers round them; the trees make way for them (`clearTrees`, nature.js)
+  const all = [...w.plots, ...w.finePlots, ...w.densePlots];
+  for (let k = 0; k < MANORS; k++) {
+    placeStreetLot(w, `manor${k}`, 5, 4.5, all, NOBLE_CENTER);
+    if (w.lots[`manor${k}`]) Object.assign(w.lots[`manor${k}`], { virtual: true, clearTrees: true });
+  }
   return w;
 }
 
@@ -184,8 +192,15 @@ function placeFletcherWorkshop(w) {
   placeStreetLot(w, 'fletcher_workshop', 6, 5, [...w.plots, ...w.finePlots]);
 }
 
-/** A workshop lot `id` (2hw x 2hd) on the free ground nearest the market that fronts a street, its front (+z) to the street. */
-function placeStreetLot(w, id, hw, hd, plots) {
+/** How many Noble manors are laid out (owner 2026-11-07), and the point of the Noble Quarter they are nearest to. */
+export const MANORS = 8;
+const NOBLE_CENTER = { x: 90, z: 140 };
+
+/**
+ * A workshop lot `id` (2hw x 2hd) on the free ground nearest the market (or `center`) that fronts a street, its front (+z)
+ * to the street.
+ */
+function placeStreetLot(w, id, hw, hd, plots, center = MARKET) {
   const taken = new SpatialHash(40);
   const take = (b) => taken.insert(obbAabb(b), b);
   for (const p of plots) take(grow(p, 1));
@@ -194,7 +209,7 @@ function placeStreetLot(w, id, hw, hd, plots) {
   for (const f of w.fields) take(grow(f, 2));
   const hits = (b) => [...taken.query(obbAabb(b))].some((o) => obbOverlap(b, o));
   const spots = [];
-  for (let dx = -160; dx <= 160; dx += 4) for (let dz = -160; dz <= 160; dz += 4) spots.push([MARKET.x + dx, MARKET.z + dz, Math.hypot(dx, dz)]);
+  for (let dx = -160; dx <= 160; dx += 4) for (let dz = -160; dz <= 160; dz += 4) spots.push([center.x + dx, center.z + dz, Math.hypot(dx, dz)]);
   spots.sort((a, b) => a[2] - b[2]);
   for (const [x, z] of spots) {
     if (Math.hypot(x, z) < CASTLE.moatOuter + 18 || isWater(w, x, z)) continue;

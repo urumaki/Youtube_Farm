@@ -97,6 +97,13 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     });
     // the results of a game at the Tournament Ground: right after it, the King gives the winner their title in the throne
     // room (owner 2026-10-28, stories/throne.js)
+    // a new Noble (owner 2026-11-07): right after the throne room, their new manor and its sign (stories/manor.js)
+    if (diff.story.id === 'noble') {
+      targets.splice(today.length ? 2 : 1, 0, {
+        kind: 'event', id: 'noble_manor', story: { ...diff.story, step: 'manor' }, pos: castle.keep.clone(),
+        radius: 12, front: 0, label: null, labels: [], weight: 1.8, cut: true,
+      });
+    }
     if (diff.story.step === 'results' && ['race', 'joust'].includes(diff.story.id)) {
       targets.splice(today.length ? 2 : 1, 0, {
         kind: 'event', id: `${diff.story.id}_crown`, story: { ...diff.story, step: 'crown' }, pos: castle.keep.clone(),

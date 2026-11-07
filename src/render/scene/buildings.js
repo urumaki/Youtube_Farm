@@ -5,7 +5,8 @@ import { Builder, boxGeo, cylGeo, gableGeo, pyramidGeo, lancetGeo, merlonLine, m
 import { heightAt, WATER_LEVEL, CASTLE } from '../../sim/world.js';
 import { rand01 } from '../../sim/prng.js';
 import { planWall2, wallLayout } from '../../sim/wall.js';
-import { awningTexture, ROYAL } from './textures.js';
+import { awningTexture, plaqueTexture, ROYAL } from './textures.js';
+import { nobles } from '../../sim/stories.js';
 
 const STALL_COLORS = [['#9b1b30', '#f3ead2'], ['#1d2f6f', '#f3ead2'], ['#2f6b3a', '#efe2b8'], ['#c27a1d', '#f6ecd0'], ['#5b2a86', '#efe6d2'], ['#9b1b30', '#e3b23c']];
 
@@ -175,6 +176,42 @@ const BUILD = {
     for (let i = 0; i < 4; i++) b.add('rock', boxGeo(34 - i * 7, 1.6, 22 - i * 4, 3), i * 1.2, -0.6 - i * 1.5, 0);
     for (let i = 0; i < 10; i++) b.add('stone', boxGeo(1.6, 1.0, 1.0, 1), -12 + (i % 5) * 1.8, 0.5 + Math.floor(i / 5), 9);
     crane(b, 8, 6, 9);
+    out.focusH = 4;
+  },
+  manor(b, lot, out, ctx) {
+    // a Noble's manor (owner 2026-11-07): a stone ground floor under a timbered upper floor and a slate roof, a round corner
+    // tower with its pennant, a walled garden with a gate onto the street (+z) and, beside the gate, the sign: "NOBLE" and
+    // the Noble's name under it (plaqueTexture)
+    for (const s of [-1, 1]) {
+      b.add('stone', boxGeo(3.8, 0.9, 0.3), s * 2.9, 0.45, 4.3); // the front wall, either side of the gate
+      b.add('stone', boxGeo(0.3, 0.9, 8.6), s * 4.8, 0.45, 0); // the side walls
+      b.add('stoneDark', boxGeo(0.55, 1.5, 0.55), s * 1.0, 0.75, 4.3); // the gate posts and their stone balls
+      b.add('stone', new THREE.SphereGeometry(0.26, 10, 8), s * 1.0, 1.75, 4.3);
+    }
+    b.add('stone', boxGeo(9.9, 0.9, 0.3), 0, 0.45, -4.3);
+    b.add('cobble', boxGeo(1.5, 0.06, 3.5), 0, 0.03, 2.5); // the path to the door
+    b.add('stone', boxGeo(7, 2.8, 4.2), 0, 1.4, -1.4);
+    b.add('timber', boxGeo(7.5, 2.4, 4.7), 0, 4.0, -1.4);
+    b.add('slate', gableGeo(8.3, 5.5, 2.7), 0, 5.2, -1.4);
+    door(b, 0, 0.72, 1.2, 2.2, 0, { frame: 'stoneDark' });
+    windowsRow(b, -2.5, 2.5, 1.7, 0.75, 2, 'windowWarm');
+    windowsRow(b, -2.8, 2.8, 4.1, 0.97, 3, 'windowWarm');
+    tower(b, 3.5, -3.0, 1.1, 6.6, 2.4);
+    b.add('stone', boxGeo(0.7, 2.4, 0.7), -2.6, 6.4, -2.3); // the chimney
+    out.smoke.push([-2.6, 7.7, -2.3]);
+    out.flags.push([3.5, 9.8, -3.0, 0.9, 0.6]);
+    // two clipped trees in the garden
+    for (const s of [-1, 1]) {
+      b.add('trunk', cylGeo(0.12, 0.15, 1.2, 6), s * 3.6, 0.6, 2.4);
+      b.add('foliage', new THREE.SphereGeometry(0.75, 10, 8), s * 3.6, 1.6, 2.4);
+    }
+    // the sign on its two posts, to the right of the gate, facing the street
+    const key = `plaque_${lot.id}`;
+    if (ctx.mats && !ctx.mats[key]) ctx.mats[key] = new THREE.MeshStandardMaterial({ map: plaqueTexture('NOBLE', ctx.noble || ''), roughness: 0.6 });
+    for (const x of [1.75, 3.45]) b.add('woodDark', boxGeo(0.14, 2.0, 0.14), x, 1.0, 4.62);
+    b.add('woodDark', boxGeo(1.86, 0.95, 0.08), 2.6, 1.5, 4.6);
+    if (ctx.mats) b.add(key, new THREE.PlaneGeometry(1.76, 0.88), 2.6, 1.5, 4.65);
+    out.lights.push([-0.9, 2.3, 0.95], [0.9, 2.3, 0.95]);
     out.focusH = 4;
   },
   dungeon(b, lot, out) {
@@ -911,7 +948,10 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
   const items = {};
   const smoke = [], lights = [], flags = [], banners = [], sails = [], boats = [];
 
-  for (const bd of state.buildings) {
+  ctx.mats = mats;
+  // the Nobles' manors (owner 2026-11-07): each Noble's manor stands from the day they were made a Noble
+  const manors = nobles(state).filter((n) => w.lots[n.lot]).map((n) => ({ id: n.lot, status: 'done', noble: n.name }));
+  for (const bd of [...state.buildings, ...manors]) {
     if (bd.id === 'fields' || bd.id === 'guardposts' || bd.id === 'charter_stone') continue;
     if (bd.id === 'wall2') {
       const wall = buildWall2(w, wall2Layout(w, state), mats);
@@ -922,8 +962,9 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
       continue;
     }
     const lot = w.lots[bd.id];
-    const fn = BUILD[bd.id];
+    const fn = BUILD[bd.id] || (bd.noble !== undefined ? BUILD.manor : null);
     if (!lot || !fn) continue;
+    ctx.noble = bd.noble;
     const parent = lot.onPlaza && w.lots[lot.onPlaza];
     const frame = parent ? plazaFrame(w, parent, lot) : lotFrame(w, lot);
     const b = new Builder();

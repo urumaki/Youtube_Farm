@@ -17,10 +17,12 @@ const KNEEL = new THREE.Vector3(0, 0, -6.7); // where the winner kneels, facing 
 const KING = new THREE.Vector3(0, 0.6, -8.15); // the King standing at the front of the dais
 const WALK = 0.3, DOWN = 0.38, TAPS = [0.46, 0.58, 0.7], RISE = 0.8; // the shares of the shot
 
+// Owner 2026-11-07: the same ceremony makes a villager a Noble (story 'noble', by the owner's hand only): the hero walks up
+// the carpet past the newest named villagers and the King gives the title.
 export function buildThrone({ story, M }) {
-  const winner = (story.riders || []).find((c) => c.id === story.winner);
+  const winner = story.id === 'noble' ? story.hero : (story.riders || []).find((c) => c.id === story.winner);
   if (!winner) return null;
-  const title = story.id === 'race' ? 'cavalier' : 'knight';
+  const title = story.id === 'noble' ? 'noble' : story.id === 'race' ? 'cavalier' : 'knight';
   const group = new THREE.Group();
   group.position.set(0, CASTLE.ground - 60, 0); // under the castle
   group.visible = false;
@@ -90,11 +92,11 @@ export function buildThrone({ story, M }) {
   if (title === 'knight') plateArmor(W, M); // owner 2026-11-01: the new Knight comes to be knighted in shining armour
   group.add(W.root);
   const labels = [];
-  const subOf = () => (title === 'cavalier' ? 'Now a Cavalier!' : 'Now a Knight!');
+  const subOf = () => ({ cavalier: 'Now a Cavalier!', knight: 'Now a Knight!', noble: 'Now a Noble!' })[title];
   const wTag = { ...castTag(winner), P: W, sub0: castTag(winner).sub };
   labels.push(wTag, { pos: toWorld(new THREE.Vector3(KING.x, KING.y + 2.45, KING.z)), title: 'The King', sub: '', fixed: true });
   // the other riders and the named villagers of the stands line the carpet, facing it
-  const line = [...story.riders.filter((c) => c.id !== winner.id), ...(story.crowd || [])].slice(0, 8);
+  const line = [...(story.riders || []).filter((c) => c.id !== winner.id), ...(story.crowd || [])].slice(0, 8);
   const crowd = line.map((c, i) => {
     const s = i % 2 ? 1 : -1, z = -4.4 + Math.floor(i / 2) * 2.1;
     const P = person(M, JOBS[c.job]?.color || '#7a6a55');
@@ -109,7 +111,7 @@ export function buildThrone({ story, M }) {
     group,
     labels,
     interior: true,
-    banner: title === 'cavalier' ? 'A new Cavalier!' : 'A new Knight!',
+    banner: { cavalier: 'A new Cavalier!', knight: 'A new Knight!', noble: 'A new Noble!' }[title],
     focus: toWorld(new THREE.Vector3(0, 1.5, -7.4)),
     cam(u) {
       // from beside the carpet, over the heads of the ones lining it, drifting in toward the dais: the King and the winner

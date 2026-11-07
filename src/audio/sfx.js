@@ -490,6 +490,9 @@ const SCENES = {
   ev_dayinlife_lecture: [['chatter', 0.12]],
   ev_dayinlife_candle: [['fire', 0.12], ['breeze', 0.2]],
   ev_dayinlife_loop: [['breeze', 0.45]],
+  // a new Noble (owner 2026-11-07): the fanfare in the throne room, the cheers at the manor's gate
+  ev_noble: [['fanfare', 0.5], ['cheer', 0.45]],
+  ev_noble_manor: [['cheer', 0.5], ['birds', 0.4]],
   // the Dungeon escape (owner 2026-11-05): a quiet cell, the market, the horn, the chase, the cheers
   ev_escape_dig: [['fire', 0.1], ['breeze', 0.2]],
   ev_escape_popup: [['birds', 0.4], ['chatter', 0.3]],

@@ -315,6 +315,37 @@ export function signTexture(text = 'SUBSCRIBER KINGDOM') {
   return t;
 }
 
+/**
+ * A Noble's sign (owner 2026-11-07): a carved board, "NOBLE" in gold letters and the Noble's name under it, the name's
+ * letters made smaller until it fits.
+ */
+export function plaqueTexture(title = 'NOBLE', name = '') {
+  const W = 1024, H = 512;
+  const [c, ctx] = canvas(W, H);
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#3a2414'); g.addColorStop(1, '#22140a');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = ROYAL.gold; ctx.lineWidth = 14; ctx.strokeRect(18, 18, W - 36, H - 36);
+  ctx.lineWidth = 4; ctx.strokeRect(40, 40, W - 80, H - 80);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const gold = ctx.createLinearGradient(0, 60, 0, 440);
+  gold.addColorStop(0, '#ffe9a8'); gold.addColorStop(0.5, ROYAL.gold); gold.addColorStop(1, ROYAL.goldDeep);
+  const write = (text, y, size) => {
+    ctx.font = `700 ${size}px Cinzel, serif`;
+    ctx.fillStyle = '#120a04'; ctx.fillText(text, W / 2 + 4, y + 6);
+    ctx.fillStyle = gold; ctx.fillText(text, W / 2, y);
+  };
+  write(title, 170, 170);
+  ctx.fillStyle = ROYAL.gold; ctx.fillRect(W / 2 - 260, 268, 520, 5);
+  let size = 96;
+  ctx.font = `700 ${size}px Cinzel, serif`;
+  while (size > 36 && ctx.measureText(name).width > W - 140) { size -= 4; ctx.font = `700 ${size}px Cinzel, serif`; }
+  write(name, 370, size);
+  const t = tex(c);
+  t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+  return t;
+}
+
 export function awningTexture(colorA, colorB) {
   const [c, ctx] = canvas(64, 64);
   for (let i = 0; i < 8; i++) { ctx.fillStyle = i % 2 ? colorA : colorB; ctx.fillRect(i * 8, 0, 8, 64); }

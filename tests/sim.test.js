@@ -1327,3 +1327,55 @@ test('a story the owner starts at its first step hands that day\'s story on to t
   assert.equal(state.storyArc.step, 'camp');
   assert.ok(state.storyArc.data && state.storyArc.data.cast !== undefined);
 });
+
+test('a Noble only by the owner\'s hand (owner 2026-11-07): the queue, the throne room, then the manor with its sign', async () => {
+  const { pickStory, nobles, STORIES } = await import('../src/sim/stories.js');
+  const { makePlan } = await import('../src/render/scene/timeline.js');
+  const { buildScript } = await import('../src/audio/narration.js');
+  const { MANORS } = await import('../src/sim/world.js');
+  const THREE = await import('three');
+  const jobs = ['guard', 'farmer', 'baker', 'scholar'];
+  const kingdom = (extra = {}) => ({
+    seed: SEED, date: '2026-11-09', day: 25, subscriberCount: 3000, weather: 'clear', storyLog: {}, buildings: [], houses: [],
+    villagers: jobs.map((job, id) => ({ id, job })), names: Object.fromEntries(jobs.map((_, id) => [id, { name: `V${id}`, day: 1 + id }])),
+    ennoble: [{ id: 0, day: 25 }], ...extra,
+  });
+  // never by chance
+  assert.ok(STORIES.noble.manual);
+  for (let d = 0; d < 60; d++) {
+    const s = kingdom({ ennoble: [], day: 30 + d, date: `2026-12-${String(1 + (d % 28)).padStart(2, '0')}` });
+    assert.notEqual(pickStory(s)?.id, 'noble');
+  }
+  // on its day: the title, the villager keeps their job, the queue empties, the manor is theirs
+  const s = kingdom();
+  const st = pickStory(s);
+  assert.equal(st.id, 'noble');
+  assert.equal(st.hero.id, 0);
+  assert.equal(s.names[0].noble, 25);
+  assert.equal(s.villagers[0].job, 'guard');
+  assert.deepEqual(s.ennoble, []);
+  assert.deepEqual(nobles(s).map((n) => [n.id, n.lot]), [[0, 'manor0']]);
+  assert.ok(MANORS >= 4);
+  // an owner story or an urgent step comes first: the title waits for the next free day
+  const busy = kingdom({ storyArc: { id: 'merchants', step: 'arrive', day: 25, owner: true } });
+  pickStory(busy);
+  assert.equal(busy.ennoble.length, 1);
+  // the throne room, then the manor; the narrator never reads the name
+  const d = { day: 25, date: '2026-11-09', story: st, added: [], named: [], buildingsStarted: [], buildingsCompleted: [], housesBuilt: [], housesRebuilt: [], housesRaised: [], housesAbandoned: [], housesRuined: [], housesReoccupied: [], removed: [], delta: 0, events: [] };
+  const plan = makePlan({ state: { ...s, unlockedTiers: [] }, diff: d, houses: { shapes: new Map() }, animated: new Map(),
+    buildings: { items: {} }, castle: { keep: new THREE.Vector3() } });
+  const ids = plan.targets.map((t) => t.id);
+  assert.equal(ids[ids.indexOf('noble') + 1], 'noble_manor');
+  const script = buildScript(s, d);
+  assert.ok(/Noble/.test(script.text) && /manor/.test(script.text) && !/V0/.test(script.text));
+});
+
+test('the Nobles\' manors (owner 2026-11-07) lie on free ground, laid out after everything else', () => {
+  const w = world(SEED);
+  const manors = Object.values(w.lots).filter((l) => l.id.startsWith('manor'));
+  assert.ok(manors.length >= 4);
+  for (const m of manors) {
+    assert.ok(m.virtual && m.clearTrees);
+    for (const p of [...w.plots, ...w.finePlots, ...w.densePlots]) assert.ok(Math.hypot(p.x - m.x, p.z - m.z) > 4, `${m.id} on plot ${p.id}`);
+  }
+});
