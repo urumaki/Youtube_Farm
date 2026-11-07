@@ -23335,21 +23335,25 @@
   "id": "raid",
   "step": "attack",
   "gate": {
-   "x": -145.1701218823414,
-   "z": -209.63093031605558,
-   "rot": -0.2808275710853523,
-   "side": "north"
+   "x": 481.2481609959907,
+   "z": 3.903504562144011,
+   "rot": 1.5759085066325043,
+   "in": [
+    -0.999987,
+    -0.005112
+   ],
+   "side": "east"
   },
   "houses": [
-   205,
-   199,
-   101
+   177,
+   212,
+   175
   ],
   "owner": {
-   "id": 967,
-   "name": "martinsharp4384",
-   "job": "scholar",
-   "day": 22
+   "id": 823,
+   "name": "guyfromAntarctica",
+   "job": "bishop",
+   "day": 15
   },
   "guard": {
    "id": 1007,
@@ -23444,10 +23448,10 @@
     "day": 23
    },
    {
-    "id": 967,
-    "name": "martinsharp4384",
-    "job": "scholar",
-    "day": 22
+    "id": 823,
+    "name": "guyfromAntarctica",
+    "job": "bishop",
+    "day": 15
    },
    {
     "id": 979,
@@ -23549,21 +23553,25 @@
   "day": 24,
   "data": {
    "gate": {
-    "x": -145.1701218823414,
-    "z": -209.63093031605558,
-    "rot": -0.2808275710853523,
-    "side": "north"
+    "x": 481.2481609959907,
+    "z": 3.903504562144011,
+    "rot": 1.5759085066325043,
+    "in": [
+     -0.999987,
+     -0.005112
+    ],
+    "side": "east"
    },
    "houses": [
-    205,
-    199,
-    101
+    177,
+    212,
+    175
    ],
    "owner": {
-    "id": 967,
-    "name": "martinsharp4384",
-    "job": "scholar",
-    "day": 22
+    "id": 823,
+    "name": "guyfromAntarctica",
+    "job": "bishop",
+    "day": 15
    },
    "guard": {
     "id": 1007,
@@ -23658,10 +23666,10 @@
      "day": 23
     },
     {
-     "id": 967,
-     "name": "martinsharp4384",
-     "job": "scholar",
-     "day": 22
+     "id": 823,
+     "name": "guyfromAntarctica",
+     "job": "bishop",
+     "day": 15
     },
     {
      "id": 979,

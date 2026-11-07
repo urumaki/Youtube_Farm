@@ -8,7 +8,7 @@
 // dropped by the owner on 2026-10-22.)
 import { rng } from './prng.js';
 import { TIERS } from './tiers.js';
-import { world, MANORS } from './world.js';
+import { world, heightAt, MANORS } from './world.js';
 import { wallLayout, insideWall2 } from './wall.js';
 import { RIDDLES, RIDDLE } from './riddles.js';
 
@@ -467,7 +467,7 @@ const BUILD = {
     const taken = [...crusaders, ...(knight ? [knight] : [])];
     const crowd = namedVillagers(state).filter((n) => !taken.some((x) => x.id === n.id)).slice(0, 8);
     return {
-      gate: { x: gate.x, z: gate.z, rot: gate.rot, side: gate.side }, knight: knight && strip(knight),
+      gate: { x: gate.x, z: gate.z, rot: gate.rot, in: gate.in, side: gate.side }, knight: knight && strip(knight),
       crusaders: crusaders.map((c) => ({ ...strip(c), joined: !!c.joined })), joined: crusaders.filter((c) => c.joined).length,
       crowd: crowd.map(strip), cast: [...(knight ? [knight] : []), ...crusaders, ...crowd].map(strip),
     };
@@ -567,7 +567,7 @@ const BUILD = {
     const watch = Math.max(5, Math.round(state.villagers.filter((v) => GUARDS.includes(v.job)).length / 20));
     const bandits = Math.max(30, Math.round((watch * 2 + r.int(-4, 4)) / 10) * 10);
     return {
-      gate: { x: gate.x, z: gate.z, rot: gate.rot, side: gate.side }, houses: [shown.h.id, ...rest.map((o) => o.h.id)],
+      gate: { x: gate.x, z: gate.z, rot: gate.rot, in: gate.in, side: gate.side }, houses: [shown.h.id, ...rest.map((o) => o.h.id)],
       owner: strip(owner), guard: strip(guard), defenders: defenders.map(strip), missing: missing && strip(missing), chain: chain.map(strip),
       // the guards on watch that night (one in twenty, at least five; the kingdom has hundreds) and about twice as many bandits
       bandits, guardCount: watch, population: state.subscriberCount,
@@ -578,29 +578,41 @@ const BUILD = {
 const strip = ({ id, name, job, day }) => ({ id, name, job, day });
 
 /**
- * The gate of the Second Wall the bandits break: open land outside it (no plot within 55 m of the road out, so the camera
- * outside films the gate and not a house), occupied houses inside near it, the northernmost such gate (the bandits come
- * from the northern woods); else the gate with the fewest plots outside. side: where it stands seen from the castle
- * (north is -z). The frame: `in` points into the town (toward the castle), `x` along the wall.
+ * The gate of the Second Wall the bandits break (owner 2026-11-07: never a north gate; the one at the top of the hill stood
+ * on a slope and the camera saw nothing). The town has grown past the wall, so most gates have houses outside: the gate
+ * chosen has the wall straight beside it (the shots film along it), flat ground, at least three occupied houses inside near
+ * it, and the widest road out clear of plots (the bandits run down it); ties: the fewest plots outside, then the northernmost. Else the old rule: the gate
+ * with the fewest plots outside. side: where it stands seen from the castle (north is -z). `in` ([x, z]): the way into the
+ * town, found by the wall itself (toward the castle is wrong where the wall bends); the frame's `x` runs along the wall.
  */
 function raidGate(w, state) {
   if (!state.wall2?.pts) return null;
-  const { gates } = wallLayout(w, state.wall2.pts);
+  const sideOf = (g) => ['east', 'north', 'west', 'south'][((Math.round(Math.atan2(-g.z, g.x) / (Math.PI / 2)) % 4) + 4) % 4];
+  const gates = wallLayout(w, state.wall2.pts).gates.filter((g) => sideOf(g) !== 'north');
   if (!gates.length) return null;
+  const pts = state.wall2.pts, inside = (x, z) => insideWall2(pts, x, z, undefined, w);
   const plots = new Map(state.plots.map((p) => [p.id, p]));
   const homes = state.houses.filter((h) => h.status === 'occupied' && plots.has(h.plot)).map((h) => plots.get(h.plot));
   const rated = gates.map((g) => {
     let ix = -Math.sin(g.rot), iz = Math.cos(g.rot);
-    if (ix * -g.x + iz * -g.z < 0) { ix = -ix; iz = -iz; }
+    if (!inside(g.x + ix * 14, g.z + iz * 14)) { ix = -ix; iz = -iz; }
+    const at = (x, z) => [g.x + iz * x + ix * z, g.z - ix * x + iz * z]; // frame (x along the wall, z in) to world
     const local = (p) => [(p.x - g.x) * iz - (p.z - g.z) * ix, (p.x - g.x) * ix + (p.z - g.z) * iz];
+    let bent = 0;
+    for (let x = -16; x <= 24; x += 4) if (inside(...at(x, -14)) || !inside(...at(x, 14))) bent++;
+    const hs = [-50, -30, -10, 10, 30].map((z) => heightAt(w, ...at(0, z)));
+    const slope = Math.max(...hs) - Math.min(...hs);
+    const near = state.plots.map((p) => [...local(p), Math.max(p.hw || 5, p.hd || 5) + 2.3]).filter(([, z, r]) => z > -56 - r && z < -14 + r);
+    let road = 0;
+    for (let x = -24; x <= 24; x += 1.1) if (!near.some(([ox, , r]) => Math.abs(ox - x) < r)) road++;
     const outside = state.plots.filter((p) => { const [x, z] = local(p); return Math.abs(x) < 30 && z < -3 && z > -55; }).length;
-    const inside = homes.filter((p) => { const [x, z] = local(p); return Math.abs(x) < 45 && z > 3 && z < 90; }).length;
-    return { g, outside, inside };
+    const homesIn = homes.filter((p) => { const [x, z] = local(p); return Math.abs(x) < 45 && z > 3 && z < 90; }).length;
+    return { g, in: [ix, iz], bent, slope, road, outside, inside: homesIn };
   });
-  const good = rated.filter((x) => !x.outside && x.inside >= 3).sort((a, b) => a.g.z - b.g.z);
-  const { g } = good[0] || [...rated].sort((a, b) => a.outside - b.outside || b.inside - a.inside)[0];
-  const ang = Math.atan2(-g.z, g.x); // 0 east, PI/2 north
-  return { ...g, side: ['east', 'north', 'west', 'south'][((Math.round(ang / (Math.PI / 2)) % 4) + 4) % 4] };
+  const good = rated.filter((x) => !x.bent && x.slope < 3 && x.inside >= 3).sort((a, b) => b.road - a.road || a.outside - b.outside || a.g.z - b.g.z);
+  const best = good[0] || [...rated].sort((a, b) => a.outside - b.outside || b.inside - a.inside)[0];
+  const { g } = best;
+  return { ...g, in: best.in.map((v) => Math.round(v * 1e6) / 1e6), side: sideOf(g) };
 }
 const SHIPS = ['the Sea Swallow', 'the Golden Gull', 'the Saint Brendan', 'the Merry Otter', 'the Northern Star', 'the Fair Wind'];
 

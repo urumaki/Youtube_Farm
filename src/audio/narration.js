@@ -303,13 +303,13 @@ function raidScript(state, diff, pick) {
     [pick(L.cta), FIXED_AT.cta],
   ] : [
     ['They came at midnight.', 0.4],
-    [`Bandits from the northern woods. ${n(e.bandits)} of them.`, 2.3],
+    [`Bandits from the ${{ east: 'eastern', west: 'western', south: 'southern' }[e.gate?.side] || 'northern'} woods. ${n(e.bandits)} of them.`, 2.3],
     [`Only ${n(e.guardCount)} guards stood between them and ${n(e.population ?? state.subscriberCount)} villagers.`, 6.3],
     ['And one of them was first to the gate.', 9.6],
     [`The ${e.gate?.side || 'east'} gate fell.`, 15.3],
     ['Look whose house is burning.', 18.4],
     ['By morning, three houses were gone.', 24.4],
-    [e.missing ? 'And one villager was missing.' : 'And the bandits were gone.', 26.6],
+    [e.missing ? 'And one villager was missing. Was it you?' : 'And the bandits were gone.', 26.3], // owner 2026-11-07: "Was it you?"
   ];
   const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
   const text = sentences.map((x) => x.text).join(' ');

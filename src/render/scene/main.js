@@ -18,6 +18,7 @@ import { buildCaravan } from './caravan.js';
 import { buildTavernInterior } from './tavern.js';
 import { buildChurchInterior } from './church.js';
 import { buildStory } from './stories/index.js';
+import { outsideGate } from './stories/raid.js';
 import { buildFields, buildWheat } from './ambient.js';
 import { buildWallWatch } from './wallwatch.js';
 import { buildPasture, buildLaundry } from './everyday.js';
@@ -77,8 +78,10 @@ async function setup(data) {
   const raisedToday = (diff.housesRaised || []).filter((id) => !diff.housesBuilt.includes(id)).slice(0, 6);
   // and the three houses that burn in the night raid (they turn black at the end, stories/raid.js)
   const burning = diff.story?.id === 'raid' && diff.story.step === 'attack' ? diff.story.houses.filter((id) => !diff.housesBuilt.includes(id) && !raisedToday.includes(id)) : [];
-  const todays = viewer ? [] : [...diff.housesBuilt, ...diff.housesRebuilt].slice(0, 60).concat(raisedToday, burning);
-  const animatedIds = new Set(todays);
+  // (owner 2026-11-07) the night of the raid: no houses outside the wall in front of the gate (stories/raid.js outsideGate)
+  const away = new Set(!viewer && diff.story?.id === 'raid' && diff.story.step === 'attack' ? outsideGate(state, w, diff.story) : []);
+  const todays = viewer ? [] : [...diff.housesBuilt, ...diff.housesRebuilt].slice(0, 60).concat(raisedToday, burning).filter((id) => !away.has(id));
+  const animatedIds = new Set([...todays, ...away]);
   const houses = buildHouses(state, w, M, { animatedIds });
   scene.add(houses.group);
   const animated = new Map();

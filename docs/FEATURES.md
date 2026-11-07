@@ -331,7 +331,7 @@ Add new owner decisions here.
   house is burning." while the name is on screen). The numbers: the guards on watch that night (one guard in twenty, at
   least five; the kingdom had 439 guards, "only 439 guards" against 40 bandits made no sense) and about twice as many
   bandits (30 at least), the population. The gate: open land outside (no plot within 55 m of the road out, so the camera
-  outside films the gate), houses inside, the northernmost such gate; the narrator names its side ("The north gate
+  outside films the gate), houses inside, the northernmost such gate (changed 2026-11-07, below); the narrator names its side ("The north gate
   fell."). The three houses: the named villager's house inside the wall nearest the gate and the two next to it; they
   are not changed in the state (repaired the next day). Bandits have no names: black clothes, a black bandana round the
   head, a dark red one over the face (`BANDIT` in `outfits.js`). Titles: "Day N: The kingdom was attacked tonight 🔥 +X
@@ -355,7 +355,16 @@ Add new owner decisions here.
   is kept. Owner's changes to day 2 (2026-10-30): the bandits' camp is in a clearing deep in the woods, far from any house
   (`campSite`: at least 80 m from every plot, dry ground, no tree of the land within 13 m, the guards' way in and the
   bandits' ways out clear; `clearing` rings it with trees), and two of the five named guards stop and shoot arrows at the
-  ground just behind the bandits as they run (nobody hurt). Test with
+  ground just behind the bandits as they run (nobody hurt). Owner's changes 2026-11-07 (the first video of day 23 was at
+  the north gate on the hill: on a slope, some shots showed nothing): never a north gate (`raidGate` in `stories.js`). The
+  town has grown past the Second Wall, so every gate has houses outside: the gate chosen has the wall straight beside it,
+  flat ground, three occupied houses inside near it, and the widest road out clear of plots (ties: the fewest plots
+  outside, then the northernmost); its way into the town (`gate.in`) is found by the wall itself, not toward the castle (wrong
+  where the wall bends). On the night of the attack the houses outside the wall in front of the gate (45 m either side of
+  the road, 90 m out: `outsideGate` in `raid.js`) are not drawn; they stand again the next morning. The bandits come out of
+  the woods along at most 12 lanes, so the trees stand between them. "Subscribe to join the kingdom" at the bottom of every
+  shot of both days (the fight keeps "...the defense"; not over the crier), the narrator says the woods on the gate's side,
+  and the last line of day 1 is "And one villager was missing. Was it you?". Test with
   `npm run render -- --real --subs N --story raid` and `--story raid:rescue` (stills: `--stills 0.4,4.5,8,13,16.5,20,26`).
   The people in a role are named villagers of that job when the kingdom has them (owner 2026-10-25, `roleCast` in
   `stories.js`): the guards beside the heroes against the bandits (`guardCast`) and the King's banner guards in the

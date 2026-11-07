@@ -11,7 +11,7 @@ import * as THREE from 'three';
 import { rand01 } from '../../../sim/prng.js';
 import { JOBS } from '../../../sim/tiers.js';
 import { heightAt, WATER_LEVEL } from '../../../sim/world.js';
-import { wallLayout } from '../../../sim/wall.js';
+import { wallLayout, insideWall2 } from '../../../sim/wall.js';
 import { FLOOR_H } from '../houseKit.js';
 import { BANDIT } from '../outfits.js';
 import { toolGeo } from '../work.js';
@@ -51,7 +51,8 @@ export function gateFrame(w, story, yFn) {
   const y0 = Math.max(heightAt(w, g.x, g.z), 1.6);
   const up = new THREE.Vector3(0, 1, 0);
   let inward = new THREE.Vector3(-Math.sin(g.rot), 0, Math.cos(g.rot));
-  if (inward.x * -g.x + inward.z * -g.z < 0) inward.negate(); // toward the castle
+  if (g.in) inward.set(g.in[0], 0, g.in[1]); // into the town, found by the wall (raidGate in src/sim/stories.js)
+  else if (inward.x * -g.x + inward.z * -g.z < 0) inward.negate(); // (older saves) toward the castle
   const along = new THREE.Vector3().crossVectors(up, inward); // x = y cross z keeps the frame right-handed
   const matrix = new THREE.Matrix4().makeBasis(along, up, inward).setPosition(g.x, y0, g.z);
   const toWorld = (x, y, z) => new THREE.Vector3(x, y, z).applyMatrix4(matrix);
@@ -63,7 +64,25 @@ export function gateFrame(w, story, yFn) {
   group.matrixAutoUpdate = false;
   group.matrix.copy(matrix);
   group.visible = false;
-  return { group, toWorld, toLocal, ground, y0 };
+  return { group, toWorld, toLocal, ground, y0, w };
+}
+
+/**
+ * The houses outside the Second Wall in front of the gate (owner 2026-11-07): the town has grown past the wall, and these
+ * stood between the camera and the woods, the bandits and the gate. They are left out of the night of the raid (the attack
+ * day only; they stand again the next morning): the plots outside the wall within 45 m either side of the road out and up
+ * to 90 m from the gate.
+ */
+export function outsideGate(state, w, story) {
+  if (!story?.gate || !state.wall2?.pts) return [];
+  const F = gateFrame(w, story, () => 0);
+  const plots = new Map(state.plots.map((p) => [p.id, p]));
+  return state.houses.filter((h) => {
+    const p = plots.get(h.plot);
+    if (!p) return false;
+    const [x, z] = F.toLocal(p.x, p.z);
+    return Math.abs(x) < 45 && z < 0 && z > -90 && !insideWall2(state.wall2.pts, p.x, p.z, undefined, w);
+  }).map((h) => h.id);
 }
 
 /** Someone standing at (x, z) of the frame, facing the frame's direction (dx, dz). */
@@ -170,10 +189,12 @@ function arrowGeo(M) {
  * What stands outside the gate in the gate's frame (owner 2026-10-30: the bandits never walk through a tree or a house):
  * the trees of the land and the houses ([x, z, radius]).
  */
-export function obstacles(F, state, nature, half = 60, far = -110) {
+export function obstacles(F, state, nature, half = 60, far = -110, story = null) {
   const out = [];
+  // (the night of the raid: the houses outside the gate are not there, see outsideGate)
+  const gone = new Set(story?.step === 'attack' ? outsideGate(state, F.w, story).map((id) => state.houses.find((h) => h.id === id)?.plot) : []);
   for (const tr of nature?.trees || []) { const [x, z] = F.toLocal(tr.x, tr.z); if (Math.abs(x) < half && z > far && z < 30) out.push([x, z, 0.9 + 0.4 * (tr.s || 1)]); }
-  for (const p of state.plots || []) { const [x, z] = F.toLocal(p.x, p.z); if (Math.abs(x) < half + 90 && z > far - 90 && z < 30) out.push([x, z, Math.max(p.hw || 5, p.hd || 5) + 1.5, true]); }
+  for (const p of state.plots || []) { if (gone.has(p.id)) continue; const [x, z] = F.toLocal(p.x, p.z); if (Math.abs(x) < half + 90 && z > far - 90 && z < 30) out.push([x, z, Math.max(p.hw || 5, p.hd || 5) + 1.5, true]); }
   return out;
 }
 
@@ -380,8 +401,11 @@ function woodsShot({ story, w, state, M, seed, yFn, nature }) {
   const F = gateFrame(w, story, yFn);
   const { group } = F;
   // lanes clear of the land's trees and the houses from inside the woods to where they run to; the woods keep them clear
-  const obs = obstacles(F, state, nature);
-  const lanes = clearLanes(obs, WOODS - 9, -14, 24);
+  const obs = obstacles(F, state, nature, undefined, undefined, story);
+  const free = clearLanes(obs, WOODS - 9, -14, 24);
+  // (owner 2026-11-07) at most 12 lanes, spread over the free ones: the trees stand between them (with open land everywhere
+  // no tree was left in the middle)
+  const lanes = free.length > 12 ? Array.from({ length: 12 }, (_, i) => free[Math.round((i * (free.length - 1)) / 11)]) : free;
   group.add(treeLine(F, M, seed, WOODS, lanes));
   const n = story.bandits || 40;
   const horde = Array.from({ length: n }, (_, i) => {
@@ -527,7 +551,7 @@ function fightShot({ story, w, state, M, seed, yFn, nature }) {
   group.add(ram);
   const carriers = Array.from({ length: 6 }, (_, i) => { const P = bandit(M, i, 'none'); P.side = i % 2 ? 1 : -1; P.along = -2 + Math.floor(i / 2) * 2; group.add(P.root); return P; });
   // the others wait behind, on ground clear of trees and houses
-  const lanes = clearLanes(obstacles(F, state, nature), -20, -8, 10, 1.3);
+  const lanes = clearLanes(obstacles(F, state, nature, undefined, undefined, story), -20, -8, 10, 1.3);
   const mob = Array.from({ length: Math.min(12, lanes.length * 2) }, (_, i) => {
     const P = bandit(M, i, i % 4 === 3 ? 'club' : 'torch');
     P.x = lanes[(i * 5) % lanes.length];
@@ -1049,5 +1073,8 @@ export function buildRaid(args) {
   if (!f) return null;
   const st = f(args);
   if (st && st.phase === undefined) st.phase = step === 'attack' ? NIGHT : MORNING;
+  // owner 2026-11-07: "Subscribe to join the kingdom" at the bottom of every shot (the fight keeps "...the defense"; not
+  // over the crier, where the call to action comes)
+  if (st && st.footer === undefined && shot !== 'crier') st.footer = 'Subscribe to join the kingdom';
   return st;
 }
