@@ -231,6 +231,37 @@ export function plateArmor(P, M, { seated = false, helmet = true } = {}) {
   }
 }
 
+/**
+ * A Noble's clothes (owner 2026-11-07: light blue, with a cloak): on a person made with NOBLE as its colour (a light blue
+ * tunic, no job's outfit). A light blue cloak with a white fur collar from the shoulders, a gold clasp and chain, a gold
+ * belt, and a soft light blue cap with a white feather.
+ */
+export const NOBLE = '#9ccaf0';
+let nobleMats = null;
+export function nobleAttire(P, M) {
+  nobleMats ??= {
+    cloak: new THREE.MeshStandardMaterial({ color: '#79b0e2', roughness: 0.8, side: THREE.DoubleSide }),
+    fur: new THREE.MeshStandardMaterial({ color: '#f3efe6', roughness: 1 }),
+    cap: new THREE.MeshStandardMaterial({ color: '#86bbe8', roughness: 0.85 }),
+  };
+  const O = nobleMats;
+  const mesh = ([geo, mat], parent) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; parent.add(m); return m; };
+  for (const part of [
+    // the cloak: an open cone round the back, from the shoulders to below the knees
+    [new THREE.CylinderGeometry(0.34, 0.47, 1.18, 18, 1, true, Math.PI / 2 - 0.25, Math.PI + 0.5).translate(0, 0.27, -0.02), O.cloak],
+    [new THREE.TorusGeometry(0.22, 0.065, 8, 20).rotateX(Math.PI / 2).scale(1.15, 1, 1).translate(0, 0.86, -0.01), O.fur], // the fur collar
+    [new THREE.SphereGeometry(0.045, 8, 6).translate(0, 0.84, 0.2), M.gold], // the clasp
+    [new THREE.TorusGeometry(0.13, 0.012, 5, 18, Math.PI).rotateZ(Math.PI).rotateX(-0.35).translate(0, 0.78, 0.13), M.gold], // the chain
+    [cylGeo(0.236, 0.242, 0.06, 14).translate(0, 0.46, 0), M.gold], // the belt
+  ]) mesh(part, P.body);
+  for (const c of [...P.hat.children]) c.visible = false;
+  for (const part of [
+    [new THREE.SphereGeometry(0.23, 14, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.05, 0.45, 1.05).translate(0, 1.15, 0), O.cap],
+    [cylGeo(0.2, 0.21, 0.05, 14).translate(0, 1.15, 0), O.cap],
+    [new THREE.SphereGeometry(0.05, 8, 6).scale(0.8, 3.2, 0.8).rotateX(-0.5).rotateZ(-0.4).translate(0.14, 1.32, -0.08), O.fur], // the feather
+  ]) mesh(part, P.hat);
+}
+
 function jesterCap(M) {
   const parts = [[cylGeo(0.215, 0.2, 0.1, 12).translate(0, 1.17, 0), M.gold]];
   // three floppy horns (left, right, back), each going up and out and then drooping, a bell at each tip

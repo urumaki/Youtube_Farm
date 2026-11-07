@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { JOBS } from '../../../sim/tiers.js';
 import { nobles } from '../../../sim/stories.js';
+import { nobleAttire, NOBLE } from '../outfits.js';
 import { person, stride, castTag, ease, clamp01 } from './common.js';
 
 const FOLK = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d', '#a0522d'];
@@ -21,7 +22,8 @@ export function buildManor({ story, state, M, buildings }) {
   group.visible = false;
   const at = (x, y, z) => new THREE.Vector3(x, y, z).applyMatrix4(group.matrix);
   // the Noble at the gate, the neighbours in the street (the named ones of the throne room first)
-  const N = person(M, JOBS[story.hero.job]?.color || '#7b3f8c');
+  const N = person(M, NOBLE);
+  nobleAttire(N, M); // owner 2026-11-07: light blue, with a cloak
   group.add(N.root);
   const folk = [...(story.crowd || []).slice(0, 4), null, null].map((c, i) => {
     const P = person(M, c ? JOBS[c.job]?.color || FOLK[i] : FOLK[i]);

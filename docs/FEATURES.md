@@ -148,7 +148,9 @@ Add new owner decisions here.
   manor (stone and timber, slate roof, a round corner tower with its pennant, a walled garden), the Noble waving at the
   gate, the neighbours cheering. Narration: "By order of the King, one of our villagers kneels... and rises a Noble!" and
   "And every Noble needs a manor. Read the name on the sign!" (names never read). An honour, not a job: the villager keeps
-  their job; `names[id].noble` is the day. The manors: `MANORS` (8) lots `manor0`... on free ground nearest the Noble
+  their job; `names[id].noble` is the day. In both shots the Noble is dressed as one (owner 2026-11-07: light blue, with a
+  cloak; `nobleAttire` in `outfits.js`): a light blue tunic, a light blue cloak with a white fur collar, a gold clasp,
+  chain and belt, a soft light blue cap with a white feather. The manors: `MANORS` (8) lots `manor0`... on free ground nearest the Noble
   Quarter (`world.js`, laid out last; virtual, so the Second Wall's line never moves; `clearTrees`). The k-th Noble (by
   day, then id: `nobles()` in `stories.js`) lives in the k-th, and it stands in every video from then on (`buildings.js`
   `manor`). The first Noble: jeff-games-CW (#0, the kingdom's first villager), queued for day 23, so after the night raid

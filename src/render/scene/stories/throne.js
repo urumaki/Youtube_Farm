@@ -9,7 +9,7 @@ import { CASTLE } from '../../../sim/world.js';
 import { Builder, boxGeo, cylGeo } from '../kit.js';
 import { toolGeo } from '../work.js';
 import { king, bannerGuard } from './royal.js';
-import { plateArmor } from '../outfits.js';
+import { plateArmor, nobleAttire, NOBLE } from '../outfits.js';
 import { person, stride, castTag, flameMaterial, flicker, ease, clamp01 } from './common.js';
 
 const HX = 6, HZ = 11, H = 9; // the hall's inner half width and length, its height
@@ -88,7 +88,8 @@ export function buildThrone({ story, M }) {
   const sword = toolGeo('sword', M);
   K.r.hand.add(sword);
   const guards = [-1, 1].map((s) => { const g = bannerGuard(M); g.P.root.position.set(s * 2.6, 0.6, -9.1); group.add(g.P.root); return g.P; });
-  const W = person(M, JOBS[winner.job]?.color || JOBS.guard.color);
+  const W = person(M, title === 'noble' ? NOBLE : JOBS[winner.job]?.color || JOBS.guard.color);
+  if (title === 'noble') nobleAttire(W, M); // owner 2026-11-07: light blue, with a cloak
   if (title === 'knight') plateArmor(W, M); // owner 2026-11-01: the new Knight comes to be knighted in shining armour
   group.add(W.root);
   const labels = [];
