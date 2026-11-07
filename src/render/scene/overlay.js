@@ -53,7 +53,7 @@ const CSS = `
 #ov .bracket .bx.now{outline:4px solid #e3b23c}
 #ov .bracket .bx.out{opacity:.55}
 #ov .bracket .ttl{position:absolute;right:0;top:-6px;font-family:'Cinzel',serif;font-weight:700;font-size:44px;line-height:1;color:#fff4d6;text-align:right;text-shadow:0 3px 0 #6b4a12,0 5px 16px rgba(0,0,0,.85);padding-right:22px;border-right:10px solid #22c02c}
-#ov .foot{position:absolute;left:0;right:0;bottom:230px;text-align:center;font-weight:800;font-size:34px;letter-spacing:1px;color:#fff4d6;text-shadow:0 2px 0 #000,0 3px 12px rgba(0,0,0,.95)}
+#ov .foot{position:absolute;left:0;right:0;bottom:230px;padding:0 70px;line-height:1.25;text-align:center;font-weight:800;font-size:34px;letter-spacing:1px;color:#fff4d6;text-shadow:0 2px 0 #000,0 3px 12px rgba(0,0,0,.95)}
 #ov .cap span{display:inline-block;margin:0 8px;font-weight:900;font-size:64px;line-height:1.15;color:#fff;text-shadow:0 0 6px #000,0 4px 0 #000,0 6px 18px rgba(0,0,0,.9);-webkit-text-stroke:2px #000}
 #ov .cap span.on{color:#ffd35a}
 `;

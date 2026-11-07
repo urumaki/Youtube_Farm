@@ -2,6 +2,7 @@
 // keywords and then discarded; only the resulting job ids are kept. A job the kingdom has not unlocked
 // yet makes the villager an apprentice, promoted when the tier is reached.
 import { TIERS, JOBS, MERGED, tiersReached, mergedJob } from './tiers.js';
+import { RIDDLES } from './riddles.js';
 
 // [regex, job] — matched anywhere in the comment (English and Italian); order of appearance in the
 // comment decides preference, so "commander, or else a fletcher" tries the commander first
@@ -215,6 +216,22 @@ const JOIN_RE = /!join\b/i;
 /** True when the comment asks to enter the games. */
 export function joinFromText(text) {
   return JOIN_RE.test(plainText(text));
+}
+
+// owner 2026-11-07: a scholar answers the King's riddle with "!answer" and the answer after it, to the end of the line or
+// the next "!" ("!answer the jester!"). Only the riddles' fixed regexes read it (riddles.js), and the answer is taken out
+// of the comment before the job and name requests are read, so "!answer the jester" never asks to be a jester
+const ANSWER_RE = /!\s*answer\b[:\s-]*([^!\n]{0,80})/gi;
+
+/** The comment without its "!answer ..." parts, and the ids of the riddles those parts answer right. */
+export function answerFromText(text) {
+  const t = plainText(text);
+  const answers = new Set();
+  for (const m of t.matchAll(ANSWER_RE)) {
+    const said = m[1].toLowerCase();
+    for (const q of RIDDLES) if (q.re.test(said)) answers.add(q.id);
+  }
+  return { rest: t.replace(ANSWER_RE, ' '), answers: [...answers] };
 }
 
 /** True when the comment talks of overthrowing the king (a rebel for the pillory). */

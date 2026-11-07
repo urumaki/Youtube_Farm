@@ -5,10 +5,11 @@ import { buildProclaim } from './proclaim.js';
 
 export function buildGamesAnnounce(args) {
   const { story } = args;
-  const name = story.id === 'race' ? 'A chariot race' : 'A joust';
+  const name = { race: 'A chariot race', joust: 'A joust', crusade: 'A Crusade' }[story.id] || 'A joust';
   const st = buildProclaim({ ...args, story: { ...story, title: name } });
   if (!st) return null;
   st.banner = `${name}! Guards: comment !join`;
+  if (story.id === 'crusade') st.footer = 'Ride as a Crusader to win back the lost relic'; // owner 2026-11-07
   return st;
 }
 

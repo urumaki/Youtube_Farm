@@ -11,6 +11,14 @@ Add new owner decisions here.
   short title; `output/thumbnail_<date>.png`, 1080x1920, read only.
 - `node scripts/map.js` — map of the town from above (`output/map.png`): houses by storeys, free plots,
   fields, the Second Wall with gates, buildings standing / going up / still to come with their goal.
+- `node scripts/zfight.js [building ...]` — owner 2026-11-07 (walls and the blacksmith's water flickered): lists the faces
+  of the buildings that lie in one plane with another part's face and overlap it (z-fighting). Since then every part a
+  `Builder` (kit.js) or a house's `Parts` (houseKit.js) takes is grown by a few millimetres round its middle, a different
+  amount for each of seventeen parts in turn (`unfight` in kit.js, 3 to 43 mm), so no two faces stay in one plane: from
+  over 400 shared faces to 16 small ones (iron bars of one material). The blacksmith's quench trough is now four plank
+  sides and a bottom with the water below the rim (`work.js` `quench`), and the chapel's square bell tower stands alone
+  (a round tower in the same place hid its door and rose window): a pointed door with its frame and a step, toward the
+  market square (`buildings.js` `chapel`).
 
 ## How it works
 - `src/sim/` deterministic simulation (seeded PRNG); `state/kingdom.json` + `state/history/`.
@@ -138,6 +146,55 @@ Add new owner decisions here.
   (`story.others`, nearest first), his own page in the lecture and by the candle. Every student in the lecture now has an
   ink bottle beside the book and a quill (`quill` in room.js), bends over the desk and writes. Local renders need the
   Kokoro Python: a worktree without `.env` falls back to no voice, so pass `PYTHON=tools/venv/Scripts/python.exe`.
+  The Crusade (owner 2026-11-07; story `crusade`, `stories/crusade.js`): over two days, guards only, like the games.
+  From 1,000, once the Second Wall stands, with a named Knight and four named guards, no rain or snow, never on a day a
+  building must be shown, cooldown 21, weight 3. Day 1 (`announce`): the town crier on the dais (`games.js`): "A
+  Crusade! Guards: comment !join", "Ride as a Crusader to win back the lost relic" at the bottom; the narrator: "Hear ye!
+  A Crusade to win back the lost Golden Apple! Guards: comment exclamation mark join to ride as Crusaders!". A "!join"
+  in the comments on that video enters a guard from before that day (`state.gamesEntrants`, as for the games). Day 2
+  (`quest`) takes the whole video (`takeover: ['quest']`, `CRUSADE_SHOTS`), keeps the counter at the start and ends with
+  the usual wide shot, goal and call to action. Up to six Crusaders: those who joined first, the places left drawn among
+  the other named guards (`drawGuards`, the longest named first); Crusader is for that day only (`names[id].crusaderDay`,
+  their job stays guard). They wear the Knight's plate with a white surcoat and cape, a white tabard with a red cross, a
+  red and white plume, a long sword and a white kite shield with the red cross (`paladinArmor` in `outfits.js`); one
+  carries the white standard with the red cross. A named Knight leads them (`story.knight`). Every one wears their name
+  tag ("Knight", "Crusader"). Shots: the march from below the waist, in front of the Knight (0-4.2 s); beside the column
+  as it passes, from below (to 7.6 s); the abandoned mausoleum (cracked and mossy walls, a corner of the roof fallen in,
+  rubble, a broken column and one lying in the grass, a dead tree, toppled gravestones, a rusted fence, crows on the
+  roof, an old door hanging off a hinge), the Knight pushes the doors open (to 11.6 s); the crypt, four bandits round the
+  relic on a tomb, the fight, the bandits knocked down one by one and lying out cold (to 16.2 s); the Knight lifts the
+  Golden Apple (gold, glowing) in his right hand, the Crusaders raise their swords (to 19.2 s); home through the
+  Second Wall's gate, the Knight holding the apple high, the town cheering (as after the raid; the camera takes the first
+  place with no tree or house between it and the gate) (to 23.5 s). The march and the mausoleum are in a country of
+  their own east of the map (x 7000, where the land is flat and the town's ground ends behind the fog: grass on the
+  land's heights, a dirt road, copses, low hills), so nothing of the town gets in the way; the crypt under it.
+  "Subscribe to join the kingdom" at the bottom of every shot. Narration (`takeoverScript`): "The Crusaders ride out, a
+  Knight at their head." / "Two guards answered the call. Shields up!" / "An old mausoleum, forgotten for a hundred
+  years. The door creaks open..." / "Bandits! Four of them, guarding the relic!" / "Down they go, out cold!" / "The
+  Golden Apple! The lost relic is ours!" / "The whole town cheers its Crusaders home!". Title "Day N: The Crusaders found
+  the Golden Apple 🍎 ...". Test: `npm run render -- --real --subs N --story crusade:quest --stills 1.5,3.5,5.5,8.5,10.8,13,15.5,17.8,21`.
+  The King's riddle (owner 2026-11-07; story `riddle`, `stories/riddle.js`, the riddles in `src/sim/riddles.js`): over
+  two days, like the games, once the Engineers are in the kingdom (2,500), with at least two named scholars and the market
+  square, never on a day a building must be shown, cooldown 14, weight 3. Day 1 (`announce`): the town crier reads the
+  riddle from the dais in the market square (`proclaim.js`), the named scholars in front; the title says "The King's
+  riddle! Scholars: comment !answer", the riddle is written at the bottom of the frame (`footer`) and the narrator reads
+  it: "Hear ye! The King has a riddle, and a reward for whoever solves it. ... Scholars: comment exclamation mark answer,
+  and your answer!" (a longer shot, weight 4.4). Day 2 (`answer`): the crier reads the answer ("The answer: the
+  jester"), the first two named scholars who answered right on the riddle's video stand in front, "Now an Engineer!", and
+  are made Engineers (their job; `promote`); nobody right: "Nobody solved the riddle!". How to answer: a comment with
+  "!answer" and the answer after it, to the end of the line or the next "!" (`answerFromText` in `requests.js`: only the
+  riddles' fixed regexes read it, nothing of the text is kept, and the answer is taken out of the comment before its job
+  and name requests are read, so "!answer the jester" never asks to be a jester). Only from a villager who was a scholar
+  before that day and is one still after that comment's own request (`state.riddleSolvers`, in comment time order,
+  `simulate.js`). The six riddles, asked in order, each once before any comes again (`state.riddlesAsked`): the owner's
+  "I'm colorful and I make noise. If I get something wrong, I don't go back home. Who am I?" (the jester, or fool,
+  buffoon, joker); the river ("I run through the whole kingdom but I have no legs. I have a bed but I never sleep.");
+  a hole ("The miners know me well: the more they take from me, the bigger I grow."); a key ("I have teeth but I never
+  bite, and every night I keep the castle shut tight."); the bell ("I hang high in the tower with a tongue but no mouth,
+  and when I am struck the whole town hears me."); a candle ("I am tall when I am young and short when I am old, and the
+  scholars read by my light."). Italian answers count too (giullare, fiume, buco, chiave, campana, candela). Test:
+  `npm run render -- --real --subs N --story riddle` and `--story riddle:answer` (with no answers yet, the first two
+  named scholars solved it, for the render only).
   A Noble, by the owner's hand only (owner 2026-11-07; story `noble`, `manual: true`: never drawn by chance, never from a
   comment). `node scripts/ennoble.js "<name>" [--day N]` (exact name, any case; `--list` shows the Nobles and the queue)
   queues the villager in `state.ennoble` (kingdom.json and the latest history file). On that day (default: the next run),
@@ -564,6 +621,13 @@ Add new owner decisions here.
   to a cart of ore, a spoil heap, a windlass over a shaft, on a dirt yard (`buildings.js` `mine`). Once it stands the
   miner works at its rock face (`PLACES` in `main.js`). Test: `npm run render -- --real --subs 2760 --stills 9.5,10.8`,
   `--built mine --gallery miner`.
+- The Baths (owner 2026-11-07): a goal at 3,750 ("Town of Baths", after the Bank, before the Bell Foundry), 2 days to
+  build, no new job (so no villager changes job). Their lot (`baths`, 18 x 14 m) is the free ground nearest the market
+  square that fronts a street, laid out last in `world.js` (virtual, `clearTrees`). The building (`buildings.js` `baths`):
+  a stone bathhouse with tall arched windows, a slate roof and a dome over the hot room, two furnace chimneys, and in
+  front an open pool of warm water behind a stone rim, columns at its corners, steam rising off it. Test with
+  `npm run render -- --real --subs N --show baths --stills 3,4.5` (`--show`: the building stands finished and gets its
+  "Completed!" shot).
 - The Dungeon (owner 2026-11-04): a goal at 3,250 ("Town of Iron Bars", after the Beehives, before the Bank), 2 days to
   build. Cells under the castle, reached by stairs from inside its walls: the stair head stands in the castle courtyard
   between the keep and the south wall's stair (`w.lots.dungeon`, a virtual lot laid out last in `world.js`), a squat stone

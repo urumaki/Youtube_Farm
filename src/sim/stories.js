@@ -10,6 +10,7 @@ import { rng } from './prng.js';
 import { TIERS } from './tiers.js';
 import { world, MANORS } from './world.js';
 import { wallLayout, insideWall2 } from './wall.js';
+import { RIDDLES, RIDDLE } from './riddles.js';
 
 export const PLACES = ['Ashford', 'the Northern Marches', 'Kingsbridge', 'the Salt Coast', 'Ravenscar', 'the Amber Vale', 'Dunmoor', 'the Eastern Isles'];
 export const GOODS = ['spices', 'wool', 'salt', 'silk', 'amber', 'wine', 'iron tools', 'honey', 'dyed cloth'];
@@ -136,6 +137,23 @@ export const STORIES = {
   // nor from a comment: the King gives the title in the throne room, then the Noble's new manor with its sign "Noble" and
   // the name under it (stories/manor.js). An honour, not a job: the villager keeps their job
   noble: { manual: true, minPop: 1 },
+  // owner 2026-11-07: the Crusade, over two days, guards only. Day 1 ('announce'): the town crier calls for Crusaders to
+  // win back the lost relic; guards enter by commenting "!join" (as for the games: `state.gamesEntrants`, simulate.js).
+  // Day 2 ('quest') takes the whole video (stories/crusade.js): the guards who joined (up to six; the places left drawn
+  // among the other named guards, the longest named first, as for the games) ride out as Crusaders in white and red over
+  // their plate, a named Knight at their head, to an abandoned mausoleum; four bandits inside are knocked out cold and the
+  // Golden Apple is brought home. Crusader is for that day only (`crusaderDay`): their job stays. Needs the Second Wall's
+  // gate (the raid's), a named Knight and four named guards; never on a day the video must show a building
+  crusade: { minPop: 1000, cooldown: 21, weight: 3, steps: ['announce', 'quest'], takeover: ['quest'],
+    needs: (s, o = {}) => built(s, 'wall2') && namedVillagers(s).some((n) => n.job === 'knight') && jousters(s).length >= 4
+      && !['rain', 'snow'].includes(s.weather) && !o.buildingShots },
+  // owner 2026-11-07: the King's riddle, over two days. Day 1 ('announce'): the town crier reads a riddle (riddles.js) from
+  // the dais in the market square: the King has a doubt, and whoever solves it is rewarded; scholars only, by commenting
+  // "!answer" and the answer. Day 2 ('answer'): the first two named scholars who answered right on that video
+  // (`state.riddleSolvers`, simulate.js) are made Engineers, and the crier reads the answer. Once the Engineers are in the
+  // kingdom (2,500), with at least two named scholars; never on a day the video must show a building
+  riddle: { minPop: 2500, cooldown: 14, weight: 3, steps: ['announce', 'answer'],
+    needs: (s, o = {}) => built(s, 'market') && namedVillagers(s).filter((n) => n.job === 'scholar').length >= 2 && !o.buildingShots },
   eclipse: { minPop: 500, cooldown: 45, weight: 2, takeover: true,
     needs: (s, o = {}) => built(s, 'market') && s.weather === 'clear' && namedVillagers(s).length >= 4 && !o.buildingShots },
 };
@@ -430,6 +448,51 @@ const BUILD = {
     const hero = r.pick(scholars);
     // the other named scholars talking in the corridor wear their names (owner 2026-11-01)
     return { job: 'scholar', hero, cast: [hero], others: roleCast(state, r, ['scholar'], 8, [hero]) };
+  },
+  crusade(state, r, arc) {
+    if (arc?.step !== 'quest') {
+      // the crier calls for Crusaders, named guards in front of the dais
+      const crier = roleCast(state, r, ['crier'], 1)[0] || null;
+      const guards = roleCast(state, r, ['guard'], 5, crier ? [crier] : []);
+      return { day: state.day, crier: crier && strip(crier), cast: [...(crier ? [crier] : []), ...guards].map(strip) };
+    }
+    const w = world(state.seed);
+    const gate = raidGate(w, state);
+    const knight = roleCast(state, r, ['knight'], 1)[0] || null;
+    if (!gate) return null;
+    const crusaders = drawGuards(state, r, 6);
+    if (crusaders.length < 2) return null;
+    state.gamesEntrants = []; // the quest is run: the next games take new entries
+    for (const c of crusaders) state.names[c.id].crusaderDay = state.day;
+    const taken = [...crusaders, ...(knight ? [knight] : [])];
+    const crowd = namedVillagers(state).filter((n) => !taken.some((x) => x.id === n.id)).slice(0, 8);
+    return {
+      gate: { x: gate.x, z: gate.z, rot: gate.rot, side: gate.side }, knight: knight && strip(knight),
+      crusaders: crusaders.map((c) => ({ ...strip(c), joined: !!c.joined })), joined: crusaders.filter((c) => c.joined).length,
+      crowd: crowd.map(strip), cast: [...(knight ? [knight] : []), ...crusaders, ...crowd].map(strip),
+    };
+  },
+  riddle(state, r, arc) {
+    const crier = roleCast(state, r, ['crier'], 1)[0] || null;
+    if (arc?.step !== 'answer') {
+      // the next riddle not asked yet, in order; once all have been asked, they start again
+      state.riddlesAsked ??= [];
+      if (state.riddlesAsked.length >= RIDDLES.length) state.riddlesAsked = [];
+      const q = RIDDLES.find((x) => !state.riddlesAsked.includes(x.id));
+      state.riddlesAsked.push(q.id);
+      const scholars = roleCast(state, r, ['scholar'], 5, crier ? [crier] : []);
+      return { riddle: q.id, day: state.day, crier: crier && strip(crier), cast: [...(crier ? [crier] : []), ...scholars].map(strip) };
+    }
+    // the first two who answered right and are scholars still: Engineers from today
+    const riddle = arc.data?.riddle;
+    if (!RIDDLE[riddle]) return null;
+    const named = namedVillagers(state);
+    const winners = (state.riddleSolvers || []).map((id) => named.find((n) => n.id === id)).filter((n) => n && n.job === 'scholar').slice(0, 2);
+    for (const w of winners) promote(state, w.id, 'engineer');
+    state.riddleSolvers = [];
+    const others = roleCast(state, r, ['scholar'], 4, [...winners, ...(crier ? [crier] : [])]);
+    return { riddle, winners: winners.map((w) => strip({ ...w, job: 'engineer' })), crier: crier && strip(crier),
+      cast: [...(crier ? [crier] : []), ...winners.map((w) => ({ ...w, job: 'engineer' })), ...others].map(strip) };
   },
   noble(state, r, entry) {
     // the villager the owner named (`entry.id`); a test render with no one queued takes the first named villager

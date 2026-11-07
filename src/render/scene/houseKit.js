@@ -4,19 +4,20 @@
 // Geometry is shared by every house of the same variant (instancing), so detail is cheap per house.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import { boxGeo, cylGeo } from './kit.js';
+import { boxGeo, cylGeo, unfight } from './kit.js';
 import { rng } from '../../sim/prng.js';
 
 export const FLOOR_H = 3.0;
 const BEAM = 0.2;
 
 class Parts {
-  constructor() { this.map = new Map(); }
+  constructor() { this.map = new Map(); this.count = 0; }
   add(layer, mat, geo, x = 0, y = 0, z = 0, ry = 0, rx = 0, rz = 0) {
     const g = geo.index ? geo.toNonIndexed() : geo.clone();
     for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(k)) g.deleteAttribute(k);
     if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
     g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromEuler(new THREE.Euler(rx, ry, rz, 'YXZ')), new THREE.Vector3(1, 1, 1)));
+    unfight(g, this.count++); // no two faces in one plane (kit.js)
     const key = `${layer}|${mat}`;
     if (!this.map.has(key)) this.map.set(key, []);
     this.map.get(key).push(g);

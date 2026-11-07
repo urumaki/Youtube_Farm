@@ -2,6 +2,7 @@
 import { rng } from '../sim/prng.js';
 import { JOBS, BUILDINGS, tavernScene } from '../sim/tiers.js';
 import { storyCue } from '../sim/stories.js';
+import { RIDDLE } from '../sim/riddles.js';
 import { featuredPeople, visitItem } from '../sim/featured.js';
 
 const L = {
@@ -69,6 +70,13 @@ const L = {
     // owner 2026-11-07: a villager the owner makes a Noble, then their manor (a second line over its shot); names never read
     noble: ['By order of the King, one of our villagers kneels... and rises a Noble!', 'A great honour today: the King makes one of our villagers a Noble!'],
     noble_manor: ['And every Noble needs a manor. Read the name on the sign!', 'A new manor for the new Noble, name and all!'],
+    // owner 2026-11-07: the King's riddle, read out (scholars answer with "!answer"), then answered the next day
+    riddle: [(s) => `Hear ye! The King has a riddle, and a reward for whoever solves it. ${RIDDLE[s.riddle].text} Scholars: comment exclamation mark answer, and your answer!`],
+    riddle_answer: [(s) => (s.winners?.length
+      ? `The answer to the King's riddle: ${RIDDLE[s.riddle].answer}! ${s.winners.length === 1 ? 'The scholar who solved it is' : 'The first two scholars to solve it are'} now Engineers!`.replace('is now Engineers', 'is now an Engineer')
+      : `Nobody solved the King's riddle! The answer was ${RIDDLE[s.riddle].answer}.`)],
+    // owner 2026-11-07: the Crusade's call (its quest, the next day, has its own script)
+    crusade: ['Hear ye! A Crusade to win back the lost Golden Apple! Guards: comment exclamation mark join to ride as Crusaders!', 'Guards of the kingdom! Comment exclamation mark join, and ride tomorrow as Crusaders!'],
     // owner 2026-10-28: the decree, read once
     decree: ['Hear ye, hear ye! From this day, guards become Knights and Cavaliers only by winning at the Tournament Ground!', 'Hear ye! No more asking to be a knight: guards win the title at the Tournament Ground!'],
     // owner 2026-10-27: six more stories
@@ -156,7 +164,7 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   if (diff.story?.id === 'raid') return raidScript(state, diff, pick);
   if (diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds) return grandJoustScript(diff);
   if (diff.story?.id === 'dayinlife') return dayInLifeScript(diff);
-  if (diff.story?.id === 'escape' || diff.story?.id === 'eclipse') return takeoverScript(diff, pick);
+  if (diff.story?.id === 'escape' || diff.story?.id === 'eclipse' || (diff.story?.id === 'crusade' && diff.story.step === 'quest')) return takeoverScript(diff, pick);
   // never the same line twice in one video (two buildings begun the same day)
   const said = new Set();
   const fresh = (a) => { const free = a.filter((f) => !said.has(f)), x = r.pick(free.length ? free : a); said.add(x); return x; };
@@ -360,7 +368,16 @@ function dayInLifeScript(diff) {
  */
 function takeoverScript(diff, pick) {
   const n = (x) => Number(x || 0).toLocaleString('en-US');
-  const lines = diff.story.id === 'escape' ? [
+  const word = (k) => ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six'][k] || String(k);
+  const lines = diff.story.id === 'crusade' ? [
+    [`Day ${diff.day}. The Crusaders ride out, a Knight at their head.`, 0.4],
+    [diff.story.joined ? `${word(diff.story.joined)} ${diff.story.joined === 1 ? 'guard' : 'guards'} answered the call. Shields up!` : 'Shields up, eyes forward!', 4.5],
+    ['An old mausoleum, forgotten for a hundred years. The door creaks open...', 7.9],
+    ['Bandits! Four of them, guarding the relic!', 11.9],
+    ['Down they go, out cold!', 14.2],
+    ['The Golden Apple! The lost relic is ours!', 16.5],
+    ['The whole town cheers its Crusaders home!', 19.5],
+  ] : diff.story.id === 'escape' ? [
     [`Day ${diff.day}. Midnight, in the Dungeon. A loose stone...`, 0.4],
     ['Morning in the market. Something is coming up through the floor!', 4.8],
     ['The cells are empty! The guards sound the alarm!', 9.2],

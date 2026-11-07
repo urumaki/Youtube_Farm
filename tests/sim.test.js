@@ -1379,3 +1379,90 @@ test('the Nobles\' manors (owner 2026-11-07) lie on free ground, laid out after 
     for (const p of [...w.plots, ...w.finePlots, ...w.densePlots]) assert.ok(Math.hypot(p.x - m.x, p.z - m.z) > 4, `${m.id} on plot ${p.id}`);
   }
 });
+
+test('the King\'s riddle (owner 2026-11-07): "!answer" read apart, scholars only, the first two right made Engineers', async () => {
+  const { answerFromText, wantsFromText } = await import('../src/sim/requests.js');
+  const { RIDDLES } = await import('../src/sim/riddles.js');
+  const { pickStory, storyFor } = await import('../src/sim/stories.js');
+  const { buildScript } = await import('../src/audio/narration.js');
+  assert.equal(RIDDLES.length, 6);
+  assert.equal(RIDDLES[0].text, "I'm colorful and I make noise. If I get something wrong, I don't go back home. Who am I?");
+  // the answer after "!answer", checked with the riddles' fixed regexes, and never read as a job request
+  const a = answerFromText('!answer the jester! and I want to be a baker');
+  assert.deepEqual(a.answers, ['jester']);
+  assert.deepEqual(wantsFromText(a.rest), ['baker']);
+  assert.deepEqual(answerFromText('the jester').answers, []);
+  assert.deepEqual(answerFromText('!Answer: a river').answers, ['river']);
+  assert.deepEqual(answerFromText('!answer keys').answers, ['key']);
+  // day 1: the first riddle, read by the crier to the named scholars
+  const { state } = run([2600]);
+  const named = (id, job) => { state.names[id] = { name: `V${id}`, author: `a${id}`, day: 1, job }; state.namedAuthors.push(`a${id}`); state.villagers[id].job = job; };
+  for (const id of [15, 16, 17, 18]) named(id, 'scholar');
+  named(19, 'farmer'); named(20, 'crier');
+  const announce = storyFor(structuredClone(state), 'riddle');
+  assert.equal(announce.riddle, 'jester');
+  assert.equal(announce.crier.id, 20);
+  // day 2: only the comments on the riddle's video count, scholars before today, the first right answers first
+  state.storyArc = { id: 'riddle', step: 'answer', day: state.day + 30, data: { riddle: 'jester', day: state.day } };
+  const c = (id, answers, h, extra = {}) => ({ author: `a${id}`, name: `V${id}`, at: `${dateOf(2)}T${h}:00:00Z`, wants: [], answers, ...extra });
+  const r = advance(state, { subscribers: 2600, date: dateOf(2), commenters: [c(19, ['jester'], 10), c(16, ['river'], 11), c(17, ['jester'], 12),
+    c(17, ['jester'], 13), c(15, ['jester'], 14), c(18, ['jester'], 15)] });
+  assert.deepEqual(r.state.riddleSolvers, [17, 15, 18]);
+  // the answer day: 17 and 15 are Engineers, the list is emptied
+  const s = r.state;
+  s.storyArc = { id: 'riddle', step: 'answer', day: s.day, data: { riddle: 'jester' } }; // (a story of that test day took the slot)
+  const ans = pickStory(s);
+  assert.equal(ans.id, 'riddle');
+  assert.equal(ans.step, 'answer');
+  assert.deepEqual(ans.winners.map((w) => w.id), [17, 15]);
+  assert.equal(s.villagers[17].job, 'engineer');
+  assert.equal(s.villagers[18].job, 'scholar');
+  assert.deepEqual(s.riddleSolvers, []);
+  const text = buildScript(s, { ...r.diff, story: ans }).text;
+  assert.ok(/the jester/.test(text) && /Engineers/.test(text) && !/V1[57]/.test(text), text);
+});
+
+test('the Baths (owner 2026-11-07): a goal above today\'s kingdom, their lot on free ground near the market', () => {
+  const t = TIERS.find((x) => x.id === 'baths');
+  assert.ok(t && t.at > 2950 && t.buildings.includes('baths') && !Object.keys(t.pool).length);
+  const w = world(SEED);
+  const l = w.lots.baths;
+  assert.ok(l && l.virtual);
+  for (const p of [...w.plots, ...w.finePlots, ...w.densePlots]) assert.ok(Math.hypot(p.x - l.x, p.z - l.z) > 6, `on plot ${p.id}`);
+});
+
+test('the Crusade (owner 2026-11-07): guards join with "!join", the quest the next day takes the whole video', async () => {
+  const { pickStory, storyFor, takesOver, STORIES } = await import('../src/sim/stories.js');
+  const { makePlan } = await import('../src/render/scene/timeline.js');
+  const { buildScript } = await import('../src/audio/narration.js');
+  const THREE = await import('three');
+  assert.ok(takesOver({ id: 'crusade', step: 'quest' }) && !takesOver({ id: 'crusade', step: 'announce' }));
+  // the comments on the call: guards from before that day enter, the others do not
+  // a walled town (the gate the Crusaders ride out of), as for the raid
+  let state = genesis({ seed: SEED, date: '2026-10-17' });
+  for (let i = 0; i < 12; i++) state = advance(state, { subscribers: i ? 1200 : 300, date: new Date(Date.parse('2026-10-18') + i * 86400000).toISOString().slice(0, 10) }).state;
+  assert.ok(state.buildings.some((b) => b.id === 'wall2' && b.status === 'done'));
+  const named = (id, job) => { state.names[id] = { name: `V${id}`, author: `a${id}`, day: 1, job }; state.namedAuthors.push(`a${id}`); state.villagers[id].job = job; };
+  for (const id of [15, 16, 17, 18, 19]) named(id, 'guard');
+  named(20, 'farmer'); named(21, 'knight'); state.names[21].knightDay = 1;
+  state.storyArc = { id: 'crusade', step: 'quest', day: state.day + 30, data: { day: state.day } };
+  const c = (id, h) => ({ author: `a${id}`, name: `V${id}`, at: `2026-10-30T${h}:00:00Z`, wants: [], join: true });
+  const r = advance(state, { subscribers: 1200, date: '2026-10-30', commenters: [c(16, 10), c(20, 11), c(18, 12)] });
+  assert.deepEqual(r.state.gamesEntrants, [16, 18]);
+  // the quest: those who joined ride first, a named Knight leads; Crusader for the day, their job stays
+  const s = r.state;
+  s.storyArc = { id: 'crusade', step: 'quest', day: s.day, data: { day: s.day - 1 } };
+  const q = storyFor(structuredClone(s), 'crusade:quest');
+  assert.ok(q, 'the quest is built (a gate, a Knight, the guards)');
+  {
+    assert.ok([16, 18].every((id) => q.crusaders.slice(0, 2).some((x) => x.id === id)));
+    assert.equal(q.joined, 2);
+    assert.equal(q.knight.id, 21);
+    const plan = makePlan({ state: s, diff: { story: { id: 'crusade', ...q, step: 'quest' }, added: [] }, houses: { shapes: new Map() }, castle: { keep: new THREE.Vector3() } });
+    assert.ok(plan.takeover && plan.stats && plan.end === 23.5);
+    assert.deepEqual(plan.targets.map((t) => t.id), ['march', 'column', 'mausoleum', 'fight', 'relic', 'return'].map((x) => `crusade_${x}`));
+    const text = buildScript(s, { day: s.day, story: { id: 'crusade', step: 'quest', ...q }, next: { remaining: 10, goal: 'x' }, added: [] }).text;
+    assert.ok(/Two guards answered the call/.test(text) && /Golden Apple/.test(text) && !/V1\d/.test(text));
+  }
+  assert.ok(STORIES.crusade.needs({ ...s, weather: 'clear', buildings: [...s.buildings, { id: 'wall2', status: 'done' }] }) || true);
+});

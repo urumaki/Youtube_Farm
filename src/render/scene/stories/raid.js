@@ -46,7 +46,7 @@ function softDot() {
 }
 
 /** The gate's frame (see the top of the file). */
-function gateFrame(w, story, yFn) {
+export function gateFrame(w, story, yFn) {
   const g = story.gate;
   const y0 = Math.max(heightAt(w, g.x, g.z), 1.6);
   const up = new THREE.Vector3(0, 1, 0);
@@ -67,13 +67,13 @@ function gateFrame(w, story, yFn) {
 }
 
 /** Someone standing at (x, z) of the frame, facing the frame's direction (dx, dz). */
-function put(F, P, x, z, dx = 0, dz = 1, dy = 0) {
+export function put(F, P, x, z, dx = 0, dz = 1, dy = 0) {
   P.root.position.set(x, F.ground(x, z) + dy, z);
   P.root.rotation.y = Math.atan2(dx, dz);
 }
 
 /** The two leaves of the gate, hinged on the towers, opening into the town. Returns { group, set(open, shake) }. */
-function doors(M) {
+export function doors(M) {
   const group = new THREE.Group();
   const iron = M.iron;
   const leaves = [1, -1].map((side) => {
@@ -141,7 +141,7 @@ function guardRig(M, c, sword = false) {
 }
 
 /** Moonlight over the whole scene (the night stays readable), and a warm light that follows the torches. */
-function nightLights(group, power = 1.1) {
+export function nightLights(group, power = 1.1) {
   const moon = new THREE.HemisphereLight('#9fb4d8', '#2a2418', power);
   group.add(moon);
   return moon;
@@ -170,7 +170,7 @@ function arrowGeo(M) {
  * What stands outside the gate in the gate's frame (owner 2026-10-30: the bandits never walk through a tree or a house):
  * the trees of the land and the houses ([x, z, radius]).
  */
-function obstacles(F, state, nature, half = 60, far = -110) {
+export function obstacles(F, state, nature, half = 60, far = -110) {
   const out = [];
   for (const tr of nature?.trees || []) { const [x, z] = F.toLocal(tr.x, tr.z); if (Math.abs(x) < half && z > far && z < 30) out.push([x, z, 0.9 + 0.4 * (tr.s || 1)]); }
   for (const p of state.plots || []) { const [x, z] = F.toLocal(p.x, p.z); if (Math.abs(x) < half + 90 && z > far - 90 && z < 30) out.push([x, z, Math.max(p.hw || 5, p.hd || 5) + 1.5, true]); }

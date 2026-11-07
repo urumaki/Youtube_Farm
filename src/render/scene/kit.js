@@ -99,8 +99,26 @@ export function pyramidGeo(w, d, h) {
   return g;
 }
 
+/**
+ * Owner 2026-11-07 (walls and the blacksmith's water flickered): two parts whose faces lie in the same plane fight over
+ * which one shows (z-fighting; scripts/zfight.js finds them). Each part is grown by a few millimetres round its middle,
+ * by a different amount for each of seventeen parts in turn (3 to 43 mm), so no two faces stay in one plane. Flat parts
+ * (a sign, a plane) keep their thickness.
+ */
+const box3 = new THREE.Box3(), mid = new THREE.Vector3(), size = new THREE.Vector3();
+export function unfight(g, k) {
+  const d = 0.003 + 0.0025 * ((k * 7) % 17);
+  box3.setFromBufferAttribute(g.attributes.position);
+  box3.getCenter(mid); box3.getSize(size);
+  const s = (n) => (n > 1e-4 ? 1 + (2 * d) / n : 1);
+  g.translate(-mid.x, -mid.y, -mid.z);
+  g.scale(s(size.x), s(size.y), s(size.z));
+  g.translate(mid.x, mid.y, mid.z);
+  return g;
+}
+
 export class Builder {
-  constructor() { this.parts = new Map(); }
+  constructor() { this.parts = new Map(); this.count = 0; }
   add(key, geo, x = 0, y = 0, z = 0, ry = 0, rx = 0, rz = 0) {
     const m = new THREE.Matrix4().compose(
       new THREE.Vector3(x, y, z),
@@ -113,6 +131,7 @@ export class Builder {
     const g = geo.index ? geo.toNonIndexed() : geo.clone();
     if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 2), 2));
     g.applyMatrix4(matrix);
+    unfight(g, this.count++);
     for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(name)) g.deleteAttribute(name);
     if (!this.parts.has(key)) this.parts.set(key, []);
     this.parts.get(key).push(g);

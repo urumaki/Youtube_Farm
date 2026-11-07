@@ -490,6 +490,17 @@ const SCENES = {
   ev_dayinlife_lecture: [['chatter', 0.12]],
   ev_dayinlife_candle: [['fire', 0.12], ['breeze', 0.2]],
   ev_dayinlife_loop: [['breeze', 0.45]],
+  // the Crusade (owner 2026-11-07): the call, the march, the creaking door, the fight, the relic, the cheers
+  ev_crusade: [['bell', 0.4], ['cheer', 0.4]],
+  ev_crusade_march: [['hooves', 0.25], ['breeze', 0.35]],
+  ev_crusade_column: [['hooves', 0.25], ['breeze', 0.35]],
+  ev_crusade_mausoleum: [['creak', 0.65], ['breeze', 0.5]],
+  ev_crusade_fight: [['chatter', 0.55], ['fire', 0.2]],
+  ev_crusade_relic: [['fanfare', 0.45], ['fire', 0.15]],
+  ev_crusade_return: [['cheer', 0.7], ['chatter', 0.3]],
+  // the King's riddle (owner 2026-11-07): the crier's bell and a murmur; the answer, the cheers
+  ev_riddle: [['bell', 0.4], ['chatter', 0.35]],
+  ev_riddle_answer: [['bell', 0.35], ['cheer', 0.5]],
   // a new Noble (owner 2026-11-07): the fanfare in the throne room, the cheers at the manor's gate
   ev_noble: [['fanfare', 0.5], ['cheer', 0.45]],
   ev_noble_manor: [['cheer', 0.5], ['birds', 0.4]],

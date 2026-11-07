@@ -254,6 +254,8 @@ function assignNames(s, commenters, blocked, diff) {
   diff.renamed = [];
   diff.complaints = [];
   diff.rebels = []; // commenters talking of overthrowing the king (the pillory, stories.js)
+  diff.answers = []; // scholars who answered the King's riddle right ("!answer ...", owner 2026-11-07; stories.js riddle)
+  s.riddleSolvers ??= [];
   diff.joins = []; // guards whose commenter wrote "!join": entered for the next games at the Tournament Ground (stories.js)
   // owner 2026-10-29: the guards entered for the next games, emptied when a game is run (stories.js)
   s.gamesEntrants ??= [];
@@ -303,7 +305,13 @@ function assignNames(s, commenters, blocked, diff) {
       // "!join" (owner 2026-10-29): only a villager who was a guard before today enters the games, and is one still after
       // this comment's own request; never one made a guard today, never the Captain of the Guard. Owner 2026-11-01: only
       // in the comments on the announcement (the day before the results), so the list is empty for the next games
-      const gameOpen = s.storyArc?.step === 'results' && s.storyArc.id in GAMES;
+      // (and the Crusade, owner 2026-11-07: the comments on its call, the day before the quest)
+      const gameOpen = (s.storyArc?.step === 'results' && s.storyArc.id in GAMES) || (s.storyArc?.id === 'crusade' && s.storyArc.step === 'quest');
+      // "!answer" (owner 2026-11-07): the comments on the riddle's day, from a villager who was a scholar before today and is
+      // one still after this comment's own request; the first right answers come first (the comments are in time order)
+      const riddle = s.storyArc?.id === 'riddle' && s.storyArc.step === 'answer' ? s.storyArc.data?.riddle : null;
+      const isScholar = () => (s.villagers[id]?.job ?? s.names[id].job) === 'scholar';
+      const scholarBefore = id !== undefined && isScholar() && s.names[id].requestDay !== s.day;
       const isGuard = () => (s.villagers[id]?.job ?? s.names[id].job) === 'guard';
       const guardBefore = id !== undefined && isGuard() && s.names[id].requestDay !== s.day && Number(id) !== s.guardCaptain;
       if (id !== undefined && wants.length) applyRequest(id, wants);
@@ -311,6 +319,10 @@ function assignNames(s, commenters, blocked, diff) {
       if (c.join && gameOpen && guardBefore && isGuard() && !s.gamesEntrants.includes(Number(id))) {
         s.gamesEntrants.push(Number(id));
         diff.joins.push({ id: Number(id), name: s.names[id].name });
+      }
+      if (riddle && (c.answers || []).includes(riddle) && scholarBefore && isScholar() && !s.riddleSolvers.includes(Number(id))) {
+        s.riddleSolvers.push(Number(id));
+        diff.answers.push({ id: Number(id), name: s.names[id].name });
       }
       continue;
     }

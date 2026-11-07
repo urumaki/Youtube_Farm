@@ -588,8 +588,12 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       add(boxGeo(0.8, 0.08, 0.6).translate(-1.45, 0.82, -0.7), M.ember);
       add(cylGeo(0.3, 0.34, 0.55, 10).translate(-1.1, 0.27, 0.5), M.woodDark);
       add(boxGeo(0.5, 0.2, 0.24).translate(-1.1, 0.65, 0.5), M.iron);
-      add(boxGeo(0.9, 0.5, 0.55).translate(0.3, 0.25, 0.78), M.wood);
-      add(boxGeo(0.8, 0.02, 0.45).translate(0.3, 0.49, 0.78), new THREE.MeshStandardMaterial({ color: '#3f5f6b', roughness: 0.2 }));
+      // the trough: four plank sides and a bottom round the water, which lies below its rim (owner 2026-11-07: the water
+      // flickered when its top was the trough's top)
+      for (const dz of [-0.25, 0.25]) add(boxGeo(0.9, 0.5, 0.05).translate(0.3, 0.25, 0.78 + dz), M.wood);
+      for (const dx of [-0.425, 0.425]) add(boxGeo(0.05, 0.5, 0.45).translate(0.3 + dx, 0.25, 0.78), M.wood);
+      add(boxGeo(0.8, 0.06, 0.45).translate(0.3, 0.03, 0.78), M.wood);
+      add(boxGeo(0.79, 0.02, 0.44).translate(0.3, 0.41, 0.78), new THREE.MeshStandardMaterial({ color: '#3f5f6b', roughness: 0.2 }));
       return new THREE.Vector3(0.3, 0.55, 0.75);
     }
     case 'bellows': { // a big leather bellows blowing into the forge; the top board goes up and down

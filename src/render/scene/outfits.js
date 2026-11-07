@@ -232,6 +232,49 @@ export function plateArmor(P, M, { seated = false, helmet = true } = {}) {
 }
 
 /**
+ * A Crusader's armour (owner 2026-11-07, stories/crusade.js): the Knight's plate (plateArmor) with a white surcoat and cape
+ * instead of the blue, a white tabard over the breastplate with a red cross, a red and white plume, a long sword in the
+ * right hand and a white kite shield with the red cross on the left arm. Returns { sword, shield }.
+ */
+let paladinMats = null;
+export function paladinArmor(P, M, { shield = true } = {}) {
+  plateArmor(P, M);
+  paladinMats ??= {
+    white: new THREE.MeshStandardMaterial({ color: '#f1efe8', roughness: 0.75, side: THREE.DoubleSide }),
+    red: new THREE.MeshStandardMaterial({ color: '#b3202a', roughness: 0.6 }),
+  };
+  const O = paladinMats;
+  P.root.traverse((m) => { if (m.isMesh && m.material === M.clothBlue) m.material = O.white; });
+  const mesh = ([geo, mat], parent) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; parent.add(m); return m; };
+  for (const part of [
+    [boxGeo(0.44, 0.62, 0.03).rotateX(-0.12).translate(0, 0.58, 0.27), O.white], // the tabard
+    [boxGeo(0.09, 0.42, 0.035).rotateX(-0.12).translate(0, 0.6, 0.29), O.red], // its cross
+    [boxGeo(0.32, 0.08, 0.035).rotateX(-0.12).translate(0, 0.67, 0.285), O.red],
+  ]) mesh(part, P.body);
+  // the plume red and white
+  P.hat.traverse((m) => { if (m.isMesh && m.material === O.white) m.material = O.red; });
+  const sword = new THREE.Group();
+  mesh([boxGeo(0.06, 0.95, 0.02).translate(0, -0.62, 0.06), M.iron || M.gear], sword); // the blade, along the arm
+  mesh([boxGeo(0.26, 0.04, 0.05).translate(0, -0.14, 0.06), M.gold], sword); // the cross guard
+  mesh([cylGeo(0.025, 0.025, 0.16, 6).translate(0, -0.05, 0.06), M.woodDark], sword);
+  P.r.hand.add(sword);
+  let kite = null;
+  if (shield) {
+    kite = new THREE.Group();
+    const shape = new THREE.Shape();
+    shape.moveTo(-0.26, 0.28); shape.lineTo(0.26, 0.28); shape.lineTo(0.24, -0.05); shape.quadraticCurveTo(0.12, -0.38, 0, -0.5);
+    shape.quadraticCurveTo(-0.12, -0.38, -0.24, -0.05); shape.lineTo(-0.26, 0.28);
+    mesh([new THREE.ExtrudeGeometry(shape, { depth: 0.04, bevelEnabled: false }), O.white], kite);
+    mesh([boxGeo(0.07, 0.62, 0.02).translate(0, -0.08, 0.05), O.red], kite);
+    mesh([boxGeo(0.4, 0.07, 0.02).translate(0, 0.1, 0.05), O.red], kite);
+    kite.position.set(-0.12, -0.35, 0.05);
+    kite.rotation.y = -Math.PI / 2; // on the outside of the forearm, facing out
+    P.l.g.add(kite);
+  }
+  return { sword, shield: kite };
+}
+
+/**
  * A Noble's clothes (owner 2026-11-07: light blue, with a cloak): on a person made with NOBLE as its colour (a light blue
  * tunic, no job's outfit). A light blue cloak with a white fur collar from the shoulders, a gold clasp and chain, a gold
  * belt, and a soft light blue cap with a white feather.

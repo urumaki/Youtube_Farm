@@ -91,7 +91,7 @@ function tower(b, x, z, r, h, roofH, key = 'stone') {
 function lanterns(list, pts) { for (const p of pts) list.push(new THREE.Vector3(...p)); }
 
 // ------------------------------------------------------------------ the buildings
-const BUILD = {
+export const BUILD = { // (exported for the overlap check, scripts/zfight.js)
   well(b, lot, out) {
     b.add('stone', cylGeo(1.5, 1.6, 1.2, 18), 0, 0.6, 0);
     b.add('woodDark', boxGeo(0.25, 3.2, 0.25), -1.3, 1.6, 0); b.add('woodDark', boxGeo(0.25, 3.2, 0.25), 1.3, 1.6, 0);
@@ -177,6 +177,28 @@ const BUILD = {
     for (let i = 0; i < 10; i++) b.add('stone', boxGeo(1.6, 1.0, 1.0, 1), -12 + (i % 5) * 1.8, 0.5 + Math.floor(i / 5), 9);
     crane(b, 8, 6, 9);
     out.focusH = 4;
+  },
+  baths(b, lot, out) {
+    // the Baths (owner 2026-11-07): a stone bathhouse with tall arched windows, a slate roof and a dome over the hot room,
+    // two chimneys for the furnaces, and in front an open pool behind a stone rim, columns at its corners, steam rising
+    b.add('stone', boxGeo(14, 6, 6), 0, 3, -3.5);
+    b.add('slate', gableGeo(14.8, 7, 2.6), 0, 6, -3.5);
+    b.add('stoneDark', cylGeo(2.7, 2.7, 0.5, 20), 0, 8.4, -3.5);
+    b.add('slate', new THREE.SphereGeometry(2.5, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2), 0, 8.6, -3.5);
+    b.add('gold', new THREE.SphereGeometry(0.25, 10, 8), 0, 11.2, -3.5);
+    door(b, 0, -0.45, 1.8, 2.8, 0, { pointed: true });
+    for (const x of [-5, -2.8, 2.8, 5]) lancet(b, x, 2.2, -0.45, 1.1, 2.4, 0, 'windowWarm');
+    for (const x of [-5.5, 5.5]) { b.add('stone', boxGeo(0.9, 3, 0.9), x, 8, -5.5); out.smoke.push([x, 9.8, -5.5]); }
+    // the pool: a stone rim round warm green water, steps down at the front
+    for (const [w, d, x, z] of [[11, 0.5, 0, 0.6], [11, 0.5, 0, 6.4], [0.5, 6.3, -5.25, 3.5], [0.5, 6.3, 5.25, 3.5]]) b.add('stone', boxGeo(w, 0.7, d), x, 0.35, z);
+    b.add('water', boxGeo(10.1, 0.1, 5.4), 0, 0.5, 3.5);
+    for (const [x, z] of [[-5.25, 0.6], [5.25, 0.6], [-5.25, 6.4], [5.25, 6.4]]) {
+      b.add('stone', cylGeo(0.28, 0.32, 3, 10), x, 2.2, z);
+      b.add('stoneDark', boxGeo(0.8, 0.3, 0.8), x, 3.8, z);
+    }
+    for (const x of [-3, 0, 3]) out.smoke.push([x, 1.0, 3.5]); // steam off the water
+    out.lights.push([0, 3.2, 0.2]);
+    out.focusH = 5;
   },
   manor(b, lot, out, ctx) {
     // a Noble's manor (owner 2026-11-07): a stone ground floor under a timbered upper floor and a slate roof, a round corner
@@ -597,12 +619,13 @@ const BUILD = {
       b.add('stained', boxGeo(0.2, 3, 1.2), s * 5.05, 3.8, z);
       b.add('stained', cylGeo(0.6, 0.6, 0.2, 10).rotateZ(Math.PI / 2), s * 5.05, 5.3, z);
     }
-    tower(b, 0, 9.5, 2.8, 13, 0, 'stone');
+    // owner 2026-11-07: the square bell tower alone (a round tower in the same place hid the door and the rose window)
     b.add('stone', boxGeo(5, 13, 5), 0, 6.5, 9.5);
     b.add('slate', pyramidGeo(5.6, 5.6, 9), 0, 13, 9.5);
     b.add('gold', boxGeo(0.25, 2.2, 0.25), 0, 23, 9.5); b.add('gold', boxGeo(1.2, 0.25, 0.25), 0, 23.5, 9.5);
     b.add('stained', cylGeo(1.4, 1.4, 0.2, 18).rotateX(Math.PI / 2), 0, 9.2, 12.06);
-    b.add('woodDark', boxGeo(2, 3.2, 0.3), 0, 1.6, 12.1);
+    door(b, 0, 12.0, 1.8, 3.0, 0, { pointed: true }); // the door under the tower, toward the market square
+    b.add('stoneDark', boxGeo(3.4, 0.3, 1.4), 0, 0.15, 12.8); // its step
     out.focusH = 12;
   },
   windmill(b, lot, out, ctx) {

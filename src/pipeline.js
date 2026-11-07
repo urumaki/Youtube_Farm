@@ -44,6 +44,7 @@ export function parseArgs(argv) {
     else if (k === '--pov') a.pov = v(); // test renders: the first villager shot ('work') or the first alone ('stroll') seen through their eyes
     else if (k === '--church') a.church = true; // test renders: the church interior closes the video (not the tavern)
     else if (k === '--built') a.built = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: these buildings stand finished
+    else if (k === '--show') a.show = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: ...and get their "Completed!" shot
     else if (k === '--names') a.names = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: fake commenters
     else throw new Error(`unknown option ${k}`);
   }
@@ -177,6 +178,7 @@ export async function testRender(args, log = console) {
   if (!args.day && !Number.isFinite(args.subs)) throw new Error('--subs N is required');
   if (args.day) args.subs ??= 0;
   const { state, diff } = args.day ? savedDay(args.day) : args.real ? realNextDay(args) : testKingdom({ subs: args.subs, from: args.from, date: args.date, seed: args.seed, names: args.names });
+  for (const id of args.show || []) if (!(args.built ||= []).includes(id)) args.built.push(id);
   for (const id of args.built || []) {
     const b = state.buildings.find((x) => x.id === id);
     if (b) Object.assign(b, { status: 'done', doneDay: state.day });
@@ -189,7 +191,12 @@ export async function testRender(args, log = console) {
     const free = Object.keys(state.names || {}).map(Number).filter((id) => id < state.villagers.length && !['guard', 'knight', 'cavalier'].includes(state.villagers[id].job));
     if (free.filter((id) => state.villagers[id].job === 'prisoner').length < 2) for (const id of free.slice(-3)) state.villagers[id].job = 'prisoner';
   }
+  // the answer to the King's riddle with no answers yet: the first two named scholars solved it (a test render, never saved)
+  if (args.story === 'riddle:answer' && !(state.riddleSolvers || []).length) {
+    state.riddleSolvers = Object.keys(state.names || {}).map(Number).filter((id) => state.villagers[id]?.job === 'scholar').slice(0, 2);
+  }
   if (args.story) diff.story = state.story = storyFor(state, args.story);
+  if (args.show) { diff.buildingsCompleted = [...args.show]; diff.buildingsStarted = []; }
   if (args.pov && diff.scenes) {
     const f = (diff.featured || []).find((x) => (args.pov === 'work' ? !AWAY_VARIANTS.has(diff.scenes.variants?.[x.id]) : !x.with));
     diff.scenes = state.scenes = { ...diff.scenes, pov: f ? { id: f.id, mode: args.pov, forced: true } : null };

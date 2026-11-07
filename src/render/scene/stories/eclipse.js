@@ -72,7 +72,7 @@ function square({ story, M, buildings, seed }, shot) {
   mesh(boxGeo(1.6, 0.12, 1.0), M.wood, group, CART.x, 0.75, CART.z);
   for (const s of [-1, 1]) mesh(boxGeo(1.6, 0.35, 0.06), M.wood, group, CART.x, 0.95, CART.z + s * 0.5);
   for (const s of [-1, 1]) mesh(cylGeo(0.36, 0.36, 0.08, 14).rotateX(Math.PI / 2), M.woodDark, group, CART.x, 0.36, CART.z + s * 0.56);
-  mesh(boxGeo(0.08, 0.08, 1.5), M.woodDark, group, CART.x - 1.4, 0.6, CART.z - 0.3).rotation.y = 0.4;
+  for (const s of [-1, 1]) mesh(boxGeo(1.1, 0.07, 0.07), M.woodDark, group, CART.x - 1.3, 0.72, CART.z + s * 0.38); // the two shafts, off its end
   mesh(cylGeo(0.38, 0.34, 0.85, 12), M.wood, group, BARREL.x, 0.425, BARREL.z);
   return { st, group, sun, crowd };
 }
