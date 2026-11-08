@@ -169,9 +169,10 @@ export function buildRebuild({ story, M, houses, seed }) {
   const { group, W, D, wallH } = st;
   group.visible = false;
   const add = (geo, mat, x, y, z) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true; group.add(m); return m; };
-  // scaffolding along the front, a plank on it, a cart of fresh timber and a sawhorse
-  const fz = -D / 2 - 1.1;
-  for (let x = -W / 2; x <= W / 2 + 0.01; x += W / 3) for (const z of [fz, -D / 2 - 0.15]) add(new THREE.CylinderGeometry(0.08, 0.08, wallH + 1.5, 6), M.wood, x, (wallH + 1.5) / 2, z);
+  // scaffolding along the front, a plank on it, a cart of fresh timber and a sawhorse; (owner 2026-11-08: day 24's carpenters
+  // stood inside the wall) clear of the upper floors, which oversail the street by up to 0.45 m (houseKit.js `jetty`)
+  const J = 0.5, fz = -D / 2 - 1.1 - J;
+  for (let x = -W / 2; x <= W / 2 + 0.01; x += W / 3) for (const z of [fz, -D / 2 - 0.15 - J]) add(new THREE.CylinderGeometry(0.08, 0.08, wallH + 1.5, 6), M.wood, x, (wallH + 1.5) / 2, z);
   add(new THREE.BoxGeometry(W + 0.6, 0.1, 1.0), M.wood, 0, 2.6, fz + 0.45);
   add(new THREE.BoxGeometry(W + 0.6, 0.08, 0.08), M.woodDark, 0, 3.6, fz);
   for (let i = 0; i < 6; i++) add(new THREE.BoxGeometry(3.2, 0.12, 0.3), M.wood, W / 2 + 4.2, 0.5 + Math.floor(i / 3) * 0.13, -D / 2 - 4 + (i % 3) * 0.32);
@@ -180,7 +181,7 @@ export function buildRebuild({ story, M, houses, seed }) {
   for (const x of [-0.55, 0.55]) add(new THREE.BoxGeometry(0.08, 0.8, 0.5), M.woodDark, -W / 2 - 2.5 + x, 0.4, -D / 2 - 3);
   // the crew: one on the scaffold hammering at the wall, one at the sawhorse, one carrying a plank
   const cast = story.cast || [];
-  const spots = [[-W * 0.2, 2.65, fz + 0.45, 0], [-W / 2 - 2.5, 0, -D / 2 - 2.35, Math.PI], [W * 0.25, 2.65, fz + 0.45, 0]];
+  const spots = [[-W * 0.2, 2.65, fz + 0.4, 0], [-W / 2 - 2.5, 0, -D / 2 - 2.35, Math.PI], [W * 0.25, 2.65, fz + 0.4, 0]];
   const crew = spots.map(([x, y, z, ry], i) => {
     const c = cast[i] || null;
     const P = person(M, c ? JOBS[c.job]?.color || '#9c6b3c' : JOBS.carpenter.color);
@@ -209,6 +210,8 @@ export function buildRebuild({ story, M, houses, seed }) {
         P.r.g.rotation.set(a, 0, 0);
         P.l.g.rotation.set(-1.0, 0, 0.2);
         P.legs[0].rotation.x = P.legs[1].rotation.x = 0;
+        // leaning into each blow, and now and then turning to look along the wall
+        P.body.rotation.set(0.12 * Math.max(0, -Math.sin(c * Math.PI * 2)), 0.25 * Math.sin(t * 0.7 + i * 2), 0);
       });
       for (const lb of labels) lb.pos.copy(tmp.copy(lb.m.P.root.position).add(new THREE.Vector3(0, 2.3, 0))).applyMatrix4(group.matrix);
     },

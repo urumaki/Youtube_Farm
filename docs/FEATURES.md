@@ -355,7 +355,14 @@ Add new owner decisions here.
   is kept. Owner's changes to day 2 (2026-10-30): the bandits' camp is in a clearing deep in the woods, far from any house
   (`campSite`: at least 80 m from every plot, dry ground, no tree of the land within 13 m, the guards' way in and the
   bandits' ways out clear; `clearing` rings it with trees), and two of the five named guards stop and shoot arrows at the
-  ground just behind the bandits as they run (nobody hurt). Owner's changes 2026-11-07 (the first video of day 23 was at
+  ground just behind the bandits as they run (nobody hurt). Owner's changes 2026-11-08 (day 24: the town had grown out to
+  the camp, which stood among the houses outside the wall, and the rescue shot began inside a house; the carpenters of the
+  morning-after shot stood still inside the house's oversailing upper floor): the camp is far from everything, best by a
+  wood (`campSite` in the gate's frame up to 500 m out and 400 m to either side: 90 m from every plot, lot and field, 30 m
+  from roads and tracks, clear of the river, fairly level; the spot with the most trees of the land 16-70 m round it); the
+  camera's height is taken from the ground there. The camp exists only in the shot, nothing of it is in the kingdom. The
+  rebuild's scaffold stands 0.5 m further out, clear of the jetty (`buildRebuild` in `house.js`), and the crew lean into
+  each blow and look along the wall. Test: `npm run render -- --day 2026-11-08 --stills 3.5,5.2,8`. Owner's changes 2026-11-07 (the first video of day 23 was at
   the north gate on the hill: on a slope, some shots showed nothing): never a north gate (`raidGate` in `stories.js`). The
   town has grown past the Second Wall, so every gate has houses outside: the gate chosen has the wall straight beside it,
   flat ground, three occupied houses inside near it, and the widest road out clear of plots (ties: the fewest plots

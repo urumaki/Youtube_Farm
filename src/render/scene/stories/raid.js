@@ -10,7 +10,7 @@
 import * as THREE from 'three';
 import { rand01 } from '../../../sim/prng.js';
 import { JOBS } from '../../../sim/tiers.js';
-import { heightAt, WATER_LEVEL } from '../../../sim/world.js';
+import { heightAt, WATER_LEVEL, RIVER_HALF_WIDTH } from '../../../sim/world.js';
 import { wallLayout, insideWall2 } from '../../../sim/wall.js';
 import { FLOOR_H } from '../houseKit.js';
 import { BANDIT } from '../outfits.js';
@@ -815,23 +815,46 @@ function repairShot({ story, M, houses, seed }) {
 }
 
 /**
- * Where the bandits camp (owner 2026-10-30: far from any house, deep in the woods or in a clearing): in the gate's frame,
- * out beyond the woods, at least 80 m from every plot, on dry ground, no tree of the land within 13 m, the way the
- * guards come in (from +z) and the ways the bandits run off (to -z) clear. The nearest such spot to the road out; else
- * the edge of the woods as before.
+ * Where the bandits camp (owner 2026-10-30: far from any house, deep in the woods or in a clearing; owner 2026-11-08: on
+ * day 24 the town had grown out to the old spot, the camp stood among the houses outside the wall and the shot began
+ * inside one; far from everything, best by a wood). In the gate's frame, out from the gate up to 500 m and 400 m either
+ * side: at least 90 m from every plot (built or not), lot and field, 30 m from every road and track, clear of the river,
+ * on dry and fairly level ground, no tree of the land within 13 m, the way the guards come in (from +z, where the camera
+ * is) and the ways the bandits run off (to -z) clear. The spot with the most trees of the land 16 to 70 m round it (a
+ * wood), then the nearest to the gate. The camp is only there in the shot (nothing of it is saved in the kingdom).
  */
-function campSite(F, w, obs) {
+function campSite(F, w, obs, nature) {
   const dry = (x, z) => { const p = F.toWorld(x, 0, z); return heightAt(w, p.x, p.z) > WATER_LEVEL + 0.6; };
+  const taken = [...w.plots, ...(w.finePlots || []), ...(w.densePlots || []), ...(w.fields || []), ...Object.values(w.lots || {}).filter((o) => !o.virtual)];
+  const CELL = 25, trees = new Map();
+  for (const t of nature?.trees || []) {
+    const k = `${Math.floor(t.x / CELL)},${Math.floor(t.z / CELL)}`;
+    if (!trees.has(k)) trees.set(k, []);
+    trees.get(k).push(t);
+  }
+  const wood = (x, z) => {
+    let n = 0;
+    for (let i = Math.floor((x - 70) / CELL); i <= Math.floor((x + 70) / CELL); i++) for (let j = Math.floor((z - 70) / CELL); j <= Math.floor((z + 70) / CELL); j++) {
+      for (const t of trees.get(`${i},${j}`) || []) { const d = Math.hypot(t.x - x, t.z - z); if (d > 16 && d < 70) n++; }
+    }
+    return n;
+  };
   let best = null;
-  for (let z = -100; z >= -230; z -= 8) for (let x = -90; x <= 90; x += 10) {
-    if (obs.some(([ox, oz, , plot]) => plot && Math.hypot(ox - x, oz - z) < 80)) continue;
-    if (obs.some(([ox, oz, or, plot]) => !plot && Math.hypot(ox - x, oz - z) < 13 + or)) continue;
+  for (let z = -60; z >= -500; z -= 10) for (let x = -400; x <= 400; x += 10) {
+    const p = F.toWorld(x, 0, z);
+    if (taken.some((o) => Math.hypot(o.x - p.x, o.z - p.z) - Math.max(o.hw || 5, o.hd || 5) < 90)) continue;
+    if (w.river.dist(p.x, p.z, 80) < RIVER_HALF_WIDTH + 30 || w.pathIndex.edgeDist(p.x, p.z, 40) < 30) continue;
     if (![[0, 0], [0, 20], [0, 36], [8, 0], [-8, 0], [0, -20]].every(([dx, dz]) => dry(x + dx, z + dz))) continue;
-    if (obs.some(([ox, oz, or]) => oz > z + 2 - or && oz < z + 38 + or && Math.abs(ox - x) < 7 + or)) continue; // the guards' way in
+    const g0 = F.ground(x, z);
+    if ([[0, 16], [0, 28], [7.5, 28], [8, 0], [-8, 0], [0, -20]].some(([dx, dz]) => Math.abs(F.ground(x + dx, z + dz) - g0) > 3)) continue;
+    if (obs.some(([ox, oz, or, plot]) => !plot && Math.hypot(ox - x, oz - z) < 13 + or)) continue;
+    if (obs.some(([ox, oz, or]) => oz > z + 2 - or && oz < z + 38 + or && Math.abs(ox - x) < 9 + or)) continue; // the guards' way in, the camera
+    const n = wood(p.x, p.z);
+    const score = n - Math.hypot(x, z) / 40;
+    if (best && score <= best.score) continue;
     const lanes = clearLanes(obs, z - 40, z - 1, 9, 1.1, 0.8, x);
     if (lanes.length < 6) continue;
-    const score = -z + 0.6 * Math.abs(x);
-    if (!best || score < best.score) best = { x, z, lanes, score };
+    best = { x, z, lanes, score };
   }
   return best;
 }
@@ -866,8 +889,8 @@ function clearing(F, M, seed, C, lanes) {
 function chaseShot({ story, w, state, M, seed, yFn, nature }) {
   const F = gateFrame(w, story, yFn);
   const { group } = F;
-  const obs = obstacles(F, state, nature, 120, -260);
-  const site = campSite(F, w, obs);
+  const obs = obstacles(F, state, nature, 420, -560);
+  const site = campSite(F, w, obs, nature);
   const C = new THREE.Vector3(site?.x ?? 0, 0, site?.z ?? WOODS + 2);
   const lanes = site?.lanes ?? clearLanes(obs, C.z - 40, C.z - 1, 9, 1.1, 0.8, C.x);
   group.add(site ? clearing(F, M, seed, C, lanes) : treeLine(F, M, seed, WOODS - 4, lanes));
@@ -922,10 +945,12 @@ function chaseShot({ story, w, state, M, seed, yFn, nature }) {
     labels,
     banner: 'The rescue',
     phase: MORNING + 0.05,
-    focus: F.toWorld(C.x, 1.5, C.z),
+    focus: F.toWorld(C.x, F.ground(C.x, C.z) + 1.5, C.z),
     work: { strikeTimes: () => [], sound: null, hits: (t0, t1) => shots.map((s) => [t0 + s.at * (t1 - t0) + FLY, 'chop']) },
     cam(u) {
-      return { pos: F.toWorld(C.x + 7.5 - 2 * u, 3.4, C.z + 28 - 12 * ease(u)), look: F.toWorld(C.x, 1.3, C.z + 2) };
+      // (the camp is far out, on its own ground: heights from the ground there, not the gate's)
+      const x = C.x + 7.5 - 2 * u, z = C.z + 28 - 12 * ease(u), g = Math.max(F.ground(x, z), F.ground(C.x, C.z));
+      return { pos: F.toWorld(x, g + 3.4, z), look: F.toWorld(C.x, F.ground(C.x, C.z) + 1.3, C.z + 2) };
     },
     update(t, t0, t1) {
       group.visible = t >= t0 && t <= t1;
