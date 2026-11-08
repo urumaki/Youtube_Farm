@@ -22,18 +22,18 @@ export const VARIANTS = {
   blacksmith: ['anvil', 'quench', 'bellows'], toolsmith: ['anvil', 'quench', 'bellows'], carpenter: ['bench', 'saw', 'cart'],
   baker: ['oven', 'knead'], fisherman: ['rod', 'net', 'boat'], miller: ['sacks', 'quern'], fletcher: ['fletch', 'shoot'],
   // owner 2026-10-23: innkeepers and brewers serve behind the bar inside the tavern once it stands ('inside')
-  innkeeper: ['inside', 'tavern', 'barrel'], brewer: ['inside', 'tavern', 'stir'], beggar: ['wall', 'collapsed', 'hat'],
+  innkeeper: ['inside', 'tavern', 'barrel', 'delivery'], brewer: ['inside', 'tavern', 'stir', 'delivery'], beggar: ['wall', 'collapsed', 'hat'],
   // owner 2026-10-23: at their own place once it stands (else their usual scene in the croft), with a queue in front;
   // the crier calls out from the Crier's Stand
   merchant: ['stall', 'cart'], taxcollector: ['counting', 'rounds'], apothecary: ['shop'], crier: ['stand', 'proclaim'],
   // owner 2026-10-25: a second scene for the jobs that had one, the physician at the Physician's Booth, the clergy at work
-  physician: ['booth'], executioner: ['chop', 'grind'], priest: ['bless', 'preach', 'shrine'], bishop: ['bless', 'preach', 'shrine'],
+  executioner: ['chop', 'grind'], priest: ['bless', 'preach', 'shrine'], bishop: ['bless', 'preach', 'shrine'],
   // owner 2026-10-23: the bard plays the flute in the market square or the lute in the tavern, the jester juggles burning
   // torches in the square, the cook and the butcher keep a market stall, the rat catcher works in an alley, the chimney
   // sweep inside a house, the hunter at the edge of a field outside the walls (a boar or a stag), the shepherd at a sheep
   // pen, the engineer in front of a building going up (src/render/scene/work.js, main.js)
-  bard: ['square', 'inn'], jester: ['square', 'kids'], cook: ['stall'], butcher: ['stall'], ratcatcher: ['alley'], chimneysweep: ['house'],
-  hunter: ['boar', 'stag'], shepherd: ['pen', 'pasture'], engineer: ['site'], falconer: ['meadow'],
+  bard: ['square', 'inn'], jester: ['square', 'kids'], butcher: ['stall'], ratcatcher: ['alley'], chimneysweep: ['house'],
+  hunter: ['boar', 'stag'], shepherd: ['pen', 'pasture'], falconer: ['meadow'],
   // owner 2026-10-29: a scholar also teaches the other scholars in a classroom of the University once it stands
   scholar: ['desk', 'lecture'],
   // owner 2026-10-30: the librarian shelves books in the University's library once it stands (else at a desk in the croft)
@@ -43,6 +43,11 @@ export const VARIANTS = {
   // owner 2026-11-04: in the Dungeon under the castle (dungeon.js) a guard comes down the stairs with a torch and walks past
   // the cells ('dungeon', among the guard's scenes above), the torch lighting a prisoner in his cell ('cell')
   prisoner: ['cell'],
+  // owner 2026-11-08, a second scene for the jobs seen most with only one: the physician picks herbs in a herb bed by the
+  // house (his table of remedies before the Physician's Booth stands); innkeepers and brewers unload kegs from a cart at the
+  // tavern door ('delivery', above); the miner winds up ore at a windlass in the Mine's yard; the cook's stew pot in the
+  // croft and the engineer's model trebuchet (in front of the Engineers' Workshop once it stands), their old only scenes
+  physician: ['booth', 'herbs', 'remedies'], miner: ['face', 'windlass'], cook: ['stall', 'cauldron'], engineer: ['site', 'trebuchet'],
 };
 VARIANTS.guard.push('dungeon');
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
@@ -60,9 +65,9 @@ export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished
 const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop', inside: 'tavern', stand: 'crier_stand',
   square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth', lecture: 'university', library: 'university', haul: 'harbor',
-  dungeon: 'dungeon', cell: 'dungeon' };
+  dungeon: 'dungeon', cell: 'dungeon', delivery: 'tavern', windlass: 'mine' };
 // croft scenes no longer used once the building stands (the innkeeper's barrel in the croft, once the tavern is open)
-const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern' };
+const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern', remedies: 'physician_booth' };
 // the same for one job only (owner 2026-10-25): knights train in the lists of the Tournament Ground once it stands, no
 // longer on the castle walls
 const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tournament' }, cavalier: { walls: 'tournament' } };
@@ -72,7 +77,7 @@ const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tourname
 // planned one render the usual shot (timeline.js), test renders can still ask for one with --pov
 export const POV_ON = false;
 const POV_AWAY = new Set(['inside', 'inn', 'house', 'lecture', 'library', 'dungeon', 'cell']);
-const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library', 'dungeon', 'cell']);
+const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library', 'dungeon', 'cell', 'delivery', 'windlass']);
 // buildings with no shot of their own: no engineer stands in front of them
 const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');

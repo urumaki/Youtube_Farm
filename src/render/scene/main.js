@@ -288,6 +288,11 @@ async function setup(data) {
       const anchor = harbor.toWorld([-0.4, 0, 17.5]).setY(harbor.base + 0.73);
       return { anchor, ax: e.x, az: e.z, floorAt: () => harbor.base + 0.73 };
     }
+    // owner 2026-11-08: the innkeeper unloads kegs in front of the tavern's door, the miner works the windlass on the far side
+    // of the Mine's yard from its own (clear of the plank way, the cart and the spoil heap), the engineer's model trebuchet in front of the Engineers' Workshop
+    if (variant === 'delivery' && done('tavern')) return { ...atLot(done('tavern'), 1.6, 7.4), face: undefined };
+    if (variant === 'windlass' && done('mine')) return { ...atLot(done('mine'), 3.8, 9.2), face: undefined };
+    if (variant === 'trebuchet' && done('engineer_workshop')) return { ...atLot(done('engineer_workshop'), 0.4, 5.6), face: undefined };
     const place = PLACES[job] && done(PLACES[job][0]);
     if (place) return { ...atLot(place, ...PLACES[job].slice(1)), face: undefined };
     if (job === 'farmer' && fieldCount > 1 && state.buildings.some((b) => b.id === 'fields')) return atField(id);

@@ -592,9 +592,10 @@ test('innkeepers and brewers serve inside the tavern once it stands, the crier c
   const before = { buildings: [{ id: 'tavern', status: 'construction' }] }, open = { buildings: [{ id: 'tavern', status: 'done' }, { id: 'crier_stand', status: 'done' }] };
   const picks = (job, state, croft = false) => new Set(Array.from({ length: 60 }, (_, id) => pickVariant(job, SEED, 9, id, new Set(), { croft, ready: (v) => sceneReady(state, v) })));
   for (const job of ['innkeeper', 'brewer']) {
-    assert.deepEqual([...picks(job, open)], ['inside'], `${job} once the tavern is open`);
+    // owner 2026-11-08: or unloading kegs at its door
+    assert.deepEqual([...picks(job, open)].sort(), ['delivery', 'inside'], `${job} once the tavern is open`);
     assert.deepEqual([...picks(job, open, true)], ['inside'], `${job} with a visitor`);
-    assert.ok(!picks(job, before).has('inside'), `${job} before the tavern is open`);
+    assert.ok(!picks(job, before).has('inside') && !picks(job, before).has('delivery'), `${job} before the tavern is open`);
   }
   assert.deepEqual([...picks('crier', open)], ['stand']);
   assert.deepEqual([...picks('crier', before)], [null], 'no stand yet: the croft');
@@ -666,18 +667,25 @@ test('scenes away from the croft of 2026-10-23: the market, the tavern, a buildi
   const picks = (job, state, croft = false) => new Set(Array.from({ length: 60 }, (_, id) => pickVariant(job, SEED, 9, id, new Set(), { croft, ready: (v) => sceneReady(state, v) })));
   assert.deepEqual([...picks('bard', town)].sort(), ['inn', 'square']);
   assert.deepEqual([...picks('bard', bare)], [null], 'no market and no tavern: the lute in the croft');
-  for (const job of ['cook', 'butcher']) assert.deepEqual([...picks(job, town)], ['stall']);
+  assert.deepEqual([...picks('butcher', town)], ['stall']);
+  // owner 2026-11-08: the cook's stew pot in the croft too
+  assert.deepEqual([...picks('cook', town)].sort(), ['cauldron', 'stall']);
   assert.deepEqual([...picks('jester', town)].sort(), ['kids', 'square']);
   // owner 2026-10-25: second scenes, the physician at the booth, the clergy out at work
   const more = { buildings: [...town.buildings, { id: 'fields', status: 'done' }, { id: 'physician_booth', status: 'done' }], pendingConstruction: [] };
   assert.deepEqual([...picks('taxcollector', more)].sort(), ['rounds'], 'no Counting House yet: door to door');
   assert.deepEqual([...picks('merchant', more)].sort(), ['cart', 'stall']);
-  assert.deepEqual([...picks('physician', more)], ['booth']);
+  // owner 2026-11-08: or picking herbs; his table of remedies only before the Booth
+  assert.deepEqual([...picks('physician', more)].sort(), ['booth', 'herbs']);
+  assert.deepEqual([...picks('physician', town)].sort(), ['herbs', 'remedies']);
   assert.deepEqual([...picks('priest', more)].sort(), ['bless', 'preach', 'shrine']);
   assert.deepEqual([...picks('priest', more, true)], ['shrine'], 'a visitor: by the house');
   assert.deepEqual([...picks('executioner', more)].sort(), ['chop', 'grind']);
-  assert.deepEqual([...picks('engineer', bare)], [null], 'only the wall going up: no site to stand at');
-  assert.deepEqual([...picks('engineer', { ...bare, pendingConstruction: [{ building: 'chapel' }] })], ['site']);
+  assert.deepEqual([...picks('engineer', bare)], ['trebuchet'], 'only the wall going up: no site to stand at');
+  assert.deepEqual([...picks('engineer', { ...bare, pendingConstruction: [{ building: 'chapel' }] })].sort(), ['site', 'trebuchet']);
+  // owner 2026-11-08: the miner's windlass once the Mine stands
+  assert.deepEqual([...picks('miner', town)], ['face']);
+  assert.deepEqual([...picks('miner', { ...town, buildings: [...town.buildings, { id: 'mine', status: 'done' }] })].sort(), ['face', 'windlass']);
   assert.deepEqual([...picks('chimneysweep', town)], ['house']);
   assert.deepEqual([...picks('chimneysweep', town, true)], [null], 'a visitor: the croft');
   assert.deepEqual([...picks('hunter', town)].sort(), ['boar', 'stag']);

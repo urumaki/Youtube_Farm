@@ -777,6 +777,17 @@ Add new owner decisions here.
   and the cobbler work in front of their stalls on the market square, the scholar on the University's lawn, the cooper,
   the bell founder and the clockmaker in front of their workshops (`PLACES`), once those stand. Test with
   `npm run render -- --real --subs 1900 --built physician_booth,tailor_stall,university,cobbler_stall --gallery "taxcollector:rounds,merchant:cart,physician:booth,executioner:grind,jester:kids,crier:proclaim,priest:bless,priest:preach,priest,bishop:preach,potter,tailor,scholar,cobbler"`.
+- A second scene for the five jobs with the most villagers and only one scene (owner 2026-11-08; a scene is not shown again
+  within 3 days, so a job with one scene was always the same and seen less): the physician picks herbs in a herb bed by the
+  house, rows of sage, lavender and camomile, a basket of cut herbs beside him (`physician:herbs`; his old table of remedies,
+  `remedies`, only before the Physician's Booth stands, `UNTIL`); innkeepers and brewers unload kegs from a cart onto a stack
+  in front of the tavern's door (`delivery`, needs the tavern, the `carry` motion, tool `keg`); the miner turns the crank of a
+  windlass over a shaft on the far side of the Mine's yard from the Mine's own, a bucket of ore coming up out of the dark
+  (`miner:windlass`, needs the Mine; `face`, the rock face, is the old scene); the cook's stew pot over the fire in the croft
+  (`cook:cauldron`) and the engineer's model trebuchet (`engineer:trebuchet`, in front of the Engineers' Workshop once it
+  stands) are picked again, their old only scenes, which the stall and the building site had taken over. `delivery` and
+  `windlass` have no visitors (`SOLO_VARIANTS`). Test with
+  `npm run render -- --real --subs 3800 --built engineer_workshop --gallery "physician:herbs,innkeeper:delivery,miner:windlass,cook:cauldron,engineer:trebuchet"`.
 - At their own buildings too (owner 2026-10-25): the baker bakes inside the town's Bakery once it stands (the bakehouse room of
   `bakery.js` built inside its walls, door to the front, `workPlace` in `main.js`); the beekeeper tends the Apiary's skeps from
   the end of its bench (`beekeeper:apiary`, only the bees as props); knights spar and cut at the straw dummy in the lists of the

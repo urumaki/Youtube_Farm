@@ -87,6 +87,7 @@ export function nod(P, a) {
 let dotTexture = null;
 let horseCoat = null; // the stablehand's brown horse
 let mineDark = null, rockMat = null; // the miner's mine mouth and rough rock
+let herbPurple = null; // the physician's lavender
 function roundDot() {
   if (dotTexture || typeof document === 'undefined') return dotTexture;
   const c = document.createElement('canvas');
@@ -259,6 +260,12 @@ Object.assign(JOB_SCENES, {
   // owner 2026-11-01: the sailor coils a rope down on the quay, hand over hand, or hauls in a line round a bollard, leaning back
   sailor: { period: 1.5, raise: -1.25, down: -0.85, bend: 0.32, sound: 'none', tool: null, props: 'ropecoil', stir: true, both: true, radius: 6.2 },
   'sailor:haul': { period: 1.7, raise: -1.55, down: -0.75, bend: -0.22, sound: 'none', tool: null, props: 'bollard', push: true, both: true, radius: 6.2 },
+  // owner 2026-11-08, a second scene for the jobs seen most with only one: the physician picks herbs in a herb bed by the
+  // house, a basket of cut herbs beside him; the innkeeper (and the brewer) unloads kegs from a cart in front of the tavern
+  // onto a stack by its door; the miner winds a bucket of ore up a shaft at a windlass in the Mine's yard
+  'physician:herbs': { period: 2.2, raise: -1.2, down: -0.5, bend: 0.5, sound: 'none', tool: null, props: 'herbs', smooth: true, both: true },
+  'innkeeper:delivery': { period: 2.4, hit: 0.5, raise: -1.45, down: -0.7, bend: 0.4, fx: null, sound: 'none', tool: 'keg', props: 'kegcart', smooth: true, both: true, carry: true },
+  'miner:windlass': { period: 1.6, raise: -1.3, down: -1.3, bend: 0.1, sound: 'none', tool: null, props: 'windlass', stir: true, both: true },
   'librarian:library': { period: 3.0, raise: -2.7, down: -1.35, bend: -0.06, sound: 'none', tool: 'book', props: 'none', smooth: true, left: -0.55 },
   priest: { period: 3.0, raise: -2.4, down: -0.5, bend: 0.05, sound: 'none', tool: null, props: 'shrine', smooth: true, left: -1.0 },
   'priest:bless': { period: 2.2, raise: -2.3, down: -0.9, bend: 0, fx: 'splash', sound: 'none', tool: null, props: 'none', smooth: true, left: -1.0, turn: 0.4 },
@@ -266,6 +273,12 @@ Object.assign(JOB_SCENES, {
 });
 JOB_SCENES.warrior = JOB_SCENES.knight;
 JOB_SCENES.cavalier = JOB_SCENES.knight;
+// owner 2026-11-08: the scenes these jobs had alone, now one of two (scenes.js): the physician's table of remedies (before the
+// Booth stands), the cook's stew pot over the fire, the engineer's model trebuchet, the miner at the rock face
+JOB_SCENES['physician:remedies'] = JOB_SCENES.physician;
+JOB_SCENES['cook:cauldron'] = JOB_SCENES.cook;
+JOB_SCENES['engineer:trebuchet'] = JOB_SCENES.engineer;
+JOB_SCENES['miner:face'] = JOB_SCENES.miner;
 // at the Apiary (owner 2026-10-25): its own bench of skeps, so only the bees (main.js puts him at the bench's end)
 JOB_SCENES['beekeeper:apiary'] = { ...JOB_SCENES.beekeeper, props: 'bees' };
 for (const [from, to] of [['toolsmith', 'blacksmith'], ['brewer', 'innkeeper'], ['bishop', 'priest']]) {
@@ -377,6 +390,9 @@ export function toolGeo(kind, M) {
     add(boxGeo(0.05, 0.35, 0.012).translate(0, -0.7, 0.08), M.ember); // the glowing blade
   } else if (kind === 'stone') {
     add(boxGeo(0.5, 0.28, 0.32).translate(-0.28, -0.12, 0.2), M.stone); // carried between both hands
+  } else if (kind === 'keg') { // a small keg with two iron hoops, carried between both hands
+    add(cylGeo(0.19, 0.19, 0.4, 12).translate(-0.28, -0.1, 0.2), M.wood);
+    for (const y of [-0.24, 0.04]) add(new THREE.TorusGeometry(0.195, 0.014, 4, 14).rotateX(Math.PI / 2).translate(-0.28, y, 0.2), M.iron);
   } else if (kind === 'saw') {
     // the blade goes on along the arm, toothed edge down
     add(boxGeo(0.06, 0.14, 0.12).translate(0, 0, 0.06), wood);
@@ -1168,6 +1184,72 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       add(boxGeo(0.9, 0.45, 0.5).translate(-1.4, 0.22, 1.3), M.hay);
       add(cylGeo(0.18, 0.15, 0.3, 10).translate(1.3, 0.15, 0.3), M.wood);
       return new THREE.Vector3(0, 1.3, 0.5);
+    }
+    case 'herbs': { // a herb bed edged with planks: rows of sage, lavender and camomile; a basket of cut herbs beside it
+      add(boxGeo(2.4, 0.16, 1.5).translate(0, 0.08, 1.05), brown);
+      for (const s of [-1, 1]) {
+        add(boxGeo(2.5, 0.22, 0.06).translate(0, 0.11, 1.05 + s * 0.78), M.wood);
+        add(boxGeo(0.06, 0.22, 1.6).translate(s * 1.23, 0.11, 1.05), M.wood);
+      }
+      const lavender = (herbPurple ??= new THREE.MeshStandardMaterial({ color: '#8a6bb8', roughness: 0.8 }));
+      [0.6, 1.05, 1.5].forEach((z, row) => {
+        for (let k = 0; k < 5; k++) {
+          const x = -0.9 + k * 0.45 + (row % 2) * 0.12;
+          add(new THREE.SphereGeometry(0.15, 7, 6).scale(1, 0.75, 1).translate(x, 0.26, z), M.greens);
+          if (row === 1) for (const d of [-0.06, 0.06]) add(cylGeo(0.02, 0.025, 0.16, 5).translate(x + d, 0.42, z), lavender);
+          if (row === 2) add(new THREE.SphereGeometry(0.045, 6, 5).translate(x + 0.05, 0.38, z - 0.05), M.clothIvory);
+        }
+      });
+      add(cylGeo(0.24, 0.18, 0.26, 10).translate(-1.15, 0.13, 0.05), M.wood); // the basket
+      for (const [x, z] of [[-1.2, 0.0], [-1.08, 0.1]]) add(new THREE.SphereGeometry(0.1, 6, 5).scale(1.4, 0.6, 1).translate(x, 0.28, z), M.greens);
+      return new THREE.Vector3(0, 0.26, 0.6);
+    }
+    case 'kegcart': { // a cart of kegs at his side (he turns to it), the stack by the tavern door growing in front of him
+      add(boxGeo(1.2, 0.08, 1.8).translate(1.75, 0.62, 0.35), M.woodDark);
+      for (const s of [-1, 1]) add(boxGeo(0.05, 0.3, 1.8).translate(1.75 + s * 0.58, 0.8, 0.35), M.woodDark);
+      for (const s of [-1, 1]) {
+        add(new THREE.TorusGeometry(0.44, 0.045, 6, 16).rotateY(Math.PI / 2).translate(1.75 + s * 0.72, 0.44, 0.4), M.woodDark);
+        add(cylGeo(0.06, 0.06, 0.1, 8).rotateZ(Math.PI / 2).translate(1.75 + s * 0.72, 0.44, 0.4), M.iron);
+      }
+      for (const s of [-1, 1]) add(cylGeo(0.03, 0.03, 1.2, 6).rotateX(Math.PI / 2 + 0.25).translate(1.75 + s * 0.4, 0.45, -0.95), M.woodDark);
+      const keg = (x, y, z) => {
+        add(cylGeo(0.21, 0.21, 0.44, 12).translate(x, y, z), M.wood);
+        for (const d of [-0.13, 0.13]) add(new THREE.TorusGeometry(0.215, 0.015, 4, 14).rotateX(Math.PI / 2).translate(x, y + d, z), M.iron);
+      };
+      for (const [x, z] of [[1.5, -0.15], [2.0, 0.2], [1.5, 0.6], [2.0, 0.95]]) keg(x, 0.88, z);
+      for (const [x, y, z] of [[-0.25, 0.22, 1.2], [0.25, 0.22, 1.25], [0, 0.66, 1.22]]) keg(x, y, z);
+      return new THREE.Vector3(0, 0.5, 1.0);
+    }
+    case 'windlass': { // a windlass over a shaft in front of him: the crank turns, the rope winds on, a bucket of ore comes up
+      add(cylGeo(0.75, 0.82, 0.45, 14).translate(0, 0.22, 1.55), M.stone); // the shaft's rim, dark inside
+      add(cylGeo(0.62, 0.62, 0.02, 14).translate(0, 0.455, 1.55), (mineDark ??= new THREE.MeshStandardMaterial({ color: '#141210', roughness: 1 })));
+      for (const z of [0.72, 2.38]) add(boxGeo(0.16, 1.3, 0.16).translate(0, 0.65, z), M.woodDark);
+      const drum = new THREE.Group(), crank = new THREE.Group();
+      drum.position.set(0, 1.18, 1.55);
+      crank.position.set(0, 1.18, 0.6);
+      holder.add(drum, crank);
+      const part = (g, geo, m) => g.add(Object.assign(new THREE.Mesh(geo, m), { castShadow: true }));
+      part(drum, cylGeo(0.13, 0.13, 1.6, 10).rotateX(Math.PI / 2), M.wood);
+      part(drum, cylGeo(0.155, 0.155, 0.5, 10).rotateX(Math.PI / 2).translate(0, 0, 0.1), M.hay); // the rope wound on
+      part(crank, boxGeo(0.05, 0.16, 0.05).translate(0, 0.08, 0), M.iron); // a short arm: the hands go round with it
+      part(crank, cylGeo(0.03, 0.03, 0.2, 6).rotateX(Math.PI / 2).translate(0, 0.16, -0.1), M.woodDark); // the handle
+      const rope = new THREE.Mesh(cylGeo(0.015, 0.015, 1, 4).translate(0, -0.5, 0), M.hay);
+      rope.position.set(0.155, 1.18, 1.65);
+      holder.add(rope);
+      const bucket = new THREE.Group();
+      holder.add(bucket);
+      part(bucket, cylGeo(0.2, 0.16, 0.3, 10).translate(0, 0.15, 0), M.wood);
+      part(bucket, new THREE.TorusGeometry(0.17, 0.012, 4, 10, Math.PI).translate(0, 0.32, 0), M.iron);
+      for (const [x, z] of [[-0.06, 0], [0.07, 0.04], [0, -0.07]]) part(bucket, new THREE.DodecahedronGeometry(0.08, 0).translate(x, 0.32, z), (rockMat ??= new THREE.MeshStandardMaterial({ color: '#77736b', roughness: 0.95, flatShading: true })));
+      anim.push((t, c) => {
+        crank.rotation.z = drum.rotation.z = -c * Math.PI * 2;
+        // up out of the dark in three seconds, then down again for the next load (always seen in a shot)
+        const q = (t % 4) / 4, h = q < 0.75 ? q / 0.75 : 1 - (q - 0.75) / 0.25;
+        const y = 0.1 + 0.5 * h;
+        bucket.position.set(0.155, y, 1.65);
+        rope.scale.y = Math.max(0.05, 1.18 - (y + 0.34));
+      });
+      return new THREE.Vector3(0, 1.18, 0.6);
     }
     case 'rockface': { // a wall of rough rock struck at chest height, a mine mouth framed in timber in it, a cart of stone
       const rock = (rockMat ??= new THREE.MeshStandardMaterial({ color: '#77736b', roughness: 0.95, flatShading: true }));
