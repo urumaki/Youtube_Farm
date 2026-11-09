@@ -269,6 +269,26 @@ test('untrusted input: names that look like code or a prompt are never used, com
   checkInvariants(r.state);
 });
 
+test('comment job requests read wrong on 2026-11-07/09 (owner 2026-11-09)', async () => {
+  const { wantsFromText: w } = await import('../src/sim/requests.js');
+  const first = (t) => w(t)[0] || '';
+  assert.equal(first('I still believe there needs to be some sort of investigation into the guard team.'), '');
+  assert.equal(first('Amazing to see free beer for the kidnapped man'), '');
+  assert.equal(first('the recent edition of production of honey, will be great for the wealth of the Kingdom.'), '');
+  assert.equal(first("Mi'lord, we must increase the numbers of guards. The defense repairs must be prioritized first, and I advise that mi'lord hire masons"), '');
+  assert.equal(first("Furthermore, I advise mi'lord to quickly establish trade and alliance relations with any realm"), '');
+  assert.equal(first('Lemme become the ruler of a distant kingdom that wants to make trade deals'), '');
+  assert.equal(first('The bandits destroyed my farm, I join the local Militia to get revenge'), 'guard');
+  assert.equal(first('My lord can I Change my Job to a captain of a beautiful ship?'), 'sailor');
+  assert.equal(first('Furniture maker'), 'carpenter');
+  assert.equal(first('We could use a councillor correct? I offer myself'), 'adviser');
+  // still read
+  assert.equal(first("M'lord. May I serve the king with my sword?"), 'guard');
+  assert.equal(first('I want to be a farmer'), 'farmer');
+  assert.equal(first('Can I be a bee keeper?'), 'beekeeper');
+  assert.equal(first('I recommend you make me a guard'), 'guard');
+});
+
 test('comment job requests read wrong on 2026-11-06/07 (owner 2026-11-07)', async () => {
   const { wantsFromText: w, rebelFromText } = await import('../src/sim/requests.js');
   const first = (t) => w(t)[0] || '';

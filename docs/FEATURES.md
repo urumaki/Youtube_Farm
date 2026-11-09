@@ -685,6 +685,15 @@ Add new owner decisions here.
   rebel. Five villagers read wrong by the day-23 run were set by hand to what they asked (state/, both files):
   God_of_greed_666 tax collector again, The_Knight_Of_Dice fletcher ("a promotion, an Archer"), MOREneenee rat catcher,
   uknown guard (crusader), Bobith tax collector (bailiff).
+  Owner 2026-11-09, from the comments of 2026-11-07/09 (`tests/sim.test.js`; over 2341 comments since 2026-10-20 the new
+  rules change 14 readings, all for the better): no request in "an investigation into the guard team" or "the numbers of
+  guards", in "free beer" (brewer) or "production of honey" (beekeeper), in trade relations ("establish trade and alliance
+  relations", "trade deals": merchant), nor in one's own farm ("the bandits destroyed my farm, I join the militia" asks for
+  the guard); a comment that only gives the lord advice ("I advise", "I recommend", "my advice", "in my opinion") with no
+  request of its own ("make me", "can I", "I want to be") asks for no job; "a captain of a beautiful ship": sailor (a word
+  may stand between); furniture maker, joiner, cabinet maker: carpenter; councillor: adviser. Set by hand (state/, both
+  files): Kyorinrina, Inugami0622 and NotaMinecraftCreeper back to the job they were born to, LaughRL innkeeper again,
+  Mossy75 guard, jasonhaberman2655 carpenter, Mysterious_wind adviser.
 - Buildings begin only when the video can show them (owner 2026-10-23): at most 2 a day once villagers have
   names (3 before), as `timeline.js` shows them (`SHOWN_STARTS` in `simulate.js`); the others wait in
   `s.buildQueue` (in tier order, commissions last) and begin on the next days (`diff.buildingsWaiting`). The

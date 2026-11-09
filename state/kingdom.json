@@ -18610,9 +18610,7 @@
   "390": {
    "name": "Kyorinrina",
    "author": "UCQlBGwCjTAV6kPiq1pjSf_Q",
-   "day": 9,
-   "job": "guard",
-   "requestDay": 25
+   "day": 9
   },
   "391": {
    "name": "InsideMinecraftOffici…",
@@ -20299,7 +20297,7 @@
    "name": "Mossy75",
    "author": "UC6KZ-FF85He1HJ3K8kXnbpw",
    "day": 12,
-   "job": "farmer",
+   "job": "guard",
    "requestDay": 24
   },
   "645": {
@@ -22268,8 +22266,8 @@
    "name": "LaughRL",
    "author": "UC8C0mnFlQQow2BL9tKg2spQ",
    "day": 21,
-   "job": "brewer",
-   "requestDay": 25
+   "job": "innkeeper",
+   "requestDay": 21
   },
   "954": {
    "name": "dustlessdawg",
@@ -22607,9 +22605,7 @@
   "1009": {
    "name": "NotaMinecraftCreepera…",
    "author": "UCrJdTqJNoJSAcjmlxxgjbKA",
-   "day": 24,
-   "job": "merchant",
-   "requestDay": 24
+   "day": 24
   },
   "1010": {
    "name": "kravvie_moral",
@@ -22725,9 +22721,7 @@
   "1027": {
    "name": "Inugami0622",
    "author": "UC2BHM4pqIIOr4m7yjd19Bcg",
-   "day": 24,
-   "job": "merchant",
-   "requestDay": 24
+   "day": 24
   },
   "1028": {
    "name": "InternalRevenueServic…",
@@ -22821,7 +22815,9 @@
   "1041": {
    "name": "jasonhaberman2655",
    "author": "UCYDxLQ02rb_y5LXZduyFqHw",
-   "day": 25
+   "day": 25,
+   "job": "carpenter",
+   "requestDay": 25
   },
   "1042": {
    "name": "sitsmestefan",
@@ -22910,7 +22906,9 @@
   "1056": {
    "name": "Mysterious_wind",
    "author": "UCTx9znvQxxIRM1sH_LyCRPg",
-   "day": 25
+   "day": 25,
+   "job": "adviser",
+   "requestDay": 25
   }
  },
  "nameQueue": [],
