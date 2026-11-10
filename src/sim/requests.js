@@ -16,11 +16,11 @@ const KEYWORDS = [
   [/\bbeggar|\bbegger|\bdrunk|\bdrink|sit all day|mendicant|ubriac|homeless|senza\s*tetto|vagabond|\btramp\b|\bhobo/, 'beggar'],
   [/weirdo|\bweird\b|\bfool\b|\bdumb\s+(person|guy|man|one|villager)\b|crazy(?!\s+(begg|drunk|hobo|tramp))|lunatic|\bscemo|\bmatto|\bidiot|nitwit/, 'jester'],
   [/jester|\bclown|juggl|giullare|buffone/, 'jester'],
-  [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b|crossbow|long\s*bow|frecce|arciere/, 'fletcher'],
+  [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b(?!\s+(to|before|down|my|our|your)\b)|crossbow|long\s*bow|frecce|arciere/, 'fletcher'],
   // owner 2026-10-28: a Knight, a Cavalier and the Captain of the Guard are only won at the tournaments, so asking makes a guard
   // (2026-10-29: "teutonic Kinght", "kight", "the king's night", paladin, "chief of war", men-at-arms, a defender of the city;
   // "sir" alone is how people speak to the king, "an army engineer" asks for the engineer)
-  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|general|\barmy(?!\s*engineer)|(?<!(boat|ship|sea)\s?)captain(?!\s+of\s+(a|the)\s+(\w+\s+)?(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusa+i?der|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
+  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|(?<!\bin\s)\bgeneral\b(?!\s+(store|idea|rule|public))|\barmy(?!\s*engineer)|(?<!(boat|ship|sea)\s?)captain(?!\s+of\s+(a|the)\s+(\w+\s+)?(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusa+i?der|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
   // (2026-11-04: the jailer keeps the Dungeon, he is a guard)
   // (2026-11-07: "I wish to fight, instead of begging for booze")
   [/\b(want|wish|like|ready|here|eager)\s+to\s+fight\b(?!\s+(the|a|an|that|this|him|her|them|with|against|some|every|his|my|your)\b)/, 'guard'],
@@ -42,23 +42,23 @@ const KEYWORDS = [
   [/merchant|\bbanker|banchier|money\s*(changer|lender)|\btrader|\bshop|mercante|negozi|head of trade|(?<!ministry of )\btrade\b(?!\s+(and|deals?|relations?|routes?|agreements?|alliances?|partners?))|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
   // owner 2026-11-01: the sailor is a job of its own (before, a fisherman)
   [/\bsailor|\bseaman|\bseamen|\bdeck\s*hand|\bpirate|captain of (a|the) (\w+ )?(ship|boat|vessel)|\b(sea|boat|ship)\s*captain|ship'?s captain|marinaio|pirata/, 'sailor'],
-  [/\bbard\b|\bsing|\bmusic|\blute|bardo|cantante/, 'bard'],
+  [/\bbard\b|\bsing(s|er|ers|ing)?\b|\bmusic|\blute|bardo|cantante/, 'bard'],
   [/scholar|\bscribe|studioso|scientist|physicist|academic|scienziat|inventor|professor|professore/, 'scholar'],
   // owner 2026-10-30: the librarian is a job of its own (before, a scholar)
   [/librar|bibliotecari|keeper of (the )?books/, 'librarian'],
   [/doctor|healer|physician|medico|guaritore|\bmedic\b|pediatric|clinic/, 'physician'],
   [/apothecar|\bapo\w*th\w*ry|alchemist|alchimista|\bchemist|\bchimico|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
   // running the town was the reeve's job (the council, politics, the law); owner 2026-10-23: the tax collector's now
-  [/\breeve\b|\bcouncil\b|administrat|politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice|justiciar|prosecutor|\blawman|\bbailiff/, 'taxcollector'],
+  [/\breeve\b|\bcouncil\b|administrat|(?<!\bno\s)politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice|justiciar|prosecutor|\blawman|\bbailiff/, 'taxcollector'],
   // jobs folded into another (owner 2026-10-23): the weaver into the tailor, the chronicler into the scholar, the admiral into the sailor
   [/\bweaver|\bweav(e|ing)\b|\bloom\b|tessitor|telaio/, 'tailor'],
-  [/chronicler|historian|\bhistory\b|cronista|\bstorico/, 'scholar'],
+  [/chronicler|historian|(?<!\b(in|into|of|make|made|makes)\s)\bhistory\b|cronista|\bstorico/, 'scholar'],
   [/\badmiral|ammiraglio/, 'sailor'],
   // new jobs asked for in the comments of 2026-10-22 (owner 2026-10-23, by request only)
   [/hunter|\bhunt(ing)?\b|\bga[mn]e\s*(warden|keeper)|cacciator|\bcaccia\b/, 'hunter'],
   [/butcher|slaughter|macellai|\bmeat\b/, 'butcher'],
   [/engineer|egineer|enginn?e+r|mechanic|ingegner|\bsiege|trebuchet|catapult/, 'engineer'],
-  [/shep+h?[ae]rd|\bsheep|\bherd(ing)?\s+(the\s+)?(pigs?|swine|ducks?|geese|goats?|cows?|cattle)|swine\s*herd|goat\s*herd|cow\s*herd|rancher|\bgoats?\b|\bbarn\b|livestock|raise animals|\bpastore|pecor|allevator/, 'shepherd'],
+  [/shep+h?[ae]rd|\bsheep|\bherd(ing)?\s+(the\s+)?(pigs?|swine|ducks?|geese|goats?|cows?|cattle)|swine\s*herd|goat\s*herd|cow\s*herd|rancher|(?<!\bthe\s)\bgoats?\b|\bbarn\b|livestock|raise animals|\bpastore|pecor|allevator/, 'shepherd'],
   [/\btanner|leather\s*worker|tannery|concia|cuoio/, 'tanner'],
   // no noble titles as jobs (owner): a lord or a landlord collects the taxes. "My lord", "my noble lord" and "signore" alone
   // are how people speak to the king, not a request (2026-10-29: "Hello my Lord, may I be a guard" made a tax collector)
@@ -73,7 +73,7 @@ const KEYWORDS = [
   [/rat\s*catcher|\brats?\b|acchiappatopi|\btopi\b|\bratti\b/, 'ratcatcher'],
   [/chimney\s*sweep|(?<!(street|road)\s)\bsweep|spazzacamin/, 'chimneysweep'],
   [/falcon|\bhawk|falconier|\bfalco\b/, 'falconer'],
-  [/\bcook|\bchef\b|\bcuoc[oa]|\bkitchen|\bcucina\b/, 'cook'],
+  [/\bcook(?!ed\b)|\bchef\b|\bcuoc[oa]|\bkitchen|\bcucina\b/, 'cook'],
   [/\bmayor|sindaco/, 'taxcollector'],
   [/executioner|headsman|\bboia\b|carnefice|giustiziere/, 'executioner'],
   [/town\s*crier|\bcrier\b|town\s*speaker|\bherald|banditore|araldo|messaggero|messenger|messa?n?ger\b|courier|doomsayer|announcer|annunciator|news\s*(paper|boy|seller)|giornal/, 'crier'],
@@ -138,6 +138,27 @@ const ONE_OF = /\b(band|gang|group|crew|one|leader|member|chief|head|captain|kin
 // ...unless a word like "job" follows the job: "can I get a blacksmith job" asks for the blacksmith
 const ADVICE = /\bi\s+(also\s+|would\s+|strongly\s+)?(advise|recommend|suggest)\b|\bmy\s+advice\b|\bin\s+my\s+opinion\b/;
 const ASKS = /\b(make\s+me|can\s+i|could\s+i|may\s+i|let\s+me\s+be|i\s+(want|wish|would\s+like|'d\s+like)\s+to\s+(be|become)|i\s+request)\b/;
+// Owner 2026-11-10: a comment that only talks about the video ("the tavern looks great", "send him to jail", "this channel
+// is the goat") changed the job of the commenter's villager. A commenter who already has a villager changes job only when
+// the comment asks (simulate.js: `asks`): a word of asking, or nothing but the job ("blacksmith", "guard now"). A first
+// comment still takes the job it names, whatever the wording. A cell in the Dungeon is by request only (owner 2026-11-04):
+// the place named alone ("the new dungeon looks amazing") asks for nothing, even in a first comment.
+const INTENT = new RegExp([
+  /\b(can|could|may|might|shall|should)\s+(i|we|u|you)\b/.source,
+  /\b(make|made|let|turn|put|throw|lock|send|sign|hire|give|grant|assign|promote|appoint|call|name|count)\s+(me|my)\b/.source,
+  /\bi\s*('d|'ll|'m|\s+am|\s+will|\s+would|\s+shall|\s+wanna|\s+want|\s+wish|\s+choose|\s+pick|\s+request|\s+ask|\s+hope|\s+need|\s+take|\s+claim|\s+apply|\s+volunteer|\s+become|\s+be|\s+gotta|\s+must|\s+should)\b/.source,
+  /\b(im|id|ill)\s+(a|an|the|be|like|love|now|gonna|going)\b/.source,
+  /\b(wanna|want(ing|ed)?\s+to|wish(ing|ed)?\s+to|like\s+to|love\s+to|going\s+to|gonna)\s+(be|become|work|join|change|switch|try)\b/.source,
+  /(?<!\b(good|nice|great|amazing|awesome|fine|cool|best)\s)\bjob\b|\b(role|position|profession|occupation|career|apprentice\w*|employment|hired?|request(ing)?)\b/.source,
+  /\b(pls+|plz+|please|pleas)\b|\b(change|switch|swap|instead|from now on|rather be|me as)\b/.source,
+  /\b(voglio|vorrei|posso|fammi|fatemi|rendimi|diventare|lavoro|lavorare|per\s+favore)\b|\b(fare|essere)\s+(il|la|lo|un|una)\b/.source,
+].join('|'));
+const CELL = /^(jail|gaol|dungeon)$/;
+/** True when the comment asks for something (a word of asking), or is too short to be about anything else. */
+export function asksFromText(text) {
+  const t = plainText(text).toLowerCase().replace(/[’‘]/g, "'");
+  return INTENT.test(t) || t.split(/[^\p{L}\p{N}']+/u).filter(Boolean).length <= 2;
+}
 const JOB_AFTER = /^[\w-]*\s+(job|role|position|apprenticeship|work)\b/;
 // "Ordinary citizen, will take a job of hunter": the job named after "a job of", "work as"... is the request, whatever came first
 // (2026-11-05: "as the first priest i request to be archbishop": the job after "want / request to be" comes first)
@@ -159,11 +180,12 @@ export function wantsFromText(text) {
   // the name asked for is not a job: "call me Hunter, I want to bake" asks for the baker
   const n = NAME_RE.exec(t);
   const nameAt = n ? [n.index + n[0].length - n[1].length, n.index + n[0].length] : [-1, -1];
-  const hits = [];
+  const hits = [], asks = INTENT.test(t);
   for (const [re, job] of KEYWORDS) {
     const g = new RegExp(re.source, 'g');
     for (let m = g.exec(t); m; m = g.exec(t)) {
       if (m.index >= nameAt[0] && m.index < nameAt[1]) continue;
+      if (job === 'prisoner' && CELL.test(m[0]) && !asks) continue;
       if (WISH.test(t.slice(Math.max(0, m.index - 60), m.index)) || ARRIVES.test(t.slice(m.index))) continue;
       if (NOW_BEFORE.test(t.slice(Math.max(0, m.index - 20), m.index)) && NOW_AFTER.test(t.slice(m.index))) continue;
       if (NOT_ASKED.test(t.slice(Math.max(0, m.index - 50), m.index)) && !JOB_AFTER.test(t.slice(m.index))) continue;
@@ -225,10 +247,15 @@ export function complainsFromText(text) {
 // "overthrow the king", "kill the king", "down with the king", "revolution!", "abbasso il re": a would-be rebel. Owner
 // (2026-10-27): at most once every 7 days the newest one spends a day in the pillory, pelted with tomatoes (stories.js).
 const KING = String.raw`(the |our |this |that |your |his |my |da |le )?(king|kingdom|crown|throne|monarchy|majesty|ruler)`;
+const UPRISING = String.raw`(revolution|revolt|rebellion|rebel|rebels|uprising|insurrection|mutiny|treason|coup|anarchy|regicide|usurper|traitor)\b`;
 const REBEL_RE = new RegExp([
-  String.raw`\b(overthrow|over throw|overthrown|overthrowing|kill|killing|murder|assassinate|dethrone|depose|behead|usurp|topple|betray|defeat|destroy|stab|poison|take down|takedown|eradicate|conquer|burn down)\s+(the entire |the whole |this whole )?${KING}\b`,
+  String.raw`(?<!\b(never|not|n't|dont|wont)\s+(ever\s+)?)\b(overthrow|over throw|overthrown|overthrowing|kill|killing|murder|assassinate|dethrone|depose|behead|usurp|topple|betray|defeat|destroy|stab|poison|take down|takedown|eradicate|conquer|burn down)\s+(the entire |the whole |this whole )?${KING}\b`,
   String.raw`\bdown with ${KING}\b`, String.raw`\b(steal|take|seize|claim)\s+(the |your |the king'?s |his )?(crown|throne)\b`, String.raw`\bi('?ll| will| shall)\s+be (the )?(new )?king\b`,
-  /\b(revolution|revolt|rebellion|rebel|rebels|uprising|insurrection|mutiny|treason|coup|anarchy|regicide|usurper|traitor)\b/.source,
+  // (owner 2026-11-10: the words alone only in a comment of a few words, "revolution!"; in a longer one the commenter says
+  // it of themselves, "we start a revolution", not of the video, "the rebels got tomatoes", "this is treason lol")
+  String.raw`^\W*(\w+\W+){0,1}${UPRISING}\W*(\w+\W*)?$`,
+  String.raw`\b(i|we|let'?s|me)\b[^.!?]{0,40}\b${UPRISING}`,
+  String.raw`\b(start|starting|join|joining|begin|lead|leading|plan|planning|plot|plotting|time for|viva la|long live the|call for|need|want)\s+(a |an |the )?${UPRISING}`,
   /\b(uccidere|uccido|ammazzare|ammazzo|rovesciare|rovescio|detronizzare|spodestare|tradire)\s+(il |del )?re\b/.source,
   /\babbasso (il )?re\b/.source, /\b(rivoluzione|ribellione|rivolta|ribelle|ribelli|colpo di stato|tradimento|traditore)\b/.source,
 ].join('|'), 'i');
@@ -265,10 +292,12 @@ export function rebelFromText(text) {
 
 // "call me Violet", "a carpenter named henry", "can I be a villager called sopita?", "chiamami Pino".
 // Only the chosen name is kept (cleaned and checked like any display name in simulate.js).
-const NAME_RE = /\b(?:(?:call me|called|named)(?: as)?|my name is sir|name me(?: as)?|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;
+const NAME_RE = /\b(?:(?:call me|(?<!\bso[\s-])called|named)(?: as)?(?: (?:sir|ser|lady|mr|mrs|miss|dr)\b\.?)?|my name is sir|name me(?: as)?|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;
 const NOT_NAMES = new Set(['a', 'an', 'the', 'me', 'it', 'one', 'him', 'her', 'please', 'pls', 'plz', 'villager', 'something', 'anything',
   'by', 'like', 'as', 'too', 'now', 'here', 'my', 'mine', 'that', 'this', 'what', 'whatever', 'un', 'una', 'come', 'per', 'favore',
   // named villagers are never villains (owner; 2026-11-04: "a villager named thief")
+  // (2026-11-10: "call me maybe", "called out", "named after")
+  'maybe', 'out', 'back', 'upon', 'when', 'if', 'so', 'for', 'to', 'in', 'on', 'and', 'or', 'but', 'not', 'your', 'his', 'their', 'our', 'after', 'because',
   'thief', 'robber', 'bandit', 'brigand', 'criminal', 'murderer', 'killer', 'villain', 'crook', 'outlaw', 'assassin', 'ladro', 'brigante']);
 
 /** A name the commenter asked for, or null. */

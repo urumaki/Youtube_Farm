@@ -1517,3 +1517,61 @@ test('the Crusade (owner 2026-11-07): guards join with "!join", the quest the ne
   }
   assert.ok(STORIES.crusade.needs({ ...s, weather: 'clear', buildings: [...s.buildings, { id: 'wall2', status: 'done' }] }) || true);
 });
+
+test('scenes: the video never opens two days in a row on the same kind of shot (owner 2026-11-10)', async () => {
+  const { pickOpening } = await import('../src/sim/scenes.js');
+  const s = { day: 9, sceneLog: { 'open:story': 8, 'open:caravan': 6 } };
+  assert.equal(pickOpening(s, { story: true, caravan: true, villager: true }), 'caravan');
+  assert.equal(pickOpening(s, { story: true }), 'story'); // nothing else to open on
+  assert.equal(pickOpening({ day: 9, sceneLog: {} }, { story: true, building: true, caravan: true }), 'story');
+  assert.equal(pickOpening(s, {}), 'castle');
+  // over many days: commenters every day, so the caravan could open every video
+  let st = genesis({ seed: SEED, date: '2026-09-30' });
+  const d = new Date('2026-10-01T00:00:00Z');
+  let last = null, kinds = new Set();
+  for (let i = 0; i < 30; i++) {
+    const date = d.toISOString().slice(0, 10);
+    d.setUTCDate(d.getUTCDate() + 1);
+    const commenters = [0, 1].map((k) => ({ author: `o${i}-${k}`, name: `O${i}x${k}`, at: `${date}T0${k}:00:00Z` }));
+    const r = advance(st, { subscribers: 150 + i * 3, date, commenters });
+    st = r.state;
+    const o = r.diff.scenes.opening;
+    assert.equal(st.sceneLog[`open:${o}`], st.day);
+    if (i > 2 && r.diff.featured.length) assert.notEqual(o, last, `day ${st.day} opens on "${o}" again`);
+    last = o; kinds.add(o);
+  }
+  assert.ok(kinds.size >= 3, [...kinds].join(' '));
+});
+
+test('requests: talk about the video changes no job, asking does (owner 2026-11-10)', async () => {
+  const { wantsFromText, asksFromText, rebelFromText, nameFromText } = await import('../src/sim/requests.js');
+  const changes = (c) => wantsFromText(c).length > 0 && asksFromText(c);
+  for (const c of ['In general I love this series', 'Not a single villager looks like me lol', 'This channel is the goat', 'we are so cooked', 'I bow to the king',
+    'this is crazy good', 'great music in this one', 'this will go down in history', 'The new dungeon looks amazing', 'the tavern looks great', 'dont judge me',
+    'nice shot of the harbor', 'the church is beautiful', 'Throw the rebel in the dungeon', 'send him to jail', 'the blacksmith scene was cool',
+    'the knight won the joust!', 'poor farmer chasing the pig', 'nice job on the tavern', 'no politics here please']) assert.equal(changes(c), false, c);
+  for (const [c, job] of [['can i be a blacksmith', 'blacksmith'], ['blacksmith', 'blacksmith'], ['guard pls', 'guard'], ['Can I work at the tavern?', 'innkeeper'],
+    ['Im a baker but can I be a guard', 'guard'], ['voglio fare il fabbro', 'blacksmith'], ['Job: miner', 'miner'], ['put me in the dungeon', 'prisoner'],
+    ['i would like to be a fisherman named Bob', 'fisherman'], ['I wanna be the town crier', 'crier']]) {
+    assert.equal(wantsFromText(c)[0], job, c);
+    assert.ok(asksFromText(c), c);
+  }
+  // a cell in the Dungeon is by request, in a first comment too
+  assert.deepEqual(wantsFromText('cant wait for the dungeon'), []);
+  // rebels speak for themselves
+  for (const c of ['revolution!', 'down with the king', 'we start a revolution', 'I will overthrow the king']) assert.ok(rebelFromText(c), c);
+  for (const c of ['the rebels got tomatoes haha', 'I would never betray the king', 'what a revolution in content']) assert.ok(!rebelFromText(c), c);
+  assert.equal(nameFromText('the so called king'), null);
+  assert.equal(nameFromText('call me maybe'), null);
+  assert.equal(nameFromText('call me Sir Lancelot'), 'Lancelot');
+  // a villager who has a job keeps it when the comment does not ask
+  let s = genesis({ seed: SEED, date: '2026-09-30' });
+  const say = (date, text) => ({ author: 'talker', name: 'Talker', at: `${date}T01:00:00Z`, wants: wantsFromText(text), asks: asksFromText(text) });
+  s = advance(s, { subscribers: 120, date: '2026-10-01', commenters: [say('2026-10-01', 'can i be a baker')] }).state;
+  const id = Object.keys(s.names).find((k) => s.names[k].author === 'talker');
+  assert.equal(s.names[id].job, 'baker');
+  s = advance(s, { subscribers: 125, date: '2026-10-02', commenters: [say('2026-10-02', 'the blacksmith scene was cool')] }).state;
+  assert.equal(s.names[id].job, 'baker');
+  s = advance(s, { subscribers: 130, date: '2026-10-03', commenters: [say('2026-10-03', 'can i be a blacksmith now')] }).state;
+  assert.equal(s.names[id].job, 'blacksmith');
+});

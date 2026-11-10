@@ -137,12 +137,23 @@ export function pickVariant(job, seed, day, id, used = new Set(), { croft = fals
   return order.find((v) => !used.has(v) && !isRecent(v)) || order.find((v) => !used.has(v)) || opts[k];
 }
 
+// Owner 2026-11-10: the video opens on the day's strongest shot, not on the same shot every day (the caravan or the
+// castle opened every video, and returning viewers swiped away): the story event, else a new building, else the caravan
+// of newcomers, else a villager at work; never the kind that opened yesterday's video when there is another one today.
+// 'castle' (the old flight to the castle) when the day has none of them. `state.sceneLog['open:<kind>']`: the last day.
+export const OPENINGS = ['story', 'building', 'caravan', 'villager'];
+export function pickOpening(state, has) {
+  const can = OPENINGS.filter((k) => has[k]);
+  return can.find((k) => state.sceneLog?.[`open:${k}`] !== state.day - 1) || can[0] || 'castle';
+}
+
 /**
- * The day's scenes: { tavern, church, variants: { villagerId: variant }, ambient }. Call after the featured
+ * The day's scenes: { tavern, church, variants: { villagerId: variant }, ambient, opening }. Call after the featured
  * villagers are picked (with `tavern` from tavernToday, `church` from churchToday). Records them in state.sceneLog.
- * `buildingShots`: how many new-building shots the video opens with (they leave less room for an everyday shot).
+ * `buildingShots`: how many new-building shots the video shows (they leave less room for an everyday shot).
+ * `story`: the day's story event has a shot of its own; `arrivals`: how many villagers got a name today (the caravan).
  */
-export function planScenes(state, { featured, tavern, church = null, avoidJobs = [], buildingShots = 0 }) {
+export function planScenes(state, { featured, tavern, church = null, avoidJobs = [], buildingShots = 0, story = false, arrivals = 0 }) {
   const inside = tavern || !!church; // an interior closes the video: one villager shot less
   const day = state.day;
   const named = Object.keys(state.names || {}).length > 0;
@@ -197,5 +208,7 @@ export function planScenes(state, { featured, tavern, church = null, avoidJobs =
     state.sceneLog[sceneKey(f.job === 'apprentice' && n?.wants ? n.wants : f.job, variants[f.id])] = day;
   }
   if (ambient) state.sceneLog[ambientKey(ambient)] = day;
-  return { tavern, church, variants, ambient, pov };
+  const opening = pickOpening(state, { story, building: buildingShots > 0, caravan: arrivals > 0, villager: named && shots.length > 0 });
+  state.sceneLog[`open:${opening}`] = day;
+  return { tavern, church, variants, ambient, pov, opening };
 }

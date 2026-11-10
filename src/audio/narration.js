@@ -276,9 +276,11 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   // with the shot plan known, the sentences follow the shots they wait for: a sentence about a later shot
   // spoken first leaves the narrator silent until that shot (day 2026-10-22: "64 job requests" waited for
   // the third villager over the raised house). A sentence with no shot stays after the one before it.
+  // a video that opens on its strongest shot (owner 2026-11-10, diff.scenes.opening): the line about that shot is the first
+  // thing said, the day and the numbers come right after it
   if (shots.length) {
     const at = sentenceAnchors(S, shots);
-    let key = 0;
+    let key = coldOpen(shots) ? shots[0].t0 + 0.3 : 0;
     const keyed = S.map((s, i) => ({ s, i, k: (key = at[i] ?? key) }));
     keyed.sort((a, b) => a.k - b.k || a.i - b.i);
     S.splice(0, S.length, ...keyed.map((x) => x.s));
@@ -443,7 +445,10 @@ function fitShots(S, shots, r) {
 }
 
 // Which shot each kind of sentence talks about (see makePlan in src/render/scene/timeline.js).
+// (the caravan's line waits for the caravan only when another shot opens the video: at 0 s it follows the opening line)
+const coldOpen = (shots) => shots[0]?.t0 === 0 && shots[0].kind !== 'caravan';
 const SHOT_OF = {
+  caravan: (c) => c.kind === 'caravan' && c.t0 > 0,
   story: (c) => c.kind === 'event', completed: (c) => c.kind === 'building', unlocked: (c) => c.kind === 'building',
   requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', pair: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', church: (c) => c.kind === 'church', comment: (c) => c.kind === 'tavern', ambient: (c) => c.kind === 'ambient',
   houses: (c) => c.kind === 'house' && !c.raised, rebuilt: (c) => c.kind === 'house' && !c.raised, raised: (c) => c.kind === 'house' && c.raised, abandoned: (c) => c.kind === 'loss', ruined: (c) => c.kind === 'loss',

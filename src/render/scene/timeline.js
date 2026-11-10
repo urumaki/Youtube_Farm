@@ -283,8 +283,14 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
 
   const { center, extent } = kingdomBox(houses);
 
-  // the caravan replaces the castle hook: it starts at 0 s, the counter overlay still shows over it
-  const start = targets[0]?.kind === 'caravan' ? 0 : HOOK;
+  // the shot that opens the video (owner 2026-11-10, diff.scenes.opening, src/sim/scenes.js): the story event (with the
+  // shots that follow it: the throne room, the manor), the first new building, the caravan or the first villager at work
+  // moves to the front, the others keep their order. Saves without it keep the old order (the caravan first).
+  const LEAD = { story: (t) => t.kind === 'event', building: (t) => t.kind === 'building' && t.id !== 'engineer_workshop', caravan: (t) => t.kind === 'caravan', villager: (t) => t.kind === 'villager' };
+  const lead = LEAD[scenes?.opening] ? targets.filter(LEAD[scenes.opening]).slice(0, scenes.opening === 'story' ? undefined : 1) : [];
+  if (lead.length) targets.splice(0, targets.length, ...lead, ...targets.filter((t) => !lead.includes(t)));
+  // a shot that opens the video replaces the castle hook: it starts at 0 s, the counter overlay still shows over it
+  const start = lead.length || targets[0]?.kind === 'caravan' ? 0 : HOOK;
   // some shots have a fixed length (owner: the caravan lasts 4-5 s at most); the rest share the remaining
   // time by weight
   const fixedLen = (tg) => (targets.length < 2 ? null : tg.kind === 'caravan' ? CARAVAN_SECONDS : tg.kind === 'event' ? tg.seconds ?? STORY_SECONDS : null);

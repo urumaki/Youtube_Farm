@@ -136,3 +136,17 @@ test('the night raid has its own script, each line at its time, no name read alo
   const r = buildScript({ subscriberCount: 2400, seed: 1 }, { date: '2026-11-03', day: 19, story: { ...story, step: 'rescue', guards: [{}, {}, {}, {}, {}] }, next: { remaining: 100, goal: 'the Mine opens' } });
   assert.ok(r.text.includes('five guards') && r.sentences.at(-1).at === 27.1);
 });
+
+test('narration: a video that opens on the story says the story first, then the day (owner 2026-11-10)', async () => {
+  const fs = await import('node:fs');
+  const { migrate } = await import('../src/sim/state.js');
+  // day 2026-11-05: a rebel in the pillory and a caravan of newcomers
+  const { state, diff } = JSON.parse(fs.readFileSync(new URL('../state/history/2026-11-05.json', import.meta.url)));
+  const cold = [{ kind: 'event', id: 'rebel', t0: 0, t1: 4.5 }, { kind: 'caravan', id: 'caravan', t0: 4.5, t1: 9 }, { kind: 'villager', job: 'woodcutter', t0: 9, t1: 16 }, { kind: 'villager', job: 'farmer', t0: 16, t1: 23.5 }];
+  const roles = buildScript(migrate(state), diff, { shots: cold }).sentences.map((x) => x.role);
+  assert.deepEqual(roles.slice(0, 3), ['story', 'open', 'caravan'], roles.join(' '));
+  // the old order (the caravan opens the video): the day first
+  const old = [cold[1], cold[0], ...cold.slice(2)].map((c, i) => ({ ...c, t0: [0, 4.5, 9, 16][i], t1: [4.5, 9, 16, 23.5][i] }));
+  const before = buildScript(migrate(state), diff, { shots: old }).sentences.map((x) => x.role);
+  assert.deepEqual(before.slice(0, 3), ['open', 'caravan', 'story'], before.join(' '));
+});

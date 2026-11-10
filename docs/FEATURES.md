@@ -44,6 +44,15 @@ Add new owner decisions here.
   out): named innkeepers/brewers behind the bar, other named villagers drinking at the tables with name
   tags, its own warm lamps (`env.set(..., interior)`). Days without any named
   villager keep the old order: castle hook → new buildings → new houses → wide shot → call to action.
+  The opening shot (owner 2026-11-10, `pickOpening` in `src/sim/scenes.js`, `diff.scenes.opening`): the videos did worse
+  and every one opened the same way (the caravan, or the flight to the castle), so the video now opens at 0 s on the
+  day's strongest shot: the story event (with the shots that follow it), else the first new building, else the caravan,
+  else the first villager at work; never the kind that opened yesterday's video when the day has another one
+  (`state.sceneLog['open:<kind>']`), `castle` (the old flight) when it has none. `makePlan` moves that shot to the front,
+  the others keep their order; the narrator says that shot's line first, then the day (`coldOpen` in `narration.js`), and
+  the caravan's line waits for the caravan. The counter still shows over the first 2.2 s. Days saved before (no
+  `scenes.opening`) and the stories that take the whole video keep their order. Test: `npm run render -- --real --subs
+  <n> --story pig --names "A,B" --stills 0.6,2.5,6` (the `[shots]` line starts with `event:pig 0.0-4.5`).
   Narration sentences follow the same order (`src/audio/narration.js`).
 - English only (owner 2026-10-28: the project will never be in Italian): narration, on-screen titles and tags, the video's
   title and description, the voices. The Italian templates, word tables and the `--lang` option are gone; file names and
@@ -850,6 +859,18 @@ Add new owner decisions here.
 - `src/publish/` YouTube upload (resumable, OAuth); `state/published.json` prevents double uploads.
 - `.github/workflows/daily.yml` runs at 03:17 UTC (GitHub often starts it hours late);
   `voice-samples.yml` renders TTS samples on demand.
+
+- Parser check (owner 2026-11-10, `requests.js`; made-up comments, the real ones are never shown to a language model): no
+  request was missed, but 29 of 47 comments that only talk about the video named a job ("the tavern looks great", "send
+  him to jail", "this channel is the goat", "in general", "not a single", "we are so cooked", "I bow to the king") and
+  changed the job of the commenter's villager. Now a commenter who already has a villager changes job only when the
+  comment asks (`asksFromText`, the `asks` flag of a commenter, `assignNames`): a word of asking ("can I", "make me", "I
+  want", "job", "please", "voglio", "posso"...) or a comment of one or two words ("blacksmith", "guard now"). A first
+  comment still takes the job it names. A cell in the Dungeon is by request in a first comment too: "jail", "dungeon"
+  alone ask for nothing. Rebels: the words alone ("revolution!", "treason") only in a comment of a few words, or said of
+  oneself ("we start a revolution"); "the rebels got tomatoes" and "I would never betray the king" make no rebel. Names:
+  "the so called king" and "call me maybe" name nobody, "call me Sir Lancelot" is Lancelot. Still read wrong: "my friend
+  is called Bob" renames the commenter's villager Bob. Test: `requests: talk about the video changes no job`.
 
 ## Open ideas the owner mentioned
 - Choose a less robotic free voice (Chatterbox or Edge voices; samples via the Voice samples action).

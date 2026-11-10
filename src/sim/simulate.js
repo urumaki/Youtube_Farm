@@ -239,7 +239,7 @@ export function planDay(s, prev, diff) {
   diff.featured = takeover ? [] : pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, church, stale: (job) => staleJob(s, job), intro: (job) => !!introVariant(s, job) });
   s.featured = diff.featured;
   markShown(s, diff.featured);
-  diff.scenes = planScenes(s, { featured: diff.featured, tavern, church, avoidJobs: diff.avoidJobs, buildingShots: Math.min(2, shownBuildings) });
+  diff.scenes = planScenes(s, { featured: diff.featured, tavern, church, avoidJobs: diff.avoidJobs, buildingShots: Math.min(2, shownBuildings), story: !!diff.story && !takeover, arrivals: (diff.named || []).length });
   s.scenes = diff.scenes;
 }
 
@@ -331,7 +331,9 @@ function assignNames(s, commenters, blocked, diff) {
       const scholarBefore = id !== undefined && isScholar() && s.names[id].requestDay !== s.day;
       const isGuard = () => (s.villagers[id]?.job ?? s.names[id].job) === 'guard';
       const guardBefore = id !== undefined && isGuard() && s.names[id].requestDay !== s.day && Number(id) !== s.guardCaptain;
-      if (id !== undefined && wants.length) applyRequest(id, wants);
+      // (owner 2026-11-10: a villager who has a job changes it only when the comment asks, `asks` from requests.js; a
+      // commenter made without it, in tests and test renders, asks)
+      if (id !== undefined && wants.length && c.asks !== false) applyRequest(id, wants);
       else if (wants.length && q) q.wants = wants;
       if (c.join && gameOpen && guardBefore && isGuard() && !s.gamesEntrants.includes(Number(id))) {
         s.gamesEntrants.push(Number(id));
