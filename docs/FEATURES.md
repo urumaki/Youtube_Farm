@@ -891,6 +891,21 @@ Add new owner decisions here.
   interior like the Dungeon: own camera, a hard cut in and out, no visitor, no shot through the villager's eyes. Test:
   `npm run render -- --real --subs <n> --gallery "miner:gallery"` (`output/gallery/`).
 
+- The kingdom's time-lapse (owner 2026-11-11: every 30 days, the month against the one before; `scripts/timelapse.js`): one
+  frame of the whole town for each saved day (`state/history/`), always from the same place in the sky over the last
+  day's town, turning slowly, in clear daylight whatever the day's weather was (fog, rain and snow would hide the town),
+  no story event, every house in full detail; "DAY N" and the number of villagers over it. The frames fade into one
+  another (0.55 s a day, `--hold`), the last is held 2.5 s, the kingdom's own music under them. A Short of its own, 1080 x
+  1920, about 17 s for 26 days. Read only: nothing saved, nothing published (the owner uploads it by hand). The last 30
+  saved days by default (`--days`), or `--from` / `--to`; `--frames-only` keeps the frames in `output/timelapse/`.
+
+- From the comments on the day 26 video (owner 2026-11-11, `requests.js`; 44 comments read by Claude at the owner's
+  request, on the public page: `PRIVACY.md` says so since that day). Asking: "asking to be a fisher", "Can l be a doctor" (a
+  small L), "permit me" ask; "work in the mines" asks for the miner. No request: the job one leaves ("quit my job as guard
+  and become a landlord" kept a guard a guard), asking how ("How can I be a Noble?" made a tax collector). Complaints:
+  "13. Day of asking for a job", "how do I see who I am". What the commenters ask for most, not built: a way to find one's
+  own villager, ranks and units for the guards, a tannery, a court, trade with other cities, iron for the blacksmith.
+
 ## Open ideas the owner mentioned
 - Choose a less robotic free voice (Chatterbox or Edge voices; samples via the Voice samples action).
 - Done: comment text picks a job and a name (`src/sim/requests.js`), end credits roll in the wide shot

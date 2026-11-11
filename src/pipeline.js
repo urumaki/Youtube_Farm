@@ -160,7 +160,7 @@ export async function daily(args, log = console) {
  * --day 2026-10-20: a saved day again, from state/history (read only), with today's code. The villagers at
  * work are picked again (src/sim/featured.js), avoiding the jobs the day before showed.
  */
-function savedDay(date, stateDir = STATE_DIR) {
+export function savedDay(date, stateDir = STATE_DIR) {
   const file = (d) => path.join(stateDir, 'history', `${d}.json`);
   if (!fs.existsSync(file(date))) throw new Error(`no saved day ${date} in ${path.join(stateDir, 'history')}`);
   const { state: raw, diff } = JSON.parse(fs.readFileSync(file(date), 'utf8'));

@@ -89,7 +89,7 @@ const KEYWORDS = [
   // 2026-11-04: "the mine worker", "a mine builder")
   // owner 2026-11-04: a thief, a bandit, a usurper... asks for a cell in the Dungeon (from 3250; before, an apprentice)
   [/\bthie(f|ves)|\brobbers?\b|\brob\b|\bbandits?\b|brigand|criminal|\boutlaws?\b|\bcrooks?\b|pickpocket|burglar|smuggler|highwayman|\bpoacher|usurper|traitor|dissident|assassin|\bsteal(ing)?\b|\bprisoner|\bconvict\b|\bjail\b|\bgaol\b|\bdungeon\b|\bladr[oi]\b|brigant|\bbandit[oi]\b|criminal[ei]|fuorilegge|usurpator|traditor|prigionier|galeott|carcerat/, 'prisoner'],
-  [/\bminers?\b|\bmining\b|\bmine\s*(worker|builder|digger|hand|labou?rer|man|men|owner)s?\b|\bowner of the mines?\b|\bminor in the (cave|mine)|\bquarry\s*man|\bpick\s*axe|minatore|miniera|cavatore/, 'miner'],
+  [/\bminers?\b|\bmining\b|\bmine\s*(worker|builder|digger|hand|labou?rer|man|men|owner)s?\b|\bowner of the mines?\b|\bminor in the (cave|mine)|\b(work|working|job|employment)\s+(in|at|down)\s+(the\s+|a\s+|your\s+)?mines?\b|\bquarry\s*man|\bpick\s*axe|minatore|miniera|cavatore/, 'miner'],
 ];
 
 // "maybe later, when there are proper guards" is a wish for the kingdom, not a job request
@@ -127,6 +127,10 @@ const NOT_ASKED = new RegExp([
   // guards" are no requests (nor is one's own farm: the farmer's keyword above)
   /\b(investigation|investigate|inquiry|enquiry|look|looking)\s+(into|at)\s+(the\s+|our\s+)?(\w+\s+)?$/.source,
   /\b(numbers?|ranks|size)\s+of\s+(our\s+|the\s+)?(\w+\s+)?$/.source,
+  // owner 2026-11-11, from the comments on the day 26 video: the job one leaves is no request ("I would like to quit my job as
+  // guard and become a landlord" kept a guard a guard), nor is asking how ("How can I be a Noble?" made a tax collector)
+  /\b(quit|quitting|leave|leaving|resign|retire|stop being|no longer)\s+(my\s+|the\s+)?((job|work|post|role|position)\s+)?((as|of|at)\s+)?(a\s+|an\s+|the\s+)?$/.source,
+  /\bhow\s+(can|could|do|would|does)\s+(i|we|one|you|someone)\s+(be|become|get|get to be)\s+(a\s+|an\s+|the\s+)?$/.source,
 ].join('|'));
 // a job named as someone else's ("I'll be the executioner's friend"), or as taken ("blacksmith was taken so I want priest"), is
 // no request for it (owner 2026-11-07)
@@ -144,12 +148,12 @@ const ASKS = /\b(make\s+me|can\s+i|could\s+i|may\s+i|let\s+me\s+be|i\s+(want|wis
 // comment still takes the job it names, whatever the wording. A cell in the Dungeon is by request only (owner 2026-11-04):
 // the place named alone ("the new dungeon looks amazing") asks for nothing, even in a first comment.
 const INTENT = new RegExp([
-  /\b(can|could|may|might|shall|should)\s+(i|we|u|you)\b/.source,
-  /\b(make|made|let|turn|put|throw|lock|send|sign|hire|give|grant|assign|promote|appoint|call|name|count)\s+(me|my)\b/.source,
+  /\b(can|could|may|might|shall|should)\s+(i|l|we|u|you)\b/.source, // (\"Can l be a doctor\", a small L)
+  /\b(make|made|let|turn|put|throw|lock|send|sign|hire|give|grant|assign|promote|appoint|call|name|count|permit|allow)\s+(me|my)\b/.source,
   /\bi\s*('d|'ll|'m|\s+am|\s+will|\s+would|\s+shall|\s+wanna|\s+want|\s+wish|\s+choose|\s+pick|\s+request|\s+ask|\s+hope|\s+need|\s+take|\s+claim|\s+apply|\s+volunteer|\s+become|\s+be|\s+gotta|\s+must|\s+should)\b/.source,
   /\b(im|id|ill)\s+(a|an|the|be|like|love|now|gonna|going)\b/.source,
   /\b(wanna|want(ing|ed)?\s+to|wish(ing|ed)?\s+to|like\s+to|love\s+to|going\s+to|gonna)\s+(be|become|work|join|change|switch|try)\b/.source,
-  /(?<!\b(good|nice|great|amazing|awesome|fine|cool|best)\s)\bjob\b|\b(role|position|profession|occupation|career|apprentice\w*|employment|hired?|request(ing)?)\b/.source,
+  /(?<!\b(good|nice|great|amazing|awesome|fine|cool|best)\s)\bjob\b|\b(role|position|profession|occupation|career|apprentice\w*|employment|hired?|request(ing)?|ask(ing|ed)?)\b|\bto\s+(be|become)\s+(a|an|the)\b/.source,
   /\b(pls+|plz+|please|pleas)\b|\b(change|switch|swap|instead|from now on|rather be|me as)\b/.source,
   /\b(voglio|vorrei|posso|fammi|fatemi|rendimi|diventare|lavoro|lavorare|per\s+favore)\b|\b(fare|essere)\s+(il|la|lo|un|una)\b/.source,
 ].join('|'));
@@ -230,6 +234,9 @@ const COMPLAINT_RE = new RegExp([
   /\b(can'?t|cannot|can not|couldn'?t|could not|didn'?t|did not|don'?t|do not|never)\s+(see|find|spot)\s+(me|myself|my\b)/,
   /\b(haven'?t|havent|have not|never)\s+(yet\s+)?(seen|found|spotted)\s+(me|myself|my\b)/, /\b(be|appear|put me|show me)\s+in\s+(the\s+)?next\s+(one|video|short|episode|day)\b/,
   // (2026-11-05: "Day 8 or 9 of asking", "Waht abot meee", "I never got my job", "I still wait for an employment in the mines")
+  // (2026-11-11: "13. Day of asking for a job", "yo how do I see who I am")
+  String.raw`\b${NUM}\W{0,3}(st|nd|rd|th)?\W{0,2}day\s+(of|for)\s+(asking|begging|requesting|waiting|trying|wanting|commenting)\b`,
+  /\bhow\s+(do|can|could|would)\s+i\s+(see|find|know|tell|check)\s+(who|where|which|what|if)\b/, /\bwho\s+am\s+i\b/, /\bwhich\s+(one|villager)\s+(am\s+i|is\s+(me|mine))\b/,
   /\bw[ha]{1,3}t\s+ab[ou]{1,2}t\s+me+\b/, /\bnever (got|had|received) (my|a) (job|villager|name|role)\b/, /\bstill wait(ing)? for (an? |my )?(employment|job|work|position|role|villager)\b/,
   /\bhave i (become|been made|been given|got|gotten)\b/, /\b(unsure|not sure|wondering)\s+(if|whether)\s+i\s+(have|am|got|was|'?m)\b/,
   /\bwhere\s+(am i|is my|'?s my|are my)\b/, /\bwhere'?s my\b/, /\bwhere('?s| is| was) (me|i)\b/,

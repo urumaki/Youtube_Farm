@@ -1611,3 +1611,18 @@ test("the kingdom's vote: one vote for each commenter, the count read the next d
   assert.equal(r.state.storyArc.day, r.state.day + 1);
   assert.equal(pickStory.length >= 1, true);
 });
+
+test('requests: from the comments on the day 26 video (owner 2026-11-11)', async () => {
+  const { wantsFromText: w, asksFromText: asks, complainsFromText: complains } = await import('../src/sim/requests.js');
+  assert.ok(asks('you forgot about me asking to be a fisher'));
+  assert.ok(asks('Can l be a doctor'));
+  assert.deepEqual(w('My liege, please permit me work in the mines'), ['miner']);
+  assert.ok(asks('My liege, please permit me work in the mines'));
+  assert.deepEqual(w('Where the mine at?'), []);
+  assert.deepEqual(w('My lord now that the raid is over I would like to quit my job as guard and become a landlord'), ['taxcollector']);
+  assert.deepEqual(w('How can I be a Noble?'), []);
+  assert.deepEqual(w('can I be a guard'), ['guard']);
+  assert.ok(complains('13. Day of asking for a job'));
+  assert.ok(complains('yo how do I see who I am, I was one of the first 50'));
+  assert.ok(!complains('What a great place to live in'));
+});

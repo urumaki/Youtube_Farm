@@ -14,13 +14,16 @@ comment text is read once to spot a job request ("can I work at the tavern?") or
 Violet"), or a note that you could not find your villager ("I can't see myself", so you are shown in the
 next video), and is then discarded: only the resulting job, name and the day of that note are stored, never the text. Names that are offensive are skipped. To have your name removed, reply to any
 video asking for it or contact the channel: it is added to a block list and disappears from the next
-video. No other data about viewers or subscribers is accessed or stored.
+video. From time to time the owner also reads the public comments of a video, as any viewer can, sometimes with the help
+of an AI assistant (Anthropic's Claude), to decide what to build next and to find comments the tool misread; nothing from
+them is stored. No other data about viewers or subscribers is accessed or stored.
 
 **What it stores.** The daily subscriber number, the simulated kingdom state (including the names
 above) and the IDs of uploaded videos, in the project repository. OAuth credentials are kept only in the owner's local `.env` file
 and in encrypted GitHub Actions secrets; they are never shared with anyone.
 
-**Third parties.** Data is sent only to Google/YouTube through YouTube API Services. By using this
+**Third parties.** Data is sent only to Google/YouTube through YouTube API Services; the text of public comments the owner
+reads with the AI assistant (see above) is processed by Anthropic for that reading only. By using this
 service you are also bound by the [YouTube Terms of Service](https://www.youtube.com/t/terms) and the
 [Google Privacy Policy](https://policies.google.com/privacy).
 
@@ -29,4 +32,4 @@ service you are also bound by the [YouTube Terms of Service](https://www.youtube
 
 **Contact.** Through the YouTube channel [@Subscriber_Kingdom](https://www.youtube.com/@Subscriber_Kingdom).
 
-Last updated: 2026-10-19.
+Last updated: 2026-11-11.
