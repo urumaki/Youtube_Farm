@@ -196,6 +196,8 @@ export async function testRender(args, log = console) {
     state.riddleSolvers = Object.keys(state.names || {}).map(Number).filter((id) => state.villagers[id]?.job === 'scholar').slice(0, 2);
   }
   if (args.story) diff.story = state.story = storyFor(state, args.story);
+  // the result of the kingdom's vote with no votes yet: made-up numbers (a test render, never saved)
+  if (args.story === 'vote:result' && diff.story && !(diff.story.tally.a + diff.story.tally.b)) Object.assign(diff.story, { tally: { a: 12, b: 31 }, winner: 'b' });
   if (args.story === 'riddle:answer') beginWorkshop(state, diff); // the Engineers' Workshop, as the daily simulation does
   if (args.show) { diff.buildingsCompleted = [...args.show]; diff.buildingsStarted = []; }
   if (args.pov && diff.scenes) {

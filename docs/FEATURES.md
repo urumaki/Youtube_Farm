@@ -872,6 +872,25 @@ Add new owner decisions here.
   "the so called king" and "call me maybe" name nobody, "call me Sir Lancelot" is Lancelot. Still read wrong: "my friend
   is called Bob" renames the commenter's villager Bob. Test: `requests: talk about the video changes no job`.
 
+- The kingdom's vote (owner 2026-11-10: the comments decide what happens; story `vote` in `stories.js`, catalog in
+  `src/sim/votes.js`, scene `stories/vote.js` on the crier's dais, as the riddle). Day 1 (`announce`): the crier asks the
+  people to choose between two events; the title says "You decide! Comment !vote A or !vote B", the two choices are at the
+  bottom of the frame. Every commenter, with a villager or not, votes once: `!vote A`, `!vote B`, `!vote 1`, `!vote 2`
+  (`voteFromText` in `requests.js`, a fixed regex, only the letter is kept; the exclamation mark is needed, as for
+  `!join`; blocked authors never count). Day 2 (`result`): the crier reads the count (`state.voteTally`, `diff.votes`);
+  the most votes win, A when level or when nobody voted ("the King decides"). What won is the next day's story
+  (`state.storyArc`, whatever its cooldown). Votes so far, asked in order (`state.votesAsked`): a pie eating contest or a
+  boat race, a tug of war or a pie eating contest, a boat race or a tug of war; only the votes whose two events the
+  kingdom can hold. From 1,000 villagers, at least 7 days apart, weight 4, never on a day the video must show a
+  building. To add a vote: one line in `VOTES` with two stories of a single day. Test: `npm run render -- --real --subs
+  <n> --story vote --stills 3.5`, `--story vote:result` (made-up numbers, 12 to 31).
+- Inside the Mine (owner 2026-11-10, `src/render/scene/mine.js`, the miner's third scene `gallery`, once the Mine stands):
+  a gallery in the rock under the Mine, timber sets, lanterns, rails; the named miner swings a pick at a boulder with a
+  seam of gold, another miner pushes a cart of ore toward the camera, two more work the wall, the windlass's bucket goes
+  up the shaft at the far end. The other named miners wear their names (the cart first, the latest to ask first). An
+  interior like the Dungeon: own camera, a hard cut in and out, no visitor, no shot through the villager's eyes. Test:
+  `npm run render -- --real --subs <n> --gallery "miner:gallery"` (`output/gallery/`).
+
 ## Open ideas the owner mentioned
 - Choose a less robotic free voice (Chatterbox or Edge voices; samples via the Voice samples action).
 - Done: comment text picks a job and a name (`src/sim/requests.js`), end credits roll in the wide shot

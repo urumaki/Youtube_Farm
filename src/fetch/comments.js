@@ -1,7 +1,7 @@
 // Commenters for villager names: public comment threads on the channel's videos (YouTube Data API v3,
 // commentThreads.list with the same API key as the subscriber count). Never throws.
 import { DEFAULT_HANDLE } from './youtube.js';
-import { asksFromText, wantsFromText, nameFromText, complainsFromText, rebelFromText, joinFromText, answerFromText, plainText } from '../sim/requests.js';
+import { asksFromText, voteFromText, wantsFromText, nameFromText, complainsFromText, rebelFromText, joinFromText, answerFromText, plainText } from '../sim/requests.js';
 
 const API = 'https://www.googleapis.com/youtube/v3';
 // Everything in a comment is untrusted: the author id and time are checked for their shape, the display name
@@ -49,8 +49,8 @@ export async function fetchCommenters({ apiKey, handle = DEFAULT_HANDLE, channel
         // an answer to the King's riddle ("!answer the jester", owner 2026-11-07) is read apart and taken out of the text first
         const { rest: text, answers } = answerFromText(plainText(c.textOriginal ?? c.textDisplay));
         const call = nameFromText(text);
-        const complains = complainsFromText(text), rebel = rebelFromText(text), join = joinFromText(text);
-        out.push({ author, name: String(c.authorDisplayName ?? '').slice(0, 100), at, wants: wantsFromText(text), asks: asksFromText(text), ...(call ? { call } : {}), ...(complains ? { complains } : {}), ...(rebel ? { rebel } : {}), ...(join ? { join } : {}), ...(answers.length ? { answers } : {}) });
+        const complains = complainsFromText(text), rebel = rebelFromText(text), join = joinFromText(text), vote = voteFromText(text);
+        out.push({ author, name: String(c.authorDisplayName ?? '').slice(0, 100), at, wants: wantsFromText(text), asks: asksFromText(text), ...(call ? { call } : {}), ...(complains ? { complains } : {}), ...(rebel ? { rebel } : {}), ...(join ? { join } : {}), ...(vote ? { vote } : {}), ...(answers.length ? { answers } : {}) });
       }
       pageToken = body.nextPageToken;
       if (older || !pageToken) break;

@@ -264,6 +264,16 @@ const REBEL_RE = new RegExp([
 // for the games at the Tournament Ground (simulate.js, stories.js); a plain "join" ("can I join the army") does not
 const JOIN_RE = /!join\b/i;
 
+// owner 2026-11-10: "!vote A" or "!vote B" ("!vote 1", "!vote 2") is a vote in the kingdom's vote (stories.js `vote`), one for
+// each commenter; only the letter is kept
+const VOTE_RE = /!\s*vote\b[:\s-]*(?:for\s+)?(?:option\s+)?([ab12])\b/i;
+
+/** 'a' or 'b' when the comment votes, else null. */
+export function voteFromText(text) {
+  const m = VOTE_RE.exec(plainText(text));
+  return m ? { a: 'a', 1: 'a', b: 'b', 2: 'b' }[m[1].toLowerCase()] : null;
+}
+
 /** True when the comment asks to enter the games. */
 export function joinFromText(text) {
   return JOIN_RE.test(plainText(text));

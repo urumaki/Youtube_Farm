@@ -11,6 +11,7 @@ import { TIERS } from './tiers.js';
 import { world, heightAt, MANORS } from './world.js';
 import { wallLayout, insideWall2 } from './wall.js';
 import { RIDDLES, RIDDLE } from './riddles.js';
+import { VOTES, VOTE, voteWinner } from './votes.js';
 
 export const PLACES = ['Ashford', 'the Northern Marches', 'Kingsbridge', 'the Salt Coast', 'Ravenscar', 'the Amber Vale', 'Dunmoor', 'the Eastern Isles'];
 export const GOODS = ['spices', 'wool', 'salt', 'silk', 'amber', 'wine', 'iron tools', 'honey', 'dyed cloth'];
@@ -154,9 +155,18 @@ export const STORIES = {
   // kingdom (2,500), with at least two named scholars; never on a day the video must show a building
   riddle: { minPop: 2500, cooldown: 14, weight: 3, steps: ['announce', 'answer'],
     needs: (s, o = {}) => built(s, 'market') && namedVillagers(s).filter((n) => n.job === 'scholar').length >= 2 && !o.buildingShots },
+  // owner 2026-11-10 (the comments decide what happens): the kingdom's vote, over two days. Day 1 ('announce'): the town crier
+  // asks the people to choose between two events (votes.js); every commenter votes once with "!vote A" or "!vote B". Day 2
+  // ('result'): the crier reads the count (`state.voteTally`, simulate.js), and the event that won is the next day's story
+  // (`state.storyArc`, whatever its cooldown). Never on a day the video must show a building
+  vote: { minPop: 1000, cooldown: 7, weight: 4, steps: ['announce', 'result'],
+    needs: (s, o = {}) => built(s, 'market') && !o.buildingShots && openVotes(s).length > 0 },
   eclipse: { minPop: 500, cooldown: 45, weight: 2, takeover: true,
     needs: (s, o = {}) => built(s, 'market') && s.weather === 'clear' && namedVillagers(s).length >= 4 && !o.buildingShots },
 };
+// the votes whose two events the kingdom can hold (their buildings, their people; the weather is the day's own)
+const holds = (s, id) => s.subscriberCount >= (STORIES[id].minPop ?? 1) && (!STORIES[id].needs || STORIES[id].needs({ ...s, weather: 'clear' }));
+const openVotes = (s) => VOTES.filter((v) => holds(s, v.a.story) && holds(s, v.b.story));
 const tomorrow = (s) => new Date(Date.parse(s.date) + 86400000).toISOString().slice(5, 10);
 
 /** True when the story ({ id, step }) takes the whole video (the raid; the Grand Joust's results day). */
@@ -493,6 +503,30 @@ const BUILD = {
     const others = roleCast(state, r, ['scholar'], 4, [...winners, ...(crier ? [crier] : [])]);
     return { riddle, winners: winners.map((w) => strip({ ...w, job: 'engineer' })), crier: crier && strip(crier),
       cast: [...(crier ? [crier] : []), ...winners.map((w) => ({ ...w, job: 'engineer' })), ...others].map(strip) };
+  },
+  vote(state, r, arc) {
+    const crier = roleCast(state, r, ['crier'], 1)[0] || null;
+    // the newest named villagers in front of the dais (today's commenters first)
+    const crowd = namedVillagers(state).filter((n) => n.id !== crier?.id).slice(0, 5);
+    const cast = [...(crier ? [crier] : []), ...crowd].map(strip);
+    if (arc?.step !== 'result') {
+      // the next vote not asked yet that the kingdom can hold, in order; once all have been asked, they start again
+      const open = openVotes(state);
+      if (!open.length) return null;
+      state.votesAsked ??= [];
+      if (open.every((v) => state.votesAsked.includes(v.id))) state.votesAsked = [];
+      const q = open.find((v) => !state.votesAsked.includes(v.id));
+      state.votesAsked.push(q.id);
+      state.voteTally = { a: 0, b: 0 };
+      return { vote: q.id, day: state.day, crier: crier && strip(crier), cast };
+    }
+    const q = VOTE[arc.data?.vote];
+    if (!q) return null;
+    const tally = { a: state.voteTally?.a ?? 0, b: state.voteTally?.b ?? 0 }, winner = voteWinner(tally);
+    state.voteTally = null;
+    // what won is tomorrow's story (pickStory hands an arc on only to a next step, so it is set here)
+    state.storyArc = { id: q[winner].story, day: state.day + 1, voted: q.id };
+    return { vote: q.id, tally, winner, crier: crier && strip(crier), cast };
   },
   noble(state, r, entry) {
     // the villager the owner named (`entry.id`); a test render with no one queued takes the first named villager

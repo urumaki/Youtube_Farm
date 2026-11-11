@@ -3,6 +3,7 @@ import { rng } from '../sim/prng.js';
 import { JOBS, BUILDINGS, tavernScene } from '../sim/tiers.js';
 import { storyCue } from '../sim/stories.js';
 import { RIDDLE } from '../sim/riddles.js';
+import { VOTE, voteWinner } from '../sim/votes.js';
 import { featuredPeople, visitItem } from '../sim/featured.js';
 
 const L = {
@@ -75,6 +76,12 @@ const L = {
     riddle_answer: [(s) => (s.winners?.length
       ? `The answer to the King's riddle: ${RIDDLE[s.riddle].answer}! ${s.winners.length === 1 ? 'The scholar who solved it is' : 'The first two scholars to solve it are'} now Engineers!`.replace('is now Engineers', 'is now an Engineer')
       : `Nobody solved the King's riddle! The answer was ${RIDDLE[s.riddle].answer}.`)],
+    // owner 2026-11-10: the kingdom's vote, asked, then counted (what won happens the day after)
+    vote: [(s) => `Hear ye! The people decide: ${VOTE[s.vote].a.label}, or ${VOTE[s.vote].b.label}? Comment exclamation mark vote A, or vote B!`],
+    vote_result: [(s) => {
+      const w = voteWinner(s.tally), l = w === 'a' ? 'b' : 'a', q = VOTE[s.vote];
+      return s.tally.a + s.tally.b ? `The people have spoken! ${cap(q[w].label)} wins, ${s.tally[w]} ${s.tally[w] === 1 ? 'vote' : 'votes'} to ${s.tally[l]}. It begins tomorrow!` : `Nobody voted, so the King decides: ${q[w].label}, tomorrow!`;
+    }],
     // owner 2026-11-07: the Crusade's call (its quest, the next day, has its own script)
     crusade: ['Hear ye! A Crusade to win back the lost Golden Apple! Guards: comment exclamation mark join to ride as Crusaders!', 'Guards of the kingdom! Comment exclamation mark join, and ride tomorrow as Crusaders!'],
     // owner 2026-10-28: the decree, read once

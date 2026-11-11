@@ -26,9 +26,11 @@ export { VARIANTS, AWAY_VARIANTS, pickVariant };
 // scenes inside a building (the baker's bakehouse, bakery.js; the chimney sweep's room, room.js): own camera, a hard cut
 // in and out
 export const indoorScene = (job, variant) => (job === 'baker' && BAKEHOUSE_VARIANTS.has(variant)) || (job === 'chimneysweep' && variant === 'house') ||
-  (job === 'scholar' && variant === 'lecture') || (job === 'librarian' && variant === 'library') || dungeonScene(variant);
+  (job === 'scholar' && variant === 'lecture') || (job === 'librarian' && variant === 'library') || dungeonScene(variant) || mineScene(variant);
 // the Dungeon under the castle (owner 2026-11-04, dungeon.js): a guard with a torch past the cells, or a prisoner in his cell
 export const dungeonScene = (variant) => variant === 'dungeon' || variant === 'cell';
+// inside the Mine (owner 2026-11-10, mine.js): the miner at a seam in a timbered gallery
+export const mineScene = (variant) => variant === 'gallery';
 // the innkeeper or brewer behind the bar of the tavern, or the bard in its corner (tavern.js): own camera, a hard cut in
 // and out, the room's lamps
 export const barScene = (variant) => variant === 'inside' || variant === 'inn';
@@ -98,7 +100,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
       kind: 'event', id: storyCue(diff.story), story: diff.story, pos: (buildings.items.market || buildings.items.well)?.focus.clone() ?? castle.keep.clone(),
       // a hard cut in and out ("meanwhile..."): no high flight over the town, and dusk scenes change the light
       // the King's riddle is read out in full (owner 2026-11-07): a longer shot (`seconds`)
-      radius: 12, front: 0, label: null, labels: [], weight: 2, seconds: diff.story.id === 'riddle' && diff.story.step !== 'answer' ? 9.5 : undefined, cut: true, phase: night ? 1 : undefined,
+      radius: 12, front: 0, label: null, labels: [], weight: 2, seconds: diff.story.id === 'riddle' && diff.story.step !== 'answer' ? 9.5 : diff.story.id === 'vote' ? (diff.story.step === 'result' ? 6 : 7.5) : undefined, cut: true, phase: night ? 1 : undefined,
     });
     // the results of a game at the Tournament Ground: right after it, the King gives the winner their title in the throne
     // room (owner 2026-10-28, stories/throne.js)

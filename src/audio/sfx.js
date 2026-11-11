@@ -500,6 +500,8 @@ const SCENES = {
   ev_crusade_return: [['cheer', 0.7], ['chatter', 0.3]],
   // the King's riddle (owner 2026-11-07): the crier's bell and a murmur; the answer, the cheers
   ev_riddle: [['bell', 0.4], ['chatter', 0.35]],
+  ev_vote: [['bell', 0.4], ['chatter', 0.35]],
+  ev_vote_result: [['bell', 0.35], ['cheer', 0.5]],
   ev_riddle_answer: [['bell', 0.35], ['cheer', 0.5]],
   // a new Noble (owner 2026-11-07): the fanfare in the throne room, the cheers at the manor's gate
   ev_noble: [['fanfare', 0.5], ['cheer', 0.45]],
@@ -578,7 +580,7 @@ const WORK_BEDS = { blacksmith: [['fire', 0.25]], toolsmith: [['fire', 0.25]], b
   'carpenter:saw': [['saw', 0.5]], 'blacksmith:bellows': [['fire', 0.45]], 'toolsmith:bellows': [['fire', 0.45]],
   'baker:knead': [['chatter', 0.1]], 'brewer:stir': [['fire', 0.2], ['chatter', 0.1]], 'stonemason:stack': [['stone', 0.4]], 'miller:quern': [['stone', 0.15]],
   // the Dungeon (owner 2026-11-04): the guard's torch crackling in the stone corridor
-  'guard:dungeon': [['fire', 0.3]], 'prisoner:cell': [['fire', 0.3]] };
+  'miner:gallery': [['stone', 0.3]], 'guard:dungeon': [['fire', 0.3]], 'prisoner:cell': [['fire', 0.3]] };
 
 function sceneFor(cue) {
   if (cue.kind === 'house') return cue.rebuilt ? 'rebuilt' : 'house';

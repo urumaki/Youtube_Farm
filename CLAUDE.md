@@ -66,7 +66,7 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - `src/sim/` — deterministic simulation (seeded PRNG, no `Math.random()`); `state/kingdom.json` + `state/history/`.
   `simulate.js` (daily step, names, houses, build queue), `tiers.js` (goals, jobs, `MERGED`, `COMMISSIONS`),
   `requests.js` (job, name, complaint and rebel requests from comments), `featured.js` (who is on screen),
-  `scenes.js` (scene picks, `NEEDS`, `UNTIL`), `stories.js` (one story event a day at most), `world.js`
+  `scenes.js` (scene picks, `NEEDS`, `UNTIL`), `stories.js` (one story event a day at most), `votes.js` (the votes the commenters decide with `!vote A`), `world.js`
   (map, plots, lots), `wall.js` (Second Wall), `badwords.js`; `state/blocked.json` removes names.
 - `src/render/scene/` — Three.js scene, captured frame by frame in headless Chromium (`capture.js`).
   `timeline.js` plans the shots; `main.js` places scenes (`PLACES`, `workPlace`); `work.js` job scenes

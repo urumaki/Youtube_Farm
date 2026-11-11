@@ -705,7 +705,7 @@ test('scenes away from the croft of 2026-10-23: the market, the tavern, a buildi
   assert.deepEqual([...picks('engineer', { ...bare, pendingConstruction: [{ building: 'chapel' }] })].sort(), ['site', 'trebuchet']);
   // owner 2026-11-08: the miner's windlass once the Mine stands
   assert.deepEqual([...picks('miner', town)], ['face']);
-  assert.deepEqual([...picks('miner', { ...town, buildings: [...town.buildings, { id: 'mine', status: 'done' }] })].sort(), ['face', 'windlass']);
+  assert.deepEqual([...picks('miner', { ...town, buildings: [...town.buildings, { id: 'mine', status: 'done' }] })].sort(), ['face', 'gallery', 'windlass']);
   assert.deepEqual([...picks('chimneysweep', town)], ['house']);
   assert.deepEqual([...picks('chimneysweep', town, true)], [null], 'a visitor: the croft');
   assert.deepEqual([...picks('hunter', town)].sort(), ['boar', 'stag']);
@@ -1574,4 +1574,40 @@ test('requests: talk about the video changes no job, asking does (owner 2026-11-
   assert.equal(s.names[id].job, 'baker');
   s = advance(s, { subscribers: 130, date: '2026-10-03', commenters: [say('2026-10-03', 'can i be a blacksmith now')] }).state;
   assert.equal(s.names[id].job, 'blacksmith');
+});
+
+test("the kingdom's vote: one vote for each commenter, the count read the next day, what won the day after (owner 2026-11-10)", async () => {
+  const { voteFromText, wantsFromText } = await import('../src/sim/requests.js');
+  const { storyFor, pickStory, STORIES } = await import('../src/sim/stories.js');
+  const { VOTE, voteWinner } = await import('../src/sim/votes.js');
+  assert.equal(voteFromText('!vote A'), 'a');
+  assert.equal(voteFromText('i say !vote b please'), 'b');
+  assert.equal(voteFromText('!vote 2'), 'b');
+  assert.equal(voteFromText('vote a'), null); // the exclamation mark, as for !join
+  assert.equal(voteFromText('!vote apples'), null);
+  assert.deepEqual(wantsFromText('!vote b'), []);
+  assert.equal(voteWinner({ a: 3, b: 3 }), 'a');
+  assert.equal(voteWinner({ a: 1, b: 2 }), 'b');
+  for (const v of Object.values(VOTE)) for (const side of [v.a, v.b]) assert.ok(STORIES[side.story] && !STORIES[side.story].steps, side.story);
+  // a kingdom with a market, a tavern and a dock, and named villagers
+  let s = genesis({ seed: SEED, date: '2026-09-30' });
+  const names = (date, k) => [0, 1, 2, 3].map((i) => ({ author: `v${k}-${i}`, name: `V${k}x${i}`, at: `${date}T0${i}:00:00Z` }));
+  s = advance(s, { subscribers: 1200, date: '2026-10-01', commenters: names('2026-10-01', 0) }).state;
+  for (const id of ['market', 'tavern', 'dock']) if (!s.buildings.some((b) => b.id === id && b.status === 'done')) s.buildings.push({ id, tier: 'test', status: 'done', startedDay: 1, doneDay: 1, daysTotal: 0 });
+  assert.ok(STORIES.vote.needs(s), 'a vote can be held');
+  const asked = storyFor(structuredClone(s), 'vote');
+  assert.equal(asked.step, 'announce');
+  // the crier asked yesterday: today's comments are counted, one for each commenter, blocked ones never
+  s.storyArc = { id: 'vote', step: 'result', day: s.day + 1, data: asked };
+  s.voteTally = { a: 0, b: 0 };
+  const votes = [['p1', 'b'], ['p1', 'a'], ['p2', 'b'], ['p3', 'a'], ['bad', 'a']].map(([author, vote], i) => ({ author, name: author, at: `2026-10-02T00:00:0${i}Z`, wants: [], vote }));
+  const r = advance(s, { subscribers: 1205, date: '2026-10-02', commenters: votes, blocked: { authors: ['bad'] } });
+  assert.deepEqual(r.diff.votes, { a: 1, b: 2 });
+  assert.equal(r.diff.story.id, 'vote');
+  assert.equal(r.diff.story.step, 'result');
+  assert.deepEqual(r.diff.story.tally, { a: 1, b: 2 });
+  assert.equal(r.diff.story.winner, 'b');
+  assert.equal(r.state.storyArc.id, VOTE[asked.vote].b.story);
+  assert.equal(r.state.storyArc.day, r.state.day + 1);
+  assert.equal(pickStory.length >= 1, true);
 });

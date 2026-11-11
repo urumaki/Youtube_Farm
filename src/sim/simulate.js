@@ -260,7 +260,7 @@ export function beginWorkshop(s, diff) {
 /**
  * Commenters name villagers: each new commenter (oldest comment first, one villager per person)
  * joins the queue; queued names go to the unnamed villagers with the lowest ids.
- * commenters: [{ author, name, at, wants?, call?, complains?, rebel?, join? }] (call: a name asked for in the comment); blocked: { authors?: [], names?: [] }.
+ * commenters: [{ author, name, at, wants?, asks?, vote?, call?, complains?, rebel?, join? }] (call: a name asked for in the comment); blocked: { authors?: [], names?: [] }.
  */
 function assignNames(s, commenters, blocked, diff) {
   const blockedAuthors = new Set(blocked.authors || []);
@@ -276,6 +276,10 @@ function assignNames(s, commenters, blocked, diff) {
   diff.joins = []; // guards whose commenter wrote "!join": entered for the next games at the Tournament Ground (stories.js)
   // owner 2026-10-29: the guards entered for the next games, emptied when a game is run (stories.js)
   s.gamesEntrants ??= [];
+  // owner 2026-11-10: the kingdom's vote (stories.js `vote`): the comments since the crier asked, one vote for each commenter
+  // (with a villager or not), counted until the crier reads the result (`state.voteTally`)
+  const voting = s.storyArc?.id === 'vote' && s.storyArc.step === 'result', voted = new Set();
+  if (voting) { diff.votes = { a: 0, b: 0 }; s.voteTally ??= { a: 0, b: 0 }; }
   diff.newCommenters = 0; // people commenting for the first time (no story on busy days, stories.js)
   // names are untrusted: cleaned to letters, digits and . _ -, never one that reads like code or an instruction
   const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !looksLikeCode(raw) && !looksLikeCode(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
@@ -304,6 +308,7 @@ function assignNames(s, commenters, blocked, diff) {
   for (const c of [...commenters].sort((a, b) => String(a.at).localeCompare(String(b.at)))) {
     if (c.at && (!s.commentsSeen || c.at > s.commentsSeen)) s.commentsSeen = c.at;
     if (!c.author || blockedAuthors.has(c.author)) continue;
+    if (voting && (c.vote === 'a' || c.vote === 'b') && !voted.has(c.author)) { voted.add(c.author); diff.votes[c.vote] += 1; s.voteTally[c.vote] += 1; }
     const wants = (Array.isArray(c.wants) ? c.wants : []).filter((j) => typeof j === 'string' && Object.hasOwn(JOBS, j));
     const call = c.call ? valid(c.call) : null; // "call me Violet"
     if (known.has(c.author)) {

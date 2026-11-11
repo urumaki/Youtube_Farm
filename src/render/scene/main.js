@@ -11,7 +11,7 @@ import { buildBuildings } from './buildings.js';
 import { buildNature } from './nature.js';
 import { buildLife } from './life.js';
 import { buildEnvironment } from './env.js';
-import { makePlan, evaluate, indoorScene, barScene, dungeonScene, AWAY_VARIANTS } from './timeline.js';
+import { makePlan, evaluate, indoorScene, barScene, dungeonScene, mineScene, AWAY_VARIANTS } from './timeline.js';
 import { createOverlay } from './overlay.js';
 import { buildWorkScene, sceneOf, rig } from './work.js';
 import { buildCaravan } from './caravan.js';
@@ -29,6 +29,7 @@ import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
 import { buildSweepRoom, buildLectureRoom, buildLibraryRoom } from './room.js';
 import { buildDungeon } from './dungeon.js';
+import { buildMine } from './mine.js';
 import { huntSpot } from '../../sim/wall.js';
 import { buildQueue } from './queue.js';
 import { heightAt, WATER_LEVEL } from '../../sim/world.js';
@@ -262,6 +263,11 @@ async function setup(data) {
       const it = buildings.items.dungeon, e = it.toWorld([0, 0, 1]).sub(it.toWorld([0, 0, 0])).setY(0).normalize();
       return { anchor: it.toWorld([0, 0, 0]), ax: e.x, az: e.z, floorAt: () => it.base - 14, face: undefined };
     }
+    // owner 2026-11-10: the Mine's gallery, deep under its hill (mine.js)
+    if (mineScene(variant) && buildings.items.mine) {
+      const it = buildings.items.mine, e = it.toWorld([0, 0, 1]).sub(it.toWorld([0, 0, 0])).setY(0).normalize();
+      return { anchor: it.toWorld([0, 0, 0]), ax: e.x, az: e.z, floorAt: () => it.base - 18, face: undefined };
+    }
     // the priest blesses one of the fields
     if (variant === 'bless' && fieldCount > 1) return atField(id);
     // the crier up on the Crier's Stand, calling to the square
@@ -374,6 +380,12 @@ async function setup(data) {
       const cellmates = Object.entries(state.names || {}).filter(([k, n]) => n.job === 'prisoner' && Number(k) !== id)
         .sort((a, b) => (b[1].requestDay ?? 0) - (a[1].requestDay ?? 0)).map(([, n]) => ({ name: n.name }));
       return buildDungeon({ variant, anchor, away, M, seed: state.seed, id, heightAt: floorAt || ((x, z) => heightAt(w, x, z)), cellmates, t0, t1 });
+    }
+    // the Mine's gallery (owner 2026-11-10): the other named miners at the cart and the walls, the latest to ask first
+    if (mineScene(variant)) {
+      const mates = Object.entries(state.names || {}).filter(([k, n]) => (state.villagers[k]?.job ?? n.job) === 'miner' && Number(k) !== id && Number(k) < state.villagers.length)
+        .sort((a, b) => (b[1].requestDay ?? 0) - (a[1].requestDay ?? 0)).map(([, n]) => ({ name: n.name }));
+      return buildMine({ anchor, away, M, seed: state.seed, id, heightAt: floorAt || ((x, z) => heightAt(w, x, z)), mates, t0, t1 });
     }
     // inside a building (the Bakery) the room stands on its floor
     if (indoorScene(job, variant)) {

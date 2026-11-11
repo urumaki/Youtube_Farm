@@ -41,6 +41,7 @@ import { buildEscape } from './escape.js';
 import { buildEclipse } from './eclipse.js';
 import { buildManor } from './manor.js';
 import { buildRiddle } from './riddle.js';
+import { buildVote } from './vote.js';
 import { buildCrusade } from './crusade.js';
 
 const BUILDERS = {
@@ -53,6 +54,7 @@ const BUILDERS = {
   dayinlife: buildDayInLife, // a villager's day: one scene per shot too (dayinlife.js)
   escape: buildEscape, eclipse: buildEclipse,
   riddle: buildRiddle,
+  vote: buildVote, // the kingdom's vote: asked, then counted (vote.js)
   crusade: buildCrusade, // the Crusade's quest: one scene per shot (crusade.js); its call is 'crusade:announce' // the King's riddle: read out, then answered (riddle.js)
   noble: buildThrone, // a villager the owner makes a Noble: the throne room, then the manor (step 'manor', manor.js) // the Dungeon escape and the eclipse: one scene per shot (escape.js, eclipse.js)
 };
