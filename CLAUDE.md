@@ -49,8 +49,9 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - `node scripts/thumbnail.js [--job guard] [--title "IS THIS YOU?"] [--sub ...] [--phase 0.25] [--weather clear]` — the video's
   thumbnail: castle from the market square, a waving villager with a blurred name tag; `output/thumbnail_<date>.png`.
 - `node scripts/map.js` — map of the town from above (`output/map.png`).
-- `node scripts/timelapse.js [--days 30] [--from d] [--to d] [--hold 0.55]` — the kingdom's time-lapse, one frame of the
-  whole town for each saved day (`output/timelapse_<from>_<to>.mp4`, ~25 s a day to render); read only, the owner uploads it.
+- `node scripts/timelapse.js [--days 30] [--from d] [--to d] [--seconds 31]` — the kingdom's time-lapse: the whole town
+  growing, one frame for each saved day, then the month's numbers (`output/timelapse_<from>_<to>.mp4`, ~25 min to render);
+  read only, the owner uploads it.
 - `node scripts/viewer.js` — free camera on the scene (`window.__controls`).
 - `node scripts/ennoble.js "<name>" [--day N] [--list]` — the owner makes a villager a Noble (throne room, then their manor
   with the sign "Noble" and the name); queued in `state.ennoble`, commit and push state/ after.

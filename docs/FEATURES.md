@@ -895,8 +895,12 @@ Add new owner decisions here.
   frame of the whole town for each saved day (`state/history/`), always from the same place in the sky over the last
   day's town, turning slowly, in clear daylight whatever the day's weather was (fog, rain and snow would hide the town),
   no story event, every house in full detail; "DAY N" and the number of villagers over it. The frames fade into one
-  another (0.55 s a day, `--hold`), the last is held 2.5 s, the kingdom's own music under them. A Short of its own, 1080 x
-  1920, about 17 s for 26 days. Read only: nothing saved, nothing published (the owner uploads it by hand). The last 30
+  another, the kingdom's own music under them. Owner 2026-11-11: only the town growing, nothing cut from the daily videos,
+  and 31 s long (`--seconds`). Three parts: the camera comes down over day 1 ("27 days in 30 seconds", 2.5 s); the growth,
+  the days sharing the seconds left (0.73 s a day for 27 days); the camera flies down and round the last day's town while
+  the month's numbers come up one at a time (villagers, named by you, houses, buildings), then "Subscribe to move in" (9.5
+  s). The two flights are drawn at 12 frames a second and blended up to 30 (a frame of the whole town takes seconds). A
+  Short of its own, 1080 x 1920. Read only: nothing saved, nothing published (the owner uploads it by hand). The last 30
   saved days by default (`--days`), or `--from` / `--to`; `--frames-only` keeps the frames in `output/timelapse/`.
 
 - From the comments on the day 26 video (owner 2026-11-11, `requests.js`; 44 comments read by Claude at the owner's
