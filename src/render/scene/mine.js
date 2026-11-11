@@ -13,17 +13,20 @@ import { rand01 } from '../../sim/prng.js';
 
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 // Room frame: +z toward the camera, the shaft at the back (-z). The gallery is HW either side of x 0, from Z0 to Z1
-const HW = 1.9, CEIL = 2.7, Z0 = -11, Z1 = 6.5, SET = 2.3, RAIL = -0.85;
+const HW = 1.9, CEIL = 3.3, Z0 = -11, Z1 = 6.5, SET = 2.3, RAIL = -0.85;
 export const FOV = 60;
 const PERIOD = 1.5, HIT = 0.7; // a swing of the pick, and when in it the point strikes
 // where the miners stand: the named one first (the right-hand wall, near the camera), then two more at the walls
-const SPOTS = [{ x: 0.95, z: 1.2, side: 1 }, { x: 0.95, z: -2.6, side: 1 }, { x: 1.0, z: -6.2, side: 1 }];
+// (each between two timber sets, so no cap beam is over the raised pick)
+const SPOTS = [{ x: 0.85, z: 0.5, side: 1 }, { x: 0.85, z: -4.1, side: 1 }, { x: 0.9, z: -8.6, side: 1 }];
+const TURN = 0.22, REACH = 1.5; // how far the miners turn from the gallery's line toward the wall, and how far ahead the boulder is
 
 /** The arms' angle through one swing: a slow wind-up, a fast blow, a short rest on the rock. */
+const UP = -2.45, DOWN = -1.3;
 function swing(p) {
-  if (p < 0.5) return THREE.MathUtils.lerp(-0.95, -2.75, ease(p / 0.5));
-  if (p < HIT) return THREE.MathUtils.lerp(-2.75, -0.95, ((p - 0.5) / (HIT - 0.5)) ** 2);
-  return -0.95;
+  if (p < 0.5) return THREE.MathUtils.lerp(DOWN, UP, ease(p / 0.5));
+  if (p < HIT) return THREE.MathUtils.lerp(UP, DOWN, ((p - 0.5) / (HIT - 0.5)) ** 2);
+  return DOWN;
 }
 
 export function buildMine({ anchor, away, M, seed, id, heightAt, mates = [], t0 = 0, t1 = t0 + 3 }) {
@@ -82,8 +85,10 @@ export function buildMine({ anchor, away, M, seed, id, heightAt, mates = [], t0 
     }
   }
   for (const sp of SPOTS) {
-    b.add('crag', new THREE.DodecahedronGeometry(0.52, 0), sp.side * (sp.x + 0.5), 0.75, sp.z + 1.05, sp.z);
-    for (let k = 0; k < 4; k++) b.add('seam', new THREE.DodecahedronGeometry(0.08 + 0.04 * r(`n${sp.z}${k}`), 0), sp.side * (sp.x + 0.2 + 0.35 * r(`nx${sp.z}${k}`)), 1.05 + 0.2 * r(`ny${sp.z}${k}`), sp.z + 0.75 + 0.3 * r(`nz${sp.z}${k}`), k);
+    const bx = sp.x + sp.side * Math.sin(TURN) * REACH, bz = sp.z + Math.cos(TURN) * REACH;
+    b.add('crag', new THREE.DodecahedronGeometry(0.48, 0), bx, 0.56, bz, sp.z);
+    b.add('crag', new THREE.DodecahedronGeometry(0.5, 0), bx + sp.side * 0.6, 0.6, bz - 0.1, sp.z + 1);
+    for (let k = 0; k < 4; k++) b.add('seam', new THREE.DodecahedronGeometry(0.08 + 0.04 * r(`n${sp.z}${k}`), 0), bx + 0.5 * (r(`nx${sp.z}${k}`) - 0.3), 0.7 + 0.2 * r(`ny${sp.z}${k}`), bz + 0.5 * (r(`nz${sp.z}${k}`) - 0.5), k);
   }
   // broken rock under each seam, a pile of props, a barrel
   for (const sp of SPOTS) for (let k = 0; k < 5; k++) b.add('crag', new THREE.DodecahedronGeometry(0.1 + 0.07 * r(`l${sp.z}${k}`), 0), sp.side * (HW - 0.5 - 0.3 * r(`lx${sp.z}${k}`)), 0.08, sp.z + 1.2 * (r(`lz${sp.z}${k}`) - 0.5));
@@ -113,7 +118,7 @@ export function buildMine({ anchor, away, M, seed, id, heightAt, mates = [], t0 
   const crew = SPOTS.map((sp, i) => {
     const P = person(M, color);
     P.root.position.set(sp.x, 0, sp.z);
-    P.root.rotation.y = sp.side * 0.22; // at a boulder of the seam that stands out of the wall, his face toward the camera
+    P.root.rotation.y = sp.side * TURN; // at a boulder of the seam that stands out of the wall, his face toward the camera
     P.r.hand.add(toolGeo('pick', M));
     room.add(P.root);
     return { P, sp, off: i ? r(`w${i}`) * PERIOD : 0, name: i ? mates[i]?.name ?? null : null, head: new THREE.Vector3() };
@@ -133,14 +138,14 @@ export function buildMine({ anchor, away, M, seed, id, heightAt, mates = [], t0 
   // from the gallery's middle, a few steps past the named miner, looking at him and down the gallery behind him
   const cam = (u) => {
     const k = ease(u);
-    return { pos: toWorld(THREE.MathUtils.lerp(-0.1, 0.2, k), THREE.MathUtils.lerp(1.65, 1.55, k), hero.sp.z + THREE.MathUtils.lerp(4.4, 3.7, k)), look: toWorld(0.62, 1.1, hero.sp.z - 0.6), fov: FOV };
+    return { pos: toWorld(THREE.MathUtils.lerp(-0.35, -0.05, k), THREE.MathUtils.lerp(1.75, 1.65, k), hero.sp.z + THREE.MathUtils.lerp(4.9, 4.2, k)), look: toWorld(0.6, 1.35, hero.sp.z - 0.6), fov: FOV };
   };
   const labelPos = new THREE.Vector3(), tmp = new THREE.Vector3();
   const labels = [];
   const update = (t, inside) => {
     room.visible = !!inside;
     for (const m of crew) {
-      const p = (((t - t0 + m.off) / PERIOD) % 1 + 1) % 1, a = swing(p), blow = (a + 2.75) / 1.8; // 0 wound up, 1 on the rock
+      const p = (((t - t0 + m.off) / PERIOD) % 1 + 1) % 1, a = swing(p), blow = (a - UP) / (DOWN - UP); // 0 wound up, 1 on the rock
       m.P.r.g.rotation.set(a, 0, -0.18);
       m.P.l.g.rotation.set(a + 0.12, 0, 0.5);
       m.P.body.rotation.x = 0.05 + 0.22 * blow;
