@@ -15,6 +15,7 @@ import { synthesize, captionPhrases } from './audio/tts/index.js';
 import { mixSoundtrack, VOICE_DELAY } from './audio/mix.js';
 import { renderVideo, renderStills, renderGallery, preparePage } from './render/capture.js';
 import { publish } from './publish/index.js';
+import { renderTimelapse } from './render/timelapse.js';
 
 export function today() {
   return new Date().toISOString().slice(0, 10);
@@ -151,7 +152,9 @@ export async function daily(args, log = console) {
   log.log(`[state] saved day ${state.day} (${date}) to ${dir}`);
   if (args.noVideo) return { state, diff, saved: true };
   const out = args.out || path.join('output', `${date}_en.mp4`);
-  const video = await produceVideo(state, diff, { out, quality: args.quality, tts: args.tts, log });
+  // owner 2026-11-11: every 30th day the time-lapse of the last 30 saved days is the day's video (music and words, no narrator)
+  if (diff.timelapse) await renderTimelapse({ to: date, out, stateDir: dir, log });
+  else await produceVideo(state, diff, { out, quality: args.quality, tts: args.tts, log });
   await publish({ video: out, state, diff, log, stateDir: dir });
   return { state, diff, saved: true, video: out };
 }

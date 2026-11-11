@@ -8,6 +8,12 @@
 import { hash } from './prng.js';
 import { tavernScene, churchScene } from './tiers.js';
 
+// Owner 2026-11-11: every 30th day (30, 60, 90...) the video is the time-lapse of the last 30 days (src/render/timelapse.js)
+// in place of the daily one. The day is simulated and saved as always, but it shows no story, no villager at work and no
+// building begun: they wait for the next day.
+export const TIMELAPSE_EVERY = 30;
+export const timelapseDay = (day) => day > 0 && day % TIMELAPSE_EVERY === 0;
+
 // jobs with the most to see when two candidates are otherwise equal
 const INTEREST = ['blacksmith', 'toolsmith', 'woodcutter', 'baker', 'stonemason', 'fisherman', 'carpenter', 'fletcher', 'miller', 'farmer', 'peasant', 'guard', 'knight'];
 const FIGHTERS = ['guard', 'knight', 'warrior', 'cavalier'];
@@ -48,6 +54,8 @@ function pairOf(a, b) {
  */
 export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScene(state), church = null, stale = () => false, intro = () => false } = {}) {
   const day = state.day;
+  // the villagers named (or given a job) on a time-lapse day had no video: they count as today's on the day after
+  const fresh = (d) => d === day || (d === day - 1 && timelapseDay(d));
   const avoid = new Set(avoidJobs);
   slots ??= tavern || church ? 2 : 3;
   // owner 2026-10-23: priests and bishops are shown in the church (church.js) on the days it closes the video; on the other
@@ -56,7 +64,7 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
   const people = Object.entries(state.names || {})
     .map(([id, n]) => {
       const last = state.lastShown?.[id];
-      return { id: Number(id), name: n.name, job: state.villagers?.[Number(id)]?.job ?? n.job, today: n.day === day, asked: n.requestDay === day, last: last < day ? last : undefined,
+      return { id: Number(id), name: n.name, job: state.villagers?.[Number(id)]?.job ?? n.job, today: fresh(n.day), asked: fresh(n.requestDay), last: last < day ? last : undefined,
         // a complaint keeps its place until they are shown, for up to 3 days (owner 2026-10-29: when their job is already on
         // screen that day, they come first on the next)
         complained: n.complainDay !== undefined && day - n.complainDay <= 3 && !(last >= n.complainDay && last < day) };

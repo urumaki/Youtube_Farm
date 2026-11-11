@@ -6,7 +6,7 @@ import { TIERS, BUILDINGS, JOBS, COMMISSIONS, jobFor, houseCapacity, tiersReache
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
 import { pickStory, takesOver, GAMES } from './stories.js';
-import { pickFeatured, shownJobs, markShown } from './featured.js';
+import { pickFeatured, shownJobs, markShown, timelapseDay } from './featured.js';
 import { planScenes, tavernToday, churchToday, staleJob, introVariant } from './scenes.js';
 import { planWall2, wallBlockers, insideWall2, crossesFields } from './wall.js';
 import { obbOverlap, obbAabb, SpatialHash } from './geometry.js';
@@ -186,6 +186,7 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   let room = Object.keys(s.names || {}).length > 0 ? SHOWN_STARTS : SHOWN_STARTS + 1;
   // a day whose story takes the whole video (the day after the raid, the Grand Joust; owner 2026-10-30): nothing begins
   if (takesOver(s.storyArc) && s.storyArc.day <= day) room = 0;
+  if (timelapseDay(day)) room = 0; // the time-lapse is the day's video: a building with a shot begins tomorrow
   // the answer to the King's riddle keeps a shot free for the Engineers' Workshop (planDay; owner 2026-11-07)
   if (s.storyArc?.id === 'riddle' && s.storyArc.step === 'answer' && s.storyArc.day <= day && !s.buildings.some((b) => b.id === 'engineer_workshop')) room = Math.max(0, room - 1);
   const waiting = [];
@@ -222,6 +223,18 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
  */
 export function planDay(s, prev, diff) {
   const shownBuildings = new Set([...diff.buildingsStarted, ...diff.buildingsCompleted]).size;
+  // owner 2026-11-11: a time-lapse day (featured.js). No story begins or goes on (state.storyArc waits for tomorrow), nobody
+  // is shown at work and no scene is used up; the scenes are still planned, for the time-lapse's frame of this day
+  if (timelapseDay(s.day)) {
+    diff.timelapse = true;
+    diff.story = s.story = null;
+    diff.avoidJobs = [];
+    diff.featured = s.featured = [];
+    const log = { ...(s.sceneLog || {}) };
+    diff.scenes = s.scenes = planScenes(s, { featured: [], tavern: false, church: false, avoidJobs: [], buildingShots: 0 });
+    s.sceneLog = log;
+    return;
+  }
   diff.story = pickStory(s, { unlocked: diff.unlocked || [], buildingShots: shownBuildings });
   s.story = diff.story;
   beginWorkshop(s, diff);

@@ -1,0 +1,47 @@
+name: Time-lapse (test)
+
+# The kingdom's time-lapse by hand, to look at it: nothing saved, nothing published (the video is the run's artifact).
+# The real one is made by the daily workflow on every 30th day, in place of the daily video (src/pipeline.js).
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'How many saved days, up to the newest'
+        required: false
+        default: '30'
+
+permissions:
+  contents: read
+
+jobs:
+  timelapse:
+    runs-on: ubuntu-24.04 # as the daily workflow
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Render the time-lapse
+        env:
+          DAYS: ${{ github.event.inputs.days || '30' }}
+        run: |
+          case "$DAYS" in ''|*[!0-9]*) echo "days must be a number"; exit 1;; esac
+          node scripts/timelapse.js --days "$DAYS"
+          node scripts/verify-video.js output/timelapse_*.mp4 || true
+
+      - name: Upload video
+        uses: actions/upload-artifact@v4
+        with:
+          name: timelapse-${{ github.run_id }}
+          path: output/timelapse_*.mp4
+          retention-days: 30

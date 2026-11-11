@@ -51,7 +51,7 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - `node scripts/map.js` — map of the town from above (`output/map.png`).
 - `node scripts/timelapse.js [--days 30] [--from d] [--to d] [--seconds 31]` — the kingdom's time-lapse: the whole town
   growing, one frame for each saved day, then the month's numbers (`output/timelapse_<from>_<to>.mp4`, ~25 min to render);
-  read only, the owner uploads it.
+  read only. Every 30th day the daily workflow publishes it in place of the daily video (`docs/FEATURES.md`).
 - `node scripts/viewer.js` — free camera on the scene (`window.__controls`).
 - `node scripts/ennoble.js "<name>" [--day N] [--list]` — the owner makes a villager a Noble (throne room, then their manor
   with the sign "Noble" and the name); queued in `state.ennoble`, commit and push state/ after.
@@ -77,6 +77,8 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   `timeline.js` plans the shots; `main.js` places scenes (`PLACES`, `workPlace`); `work.js` job scenes
   (`JOB_SCENES`); `overlay.js` name tags and credits; `stories/` one file per story event; `tavern.js`,
   `church.js`, `bakery.js`, `caravan.js`, `ambient.js`, `away.js`, `houses.js`, `houseKit.js`, `buildings.js`.
+  `src/render/timelapse.js` — the time-lapse (every 30th day's video).
 - `src/audio/` — narration templates (names never read aloud), Kokoro TTS (`am_adam`), procedural music, synced sfx.
 - `src/publish/` — YouTube upload; `state/published.json` prevents double uploads.
 - `.github/workflows/daily.yml` — runs at 03:17 UTC on `ubuntu-24.04` (GitHub often starts it hours late).
+  `timelapse.yml` — the time-lapse by hand, as a test (artifact only).

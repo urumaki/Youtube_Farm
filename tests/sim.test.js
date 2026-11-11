@@ -1529,7 +1529,7 @@ test('scenes: the video never opens two days in a row on the same kind of shot (
   let st = genesis({ seed: SEED, date: '2026-09-30' });
   const d = new Date('2026-10-01T00:00:00Z');
   let last = null, kinds = new Set();
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 29; i++) { // (day 30 is a time-lapse day: no opening)
     const date = d.toISOString().slice(0, 10);
     d.setUTCDate(d.getUTCDate() + 1);
     const commenters = [0, 1].map((k) => ({ author: `o${i}-${k}`, name: `O${i}x${k}`, at: `${date}T0${k}:00:00Z` }));
@@ -1625,4 +1625,32 @@ test('requests: from the comments on the day 26 video (owner 2026-11-11)', async
   assert.ok(complains('13. Day of asking for a job'));
   assert.ok(complains('yo how do I see who I am, I was one of the first 50'));
   assert.ok(!complains('What a great place to live in'));
+});
+
+test('time-lapse day (owner 2026-11-11): every 30th day shows no story and nobody at work; they wait for the next day', async () => {
+  const { genesis: g, advance: adv } = await import('../src/sim/simulate.js');
+  const { timelapseDay } = await import('../src/sim/featured.js');
+  const { metadata } = await import('../src/publish/index.js');
+  assert.ok(!timelapseDay(0) && !timelapseDay(29) && timelapseDay(30) && !timelapseDay(31) && timelapseDay(60));
+  let s = g({ seed: 7, date: '2026-01-01' }), d;
+  const at = (k) => new Date(Date.parse('2026-01-01') + k * 86400000).toISOString().slice(0, 10);
+  const who = (k, n) => Array.from({ length: n }, (_, i) => ({ author: `a${k}-${i}`, name: `Tester${k}x${i}`, at: `${at(k)}T00:00:0${i}Z`, wants: [] }));
+  for (let k = 1; k <= 29; k++) ({ state: s } = adv(s, { subscribers: 40 * k, date: at(k), source: 'test', commenters: k === 29 ? who(k, 3) : [] }));
+  assert.equal(s.day, 29);
+  const arc = JSON.stringify(s.storyArc), log = JSON.stringify(s.sceneLog);
+  ({ state: s, diff: d } = adv(s, { subscribers: 1300, date: at(30), source: 'test', commenters: who(30, 2) }));
+  assert.equal(s.day, 30);
+  assert.equal(d.timelapse, true);
+  assert.equal(d.story, null);
+  assert.deepEqual(d.featured, []);
+  assert.ok(d.scenes);
+  assert.equal(d.named.length, 2);
+  assert.equal(JSON.stringify(s.storyArc), arc);
+  assert.equal(JSON.stringify(s.sceneLog), log);
+  assert.match(metadata({ state: s, diff: d }).title, /^Day 30: 30 days of the kingdom in 30 seconds/);
+  const named = d.named.map((v) => v.id);
+  ({ state: s, diff: d } = adv(s, { subscribers: 1340, date: at(31), source: 'test', commenters: [] }));
+  assert.ok(!d.timelapse);
+  const shown = d.featured.flatMap((f) => (f.with ? [f, f.with] : [f]));
+  if (d.featured.length) assert.ok(shown.some((f) => named.includes(f.id) && f.today), 'a villager named on the time-lapse day is shown the day after');
 });

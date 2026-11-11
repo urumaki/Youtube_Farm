@@ -902,6 +902,16 @@ Add new owner decisions here.
   s). The two flights are drawn at 12 frames a second and blended up to 30 (a frame of the whole town takes seconds). A
   Short of its own, 1080 x 1920. Read only: nothing saved, nothing published (the owner uploads it by hand). The last 30
   saved days by default (`--days`), or `--from` / `--to`; `--frames-only` keeps the frames in `output/timelapse/`.
+- The time-lapse in place of the daily video (owner 2026-11-11: "al posto del day 30/60/90"; `timelapseDay` in
+  `featured.js`, `planDay`, `daily` in `pipeline.js`, `src/render/timelapse.js`). Every 30th day of the kingdom (30, 60,
+  90...) the daily workflow makes the time-lapse of the last 30 saved days and publishes it as that day's video: music and
+  words only, no narrator (owner). Title "Day 30: 30 days of the kingdom in 30 seconds", the tag #timelapse. The day itself
+  is simulated and saved as always (villagers, names, jobs, votes counted), but: no story begins or goes on (the pending
+  step in `state.storyArc` waits for the next day; a calendar story or the proclamation of a goal reached that very day is
+  not shown), no building with a shot begins (it waits in the queue), nobody is shown at work and no scene is used up. The
+  villagers named or given a job that day count as "today's" on the day after, so they come first in that video.
+  Test: the workflow "Time-lapse (test)" (`.github/workflows/timelapse.yml`, by hand: nothing saved, nothing published, the
+  video is the run's artifact); locally `node scripts/daily.js --state-dir <a copy of state/> --date <day 30> --subs N`.
 
 - From the comments on the day 26 video (owner 2026-11-11, `requests.js`; 44 comments read by Claude at the owner's
   request, on the public page: `PRIVACY.md` says so since that day). Asking: "asking to be a fisher", "Can l be a doctor" (a

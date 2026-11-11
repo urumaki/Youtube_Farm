@@ -14,6 +14,12 @@ const DESCRIPTION_TAGS = '#subscriberkingdom #medieval #citybuilder #castle';
 
 export function metadata({ state, diff }) {
   const d = diff.delta;
+  // owner 2026-11-11: every 30th day the video is the time-lapse of the last 30 days
+  if (diff.timelapse) {
+    return { title: `Day ${state.day}: 30 days of the kingdom in 30 seconds ⏳ ${state.subscriberCount.toLocaleString('en-US')} villagers 👑 #shorts`,
+      description: `Every subscriber is one villager of Subscriber Kingdom: the town, one day at a time. Subscribe to move in!\n${DESCRIPTION_TAGS} #timelapse`,
+      tags: ['subscriber kingdom', 'medieval', 'kingdom builder', 'castle', 'timelapse', 'shorts'] };
+  }
   // owner 2026-10-30: back to the day's numbers (the hook-first titles of 2026-10-29 did worse)
   // owner 2026-10-30: the two days of the night raid say what happened first
   const raid = diff.story?.id === 'raid' ? { attack: 'The kingdom was attacked tonight 🔥 ', rescue: 'The guards brought them home 🛡️ ' }[diff.story.step] || ''
