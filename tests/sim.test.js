@@ -1687,7 +1687,9 @@ test('villager shots rotate through every job, new scenes first; the villager pi
   const jobs = ['blacksmith', 'blacksmith', 'baker', 'baker', 'fletcher', 'farmer', 'teacher', 'tanner', 'philosopher', 'guard', 'guard', 'diplomat'];
   const s = {
     seed: SEED, day: 20, date: '2026-11-13', subscriberCount: jobs.length, unlockedTiers: ['guard'], buildings: [], pendingConstruction: [], lastShown: {},
-    sceneLog: { 'blacksmith:anvil': 18, 'baker:oven': 17, 'fletcher:fletch': 16, 'farmer:hoe': 15, 'guard:walls': 19 },
+    // every scene of the smith, the baker, the fletcher and the farmer seen in the last days
+    sceneLog: { 'blacksmith:anvil': 18, 'blacksmith:quench': 14, 'blacksmith:bellows': 12, 'baker:oven': 17, 'baker:knead': 13, 'fletcher:fletch': 16, 'fletcher:shoot': 11,
+      'farmer:hoe': 15, 'farmer:sow': 10, 'farmer:scythe': 9, 'farmer:fields': 8, 'farmer:wheat': 7, 'guard:walls': 19 },
     villagers: jobs.map((job) => ({ job })), names: Object.fromEntries(jobs.map((job, id) => [id, { name: `N${id}`, job, day: 1 }])),
   };
   const own = new Set(), days = [];
@@ -1706,7 +1708,8 @@ test('villager shots rotate through every job, new scenes first; the villager pi
   }
   // the first day: three of the four jobs never seen, each in their own scene
   assert.ok(days[0].every((f) => ['teacher', 'tanner', 'philosopher', 'diplomat'].includes(f.job)), days[0].map((f) => f.job).join(' '));
-  assert.ok(!days[0].some((f) => ['teacher', 'tanner', 'philosopher'].includes(f.with?.job)), 'nobody picked is a visitor');
+  // the visitors: somebody whose job's scenes were all seen, so the jobs never seen keep their own shot
+  assert.ok(days[0].every((f) => !f.with || ['blacksmith', 'baker', 'fletcher', 'farmer'].includes(f.with.job)), days[0].map((f) => f.with?.job).join(' '));
   assert.ok(own.size >= 8, `own scenes in 4 days: ${[...own]}`);
 });
 

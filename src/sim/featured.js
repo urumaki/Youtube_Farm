@@ -30,7 +30,11 @@ export const PAIRS = [
 ];
 // any villager may drop by these workers (to buy bread, a drink... or just to chat); not the fisherman, who
 // works out on the river (owner 2026-10-22)
-export const VISIT_HOSTS = ['farmer', 'peasant', 'blacksmith', 'toolsmith', 'woodcutter', 'stonemason', 'carpenter', 'baker', 'miller', 'fletcher', 'innkeeper', 'brewer', 'crier', 'executioner'];
+// owner 2026-11-13: most other jobs too, now that every job gets its turn (seen in test frames with a visitor, output/gallery/);
+// not the hunter (out at a field's edge), the miner, the rat catcher, the beggar, the apprentice, the new jobs by request
+export const VISIT_HOSTS = ['farmer', 'peasant', 'blacksmith', 'toolsmith', 'woodcutter', 'stonemason', 'carpenter', 'baker', 'miller', 'fletcher', 'innkeeper', 'brewer', 'crier', 'executioner',
+  'merchant', 'taxcollector', 'physician', 'jester', 'scholar', 'priest', 'bishop', 'engineer', 'cook', 'butcher', 'beekeeper', 'tailor', 'shepherd', 'stablehand',
+  'teacher', 'potter', 'philosopher', 'barber', 'tanner', 'cobbler', 'astronomer', 'adviser'];
 
 // what a visitor gets from the host when they just drop by (null: they only chat)
 const VISIT_ITEMS = { baker: 'loaf', innkeeper: 'tankard', brewer: 'tankard', fisherman: 'fish', farmer: 'sheaf', peasant: 'cabbage', miller: 'sack' };
@@ -89,6 +93,9 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
     || many[a.scene] - many[b.scene]
     || (INTEREST.indexOf(a.job) + 1 || 50) - (INTEREST.indexOf(b.job) + 1 || 50)
     || hash(state.seed, 'feat', day, a.id) - hash(state.seed, 'feat', day, b.id)); // a different face each day
+  const onScreen = {};
+  for (const n of people) if (n.last !== undefined && !(onScreen[n.job] >= n.last)) onScreen[n.job] = n.last;
+  const guests = [...people].sort((a, b) => (onScreen[a.job] ?? -1) - (onScreen[b.job] ?? -1));
   const out = [];
   const usedJobs = new Set(), usedIds = new Set();
   // owner 2026-10-29: never the same scene twice in a video: one shot per job, the complaints too
@@ -106,12 +113,15 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
     // else's croft (the guard was a visitor 7 times in 16 days, never on the walls); nobody whose job has a scene never
     // shown with no room for a visitor (the Diplomat) or who asked for their job is taken as a visitor either
     let shot = null;
-    for (const m of people) {
-      if (solo(n)) break;
-      if (!free(m) || m.job === n.job || solo(m) || novel(m.scene) === 2 || m.asked) continue;
-      shot = hostPair(n, m);
-      if (!shot && m.last === undefined && score(m) > 0 && VISIT_HOSTS.includes(n.job)) shot = { id: 'visit', host: n, guest: m };
-      if (shot) break;
+    // a visitor whose job's scenes were all seen first (a guard, a farmer), so the rarer jobs keep their own shot for the next days;
+    // among them, the job away from the screen longest (or the woodcutter visited somebody every other day)
+    for (const pass of [0, 1]) {
+      for (const m of guests) {
+        if (solo(n) || shot) break;
+        if (!free(m) || m.job === n.job || solo(m) || novel(m.scene) > pass || m.asked) continue;
+        shot = hostPair(n, m);
+        if (!shot && m.last === undefined && score(m) > 0 && VISIT_HOSTS.includes(n.job)) shot = { id: 'visit', host: n, guest: m };
+      }
     }
     if (shot) {
       const other = shot.host === n ? shot.guest : shot.host;

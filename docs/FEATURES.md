@@ -545,8 +545,16 @@ Add new owner decisions here.
     somebody else's croft (the guard visited 7 times in 16 days and was never on the walls). Nobody who asked
     for their job, or whose job's new scenes have no room for a visitor, is taken as a visitor.
   - A granted request keeps its +3 until they are shown, for up to 5 days, +0.2 a day waited (the older first).
-  - Fewer people per video for now (about 2.6 against 4.6 before): most jobs at the top are not in
-    `VISIT_HOSTS`, so they have no visitor.
+  - The visitor is first somebody whose job's scenes were all seen (a woodcutter, a smith), the job away from the
+    screen longest, so the rarer jobs keep their own shot for the next days.
+  - Most jobs now take a visitor (`VISIT_HOSTS`, checked in test frames with a visitor): the merchant, the tax
+    collector, the physician, the jester, the scholar, the clergy, the engineer, the cook, the butcher, the beekeeper,
+    the tailor, the shepherd, the stablehand, the teacher, the potter, the philosopher, the barber, the tanner, the
+    cobbler, the astronomer, the adviser. Not the hunter, the miner, the rat catcher, the beggar, the apprentice or
+    the new jobs by request. The market stalls, the Physician's Booth and the Counting House take no visitor
+    (`SOLO_VARIANTS`): they have their own queue, and the visitor stood behind the counter or out of the frame.
+  - Simulated over the next 20 days from the saved state: 39 jobs at work in their own scene, about 3.6
+    people per video (4.6 before, with only 10 jobs).
   - Test: `node --test --test-name-pattern="rotate through every job|granted request keeps" tests/sim.test.js`.
 - `npm run render -- --subs 80 --gallery "farmer:sow,blacksmith:anvil+guard:sword"` renders test views
   of work scenes and visits (`output/gallery/`), in the croft of the first named villager.

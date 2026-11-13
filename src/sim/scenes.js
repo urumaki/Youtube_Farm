@@ -83,7 +83,9 @@ const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tourname
 // planned one render the usual shot (timeline.js), test renders can still ask for one with --pov
 export const POV_ON = false;
 const POV_AWAY = new Set(['inside', 'inn', 'house', 'lecture', 'library', 'dungeon', 'cell', 'gallery']);
-const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library', 'dungeon', 'cell', 'delivery', 'windlass', 'gallery', 'peek', 'letter', 'treaty', 'lunge']);
+// owner 2026-11-13: the market stalls, the Physician's Booth and the Counting House have their own queue, and a visitor stood
+// behind the counter or out of the frame
+const SOLO_VARIANTS = new Set(['stall', 'booth', 'counting', 'stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library', 'dungeon', 'cell', 'delivery', 'windlass', 'gallery', 'peek', 'letter', 'treaty', 'lunge']);
 // buildings with no shot of their own: no engineer stands in front of them
 const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');
