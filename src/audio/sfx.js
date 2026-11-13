@@ -506,6 +506,20 @@ const SCENES = {
   // a new Noble (owner 2026-11-07): the fanfare in the throne room, the cheers at the manor's gate
   ev_noble: [['fanfare', 0.5], ['cheer', 0.45]],
   ev_noble_manor: [['cheer', 0.5], ['birds', 0.4]],
+  // the ambush in the forest (owner 2026-11-13): the cart's wheels and hooves, the forest gone quiet, the fight (sword clangs
+  // from the shots' own hits), the cart away at a gallop; the next day the ring, the horn and the cavalry, the cheers
+  ev_ambush_road: [['hooves', 0.3], ['creak', 0.3], ['birds', 0.4], ['breeze', 0.3]],
+  ev_ambush_escort: [['hooves', 0.35], ['creak', 0.35], ['birds', 0.35]],
+  ev_ambush_trap: [['breeze', 0.45], ['creak', 0.2], ['chatter', 0.25]],
+  ev_ambush_defend: [['chatter', 0.6], ['breeze', 0.2]],
+  ev_ambush_flee: [['hooves', 0.75], ['creak', 0.4], ['chatter', 0.45]],
+  ev_ambush_clash: [['chatter', 0.6], ['breeze', 0.35]],
+  ev_ambush_weary: [['breeze', 0.45], ['birds', 0.15]],
+  ev_ambush_ring: [['chatter', 0.4], ['breeze', 0.35]],
+  ev_ambush_closing: [['chatter', 0.5], ['breeze', 0.3]],
+  ev_ambush_cavalry: [['hooves', 0.85], ['fanfare', 0.5]],
+  ev_ambush_rout: [['hooves', 0.55], ['chatter', 0.55], ['cheer', 0.3]],
+  ev_ambush_saved: [['cheer', 0.75], ['hooves', 0.2]],
   // the Dungeon escape (owner 2026-11-05): a quiet cell, the market, the horn, the chase, the cheers
   ev_escape_dig: [['fire', 0.1], ['breeze', 0.2]],
   ev_escape_popup: [['birds', 0.4], ['chatter', 0.3]],
@@ -621,7 +635,7 @@ export function makeSfxTrack(file, { cues = [], seed, date, weather, duration = 
   // the night of the raid has no birds, no drawbridge and no chime: its own shots fill the whole video (the Grand Joust
   // has its own opening and end too: no drawbridge or chime)
   const raid = cues.some((c) => c.id === 'raid_arrow');
-  const own = raid || cues.some((c) => c.id === 'joust_intro');
+  const own = raid || cues.some((c) => c.id === 'joust_intro' || String(c.id).startsWith('ambush_'));
   // quiet beds for the whole video
   place(sound('breeze', duration, r, workDir), 0, raid ? 0.15 : 0.05, 0, 1, 1);
   if (!raid) place(sound('birds', duration, r, workDir), 0, 0.22, 0.2, 1, 1);

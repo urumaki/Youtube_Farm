@@ -1724,4 +1724,52 @@ test('a granted request keeps its place for up to 5 days until shown, the older 
   // five days after, still first; six days after, a newer request comes before him
   assert.deepEqual(pick(33, 1), ['diplomat']);
   assert.deepEqual(pick(34, 1), ['tanner']);
+
+test('the ambush in the forest (owner 2026-11-13): two days that take the whole video, the same guards and merchants, the cavalry', async () => {
+  const { STORIES, storyFor } = await import('../src/sim/stories.js');
+  const { buildScript, spokenLength } = await import('../src/audio/narration.js');
+  // a kingdom of 900 with named guards, merchants and a cavalier
+  let s = genesis({ seed: SEED, date: '2026-10-17' });
+  const start = new Date('2026-10-18T00:00:00Z');
+  const jobs = ['guard', 'guard', 'guard', 'guard', 'guard', 'guard', 'guard', 'merchant', 'merchant', 'cavalier'];
+  for (let i = 0; i < 12; i++) {
+    const date = new Date(start.getTime() + i * 86400000).toISOString().slice(0, 10);
+    const commenters = i === 11 ? jobs.map((j, k) => ({ author: 'm' + k, name: `Amb${k}`, at: `${date}T00:${String(k).padStart(2, '0')}:00Z`, wants: [j] })) : [];
+    s = advance(s, { subscribers: i ? 900 : 300, date, commenters }).state;
+  }
+  const day1 = storyFor(s, 'ambush');
+  assert.equal(day1.step, 'ambush');
+  assert.equal(day1.guards.length, 6);
+  assert.ok(day1.guards.filter(Boolean).length >= 4 && day1.guards.filter(Boolean).every((g) => g.job === 'guard' && g.name));
+  assert.equal(day1.merchants.filter((m) => m?.job === 'merchant').length, 2);
+  assert.ok(day1.bandits >= 14 && day1.cargo);
+  const day2 = storyFor(s, 'ambush:rescue');
+  assert.deepEqual(day2.guards, day1.guards, 'the same six guards');
+  assert.deepEqual(day2.merchants, day1.merchants);
+  // (asking makes no Cavalier: the riders here are the named guards left; Cavaliers and Knights first when the kingdom has some, nameless riders fill the six)
+  assert.ok(day2.riders.length >= 1 && day2.riders.length <= 6 && day2.riders.every((x) => ['cavalier', 'knight', 'guard'].includes(x.job)));
+  assert.ok(!day2.riders.some((x) => day1.guards.some((g) => g?.id === x.id)), 'no guard of the escort rides with the cavalry');
+  assert.ok(day2.ring > day1.bandits && day2.downed >= 3);
+  // never on a building's day, in the rain, on the eve of a calendar event or of a time-lapse
+  const ok = { ...s, date: '2026-11-05', weather: 'clear', day: 20 };
+  assert.ok(STORIES.ambush.needs(ok) && !STORIES.ambush.needs(ok, { buildingShots: 1 }));
+  assert.ok(!STORIES.ambush.needs({ ...ok, date: '2026-10-30' }) && !STORIES.ambush.needs({ ...ok, weather: 'rain' }) && !STORIES.ambush.needs({ ...ok, day: 29 }));
+  // the rescue comes the very next day and takes the whole video: nobody at work
+  s.storyArc = { id: 'ambush', step: 'rescue', day: s.day + 1, data: day1 };
+  const { diff } = advance(s, { subscribers: 950, date: '2026-10-30' });
+  assert.deepEqual([diff.story.id, diff.story.step], ['ambush', 'rescue']);
+  assert.deepEqual(diff.featured, []);
+  // the narration: its own lines at their times, no silence over 2.6 s, no name read aloud
+  for (const story of [{ id: 'ambush', ...day1 }, { id: 'ambush', ...day2 }]) {
+    const sc = buildScript(s, { date: '2026-10-30', day: 30, story, next: { remaining: 100, goal: 'the Harbor' } });
+    let end = 0;
+    for (const x of sc.sentences) {
+      assert.ok(x.at !== undefined, x.text);
+      const from = Math.max(x.at, end + 0.28);
+      assert.ok(from - end < 2.6, `${(from - end).toFixed(1)} s of silence before "${x.text}"`);
+      end = from + spokenLength(x.text);
+    }
+    assert.ok(end < 29.6, `the voice runs to ${end.toFixed(1)} s`);
+    assert.ok(!/Amb\d/.test(sc.text), 'no name read aloud');
+  }
 });

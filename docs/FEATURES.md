@@ -182,6 +182,33 @@ Add new owner decisions here.
   years. The door creaks open..." / "Bandits! Four of them, guarding the relic!" / "Down they go, out cold!" / "The
   Golden Apple! The lost relic is ours!" / "The whole town cheers its Crusaders home!". Title "Day N: The Crusaders found
   the Golden Apple 🍎 ...". Test: `npm run render -- --real --subs N --story crusade:quest --stills 1.5,3.5,5.5,8.5,10.8,13,15.5,17.8,21`.
+  The ambush in the forest (owner 2026-11-13; story `ambush`, `stories/ambush.js`): two days that both take the whole video
+  (`takeover: true`, `AMBUSH_SHOTS`), the second the very next day (`urgent`). From 500, with four named guards, no rain or
+  snow, never on a day a building must be shown, nor the day before a calendar event or a time-lapse; cooldown 30, weight 3.
+  Cast (`BUILD.ambush`): six guards (named first, nameless ones fill), two named merchants on the cart's box, 14-18
+  bandits and the cart's cargo; day 2 keeps the same guards and merchants (while they keep their job) and draws six riders
+  (named Cavaliers and Knights first, then named guards), the bandits of the ring (8-12 more) and those out cold (3-5).
+  The forest is a set of its own east of the map (x 7000, as the Crusade's country, built once and shared by the shots):
+  firs and oaks thick along a bending dirt path, bushes, rocks, a fallen trunk, a clearing at z -21 where the cart stops
+  and they fight both days; the right of the path is kept clear where the cameras stand. Cameras are placed above the
+  ground there (it is about 2.7 m up). Day 1 (`ambush`, runs to the end, a cliffhanger): from above the trees, the
+  kingdom's cart (a covered wagon in blue and gold, the banner at the back, two horses), two guards in front and four
+  behind (0-4.5 s); beside it at eye level, the name tags (to 8.5); from behind the bushes ahead, the convoy slows, the
+  bandits leap out, the horses rear, the guards draw ("Bandits!", to 12.5); the guards round the cart against the bandits
+  out of the trees, sword clangs ("Defend the cart!", to 17); the merchant cracks the whip and the cart breaks through
+  and races past the camera, the fight behind ("Ride for help!", to 21.5); six guards back to back as more bandits pour
+  out of the trees, the camera rising over them ("Six against the forest", then "To be continued..." and "Subscribe to see
+  what happens tomorrow", to 30). Day 2 (`rescue`, ends with the usual wide shot, goal and call to action): the guards
+  worn out, a few bandits out cold ("Still standing"); more bandits ring them, from above ("Surrounded!"); between two
+  guards, the ring closing; a horn, the cavalry gallops down the path past the camera, the leader with the kingdom's
+  banner, the cart behind ("The cavalry!"); in the clearing the bandits drop their clubs and run into the trees ("Run for
+  it!"); the guards cheer, swords up, the riders circling, the merchants arriving ("Saved!", to 23.5). Nobody gets hurt.
+  Narration (`ambushScript`, lines at fixed times): day 1 "The kingdom's cart, deep in the forest." ... "Bandits!" ...
+  "Ride! Ride for the town and bring help!" ... "Will they hold? Find out tomorrow."; day 2 "The six guards are still
+  standing. Barely." ... "Then... a horn! The cavalry of the kingdom!" ... "Saved! Every guard rides home tonight.", goal
+  and call to action. The raid's drums (`mix.js`), sounds `ev_ambush_*` (`sfx.js`), no drawbridge. Titles "Day N: Bandits
+  attacked the royal cart 🗡️ ..." and "Day N: The cavalry came just in time 🐎 ...". Test: `npm run render -- --real
+  --subs N --story ambush --stills 2,6.5,11.5,14.5,19,23,28.5` and `--story ambush:rescue --stills 2,6.5,11,15,19.5,22.5`.
   The King's riddle (owner 2026-11-07; story `riddle`, `stories/riddle.js`, the riddles in `src/sim/riddles.js`): over
   two days, like the games, once the Engineers are in the kingdom (2,500), with at least two named scholars and the market
   square, never on a day a building must be shown, cooldown 14, weight 3. Day 1 (`announce`): the town crier reads the

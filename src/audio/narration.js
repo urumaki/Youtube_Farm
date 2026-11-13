@@ -174,6 +174,7 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   const r = rng(seed, 'narration', diff.date, 'en'); // 'en' keeps the draws of the days already published
   const pick = (a) => r.pick(a);
   if (diff.story?.id === 'raid') return raidScript(state, diff, pick);
+  if (diff.story?.id === 'ambush') return ambushScript(diff, pick);
   if (diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds) return grandJoustScript(diff);
   if (diff.story?.id === 'dayinlife') return dayInLifeScript(diff);
   if (diff.story?.id === 'escape' || diff.story?.id === 'eclipse' || (diff.story?.id === 'crusade' && diff.story.step === 'quest')) return takeoverScript(diff, pick);
@@ -336,6 +337,43 @@ function raidScript(state, diff, pick) {
     ['Smoke rose over the rooftops.', 20.7],
     ['By morning, three houses were gone.', 24.4],
     [e.missing ? 'And one villager was missing. Was it you?' : 'And the bandits were gone.', 26.3], // owner 2026-11-07: "Was it you?"
+  ];
+  const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
+  const text = sentences.map((x) => x.text).join(' ');
+  return { sentences, text, words: words(text) };
+}
+
+/**
+ * The ambush in the forest (owner 2026-11-13): its own script, each line at a fixed time over its shot (AMBUSH_SHOTS in
+ * src/render/scene/stories/ambush.js). The first day ends on the fight (no goal: a cliffhanger and the call to come back);
+ * the second ends as usual (goal, call to action). Names stay on screen, never read aloud.
+ */
+function ambushScript(diff, pick) {
+  const e = diff.story, n = (x) => Number(x || 0).toLocaleString('en-US');
+  const lines = e.step === 'rescue' ? [
+    [`Day ${diff.day}. The six guards are still standing. Barely.`, 0.4],
+    [`${['No', 'One', 'Two', 'Three', 'Four', 'Five'][e.downed] || n(e.downed)} bandits lie out cold.`, 3.4],
+    [`But more come out of the trees. ${n(e.ring)} of them.`, 5.0],
+    ['The ring closes in. Back to back, swords up.', 9.2],
+    ['Then... a horn! The cavalry of the kingdom!', 13.7],
+    ['The merchants made it to town!', 16.3],
+    ['The bandits drop their clubs and run!', 18.2],
+    ['Saved! Every guard rides home tonight.', 21.1],
+    ...(diff.next ? [[pick(L.goal)(n(diff.next.remaining), diff.next.goal), FIXED_AT.goal]] : []),
+    [pick(L.cta), FIXED_AT.cta],
+  ] : [
+    [`Day ${diff.day}. The kingdom's cart, deep in the forest.`, 0.4],
+    [`It carries ${e.cargo || 'goods for the kingdom'}.`, 3.5],
+    ['Two merchants on the box. Six guards around it.', 5.8],
+    ['Then the forest went quiet...', 8.6],
+    ['Bandits!', 10.9],
+    ['Swords out! Defend the cart!', 12.6],
+    ['Steel against clubs, and nobody gives an inch!', 14.4],
+    ['Ride! Ride for the town and bring help!', 17.1],
+    ['The cart breaks through!', 19.3],
+    [`Six guards, against ${n(e.bandits)} bandits.`, 21.6],
+    ['And more are coming out of the trees...', 24.3],
+    ['Will they hold? Find out tomorrow.', 27.1],
   ];
   const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
   const text = sentences.map((x) => x.text).join(' ');

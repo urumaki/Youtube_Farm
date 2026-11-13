@@ -10,6 +10,7 @@ import { DAY_SHOTS } from './stories/dayinlife.js';
 import { ESCAPE_SHOTS } from './stories/escape.js';
 import { ECLIPSE_SHOTS } from './stories/eclipse.js';
 import { CRUSADE_SHOTS } from './stories/crusade.js';
+import { AMBUSH_SHOTS } from './stories/ambush.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
 import { BAKEHOUSE_VARIANTS } from './bakery.js';
@@ -50,7 +51,10 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   // The Dungeon escape and the eclipse (owner 2026-11-05, escape.js, eclipse.js) keep the counter and the day line too, and
   // end at 23.5 s with the usual wide shot, goal and call to action (in the light of their own day: `dusk`)
   // and the Crusade's quest (owner 2026-11-07, crusade.js), its second day
-  const OWN = diff.story?.id === 'crusade' ? (diff.story.step === 'quest' ? [CRUSADE_SHOTS, 0.3] : null) : { escape: [ESCAPE_SHOTS, 0.45], eclipse: [ECLIPSE_SHOTS, 0.3] }[diff.story?.id];
+  // owner 2026-11-13: both days of the ambush in the forest (ambush.js); the first runs to the end (the cliffhanger)
+  const OWN = diff.story?.id === 'crusade' ? (diff.story.step === 'quest' ? [CRUSADE_SHOTS, 0.3] : null)
+    : diff.story?.id === 'ambush' ? (AMBUSH_SHOTS[diff.story.step] ? [AMBUSH_SHOTS[diff.story.step], 0.25] : null)
+    : { escape: [ESCAPE_SHOTS, 0.45], eclipse: [ECLIPSE_SHOTS, 0.3] }[diff.story?.id];
   const day = diff.story?.id === 'dayinlife' ? DAY_SHOTS[diff.story.job] : OWN ? OWN[0] : null;
   const ownShots = diff.story?.id === 'raid' ? RAID_SHOTS[diff.story.step] : diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds ? JOUST_SHOTS : day;
   if (ownShots) {

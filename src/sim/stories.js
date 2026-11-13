@@ -12,6 +12,7 @@ import { world, heightAt, MANORS } from './world.js';
 import { wallLayout, insideWall2 } from './wall.js';
 import { RIDDLES, RIDDLE } from './riddles.js';
 import { VOTES, VOTE, voteWinner } from './votes.js';
+import { timelapseDay } from './featured.js';
 
 export const PLACES = ['Ashford', 'the Northern Marches', 'Kingsbridge', 'the Salt Coast', 'Ravenscar', 'the Amber Vale', 'Dunmoor', 'the Eastern Isles'];
 export const GOODS = ['spices', 'wool', 'salt', 'silk', 'amber', 'wine', 'iron tools', 'honey', 'dyed cloth'];
@@ -161,6 +162,16 @@ export const STORIES = {
   // (`state.storyArc`, whatever its cooldown). Never on a day the video must show a building
   vote: { minPop: 1000, cooldown: 7, weight: 4, steps: ['announce', 'result'],
     needs: (s, o = {}) => built(s, 'market') && !o.buildingShots && openVotes(s).length > 0 },
+  // owner 2026-11-13: the ambush in the forest, over two days that take the whole video (stories/ambush.js). Day 1 ('ambush'):
+  // the kingdom's cart on a path through the forest, two named merchants on the box, two named guards in front and four
+  // behind; bandits leap out of the trees, the guards stand and fight, the merchants whip the horses and the cart gets away
+  // to fetch help; it ends on the fight, a cliffhanger. Day 2 ('rescue', the very next day: `urgent`): the six guards, worn
+  // out, a few bandits out cold round them, are slowly surrounded by more bandits, until the cavalry of the town (named
+  // Cavaliers and Knights first, the cart behind them) charges in and the bandits run. Nobody gets hurt. At least 30 days
+  // apart; never on a day the video must show a building, nor the day before a calendar event or a time-lapse
+  ambush: { minPop: 500, cooldown: 30, weight: 3, urgent: true, takeover: true, steps: ['ambush', 'rescue'],
+    needs: (s, o = {}) => teamOf(s, ['guard']).length >= 4 && !['rain', 'snow'].includes(s.weather) && !o.buildingShots
+      && !Object.values(STORIES).some((x) => x.date === tomorrow(s)) && !timelapseDay(s.day + 1) },
   eclipse: { minPop: 500, cooldown: 45, weight: 2, takeover: true,
     needs: (s, o = {}) => built(s, 'market') && s.weather === 'clear' && namedVillagers(s).length >= 4 && !o.buildingShots },
 };
@@ -558,6 +569,28 @@ const BUILD = {
     const watchers = namedVillagers(state).filter((n) => !taken.some((x) => x.id === n.id)).slice(0, 6);
     if (watchers.length < 3) return null;
     return { wise: wise && strip(wise), crier: crier && strip(crier), watchers: watchers.map(strip), cast: [...watchers, ...taken].map(strip) };
+  },
+  ambush(state, r, arc) {
+    if (arc?.step === 'rescue') {
+      const { id: _id, step: _step, ...d } = arc.data; // (yesterday's story as saved, without its id and step)
+      // the same guards and merchants (while they keep their job); the riders: named Cavaliers and Knights first, then guards
+      const still = (c, jobs) => c && jobs.includes(state.villagers[c.id]?.job) ? c : null;
+      const guards = (d.guards || []).map((c) => still(c, ['guard', 'knight']));
+      const merchants = (d.merchants || []).map((c) => still(c, ['merchant']));
+      const keep = [...guards, ...merchants].filter(Boolean);
+      const riders = roleCast(state, r, ['cavalier', 'knight'], 6, keep);
+      riders.push(...roleCast(state, r, ['guard'], 6 - riders.length, [...keep, ...riders]));
+      return { ...d, guards, merchants, riders: riders.map(strip), ring: d.bandits + r.int(8, 12), downed: r.int(3, 5),
+        cast: [...keep, ...riders].map(strip) };
+    }
+    const guards = roleCast(state, r, ['guard'], 6);
+    if (guards.length < 4) return null;
+    while (guards.length < 6) guards.push(null); // nameless guards fill the escort
+    const merchants = roleCast(state, r, ['merchant'], 2, guards.filter(Boolean));
+    while (merchants.length < 2) merchants.push(null);
+    const cargo = r.pick(['the taxes of the eastern villages', 'grain for the winter', 'iron for the forge', 'cloth for the market']);
+    return { guards: guards.map((c) => c && strip(c)), merchants: merchants.map((c) => c && strip(c)), bandits: r.int(14, 18), cargo,
+      cast: [...merchants, ...guards].filter(Boolean).map(strip) };
   },
   raid(state, r, arc) {
     if (arc?.step === 'rescue') {

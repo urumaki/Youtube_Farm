@@ -43,6 +43,7 @@ import { buildManor } from './manor.js';
 import { buildRiddle } from './riddle.js';
 import { buildVote } from './vote.js';
 import { buildCrusade } from './crusade.js';
+import { buildAmbush } from './ambush.js';
 
 const BUILDERS = {
   quarrel: buildQuarrel, merchants: buildMerchants, bandits: buildBandits, halloween: buildHalloween,
@@ -55,6 +56,7 @@ const BUILDERS = {
   escape: buildEscape, eclipse: buildEclipse,
   riddle: buildRiddle,
   vote: buildVote, // the kingdom's vote: asked, then counted (vote.js)
+  ambush: buildAmbush, // the ambush in the forest (owner 2026-11-13): one scene per shot, both days (ambush.js)
   crusade: buildCrusade, // the Crusade's quest: one scene per shot (crusade.js); its call is 'crusade:announce' // the King's riddle: read out, then answered (riddle.js)
   noble: buildThrone, // a villager the owner makes a Noble: the throne room, then the manor (step 'manor', manor.js) // the Dungeon escape and the eclipse: one scene per shot (escape.js, eclipse.js)
 };
