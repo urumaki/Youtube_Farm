@@ -21991,7 +21991,9 @@
   "887": {
    "name": "filter_error",
    "author": "UC_E3xMLSTkGdrO7NrjYwvbw",
-   "day": 17
+   "day": 17,
+   "job": "stablehand",
+   "requestDay": 28
   },
   "888": {
    "name": "oofism-santa",
@@ -22713,7 +22715,9 @@
    "name": "myiastephens6303",
    "author": "UC4EhWDIDSVx1mVTSKQk03gw",
    "day": 23,
-   "complainDay": 25
+   "complainDay": 25,
+   "job": "diplomat",
+   "requestDay": 28
   },
   "1004": {
    "name": "GN___175",

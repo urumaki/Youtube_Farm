@@ -90,6 +90,12 @@ export const JOBS = {
   // owner 2026-11-04: the commenters who ask to be a thief, a bandit, a usurper... sit in the cells of the Dungeon under the
   // castle. Only by request (never drawn, see the 'dungeon' tier), from 3250 on; asked for before that, an apprentice
   prisoner: { label: 'Prisoner', color: '#6b6250' },
+  // owner 2026-11-13, by request only: the spy, the town's messenger (before, a crier) and the street sweeper
+  spy: { label: 'Spy', color: '#2b2f36', requestOnly: true },
+  messenger: { label: 'Messenger', color: '#2f7a6b', requestOnly: true },
+  sweeper: { label: 'Street Sweeper', color: '#8b8a6e', requestOnly: true },
+  // owner 2026-11-13: the kingdom's one Diplomat, only the commenter who asked for it day after day (`only`: their channel ids)
+  diplomat: { label: 'Diplomat', color: '#1f5a5a', requestOnly: true, only: ['UC4EhWDIDSVx1mVTSKQk03gw'] },
 };
 
 export const BUILDINGS = {

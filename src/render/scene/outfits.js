@@ -81,6 +81,8 @@ const tabard = (mat, front = true) => {
 // (wider than the tunic all the way down, so the tunic's hem never shows through)
 const robe = (mat) => [[cylGeo(0.28, 0.42, 1.04, 16, 4, true).translate(0, -0.02, 0), mat], [cylGeo(0.255, 0.27, 0.08, 14).translate(0, 0.5, 0), mat]];
 const mailCollar = (O) => [[cylGeo(0.2, 0.27, 0.16, 14).translate(0, 0.86, 0), O.mail]];
+// a letter satchel at the left hip, its strap across the chest from the right shoulder
+const satchel = (mat) => [[boxGeo(0.24, 0.2, 0.09).translate(-0.27, 0.3, 0.06), mat], [boxGeo(0.06, 0.7, 0.025).rotateZ(-0.66).rotateX(-0.16).translate(0, 0.5, 0.25), mat]];
 const purse = (mat) => [[new THREE.SphereGeometry(0.07, 8, 6).scale(1, 1.2, 0.7).translate(0.2, 0.38, 0.18), mat]];
 const quiver = (O) => [[cylGeo(0.07, 0.06, 0.55, 8).rotateZ(0.35).translate(0.08, 0.7, -0.27), O.leather],
   ...[-0.03, 0.02, 0.07].map((x) => [new THREE.ConeGeometry(0.03, 0.09, 4).translate(x + 0.2, 1.02, -0.27), O.feather])];
@@ -146,6 +148,12 @@ const OUTFITS = {
   librarian: (O) => [HATS.pileus(O, O.brown)],
   // owner 2026-11-01: the sailor in a red knitted cap
   sailor: (O) => [HATS.knit(O, O.wool)],
+  // owner 2026-11-13: the spy in a black hood and cloak, the messenger in a feathered red beret with a leather satchel, the
+  // street sweeper in a grey knitted cap and a canvas apron, the diplomat in a broad navy hat, a gold chain and a long robe
+  spy: (O) => [HATS.hood(O, O.black), [], O.black],
+  messenger: (O, M) => [HATS.beret(O, M.clothRed), satchel(O.leather)],
+  sweeper: (O) => [HATS.knit(O, O.grey), apron(O.canvas)],
+  diplomat: (O, M) => [HATS.wideFelt(O, O.navy), chain(O, M.gold), O.navy],
   // owner 2026-10-25: clergy (a red stole; the bishop a mitre with a gold band)
   priest: (O, M) => [null, [[boxGeo(0.16, 0.85, 0.04).translate(0, 0.42, 0.29), M.clothRed]]],
   bishop: (O, M) => [[[new THREE.ConeGeometry(0.23, 0.62, 4).scale(1, 1, 0.7).translate(0, 1.47, 0), M.clothIvory],

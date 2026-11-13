@@ -208,6 +208,14 @@ const JOB_SCENES = {
   adviser: { period: 2.2, raise: -1.3, down: -1.08, bend: 0.25, sound: 'none', tool: null, props: 'mapdesk', smooth: true, left: -1.05 },
   // asked for in the comments of 2026-10-28 (owner 2026-10-29): the miner swings a pick at a rock face by a timbered mine mouth
   miner: { period: 1.6, hit: 0.72, raise: -2.8, down: -0.9, bend: 0.25, fx: 'dust', sound: 'chisel', tool: 'pick', props: 'rockface', both: true },
+  // owner 2026-11-13, by request: the spy hides behind a stack of barrels, writes in a little book and leans out to peek; the
+  // messenger runs up to a door with a sealed letter, knocks, and hands it to the householder who opens; the street sweeper
+  // sweeps leaves and straw into a heap with a broom; the Diplomat signs a treaty across a table from a foreign envoy,
+  // then stands and shakes his hand, the two kingdoms' banners behind them
+  spy: { period: 4.6, raise: -1.0, down: -1.0, bend: 0.25, sound: 'none', tool: null, props: 'hideout', smooth: true, peek: true, left: -1.1, turn: -0.47 },
+  messenger: { period: 3.0, raise: -1.3, down: -1.3, bend: 0, sound: 'none', tool: null, props: 'letterdoor', smooth: true, errand: true },
+  sweeper: { period: 1.5, hit: 0.5, raise: -0.8, down: -0.8, bend: 0.2, fx: 'dust', sound: 'none', tool: 'broom', props: 'litter', sweep: true, both: true },
+  diplomat: { period: 5.2, raise: -1.3, down: -1.08, bend: 0.2, sound: 'none', tool: null, props: 'treaty', smooth: true, treaty: true, left: -1.05 },
 };
 const DEFAULT_SCENE = { period: 2.4, hit: 0.5, raise: -2.6, down: -0.2, bend: 0, fx: null, sound: 'none', tool: null, props: 'market', wave: true };
 // Other scenes of the same jobs, 'job:variant' (owner 2026-10-20: a job is not always shown the same way;
@@ -279,6 +287,8 @@ JOB_SCENES['physician:remedies'] = JOB_SCENES.physician;
 JOB_SCENES['cook:cauldron'] = JOB_SCENES.cook;
 JOB_SCENES['engineer:trebuchet'] = JOB_SCENES.engineer;
 JOB_SCENES['miner:face'] = JOB_SCENES.miner;
+// owner 2026-11-13 (asked for as a horse trainer): the stablehand lunges a horse, trotting round him on a long line
+JOB_SCENES['stablehand:lunge'] = { period: 6.0, raise: -1.35, down: -1.35, bend: 0, sound: 'none', tool: null, props: 'lunge', smooth: true, lunge: true, radius: 10 };
 // at the Apiary (owner 2026-10-25): its own bench of skeps, so only the bees (main.js puts him at the bench's end)
 JOB_SCENES['beekeeper:apiary'] = { ...JOB_SCENES.beekeeper, props: 'bees' };
 for (const [from, to] of [['toolsmith', 'blacksmith'], ['brewer', 'innkeeper'], ['bishop', 'priest']]) {
@@ -425,6 +435,13 @@ export function toolGeo(kind, M) {
   } else if (kind === 'brush') { // the sweep's brush: a long pole on from the raised arms, a round bristle head at the end
     add(cylGeo(0.02, 0.02, 2.2, 6).translate(0, -1.1, 0.02), wood);
     add(new THREE.SphereGeometry(0.2, 10, 8).scale(1, 0.6, 1).translate(0, -2.25, 0.02), M.gear);
+  } else if (kind === 'letter') { // a folded letter with a red wax seal, held up in the hand
+    add(boxGeo(0.2, 0.02, 0.14).translate(0, -0.03, 0.1), M.clothIvory);
+    add(cylGeo(0.03, 0.03, 0.012, 10).translate(0, -0.015, 0.1), M.clothRed);
+  } else if (kind === 'broom') { // a long handle on from the hands, a bundle of twigs bound at the far end
+    add(cylGeo(0.022, 0.022, 1.25, 6).translate(0, -0.37, 0.02), wood);
+    add(new THREE.ConeGeometry(0.16, 0.36, 9).translate(0, -1.16, 0.02), M.hay);
+    add(cylGeo(0.05, 0.05, 0.06, 8).translate(0, -0.99, 0.02), M.woodDark); // the binding
   } else if (kind === 'cleaver') { // a short handle and a wide square blade
     striker(g, M, { beta: 0.3, len: 0.32, back: 0.05, head: (put, along, h, p, end) => {
       put(along(boxGeo(0.025, 0.2, 0.26), p).translate(...end.clone().addScaledVector(p, 0.1).toArray()), iron);
@@ -1267,6 +1284,114 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       for (const [x, z] of [[-1.42, 0.6], [-1.28, 0.75], [-1.4, 0.92], [-1.3, 0.55]]) add(new THREE.DodecahedronGeometry(0.11, 0).translate(x, 0.62, z), rock);
       return new THREE.Vector3(0, 1.0, 1.05);
     }
+    case 'hideout': { // barrels with a crate and a sack on top in front of the spy, a crate beside them: he peeks out to the +x side
+      for (const [x, z] of [[-0.3, 0.75], [0.25, 0.85]]) {
+        add(cylGeo(0.3, 0.3, 0.9, 12).translate(x, 0.45, z), M.wood);
+        for (const y of [0.15, 0.75]) add(new THREE.TorusGeometry(0.305, 0.015, 4, 16).rotateX(Math.PI / 2).translate(x, y, z), M.iron);
+      }
+      add(boxGeo(0.7, 0.5, 0.6).translate(-0.1, 1.15, 0.8), M.woodDark);
+      add(new THREE.SphereGeometry(0.26, 9, 7).scale(1.1, 0.75, 1).translate(-0.2, 1.55, 0.8), M.clothIvory); // a sack of flour
+      add(boxGeo(0.6, 0.6, 0.6).translate(-0.95, 0.3, 0.75), M.wood);
+      return new THREE.Vector3(0.7, 1.4, 0.8);
+    }
+    case 'letterdoor': { // a house front with a door; it opens, the householder in the doorway takes the letter (cfg.errand)
+      const front = new THREE.Group();
+      front.position.set(0.15, 0, 1.45);
+      front.rotation.y = -2.45;
+      holder.add(front);
+      const put = (geo, mat, parent = front) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; parent.add(m); return m; };
+      put(boxGeo(3.4, 3.0, 0.25).translate(0, 1.5, -0.2), M.plaster);
+      for (const x of [-1.6, 1.6]) put(boxGeo(0.18, 3.0, 0.3).translate(x, 1.5, -0.2), M.woodDark);
+      put(boxGeo(3.4, 0.18, 0.3).translate(0, 2.95, -0.2), M.woodDark);
+      put(boxGeo(1.1, 2.0, 0.3).translate(0, 1.0, -0.19), M.woodDark); // the doorway
+      put(boxGeo(1.3, 0.12, 0.5).translate(0, 0.06, 0.2), M.stone); // the step
+      put(boxGeo(0.6, 0.5, 0.06).translate(1.05, 1.9, -0.05), M.woodDark); // a window
+      const door = new THREE.Group(); // hinged at its left edge
+      door.position.set(-0.5, 0, -0.02);
+      front.add(door);
+      put(boxGeo(1.0, 1.95, 0.08).translate(0.5, 0.98, 0), M.wood, door);
+      put(new THREE.SphereGeometry(0.04, 6, 5).translate(0.88, 1.0, 0.06), M.iron, door);
+      const H = rig(M, '#8a6a3a');
+      H.root.position.set(0, 0.12, 0.05);
+      front.add(H.root);
+      const letter = toolGeo('letter', M);
+      H.r.hand.add(letter);
+      holder.userData.door = { door, H, letter };
+      return new THREE.Vector3(0, 1.2, 0.6);
+    }
+    case 'litter': { // a heap of swept leaves and straw ahead of the broom, a wooden bucket beside the sweeper
+      add(new THREE.SphereGeometry(0.24, 9, 6).scale(1.3, 0.35, 1).translate(0.05, 0.02, 1.3), M.hay);
+      for (let i = 0; i < 16; i++) {
+        const a = i * 2.4, r = 0.12 + (i % 5) * 0.09;
+        add(boxGeo(0.08, 0.015, 0.05).rotateY(a).translate(0.05 + Math.cos(a) * r, 0.05, 1.3 + Math.sin(a) * r * 0.7), i % 3 ? M.hay : M.greens);
+      }
+      add(cylGeo(0.18, 0.15, 0.34, 10).translate(-1.0, 0.17, 0.45), M.wood);
+      add(new THREE.TorusGeometry(0.17, 0.012, 4, 14).rotateX(Math.PI / 2).translate(-1.0, 0.3, 0.45), M.iron);
+      return new THREE.Vector3(0, 0.05, 1.1);
+    }
+    case 'treaty': { // a table with the treaty, an inkpot and a seal; across it a foreign envoy (cfg.treaty); the two banners
+      add(boxGeo(1.3, 0.07, 0.8).translate(0, 0.8, 0.72), M.wood);
+      for (const x of [-0.55, 0.55]) add(boxGeo(0.08, 0.8, 0.7).translate(x, 0.4, 0.72), M.woodDark);
+      add(boxGeo(0.5, 0.01, 0.36).translate(0, 0.84, 0.6), M.clothIvory);
+      for (const x of [-0.27, 0.27]) add(cylGeo(0.025, 0.025, 0.38, 8).rotateX(Math.PI / 2).translate(x, 0.86, 0.6), M.clothIvory);
+      add(cylGeo(0.045, 0.045, 0.012, 12).translate(0.14, 0.85, 0.7), M.clothRed); // the seal on the treaty
+      add(cylGeo(0.05, 0.06, 0.09, 10).translate(0.5, 0.88, 0.45), M.iron); // the inkpot
+      add(boxGeo(0.01, 0.26, 0.03).rotateZ(-0.35).translate(0.55, 1.0, 0.45), M.clothIvory); // a quill in it
+      for (const [z, cloth, band] of [[-0.35, M.clothRed, M.gold], [2.0, M.clothBlue, M.gold]]) {
+        add(cylGeo(0.035, 0.04, 2.6, 6).translate(1.5, 1.3, z), M.woodDark);
+        add(boxGeo(0.04, 0.04, 0.62).translate(1.48, 2.45, z), M.woodDark);
+        add(boxGeo(0.02, 0.85, 0.55).translate(1.46, 1.98, z), cloth);
+        add(boxGeo(0.025, 0.1, 0.55).translate(1.45, 1.62, z), band);
+      }
+      const E = rig(M, '#3f6b4a');
+      E.root.position.set(0.6, 0, 1.42);
+      E.root.rotation.y = Math.PI;
+      holder.add(E.root);
+      E.hat.clear(); // the envoy's broad blue hat with a gold band (it nods with his head)
+      for (const [geo, mat] of [[cylGeo(0.3, 0.3, 0.03, 16).translate(0, 1.19, 0), M.clothBlue], [cylGeo(0.17, 0.2, 0.2, 12).translate(0, 1.3, 0), M.clothBlue],
+        [cylGeo(0.205, 0.205, 0.05, 12).translate(0, 1.24, 0), M.gold]]) E.hat.add(Object.assign(new THREE.Mesh(geo, mat), { castShadow: true }));
+      // he nods along while the treaty is signed, then reaches across the table to shake hands (the Diplomat's cycle)
+      anim.push((t, c) => {
+        const u = c - Math.floor(c), shake = u > 0.62 && u < 0.92;
+        E.r.g.rotation.set(shake ? -1.45 + 0.1 * Math.sin(t * 14) : -0.2, 0, 0);
+        E.l.g.rotation.set(-0.2, 0, 0.05);
+        nod(E, shake ? 0.05 : 0.2 + 0.08 * Math.sin(t * 1.3));
+      });
+      return new THREE.Vector3(0, 0.86, 0.6);
+    }
+    case 'lunge': { // a horse trotting round him on a long line, 3.2 m out (the line, his turning and the whip: cfg.lunge)
+      const coat = (horseCoat ??= new THREE.MeshStandardMaterial({ color: '#6b4226', roughness: 0.85 }));
+      const horse = new THREE.Group();
+      holder.add(horse);
+      const part = (geo, m, parent = horse) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; parent.add(o); return o; };
+      part(boxGeo(0.55, 0.62, 1.55).translate(0, 1.3, 0), coat);
+      part(boxGeo(0.3, 0.7, 0.36).rotateX(-0.55).translate(0, 1.78, 0.78), coat);
+      part(boxGeo(0.24, 0.26, 0.58).rotateX(0.35).translate(0, 2.08, 1.07), coat);
+      part(boxGeo(0.06, 0.55, 0.3).rotateX(-0.55).translate(0, 1.95, 0.66), M.woodDark); // mane
+      part(boxGeo(0.6, 0.05, 0.6).translate(0, 1.63, 0.05), M.clothRed); // a saddle cloth
+      const tail = new THREE.Group();
+      tail.position.set(0, 1.5, -0.78);
+      horse.add(tail);
+      part(boxGeo(0.1, 0.6, 0.1).translate(0, -0.3, 0).rotateX(0.5), M.woodDark, tail);
+      const legs = [[-0.18, -0.58], [0.18, -0.58], [-0.18, 0.58], [0.18, 0.58]].map(([x, z]) => {
+        const g = new THREE.Group();
+        g.position.set(x, 1.0, z);
+        horse.add(g);
+        part(boxGeo(0.13, 1.0, 0.14).translate(0, -0.5, 0), coat, g);
+        return g;
+      });
+      const R = 2.8;
+      holder.userData.lunge = { horse, R };
+      anim.push((t, c) => {
+        // round him anticlockwise seen from above, a lap each period; a trot: the diagonal pairs of legs swing together
+        const phi = c * Math.PI * 2;
+        horse.position.set(R * Math.sin(phi), 0.05 * Math.abs(Math.sin(phi * 9)), R * Math.cos(phi));
+        horse.rotation.y = phi + Math.PI / 2;
+        legs.forEach((g, i) => { g.rotation.x = 0.42 * Math.sin(phi * 9 + (i === 0 || i === 3 ? 0 : Math.PI)); });
+        tail.rotation.x = 0.15 * Math.sin(t * 6);
+      });
+      return new THREE.Vector3(0, 1.2, 0);
+    }
     case 'mapdesk': { // a table with a map of the kingdom, a candle, a little stack of letters with a seal
       add(boxGeo(1.3, 0.07, 0.75).translate(0, 0.8, 0.65), M.wood);
       for (const x of [-0.55, 0.55]) add(boxGeo(0.08, 0.8, 0.65).translate(x, 0.4, 0.65), M.woodDark);
@@ -1494,7 +1619,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
   const group = new THREE.Group();
   group.position.copy(anchor);
   group.rotation.y = face;
-  const P = rig(M, color || JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer || !!cfg.haul, ground: !!cfg.ground, seated: !!cfg.seated });
+  const P = rig(M, color || JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer || !!cfg.haul || !!cfg.errand, ground: !!cfg.ground, seated: !!cfg.seated });
   if (cfg.lute) P.body.add(lute(M));
   group.add(P.root);
   const propsG = new THREE.Group();
@@ -1559,6 +1684,22 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     for (const [w, h, x, y] of [[0.4, 0.012, 0, 0.1], [0.4, 0.012, 0, -0.1], [0.012, 0.2, -0.2, 0], [0.012, 0.2, 0.2, 0], [0.012, 0.2, 0, 0], [0.2, 0.012, -0.1, 0.02]]) plan.add(new THREE.Mesh(boxGeo(w, h, 0.004).translate(x, y, 0.006), M.clothBlue));
     for (const x of [-0.29, 0.29]) plan.add(new THREE.Mesh(cylGeo(0.022, 0.022, 0.4, 8).translate(x, 0, 0), M.clothIvory)); // the rolled ends
     P.body.add(plan);
+  }
+  // the spy's little book in the left hand and a quill in the right (cfg.peek)
+  if (cfg.peek) {
+    P.l.hand.add(Object.assign(new THREE.Mesh(boxGeo(0.16, 0.03, 0.12).translate(0.02, -0.02, 0.1), M.woodDark), { castShadow: true }));
+    P.r.hand.add(new THREE.Mesh(boxGeo(0.01, 0.22, 0.03).rotateX(0.5).translate(0, 0.04, 0.12), M.clothIvory));
+  }
+  // the messenger's letter (cfg.errand): in his left hand until the householder takes it (props 'letterdoor')
+  const letterOut = cfg.errand ? toolGeo('letter', M) : null;
+  if (letterOut) P.l.hand.add(letterOut);
+  // the lunge line from the right hand to the horse's head, the long whip in the left hand (cfg.lunge)
+  let line = null;
+  if (cfg.lunge) {
+    line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]), new THREE.LineBasicMaterial({ color: '#e8dcc0' }));
+    line.frustumCulled = false;
+    group.add(line);
+    P.l.hand.add(Object.assign(new THREE.Mesh(cylGeo(0.012, 0.018, 1.9, 5).translate(0, -0.95, 0).rotateX(-0.7), M.woodDark), { castShadow: true }));
   }
   // the carpenter's handcart of planks, pulled along by its shafts
   let cart = null;
@@ -1799,6 +1940,59 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
         P.root.position.y = 0.04 * Math.abs(Math.cos(d * 3.6));
       }
       if (cfg.push) P.root.position.z = 0.25 * Math.sin(((t + offset) / cfg.period) * Math.PI * 2);
+      if (cfg.peek) {
+        // hidden behind the barrels writing in the book, then leaning out to the side to look this way and that, and back
+        const u = cycleU, out = u < 0.4 ? 0 : u < 0.5 ? ease((u - 0.4) / 0.1) : u < 0.76 ? 1 : u < 0.86 ? 1 - ease((u - 0.76) / 0.1) : 0;
+        P.root.position.x = 0.4 * out;
+        P.body.rotation.set(cfg.bend + 0.1 * out, 0, -0.3 * out);
+        nod(P, 0.35 * (1 - out));
+        const look = out * 0.7 * Math.sin(Math.max(0, u - 0.5) * 22);
+        P.head.rotation.y = look; P.hat.rotation.y = look;
+        P.l.g.rotation.set(-1.1, 0, 0.35);
+        P.r.g.rotation.set(-1.0 + 0.07 * Math.sin(t * 9) * (1 - out), 0, -0.35);
+      }
+      if (cfg.errand) {
+        // runs up to the door (the shot's first second), knocks, the door opens, the letter is handed over, a bow
+        const s = t - t0, D = propsG.userData.door, run = s < 1.1, stride = s * 11;
+        P.root.position.z = run ? -3.2 * (1 - s / 1.1) : 0;
+        P.root.position.y = run ? 0.06 * Math.abs(Math.cos(stride)) : 0;
+        P.legs[0].rotation.x = run ? 0.7 * Math.sin(stride) : 0; P.legs[1].rotation.x = run ? -0.7 * Math.sin(stride) : 0;
+        const give = THREE.MathUtils.clamp((s - 2.3) / 0.4, 0, 1), handed = s > 2.75, bow = THREE.MathUtils.clamp((s - 2.9) / 0.3, 0, 1) * (1 - THREE.MathUtils.clamp((s - 3.5) / 0.3, 0, 1));
+        P.body.rotation.set(run ? 0.2 : 0.4 * bow, 0, 0);
+        P.r.g.rotation.set(run ? 0.7 * Math.sin(stride) : s < 1.9 ? -1.5 + 0.2 * Math.abs(Math.sin((s - 1.1) * Math.PI * 3.6)) : -0.1, 0, 0);
+        P.l.g.rotation.set(run ? -1.2 : lerp(-1.0, -1.45, give) * (handed ? 0 : 1) - (handed ? 0.1 : 0), 0, 0.05);
+        letterOut.visible = !handed;
+        const open = THREE.MathUtils.clamp((s - 1.9) / 0.4, 0, 1);
+        D.door.rotation.y = -1.7 * ease(open);
+        D.H.root.visible = open > 0.3;
+        D.H.r.g.rotation.set(lerp(-0.2, -1.4, THREE.MathUtils.clamp((s - 2.35) / 0.4, 0, 1)) + (handed ? 0.5 * THREE.MathUtils.clamp((s - 2.8) / 0.4, 0, 1) : 0), 0, 0);
+        D.letter.visible = handed;
+        nod(D.H, handed ? 0.3 : 0);
+      }
+      if (cfg.treaty) {
+        // stands up from the treaty to shake the envoy's hand across the table (props 'treaty'), then back to the quill
+        const u = cycleU;
+        if (u > 0.55 && u < 0.98) {
+          const shake = u > 0.62 && u < 0.92;
+          P.body.rotation.set(shake ? 0.08 : 0, 0, 0);
+          P.r.g.rotation.set(shake ? -1.45 + 0.1 * Math.sin(t * 14) : -0.5, 0, 0);
+          P.l.g.rotation.set(-0.2, 0, 0.05);
+        }
+      }
+      if (line) {
+        // facing the horse as it goes round him, the line out to its head, the whip held out behind it
+        const L = propsG.userData.lunge, phi = c * Math.PI * 2;
+        P.root.rotation.y = phi;
+        P.r.g.rotation.set(-1.35, 0, 0.25);
+        P.l.g.rotation.set(-0.7, 0, -0.75);
+        group.updateMatrixWorld(true);
+        const s = line.geometry.attributes.position;
+        const hand = group.worldToLocal(P.r.hand.getWorldPosition(v));
+        s.setXYZ(0, hand.x, hand.y, hand.z);
+        const head = group.worldToLocal(L.horse.localToWorld(w.set(0, 2.05, 1.2)));
+        s.setXYZ(1, head.x, head.y, head.z);
+        s.needsUpdate = true;
+      }
       // a loaf on the peel on the way into the oven, none on the way back
       if (cfg.loaf && tool?.userData.loaf) tool.userData.loaf.visible = Math.cos(c * Math.PI * 2) > 0;
       // particles from the last two impacts

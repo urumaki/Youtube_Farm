@@ -377,7 +377,7 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
     'Letter to the Ministry of Trade: I wish to be a slaughter man': 'butcher', 'I want to be a crazy guy': 'jester',
   };
   for (const [text, job] of Object.entries(day14)) assert.deepEqual(wantsFromText(text), [job], text);
-  assert.deepEqual(wantsFromText('with my trusty broom, let me do my street sweeper duties'), [], 'no street sweeper job');
+  assert.deepEqual(wantsFromText('with my trusty broom, let me do my street sweeper duties'), ['sweeper'], 'the street sweeper (owner 2026-11-13)');
   assert.equal(nameFromText('My king may i be named as GeorgeK. May i be born into your kingdom'), 'GeorgeK');
   assert.equal(nameFromText('For my name is sir gwain I am a knight'), 'Gwain');
   const { complainsFromText } = await import('../src/sim/requests.js');
@@ -822,7 +822,7 @@ test('comment words of 2026-10-22: typos and synonyms reach the jobs, the new jo
   const cases = {
     'i wanna be a gaurd': 'guard', 'THANK YOU FIR ADDINF ME AS A GAAurd': 'guard', 'I subscribed can i be a mercenary': 'guard',
     'May i be the Bishop of this great kingdom': 'bishop', 'Can I be a weaponsmith?': 'blacksmith', 'Can I own my own pub': 'innkeeper',
-    'yo can i work on the harbour': 'fisherman', 'i want to be the herbalist': 'apothecary', 'I subbed can I be a messenger?': 'crier',
+    'yo can i work on the harbour': 'fisherman', 'i want to be the herbalist': 'apothecary', 'I subbed can I be a messenger?': 'messenger',
     'May I be town idiot': 'jester', 'Can I be a military officer': 'guard', 'May I Be A Architect': 'stonemason', 'Subbed Can I be a politician': 'taxcollector',
     'May I be a lawyer': 'taxcollector', 'Can i be the head of trade?': 'merchant', 'Can I be a scientist': 'scholar', 'can i be a groudnskeeper or gardener': 'peasant',
     'can I be a Hunter?': 'hunter', 'can i be a butcher': 'butcher', 'I request to be an egineer': 'engineer', 'May I be a Shepard tending to sheep?': 'shepherd',
@@ -1225,7 +1225,7 @@ test('comments of 2026-11-04 (owner 2026-11-05): fighting someone is no request,
   const { wantsFromText, nameFromText, complainsFromText } = await import('../src/sim/requests.js');
   for (const [t, jobs] of Object.entries({
     "I wish to fight the knight at the tavern when he's drunk. Or just beg near the other beggars to make a union.": ['beggar'],
-    'as the first priest i request to be archbishop': ['bishop', 'priest'], "My lord can I be the town's messager? Please": ['crier'],
+    'as the first priest i request to be archbishop': ['bishop', 'priest'], "My lord can I be the town's messager? Please": ['messenger'],
     'Day 8 or 9 of asking to be the owner of the mine when it opens': ['miner'], 'Can i be...The enginner': ['engineer'],
     'I subbed can I be a dumb person': ['jester'],
     // still requests
@@ -1653,4 +1653,28 @@ test('time-lapse day (owner 2026-11-11): every 30th day shows no story and nobod
   assert.ok(!d.timelapse);
   const shown = d.featured.flatMap((f) => (f.with ? [f, f.with] : [f]));
   if (d.featured.length) assert.ok(shown.some((f) => named.includes(f.id) && f.today), 'a villager named on the time-lapse day is shown the day after');
+});
+
+test('the spy, the messenger, the street sweeper and the one Diplomat (owner 2026-11-13)', async () => {
+  const { wantsFromText } = await import('../src/sim/requests.js');
+  const { JOBS } = await import('../src/sim/tiers.js');
+  const { VARIANTS } = await import('../src/sim/scenes.js');
+  for (const [text, want] of [["My lord can I be the town's messager? Please", 'messenger'], ['can I be a courier', 'messenger'], ['I would work for thy kingdom as a spy Sire', 'spy'],
+    ['Hello, I am very skilled street sweeper', 'sweeper'], ['My liege, I am ready to sweep the streets!!!', 'sweeper'], ['can I be a chimney sweep', 'chimneysweep'],
+    ['day 3 of asking to be a diplomat', 'diplomat'], ['I ask to be a powerful diplomat & ambassador', 'diplomat'], ["i wish to be a horse trainer m'lord", 'stablehand'],
+    ['can i be the town crier', 'crier']]) assert.deepEqual(wantsFromText(text), [want], text);
+  for (const j of ['spy', 'messenger', 'sweeper', 'diplomat']) { assert.ok(JOBS[j].requestOnly, j); assert.ok(VARIANTS[j]?.length, j); }
+  assert.ok(VARIANTS.stablehand.includes('lunge'));
+  // only the commenter who asked for it day after day is the Diplomat: anyone else asking gets no job from it
+  const only = JOBS.diplomat.only[0];
+  const W = (author, name, text, at) => ({ author, name, at, wants: wantsFromText(text) });
+  const { state: s } = run([60]);
+  const r = advance(s, { subscribers: 60, date: dateOf(5), commenters: [W(only, 'Envoy', 'my lord may I be a diplomat', '1'), W('other', 'Other', 'make me a diplomat', '2'),
+    W('spy', 'Shade', 'can I be a spy', '3')] });
+  const job = (n) => r.state.villagers.find((v) => v.name === n).job;
+  assert.equal(job('Envoy'), 'diplomat');
+  assert.notEqual(job('Other'), 'diplomat');
+  assert.equal(r.state.names[r.state.villagers.find((v) => v.name === 'Other').id].requestDay, undefined, 'no request at all');
+  assert.equal(job('Shade'), 'spy');
+  checkInvariants(r.state);
 });

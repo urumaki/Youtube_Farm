@@ -321,6 +321,16 @@ async function setup(data) {
       anchor.y = yFn(anchor.x, anchor.z);
       return { anchor, ax: 0, az: 1, floorAt: null };
     }
+    // owner 2026-11-13: the stablehand lunges a horse on the grass beyond the fields, a way along from the shepherd's pen
+    if (variant === 'lunge' && farField) {
+      const anchor = new THREE.Vector3(farField.x + farField.hw + 13, 0, farField.z - 12);
+      anchor.y = yFn(anchor.x, anchor.z);
+      const mid = anchor.clone().setY(anchor.y + 1.2), dir = new THREE.Vector3(0.94, 0, 0.34);
+      const from = mid.clone().addScaledVector(dir, 13.5), to = mid.clone().addScaledVector(dir, 12.5);
+      from.y = Math.max(from.y + 1.4, yFn(from.x, from.z) + 1.6); to.y = Math.max(to.y + 1.2, yFn(to.x, to.z) + 1.6);
+      const cam = (u) => ({ pos: from.clone().lerp(to, u * u * (3 - 2 * u)), look: mid });
+      return { anchor, ax: dir.x, az: dir.z, floorAt: null, cam };
+    }
     // the falconer in the same clearing, a few steps to one side, the falcon flying out over the grass
     if (variant === 'meadow') {
       const { ox, oz } = hunt, anchor = new THREE.Vector3(hunt.x - ox * 4 + oz * 4, 0, hunt.z - oz * 4 - ox * 4);

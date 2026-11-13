@@ -50,6 +50,10 @@ export const VARIANTS = {
   // owner 2026-11-10: inside the Mine (mine.js), the miner at a seam of gold in a timbered gallery, the other named miners
   // around him ('gallery')
   physician: ['booth', 'herbs', 'remedies'], miner: ['face', 'windlass', 'gallery'], cook: ['stall', 'cauldron'], engineer: ['site', 'trebuchet'],
+  // owner 2026-11-13: the new jobs by request (work.js): the spy behind the barrels, the messenger at a door with a letter, the
+  // street sweeper in the market square (or in the croft), the Diplomat's treaty; the stablehand also lunges a horse on the
+  // grass beyond the fields (asked for as a horse trainer)
+  spy: ['peek'], messenger: ['letter'], sweeper: ['square', 'street'], diplomat: ['treaty'], stablehand: ['stable', 'lunge'],
 };
 VARIANTS.guard.push('dungeon');
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
@@ -79,7 +83,7 @@ const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tourname
 // planned one render the usual shot (timeline.js), test renders can still ask for one with --pov
 export const POV_ON = false;
 const POV_AWAY = new Set(['inside', 'inn', 'house', 'lecture', 'library', 'dungeon', 'cell', 'gallery']);
-const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library', 'dungeon', 'cell', 'delivery', 'windlass', 'gallery']);
+const SOLO_VARIANTS = new Set(['stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library', 'dungeon', 'cell', 'delivery', 'windlass', 'gallery', 'peek', 'letter', 'treaty', 'lunge']);
 // buildings with no shot of their own: no engineer stands in front of them
 const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');

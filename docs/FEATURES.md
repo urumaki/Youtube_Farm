@@ -581,7 +581,7 @@ Add new owner decisions here.
   "un signore" do; "Hello my Lord, may I be a guard" had made tax collectors). Sawbones and surgeon ask for the barber;
   carriage, coachman and wagon driver for the stablehand. Also: "Kinght", paladin and "chief of war" ask for a guard (a knight is won); banker and money changer for the
   merchant (no banker job before the Bank); physicist for the scholar; chemist for the apothecary; "claim the king's
-  throne" makes a rebel. Not mapped, no such job: street sweeper (a broom and clean roads); villainous: assassin, mafia.
+  throne" makes a rebel. Not mapped: villainous ones, assassin, mafia (the street sweeper is a job since 2026-11-13).
 - Miner (owner 2026-10-29, by request only: miner, mining, "a minor in the cave", quarryman, pickaxe, minatore;
   "mine" alone asks for nothing): in a grey hood and a leather apron, swings a pick with both hands at a wall of rough
   rock beside a mine mouth framed in timber, dust at each blow, a cart of stone beside him (`work.js` `rockface`, tool
@@ -602,10 +602,37 @@ Add new owner decisions here.
   University (and with a visitor), writes the catalogue at a desk in the croft (`desk`). Cavan357 and ChezzKahn, who had
   asked for it, set from scholar to librarian in the state. Test: `npm run render -- --real --subs 2500 --gallery
   "librarian:library,librarian"`.
+- Spy, Messenger, Street Sweeper and the one Diplomat (owner 2026-11-13, by request only; `tiers.js`, `requests.js`,
+  `work.js`, `outfits.js`, `scenes.js`). No villager had any of them before.
+  - Spy (spy, spies, spying, espionage, informant, spia): a black hood and cloak; behind a stack of barrels with a crate and a
+    sack on top (`hideout`), he writes in a little book, then leans out to the side and looks this way and that, and back.
+    The camera is in front of the stack (`turn` -0.47), so he is hidden until he peeks (`spy: ['peek']`).
+  - Messenger (messenger, "messager", messanger, courier, postman, mail carrier, letter carrier, messaggero, corriere; before,
+    these asked for the crier): a red beret with a feather and a leather letter satchel. In the shot's first second he runs
+    up to a house front with a sealed letter (`letterdoor`, cfg.errand, timed from the shot's start like the carpenter's
+    cart), knocks, the door swings open, the householder takes the letter, he bows (`messenger: ['letter']`).
+  - Street Sweeper ("street sweeper", "sweep the streets", street cleaner, spazzino, netturbino; "sweep" alone is still
+    the chimney sweep): a grey knitted cap and a canvas apron. Sweeps from side to side with a twig broom (tool `broom`),
+    dust at each stroke, toward a heap of leaves and straw, a bucket beside him (`litter`). In the market square once the
+    market stands, else in the croft (`sweeper: ['square', 'street']`).
+  - Diplomat (diplomat, ambassador, envoy, emissary, embassy, ambasciatore): a broad navy hat, a gold chain and a long navy
+    robe. Signs a treaty at a table with an inkpot and a red seal; across it a foreign envoy in green with a broad blue hat
+    nods along; then the Diplomat stands and they shake hands across the table; the two kingdoms' banners (red, and blue)
+    behind them (`treaty`, `diplomat: ['treaty']`). Only one: `JOBS.diplomat.only` holds the channel id of the commenter
+    who asked for it day after day (myiastephens6303); the same words from anyone else are no request at all
+    (`assignNames` in `simulate.js`). Set to Diplomat in the state.
+  - Horse trainer ("stalliere"): the stablehand already existed (stablehand, stable boy, ostler, stalliere...). Horse trainer,
+    horse breaker and horse whisperer now ask for it too. Its second scene (`stablehand: ['stable', 'lunge']`): on the grass
+    beyond the fields, a way along from the shepherd's pen, he lunges a brown horse with a red saddle cloth. The horse trots
+    round him on a long line, 2.8 m out, a lap every 6 s. He turns with it, the line in one hand and a long whip in the other.
+    It has its own camera, far enough back for the whole ring (`lunge` in `main.js`). filter_error, who asked to be a horse
+    trainer, was set to stablehand in the state.
+  - With a visitor, or in a POV shot: none of `peek`, `letter`, `treaty` or `lunge` (`SOLO_VARIANTS`).
+  - Test: `npm run render -- --real --subs 3100 --gallery "spy:peek,messenger:letter,sweeper:square,sweeper:street,diplomat:treaty,stablehand:lunge" --gallery-times 0.6,1.5,2.4,3.1`.
 - From the comments on the day 14 video (owner 2026-10-30, `requests.js`): "begger" asks for the beggar, and "crazy"
   before a beggar or drunk no longer makes a jester; "townsguard", flag or standard bearer ask for a guard; "captain of a
   ship" and sea captain for the fisherman (a sailor), not a guard; herding pigs, ducks, goats or cows for the shepherd;
-  slaughter for the butcher, and "Ministry of Trade" is not a trade. Street sweeper still asks for nothing (it had become
+  slaughter for the butcher, and "Ministry of Trade" is not a trade. Street sweeper asked for nothing then (it had become
   a chimney sweep). Names: "be named as X" and "my name is sir X". Complaints: "still not in this village", "still
   looking for myself". Not made: toilet scrubber, noble, witch.
 - From the comments on the day 16 video (owner 2026-11-01, `requests.js`, read by the 2026-11-01 run): buying from someone

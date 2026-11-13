@@ -71,19 +71,25 @@ const KEYWORDS = [
   [/bell\s*(founder|maker)|fonditore|campanar/, 'bellfounder'],
   [/clock\s*maker|\bclocks?\b|watch\s*maker|orologi/, 'clockmaker'],
   [/rat\s*catcher|\brats?\b|acchiappatopi|\btopi\b|\bratti\b/, 'ratcatcher'],
-  [/chimney\s*sweep|(?<!(street|road)\s)\bsweep|spazzacamin/, 'chimneysweep'],
+  // owner 2026-11-13: the street sweeper ("sweep the streets", "street sweeper"), read before the chimney sweep
+  [/(street|road|town|city)\s*(sweep|clean)|\bsweep(ing|s)?\s+(the\s+)?(streets?|roads?|square)|clean\s+(the\s+)?(streets?|roads?)|spazzin|netturbin/, 'sweeper'],
+  [/chimney\s*sweep|(?<!(street|road|town|city)\s)\bsweep(?!(ing|s)?\s+(the\s+)?(streets?|roads?|square))|spazzacamin/, 'chimneysweep'],
   [/falcon|\bhawk|falconier|\bfalco\b/, 'falconer'],
   [/\bcook(?!ed\b)|\bchef\b|\bcuoc[oa]|\bkitchen|\bcucina\b/, 'cook'],
   [/\bmayor|sindaco/, 'taxcollector'],
   [/executioner|headsman|\bboia\b|carnefice|giustiziere/, 'executioner'],
-  [/town\s*crier|\bcrier\b|town\s*speaker|\bherald|banditore|araldo|messaggero|messenger|messa?n?ger\b|courier|doomsayer|announcer|annunciator|news\s*(paper|boy|seller)|giornal/, 'crier'],
+  [/town\s*crier|\bcrier\b|town\s*speaker|\bherald|banditore|araldo|doomsayer|announcer|annunciator|news\s*(paper|boy|seller)|giornal/, 'crier'],
+  // owner 2026-11-13: the town's messenger (before, the crier), the spy, the one Diplomat (tiers.js `only`; anyone else: no job)
+  [/mess[ae]?n?ger|\bcourier|messaggero|\bpostman|mail\s*(man|carrier)|letter\s*(carrier|bearer)|corriere/, 'messenger'],
+  [/\bspy\b|\bspies\b|\bspying\b|\bspy'?s\b|espionage|\bspia\b|\bspie\b|informant/, 'spy'],
+  [/diplomat|ambassador|\bembassy|\benvoy|emissary|ambasciat/, 'diplomat'],
   // new jobs asked for in the comments up to 2026-10-25 (owner 2026-10-25, by request only)
   [/teacher|\btutor|school\s*master|insegnant|\bmaestr[oa]\b/, 'teacher'],
   [/philosoph|\bthinker|filosof/, 'philosopher'],
   // the medieval surgeon was the barber (2026-10-29: "sawbone", "a surgeon")
   [/\bbarber|barbiere|hair\s*(cutter|dresser)|saw\s*bone|surgeon|chirurg/, 'barber'],
   [/astronom|astrolog|stargaz|star\s*gaz/, 'astronomer'],
-  [/stable\s*(hand|boy|keeper|master|man|worker)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom)|carriage|coach\s*(man|driver)|wagon\s*(driver|master)|\bwagoner|cocchier|carrettier/, 'stablehand'],
+  [/stable\s*(hand|boy|keeper|master|man|worker)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom|trainer|breaker|whisperer)|carriage|coach\s*(man|driver)|wagon\s*(driver|master)|\bwagoner|cocchier|carrettier/, 'stablehand'],
   [/advis[eo]r|counsell?or|council+or|consiglier/, 'adviser'],
   // owner 2026-10-29, from "a minor in the cave" and "I be mining" ("mine" alone is the word for mine, not a request;
   // 2026-11-04: "the mine worker", "a mine builder")

@@ -322,7 +322,8 @@ function assignNames(s, commenters, blocked, diff) {
     if (c.at && (!s.commentsSeen || c.at > s.commentsSeen)) s.commentsSeen = c.at;
     if (!c.author || blockedAuthors.has(c.author)) continue;
     if (voting && (c.vote === 'a' || c.vote === 'b') && !voted.has(c.author)) { voted.add(c.author); diff.votes[c.vote] += 1; s.voteTally[c.vote] += 1; }
-    const wants = (Array.isArray(c.wants) ? c.wants : []).filter((j) => typeof j === 'string' && Object.hasOwn(JOBS, j));
+    // owner 2026-11-13: a job only some commenters may have (the Diplomat, tiers.js `only`) is no request from anyone else
+    const wants = (Array.isArray(c.wants) ? c.wants : []).filter((j) => typeof j === 'string' && Object.hasOwn(JOBS, j) && (!JOBS[j].only || JOBS[j].only.includes(c.author)));
     const call = c.call ? valid(c.call) : null; // "call me Violet"
     if (known.has(c.author)) {
       // someone who already has a villager asks for a (new) job or a new name
