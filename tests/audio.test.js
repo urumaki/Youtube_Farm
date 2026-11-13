@@ -150,3 +150,18 @@ test('narration: a video that opens on the story says the story first, then the 
   const before = buildScript(migrate(state), diff, { shots: old }).sentences.map((x) => x.role);
   assert.deepEqual(before.slice(0, 3), ['open', 'caravan', 'story'], before.join(' '));
 });
+
+test('a line alone over its shot is not dropped for the word count: day 29 was silent over the pasture (owner 2026-11-13)', async () => {
+  const fs = await import('node:fs');
+  const { migrate } = await import('../src/sim/state.js');
+  const { state, diff } = JSON.parse(fs.readFileSync(new URL('../state/history/2026-11-13.json', import.meta.url)));
+  const cues = [
+    { kind: 'event', id: 'bigfish', t0: 0, t1: 4.5 }, { kind: 'caravan', id: 'caravan', t0: 4.5, t1: 9 },
+    { kind: 'villager', job: 'fletcher', t0: 9, t1: 12.63 }, { kind: 'villager', job: 'baker', t0: 12.63, t1: 16.25 },
+    { kind: 'ambient', id: 'pasture', t0: 16.25, t1: 19 }, { kind: 'church', id: 'cathedral', t0: 19, t1: 23.5 },
+  ];
+  const s = buildScript(migrate(state), diff, { shots: cues });
+  assert.ok(s.sentences.some((x) => x.role === 'ambient'), s.text);
+  assert.ok(s.sentences.some((x) => x.role === 'comment'), 'and the invitation to comment stays');
+  assert.ok(s.words <= 80, `${s.words} words`);
+});

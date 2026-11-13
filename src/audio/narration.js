@@ -293,8 +293,12 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
     S.splice(0, S.length, ...keyed.map((x) => x.s));
     fitShots(S, shots, r);
   }
-  while (S.reduce((n, s) => n + words(s.text), 0) > 68) {
-    const victim = [...S].sort((a, b) => a.priority - b.priority || own.has(a) - own.has(b))[0];
+  // owner 2026-11-13: day 29 lost the shepherd's line over the pasture shot to the word count (76 words) and the narrator was
+  // silent for 5 s. With the shot plan known, fitShots has already made every line fit its time, so the count goes to 80,
+  // and the lines with no shot of their own go before a line that is the only one over its shot
+  const total = () => S.reduce((n, s) => n + words(s.text), 0);
+  while (total() > (shots.length ? 80 : 68)) {
+    const victim = [...S].sort((a, b) => (shots.length ? own.has(a) - own.has(b) : 0) || a.priority - b.priority || own.has(a) - own.has(b))[0];
     if (victim.priority >= 9) break;
     S.splice(S.indexOf(victim), 1);
   }
