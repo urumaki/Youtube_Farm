@@ -801,9 +801,19 @@ Add new owner decisions here.
   lines the voice ran 2 s late over the shots): `fitShots` estimates how long each line takes (`spokenLength`), takes a
   shorter variant of a line that would run past its shot (each template list has short ones: "Up goes the Potter's
   Stall!"), drops a line that would still run into the next shot or whose shot another line took, then applies the word
-  budget (owner 2026-11-13: with the shot plan known the budget is 80 words, not 68, and the lines with no shot of their
-  own go first: day 29 lost the shepherd's line over the pasture shot to the count, 5 s of silence from 14 s; test in
-  `audio.test.js`); the lines naming a job or a building take their shots first, one welcome per villager shot; the tavern seats 14 with name tags that take turns like the
+  budget. Owner 2026-11-13 (day 29 was silent for 5 s; the saved days since 2026-10-23 replayed over their shots had 19
+  silences over 2 s, 50 s in all, now 10 of at most 2.5 s, 22 s in all):
+  - with the shot plan known the budget is 85 words, not 68 (fitShots has already timed every line), and the lines with no
+    shot of their own go first (day 29 lost the shepherd's line over the pasture to the count);
+  - a second line about the same villager follows the first over that shot when there is time left in it (the tax
+    collector buying bread after "Say hello to our new baker!");
+  - a line with no shot of its own dropped where it stood (the new houses, the weather, market day, the apprentices, the
+    invitation to comment) is said in the first silence it fits in, before a line that waits for its shot;
+  - the everyday shots' lines have the other line as a shorter alt;
+  - the raid: "They poured into the streets" over the breach, "Smoke rose over the rooftops" over the burning house,
+    "Bread and ale for the brave guards tonight!" over the return (they were silent for 2 to 4.5 s);
+  - test in `audio.test.js` ("no long silences").
+  Then the lines naming a job or a building take their shots first, one welcome per villager shot; the tavern seats 14 with name tags that take turns like the
   caravan's (`overlay.js`), and the one playing the lute always has a name: a named bard, else another named villager
   tagged "Bard tonight" (`musician`).
 - Builders at building sites (owner 2026-10-24): every building shot (going up or completed) shows 3-5 named villagers at

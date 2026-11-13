@@ -237,7 +237,7 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   // the tavern interior is shown on these days (see makePlan in src/render/scene/timeline.js)
   // shots: the renderer's shot plan, when known (an everyday shot gets a short line)
   const amb = shots.find((c) => c.kind === 'ambient');
-  if (amb && L.ambient[amb.id]) add(pick(L.ambient[amb.id]), 'ambient', 4);
+  if (amb && L.ambient[amb.id]) addT(L.ambient[amb.id], [], 'ambient', 4); // the other line as an alt (a shorter one fits)
   if (diff.scenes ? diff.scenes.tavern : tavernScene(state)) add(pick(L.tavern), 'tavern', 6);
   if (diff.scenes?.church) add(pick(L.church[diff.scenes.church]), 'church', 6);
   const nb = diff.housesBuilt.length;
@@ -294,10 +294,10 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
     fitShots(S, shots, r);
   }
   // owner 2026-11-13: day 29 lost the shepherd's line over the pasture shot to the word count (76 words) and the narrator was
-  // silent for 5 s. With the shot plan known, fitShots has already made every line fit its time, so the count goes to 80,
+  // silent for 5 s. With the shot plan known, fitShots has already made every line fit its time, so the count goes to 85,
   // and the lines with no shot of their own go before a line that is the only one over its shot
   const total = () => S.reduce((n, s) => n + words(s.text), 0);
-  while (total() > (shots.length ? 80 : 68)) {
+  while (total() > (shots.length ? 85 : 68)) {
     const victim = [...S].sort((a, b) => (shots.length ? own.has(a) - own.has(b) : 0) || a.priority - b.priority || own.has(a) - own.has(b))[0];
     if (victim.priority >= 9) break;
     S.splice(S.indexOf(victim), 1);
@@ -319,6 +319,8 @@ function raidScript(state, diff, pick) {
     [`At dawn, ${['one', 'two', 'three', 'four', 'five'][(e.guards || []).length - 1] || 'five'} guards tracked the bandits to their camp.`, 5.3],
     [e.missing ? 'The bandits ran, and the missing villager was free!' : 'The bandits ran for their lives!', 8.9],
     ['The whole town came out to cheer them home.', 12.6],
+    // owner 2026-11-13: the return's shot lasts 7 s and was silent for its last 4.5
+    ['Bread and ale for the brave guards tonight!', 15.2],
     ['Hear ye! The bandits have fled the kingdom!', 19.3],
     ...(diff.next ? [[pick(L.goal)(n(diff.next.remaining), diff.next.goal), FIXED_AT.goal]] : []),
     [pick(L.cta), FIXED_AT.cta],
@@ -328,7 +330,10 @@ function raidScript(state, diff, pick) {
     [`Only ${n(e.guardCount)} guards stood between them and ${n(e.population ?? state.subscriberCount)} villagers.`, 6.3],
     ['And one of them was first to the gate.', 9.6],
     [`The ${e.gate?.side || 'east'} gate fell.`, 15.3],
+    // owner 2026-11-13: the breach and the burning house were silent for 2 and 4.5 s
+    ['They poured into the streets.', 16.5],
     ['Look whose house is burning.', 18.4],
+    ['Smoke rose over the rooftops.', 20.7],
     ['By morning, three houses were gone.', 24.4],
     [e.missing ? 'And one villager was missing. Was it you?' : 'And the bandits were gone.', 26.3], // owner 2026-11-07: "Was it you?"
   ];
@@ -434,7 +439,7 @@ const MUST = new Set(['open', 'delta', 'caravan', 'story', 'goal', 'cta']);
  */
 function fitShots(S, shots, r) {
   const cues = sentenceCues(S, shots);
-  const out = [];
+  const out = [], kept = []; // kept: when each kept line is said ({ s, start, end, anchored })
   let t = FIRST;
   S.forEach((s, i) => {
     const c = cues[i], start = Math.max(t, c?.at ?? t);
@@ -450,9 +455,27 @@ function fitShots(S, shots, r) {
     // a line about a villager or a building whose shot another line took would be heard over some other shot
     if (!c && (s.job || s.building) && !MUST.has(s.role)) return;
     out.push(s);
+    kept.push({ s, start, end: start + spokenLength(s.text), anchored: !!c });
     t = start + spokenLength(s.text) + GAP;
   });
-  S.splice(0, S.length, ...out);
+  // owner 2026-11-13: a line with no shot of its own (the new houses, the weather, market day, the apprentices...) dropped
+  // where it stood is said in the first silence it fits in, before a line that waits for its shot (day 2026-11-06: 3 s of
+  // silence over a villager shot while "It is market day, and the square is buzzing" was dropped)
+  const spare = S.filter((s, i) => !out.includes(s) && !cues[i] && !s.job && !s.building).sort((a, b) => b.priority - a.priority);
+  for (const s of spare) {
+    const texts = [s.text, ...[...(s.alts || [])].sort((a, b) => spokenLength(a) - spokenLength(b))];
+    place: for (const text of texts) {
+      if (kept.some((k) => k.s.text === text)) continue;
+      for (let k = 0; k < kept.length; k++) {
+        const from = (k ? kept[k - 1].end : FIRST - GAP) + GAP, len = spokenLength(text);
+        if (!kept[k].anchored || from + len + GAP > kept[k].start) continue;
+        s.text = text;
+        kept.splice(k, 0, { s, start: from, end: from + len, anchored: false });
+        break place;
+      }
+    }
+  }
+  S.splice(0, S.length, ...kept.map((k) => k.s));
 }
 
 // Which shot each kind of sentence talks about (see makePlan in src/render/scene/timeline.js).
@@ -492,10 +515,17 @@ function sentenceCues(sentences, cues = []) {
     // a sentence naming a job waits for that villager's shot (and for no other; a visiting villager is in
     // the host's shot); otherwise the next shot of its kind
     // a sentence naming a building waits for that building's shot, or for none
+    const aboutJob = s.job && (s.role === 'person' || s.role === 'requests' || s.role === 'pair');
     const cue = match && (s.building ? cues.find((c) => match(c) && c.id === s.building && !used.has(c))
-      : s.job && (s.role === 'person' || s.role === 'requests' || s.role === 'pair')
-        ? cues.find((c) => match(c) && (c.job === s.job || c.job2 === s.job) && !used.has(c))
+      : aboutJob ? cues.find((c) => match(c) && (c.job === s.job || c.job2 === s.job) && !used.has(c))
         : cues.find((c) => match(c) && !used.has(c)));
+    // owner 2026-11-13: a second line about the same villager follows the first over that shot when there is time left in
+    // it (fitShots drops it when there is not): day 29's baker shot heard only "Say hello to our new baker!" and 2.5 s of
+    // silence, the line about the tax collector buying bread lost
+    if (!cue && aboutJob) {
+      const again = cues.find((c) => match(c) && (c.job === s.job || c.job2 === s.job));
+      if (again) return { at: again.t0 + 0.25, end: again.t1 };
+    }
     if (!cue) return null;
     used.add(cue);
     return { at: cue.t0 + 0.25, end: cue.t1 };

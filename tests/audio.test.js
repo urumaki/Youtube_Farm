@@ -151,17 +151,47 @@ test('narration: a video that opens on the story says the story first, then the 
   assert.deepEqual(before.slice(0, 3), ['open', 'caravan', 'story'], before.join(' '));
 });
 
-test('a line alone over its shot is not dropped for the word count: day 29 was silent over the pasture (owner 2026-11-13)', async () => {
+test('no long silences: a line alone over its shot stays, a second line follows over a long villager shot, the lines with no shot fill the gaps (owner 2026-11-13)', async () => {
   const fs = await import('node:fs');
   const { migrate } = await import('../src/sim/state.js');
-  const { state, diff } = JSON.parse(fs.readFileSync(new URL('../state/history/2026-11-13.json', import.meta.url)));
-  const cues = [
+  const { sentenceAnchors, spokenLength } = await import('../src/audio/narration.js');
+  const { schedule } = await import('../src/audio/tts/index.js');
+  const day = (date) => JSON.parse(fs.readFileSync(new URL(`../state/history/${date}.json`, import.meta.url)));
+  const silences = (date, cues) => {
+    const { state, diff } = day(date);
+    const s = buildScript(migrate(state), diff, { shots: cues });
+    const len = s.sentences.map((x) => spokenLength(x.text));
+    const starts = schedule(len, sentenceAnchors(s.sentences, cues), 29.5);
+    let end = 0, worst = 0;
+    starts.forEach((t, i) => { worst = Math.max(worst, t - end); end = Math.max(end, t + len[i]); });
+    return { s, worst: Math.max(worst, 29.1 - end) };
+  };
+  // day 29: the shepherd's line over the pasture was dropped for the word count, the tax collector's visit to the baker
+  // for want of a shot of its own: 5 s of silence
+  let r = silences('2026-11-13', [
     { kind: 'event', id: 'bigfish', t0: 0, t1: 4.5 }, { kind: 'caravan', id: 'caravan', t0: 4.5, t1: 9 },
-    { kind: 'villager', job: 'fletcher', t0: 9, t1: 12.63 }, { kind: 'villager', job: 'baker', t0: 12.63, t1: 16.25 },
+    { kind: 'villager', job: 'fletcher', job2: 'guard', t0: 9, t1: 12.63 }, { kind: 'villager', job: 'baker', job2: 'taxcollector', t0: 12.63, t1: 16.25 },
     { kind: 'ambient', id: 'pasture', t0: 16.25, t1: 19 }, { kind: 'church', id: 'cathedral', t0: 19, t1: 23.5 },
-  ];
-  const s = buildScript(migrate(state), diff, { shots: cues });
-  assert.ok(s.sentences.some((x) => x.role === 'ambient'), s.text);
-  assert.ok(s.sentences.some((x) => x.role === 'comment'), 'and the invitation to comment stays');
-  assert.ok(s.words <= 80, `${s.words} words`);
+  ]);
+  for (const role of ['ambient', 'pair', 'comment']) assert.ok(r.s.sentences.some((x) => x.role === role), `${role}: ${r.s.text}`);
+  assert.ok(r.worst < 2.6, `${r.worst.toFixed(1)} s of silence: ${r.s.text}`);
+  assert.ok(r.s.words <= 85, `${r.s.words} words`);
+  // day 2026-11-06: three long villager shots, 3 s of silence over two of them while market day and the houses were dropped
+  r = silences('2026-11-06', [
+    { kind: 'caravan', id: 'caravan', t0: 0, t1: 4.5 }, { kind: 'building', id: 'university', t0: 4.5, t1: 7.8 },
+    { kind: 'villager', job: 'peasant', job2: 'merchant', t0: 7.8, t1: 13 }, { kind: 'villager', job: 'fletcher', job2: 'guard', t0: 13, t1: 18.3 },
+    { kind: 'villager', job: 'farmer', job2: 'miner', t0: 18.3, t1: 23.5 },
+  ]);
+  assert.ok(r.worst < 2.6, `${r.worst.toFixed(1)} s of silence: ${r.s.text}`);
+  // the raid: the burning house and the guards' return were silent for 4.5 s
+  for (const date of ['2026-11-07', '2026-11-08']) {
+    const { state, diff } = day(date);
+    const s = buildScript(migrate(state), diff, { shots: [] });
+    const len = s.sentences.map((x) => spokenLength(x.text));
+    const starts = schedule(len, s.sentences.map((x) => x.at), 29.5);
+    for (let i = 1; i < s.sentences.length; i++) {
+      const gap = starts[i] - (starts[i - 1] + len[i - 1]);
+      assert.ok(gap < 2.6, `${date}: ${gap.toFixed(1)} s of silence before "${s.sentences[i].text}"`);
+    }
+  }
 });
