@@ -1724,6 +1724,7 @@ test('a granted request keeps its place for up to 5 days until shown, the older 
   // five days after, still first; six days after, a newer request comes before him
   assert.deepEqual(pick(33, 1), ['diplomat']);
   assert.deepEqual(pick(34, 1), ['tanner']);
+});
 
 test('the ambush in the forest (owner 2026-11-13): two days that take the whole video, the same guards and merchants, the cavalry', async () => {
   const { STORIES, storyFor } = await import('../src/sim/stories.js');
