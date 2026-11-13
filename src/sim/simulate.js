@@ -7,7 +7,7 @@ import { world } from './world.js';
 import { dailyEvents } from './events.js';
 import { pickStory, takesOver, GAMES } from './stories.js';
 import { pickFeatured, shownJobs, markShown, timelapseDay } from './featured.js';
-import { planScenes, tavernToday, churchToday, staleJob, introVariant } from './scenes.js';
+import { planScenes, tavernToday, churchToday, staleJob, introVariant, jobLastShown, novelJob } from './scenes.js';
 import { planWall2, wallBlockers, insideWall2, crossesFields } from './wall.js';
 import { obbOverlap, obbAabb, SpatialHash } from './geometry.js';
 
@@ -249,7 +249,8 @@ export function planDay(s, prev, diff) {
   // work, so nobody loses their turn
   const takeover = takesOver(diff.story);
   const tavern = !takeover && diff.story?.id !== 'chicken' && tavernToday(s), church = !takeover && churchToday(s, tavern);
-  diff.featured = takeover ? [] : pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, church, stale: (job) => staleJob(s, job), intro: (job) => !!introVariant(s, job) });
+  diff.featured = takeover ? [] : pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, church, stale: (job) => staleJob(s, job), intro: (job) => !!introVariant(s, job),
+    lastJob: (job) => jobLastShown(s, job), novel: (job) => novelJob(s, job) });
   s.featured = diff.featured;
   markShown(s, diff.featured);
   diff.scenes = planScenes(s, { featured: diff.featured, tavern, church, avoidJobs: diff.avoidJobs, buildingShots: Math.min(2, shownBuildings), story: !!diff.story && !takeover, arrivals: (diff.named || []).length });

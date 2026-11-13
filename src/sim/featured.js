@@ -36,12 +36,10 @@ export const VISIT_HOSTS = ['farmer', 'peasant', 'blacksmith', 'toolsmith', 'woo
 const VISIT_ITEMS = { baker: 'loaf', innkeeper: 'tankard', brewer: 'tankard', fisherman: 'fish', farmer: 'sheaf', peasant: 'cabbage', miller: 'sack' };
 export const visitItem = (hostJob) => VISIT_ITEMS[hostJob] || null;
 
-function pairOf(a, b) {
-  for (const p of PAIRS) {
-    if (p.host.includes(a.job) && p.guest.includes(b.job)) return { id: p.id, host: a, guest: b };
-    if (p.host.includes(b.job) && p.guest.includes(a.job)) return { id: p.id, host: b, guest: a };
-  }
-  return null;
+// a PAIRS shot with `host` at work and `guest` visiting, or null
+function hostPair(host, guest) {
+  const p = PAIRS.find((q) => q.host.includes(host.job) && q.guest.includes(guest.job));
+  return p ? { id: p.id, host, guest } : null;
 }
 
 /**
@@ -51,8 +49,10 @@ function pairOf(a, b) {
  * tavern closes the video today, `church` which church (src/sim/scenes.js). `stale(job)`: true when every scene of that job was
  * shown in the last days, so somebody else is shown if possible. `intro(job)`: true when a villager of that job introduced
  * today has an everyday scene of their own (src/sim/scenes.js INTRO): they get no visitor and visit nobody.
+ * `lastJob(job)`: the last day a scene of that job was shown (undefined: never). `novel(job)`: 0, or 1 when the job has a
+ * scene never shown yet, 2 when every such scene has no room for a visitor (src/sim/scenes.js novelJob).
  */
-export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScene(state), church = null, stale = () => false, intro = () => false } = {}) {
+export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScene(state), church = null, stale = () => false, intro = () => false, lastJob = () => undefined, novel = () => 0 } = {}) {
   const day = state.day;
   // the villagers named (or given a job) on a time-lapse day had no video: they count as today's on the day after
   const fresh = (d) => d === day || (d === day - 1 && timelapseDay(d));
@@ -64,7 +64,11 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
   const people = Object.entries(state.names || {})
     .map(([id, n]) => {
       const last = state.lastShown?.[id];
-      return { id: Number(id), name: n.name, job: state.villagers?.[Number(id)]?.job ?? n.job, today: fresh(n.day), asked: fresh(n.requestDay), last: last < day ? last : undefined,
+      const job = state.villagers?.[Number(id)]?.job ?? n.job;
+      return { id: Number(id), name: n.name, job, scene: job === 'apprentice' && n.wants ? n.wants : job, today: fresh(n.day), last: last < day ? last : undefined, req: n.requestDay,
+        // owner 2026-11-13: a granted request keeps its place until they are shown, for up to 5 days (a request granted the
+        // day before a time-lapse, or on a day with more requests than shots, was otherwise never seen at work); the older first
+        asked: fresh(n.requestDay) || (n.requestDay !== undefined && day - n.requestDay <= 5 && !(last >= n.requestDay && last < day)),
         // a complaint keeps its place until they are shown, for up to 3 days (owner 2026-10-29: when their job is already on
         // screen that day, they come first on the next)
         complained: n.complainDay !== undefined && day - n.complainDay <= 3 && !(last >= n.complainDay && last < day) };
@@ -72,9 +76,17 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
     // innkeepers and brewers serve in the tavern scene when it closes the video
     .filter((n) => n.id < state.subscriberCount && n.job && !(tavern && (n.job === 'innkeeper' || n.job === 'brewer')) && !(clergy && (n.job === 'priest' || n.job === 'bishop')));
   // someone who wrote they could not find themselves in the last video comes before everybody (owner 2026-10-21)
-  const score = (n) => (n.complained ? 30 : 0) + (n.today ? 8 : 0) + (n.asked ? 3 : 0) + (n.last === undefined ? 4 : Math.min(3, (day - n.last) / 3))
-    + (avoid.has(n.job) ? -6 : 0) + (n.last === day - 1 ? -10 : 0) + (stale(n.job) ? -4 : 0);
+  const score = (n) => (n.complained ? 30 : 0) + (n.today ? 8 : 0) + (n.asked ? 3 + 0.2 * (day - (n.req ?? day)) : 0) + (n.last === undefined ? 4 : Math.min(3, (day - n.last) / 3))
+    + (avoid.has(n.job) ? -6 : 0) + (n.last === day - 1 ? -10 : 0) + (stale(n.job) ? -4 : 0) + (novel(n.scene) ? 2 : 0);
+  // owner 2026-11-13: most villagers were never shown (score 4 for all of them), and the tie went to INTEREST: the same
+  // ten jobs every day. Now the tie goes to the job whose scenes were seen longest ago (never first), then to the rarer job
+  // (the one Diplomat lost to one of 23 physicians on a coin toss, and his request ran out), then INTEREST
+  const seenJob = (n) => lastJob(n.scene) ?? -1;
+  const many = {};
+  for (const n of people) many[n.scene] = (many[n.scene] || 0) + 1;
   people.sort((a, b) => score(b) - score(a)
+    || seenJob(a) - seenJob(b)
+    || many[a.scene] - many[b.scene]
     || (INTEREST.indexOf(a.job) + 1 || 50) - (INTEREST.indexOf(b.job) + 1 || 50)
     || hash(state.seed, 'feat', day, a.id) - hash(state.seed, 'feat', day, b.id)); // a different face each day
   const out = [];
@@ -82,22 +94,23 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
   // owner 2026-10-29: never the same scene twice in a video: one shot per job, the complaints too
   const free = (n) => !usedIds.has(n.id) && !usedJobs.has(n.job);
   const entry = (n) => ({ id: n.id, name: n.name, job: n.job, today: n.today });
-  const solo = (n) => n.today && intro(n.job);
+  // owner 2026-11-13: a villager whose new scenes all have no room for a visitor (the spy, the Diplomat...) is shown alone
+  const solo = (n) => (n.today && intro(n.job)) || novel(n.scene) === 2;
   for (const n of people) {
     if (out.length >= slots) break;
     if (!free(n)) continue;
     usedIds.add(n.id); usedJobs.add(n.job);
     // a partner: the best free villager who works with them, or one never shown yet dropping by; a villager
     // introduced today in an everyday scene of the job (the changing of the guard...) is shown alone (`intro`)
+    // owner 2026-11-13: the villager picked keeps their own scene: they are the host or alone, never a visitor in somebody
+    // else's croft (the guard was a visitor 7 times in 16 days, never on the walls); nobody whose job has a scene never
+    // shown with no room for a visitor (the Diplomat) or who asked for their job is taken as a visitor either
     let shot = null;
     for (const m of people) {
       if (solo(n)) break;
-      if (!free(m) || m.job === n.job || solo(m)) continue;
-      shot = pairOf(n, m);
-      if (!shot && m.last === undefined && score(m) > 0) {
-        if (VISIT_HOSTS.includes(n.job)) shot = { id: 'visit', host: n, guest: m };
-        else if (VISIT_HOSTS.includes(m.job)) shot = { id: 'visit', host: m, guest: n };
-      }
+      if (!free(m) || m.job === n.job || solo(m) || novel(m.scene) === 2 || m.asked) continue;
+      shot = hostPair(n, m);
+      if (!shot && m.last === undefined && score(m) > 0 && VISIT_HOSTS.includes(n.job)) shot = { id: 'visit', host: n, guest: m };
       if (shot) break;
     }
     if (shot) {

@@ -112,6 +112,25 @@ export function staleJob(state, job) {
   return opts ? opts.every((v) => recentScene(state, sceneKey(job, v))) : recentScene(state, job);
 }
 
+/** The last day a scene of the job was shown (its own shots and the everyday shots of it), or undefined. */
+export function jobLastShown(state, job) {
+  let last;
+  for (const [k, d] of Object.entries(state.sceneLog || {})) if ((k === job || k.startsWith(job + ':')) && !(last >= d)) last = d;
+  return last;
+}
+
+/**
+ * Owner 2026-11-13: 0, or 1 when the job has a scene ready today that was never shown (the new jobs, the new scenes of the
+ * old ones), 2 when none of those scenes has room for a visitor (the spy's barrels, the Diplomat's treaty, the lunge...).
+ */
+export function novelJob(state, job) {
+  const log = state.sceneLog || {};
+  const opts = VARIANTS[job]?.filter((v) => sceneReady(state, v, job));
+  const fresh = opts?.length ? opts.filter((v) => log[sceneKey(job, v)] === undefined) : log[job] === undefined ? [null] : [];
+  if (!fresh.length) return 0;
+  return fresh.every((v) => v && (AWAY_VARIANTS.has(v) || SOLO_VARIANTS.has(v))) ? 2 : 1;
+}
+
 /** The tavern closes the video when it stands, but not again within SCENE_GAP days. */
 export function tavernToday(state) {
   return tavernScene(state) && !recentScene(state, 'tavern');
@@ -133,14 +152,15 @@ export function introVariant(state, job, used = new Set()) {
 
 /**
  * The scene for a villager of this job today (null: the job's only scene), not one already used today and,
- * when there is a choice, not one shown in the last days (`isRecent(variant)`).
+ * when there is a choice, not one shown in the last days (`isRecent(variant)`); one never shown yet first (`isNew(variant)`,
+ * owner 2026-11-13).
  */
-export function pickVariant(job, seed, day, id, used = new Set(), { croft = false, isRecent = () => false, ready = () => true } = {}) {
+export function pickVariant(job, seed, day, id, used = new Set(), { croft = false, isRecent = () => false, ready = () => true, isNew = () => false } = {}) {
   const opts = VARIANTS[job]?.filter((v) => !(croft && (AWAY_VARIANTS.has(v) || SOLO_VARIANTS.has(v))) && ready(v));
   if (!opts?.length) return null;
   const k = Math.floor(rand01(seed, 'variant', day, id) * opts.length);
   const order = opts.map((_, i) => opts[(k + i) % opts.length]);
-  return order.find((v) => !used.has(v) && !isRecent(v)) || order.find((v) => !used.has(v)) || opts[k];
+  return order.find((v) => !used.has(v) && isNew(v)) || order.find((v) => !used.has(v) && !isRecent(v)) || order.find((v) => !used.has(v)) || opts[k];
 }
 
 // Owner 2026-11-10: the video opens on the day's strongest shot, not on the same shot every day (the caravan or the
@@ -170,7 +190,7 @@ export function planScenes(state, { featured, tavern, church = null, avoidJobs =
     const n = state.names[f.id];
     const job = f.job === 'apprentice' && n?.wants ? n.wants : f.job;
     // no innkeeper or bard shot inside the tavern on the day the tavern interior closes the video
-    const v = (f.today && !f.with && introVariant(state, job, used)) || pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), ready: (x) => sceneReady(state, x, job) && !(tavern && (x === 'inside' || x === 'inn')) });
+    const v = (f.today && !f.with && introVariant(state, job, used)) || pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), isNew: (x) => state.sceneLog?.[sceneKey(job, x)] === undefined, ready: (x) => sceneReady(state, x, job) && !(tavern && (x === 'inside' || x === 'inn')) });
     if (v) used.add(v);
     variants[f.id] = v;
   }

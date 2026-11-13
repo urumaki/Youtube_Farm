@@ -507,6 +507,20 @@ Add new owner decisions here.
   first. A shot can show two villagers together (`PAIRS` in `featured.js`, `visit.js`): the guest walks
   into the host's croft and gets something (a sword, a bow, a mended tool, bread...) or brings something
   (flour, wheat, fish, logs); anyone never shown may just drop by. Up to 6 named villagers per video.
+- Every job gets its turn (owner 2026-11-13; the last 16 days had shown only 10 jobs at work, the same smiths,
+  fletchers, farmers and bakers, because most villagers were never shown and every tie went to `INTEREST`):
+  - A tie goes to the job whose scenes were seen longest ago (never first, `jobLastShown` in `scenes.js`), then to
+    the rarer job (the one Diplomat before one of 23 physicians), then `INTEREST`, then the day's coin toss.
+  - A job with a scene never shown yet scores +2 (`novelJob`), and that scene is picked first (`pickVariant`'s
+    `isNew`). When none of those new scenes has room for a visitor (the spy, the Diplomat, the lunge), the
+    villager is shown alone.
+  - The villager picked keeps their own scene: they host the visit or are shown alone, never a visitor in
+    somebody else's croft (the guard visited 7 times in 16 days and was never on the walls). Nobody who asked
+    for their job, or whose job's new scenes have no room for a visitor, is taken as a visitor.
+  - A granted request keeps its +3 until they are shown, for up to 5 days, +0.2 a day waited (the older first).
+  - Fewer people per video for now (about 2.6 against 4.6 before): most jobs at the top are not in
+    `VISIT_HOSTS`, so they have no visitor.
+  - Test: `node --test --test-name-pattern="rotate through every job|granted request keeps" tests/sim.test.js`.
 - `npm run render -- --subs 80 --gallery "farmer:sow,blacksmith:anvil+guard:sword"` renders test views
   of work scenes and visits (`output/gallery/`), in the croft of the first named villager.
 - Hashtags (owner 2026-10-20): at most 5 per video, title and description together, none repeated

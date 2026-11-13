@@ -1678,3 +1678,50 @@ test('the spy, the messenger, the street sweeper and the one Diplomat (owner 202
   assert.equal(job('Shade'), 'spy');
   checkInvariants(r.state);
 });
+
+test('villager shots rotate through every job, new scenes first; the villager picked keeps their own scene (owner 2026-11-13)', async () => {
+  const { pickFeatured, markShown } = await import('../src/sim/featured.js');
+  const { jobLastShown, novelJob, planScenes } = await import('../src/sim/scenes.js');
+  // nobody shown yet, so all tie: the tie went to the INTEREST jobs (smith, baker, fletcher, farmer) every day, and the
+  // others were only seen visiting them
+  const jobs = ['blacksmith', 'blacksmith', 'baker', 'baker', 'fletcher', 'farmer', 'teacher', 'tanner', 'philosopher', 'guard', 'guard', 'diplomat'];
+  const s = {
+    seed: SEED, day: 20, date: '2026-11-13', subscriberCount: jobs.length, unlockedTiers: ['guard'], buildings: [], pendingConstruction: [], lastShown: {},
+    sceneLog: { 'blacksmith:anvil': 18, 'baker:oven': 17, 'fletcher:fletch': 16, 'farmer:hoe': 15, 'guard:walls': 19 },
+    villagers: jobs.map((job) => ({ job })), names: Object.fromEntries(jobs.map((job, id) => [id, { name: `N${id}`, job, day: 1 }])),
+  };
+  const own = new Set(), days = [];
+  for (let day = 20; day < 24; day++) {
+    s.day = day;
+    const featured = pickFeatured(s, { avoidJobs: [], tavern: false, lastJob: (j) => jobLastShown(s, j), novel: (j) => novelJob(s, j) });
+    const scenes = planScenes(s, { featured, tavern: false });
+    markShown(s, featured);
+    days.push(featured);
+    for (const f of featured) {
+      own.add(f.job);
+      // the Diplomat's treaty has no room for a visitor: he is shown alone, and never visits anybody
+      if (f.job === 'diplomat') assert.deepEqual([f.with, scenes.variants[f.id]], [null, 'treaty']);
+      assert.notEqual(f.with?.job, 'diplomat');
+    }
+  }
+  // the first day: three of the four jobs never seen, each in their own scene
+  assert.ok(days[0].every((f) => ['teacher', 'tanner', 'philosopher', 'diplomat'].includes(f.job)), days[0].map((f) => f.job).join(' '));
+  assert.ok(!days[0].some((f) => ['teacher', 'tanner', 'philosopher'].includes(f.with?.job)), 'nobody picked is a visitor');
+  assert.ok(own.size >= 8, `own scenes in 4 days: ${[...own]}`);
+});
+
+test('a granted request keeps its place for up to 5 days until shown, the older first; the rarer job wins a tie (owner 2026-11-13)', async () => {
+  const { pickFeatured } = await import('../src/sim/featured.js');
+  const jobs = ['physician', 'physician', 'physician', 'diplomat', 'teacher', 'tanner'];
+  const asked = { 0: 28, 3: 28, 4: 27, 5: 33 };
+  const kingdom = (day) => ({
+    seed: SEED, day, subscriberCount: jobs.length, buildings: [], lastShown: {}, villagers: jobs.map((job) => ({ job })),
+    names: Object.fromEntries(jobs.map((job, id) => [id, { name: `N${id}`, job, day: 1, ...(asked[id] < day ? { requestDay: asked[id] } : {}) }])),
+  });
+  const pick = (day, slots) => pickFeatured(kingdom(day), { avoidJobs: [], tavern: false, slots }).map((f) => f.job);
+  // three days after: the older request first, then the Diplomat (one of his kind) before one of three physicians
+  assert.deepEqual(pick(31, 2), ['teacher', 'diplomat']);
+  // five days after, still first; six days after, a newer request comes before him
+  assert.deepEqual(pick(33, 1), ['diplomat']);
+  assert.deepEqual(pick(34, 1), ['tanner']);
+});
