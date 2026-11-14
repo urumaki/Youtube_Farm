@@ -294,9 +294,11 @@ function assignNames(s, commenters, blocked, diff) {
   // (with a villager or not), counted until the crier reads the result (`state.voteTally`)
   const voting = s.storyArc?.id === 'vote' && s.storyArc.step === 'result', voted = new Set();
   if (voting) { diff.votes = { a: 0, b: 0 }; s.voteTally ??= { a: 0, b: 0 }; }
-  // owner 2026-11-14: the trial (stories.js `trial`): "!guilty" or "!innocent", one for each commenter, counted until the verdict
-  const judging = s.storyArc?.id === 'trial' && s.storyArc.step === 'verdict', judged = new Set();
-  if (judging) { diff.verdicts = { innocent: 0, guilty: 0 }; s.verdictTally ??= { innocent: 0, guilty: 0 }; }
+  // owner 2026-11-14: the trial (stories.js `trial`): the day of the verdict, the most likes on a comment each of the two
+  // parties wrote since (null: none); only the count of likes is kept, never the comment
+  const trialData = s.storyArc?.id === 'trial' && s.storyArc.step === 'verdict' ? s.storyArc.data : null;
+  const parties = trialData ? { accused: s.names[trialData.accused?.id]?.author, accuser: s.names[trialData.accuser?.id]?.author } : null;
+  if (parties) s.trialLikes ??= { accused: null, accuser: null };
   diff.newCommenters = 0; // people commenting for the first time (no story on busy days, stories.js)
   // names are untrusted: cleaned to letters, digits and . _ -, never one that reads like code or an instruction
   const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !looksLikeCode(raw) && !looksLikeCode(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
@@ -326,7 +328,10 @@ function assignNames(s, commenters, blocked, diff) {
     if (c.at && (!s.commentsSeen || c.at > s.commentsSeen)) s.commentsSeen = c.at;
     if (!c.author || blockedAuthors.has(c.author)) continue;
     if (voting && (c.vote === 'a' || c.vote === 'b') && !voted.has(c.author)) { voted.add(c.author); diff.votes[c.vote] += 1; s.voteTally[c.vote] += 1; }
-    if (judging && (c.verdict === 'innocent' || c.verdict === 'guilty') && !judged.has(c.author)) { judged.add(c.author); diff.verdicts[c.verdict] += 1; s.verdictTally[c.verdict] += 1; }
+    if (parties) {
+      const likes = Number.isSafeInteger(c.likes) && c.likes >= 0 ? c.likes : 0;
+      for (const k of ['accused', 'accuser']) if (parties[k] && c.author === parties[k]) s.trialLikes[k] = Math.max(s.trialLikes[k] ?? 0, likes);
+    }
     // owner 2026-11-13: a job only some commenters may have (the Diplomat, tiers.js `only`) is no request from anyone else
     const wants = (Array.isArray(c.wants) ? c.wants : []).filter((j) => typeof j === 'string' && Object.hasOwn(JOBS, j) && (!JOBS[j].only || JOBS[j].only.includes(c.author)));
     const call = c.call ? valid(c.call) : null; // "call me Violet"
@@ -334,6 +339,8 @@ function assignNames(s, commenters, blocked, diff) {
       // someone who already has a villager asks for a (new) job or a new name
       const id = villagerOf(c.author);
       const q = id === undefined ? s.nameQueue.find((n) => n.author === c.author) : null;
+      // owner 2026-11-14: the day the commenter last wrote (the trial's parties are picked among the latest, stories.js)
+      if (id !== undefined) s.names[id].seenDay = s.day; else if (q) q.seenDay = s.day;
       if (call && id !== undefined && s.names[id].name !== call) {
         diff.renamed.push({ id: Number(id), from: s.names[id].name, name: call });
         s.names[id].name = call;
@@ -374,7 +381,7 @@ function assignNames(s, commenters, blocked, diff) {
     known.add(c.author);
     s.namedAuthors.push(c.author);
     diff.newCommenters += 1;
-    s.nameQueue.push({ name, author: c.author, ...(wants.length ? { wants } : {}), ...(c.rebel ? { rebel: true } : {}) });
+    s.nameQueue.push({ name, author: c.author, seenDay: s.day, ...(wants.length ? { wants } : {}), ...(c.rebel ? { rebel: true } : {}) });
   }
   // names blocked after they were given are taken back
   for (const [id, n] of Object.entries(s.names)) {

@@ -1778,10 +1778,10 @@ test('the ambush in the forest (owner 2026-11-13): two days that take the whole 
   }
 });
 
-test('the Hall of Justice (owner 2026-11-14): a goal at 3,400, the Judge and the Bailiff, the trial the commenters decide, the rebel tried first', async () => {
-  const { verdictFromText, wantsFromText } = await import('../src/sim/requests.js');
-  const { storyFor, STORIES, TRIAL_CHARGES, TRIAL_SENTENCES } = await import('../src/sim/stories.js');
-  const { TIERS, jobFor } = await import('../src/sim/tiers.js');
+test('the Hall of Justice (owner 2026-11-14): a goal at 3,400, the Judge and the Bailiff, the trial the likes decide, the rebel tried first', async () => {
+  const { wantsFromText } = await import('../src/sim/requests.js');
+  const { storyFor, STORIES, TRIAL_CHARGES, TRIAL_SENTENCES, trialCharge } = await import('../src/sim/stories.js');
+  const { TIERS, JOBS, jobFor } = await import('../src/sim/tiers.js');
   const { world } = await import('../src/sim/world.js');
   // the goal, the jobs, the lot
   const court = TIERS.find((t) => t.id === 'court');
@@ -1792,46 +1792,52 @@ test('the Hall of Justice (owner 2026-11-14): a goal at 3,400, the Judge and the
   assert.deepEqual(wantsFromText('can I be a judge'), ['judge']);
   assert.deepEqual(wantsFromText('I want to be the bailiff'), ['bailiff']);
   assert.deepEqual(wantsFromText('make me the court jester'), ['jester']);
-  // "!guilty" / "!innocent"
-  assert.equal(verdictFromText('!guilty'), 'guilty');
-  assert.equal(verdictFromText('he did it !GUILTY'), 'guilty');
-  assert.equal(verdictFromText('!not guilty'), 'innocent');
-  assert.equal(verdictFromText('!innocent'), 'innocent');
-  assert.equal(verdictFromText('!colpevole'), 'guilty');
-  assert.equal(verdictFromText('guilty'), null); // the exclamation mark, as for !vote
-  assert.deepEqual(wantsFromText('!guilty'), []);
-  // a kingdom with the Hall of Justice and named villagers
+  // a charge for every job, and the accusers that fit it are real jobs
+  for (const j of Object.keys(JOBS)) assert.ok(TRIAL_CHARGES[j]?.length, `a charge for the ${j}`);
+  for (const list of Object.values(TRIAL_CHARGES)) for (const [text, fits] of list) assert.ok(text && fits.every((x) => JOBS[x]), text);
+  assert.equal(trialCharge({ accused: { job: 'merchant' }, accuser: { job: 'farmer' }, charge: 'buying their potatoes for far too little' }),
+    'The Merchant stands accused by the Farmer of buying their potatoes for far too little');
+  assert.match(trialCharge({ accused: { job: 'farmer' }, accuser: { job: 'farmer' }, charge: 'x' }), /by a fellow Farmer of x$/);
+  // a kingdom with the Hall of Justice and named villagers; t5 and t6 commented again today
   let s = genesis({ seed: SEED, date: '2026-09-30' });
   const names = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ author: `t${i}`, name: `Tri${i}`, at: `2026-10-01T0${i}:00:00Z` }));
   s = advance(s, { subscribers: 1200, date: '2026-10-01', commenters: names }).state;
+  s = advance(s, { subscribers: 1201, date: '2026-10-02', commenters: [5, 6].map((i) => ({ author: `t${i}`, name: `Tri${i}`, at: `2026-10-02T0${i}:00:00Z`, wants: [] })) }).state;
   for (const id of ['court', 'pillory', 'market']) if (!s.buildings.some((b) => b.id === id && b.status === 'done')) s.buildings.push({ id, tier: 'test', status: 'done', startedDay: 1, doneDay: 1, daysTotal: 0 });
   assert.ok(STORIES.trial.needs(s));
+  const idOf = (author) => Number(Object.keys(s.names).find((id) => s.names[id].author === author));
   const day1 = storyFor(structuredClone(s), 'trial');
   assert.equal(day1.step, 'trial');
-  assert.ok(day1.accused.name && TRIAL_CHARGES[day1.charge] && day1.charge !== 'rebel');
-  assert.ok(day1.witness && day1.witness.id !== day1.accused.id);
-  // the trial was yesterday: today's comments are counted, one for each commenter; more "!guilty": a comic sentence
+  assert.ok(day1.accused.name && day1.accuser.name && day1.accuser.id !== day1.accused.id);
+  // the two are the villagers whose commenters wrote today
+  assert.deepEqual([day1.accused.id, day1.accuser.id].sort(), [idOf('t5'), idOf('t6')].sort());
+  assert.ok(TRIAL_CHARGES[day1.accused.job].some(([text]) => text === day1.charge), 'the charge fits the accused');
+  // the day after: the most likes on a comment of each of the two
   s.storyArc = { id: 'trial', step: 'verdict', day: s.day + 1, data: day1 };
-  s.verdictTally = { innocent: 0, guilty: 0 };
-  const say = (list, date) => list.map(([author, verdict], i) => ({ author, name: author, at: `${date}T00:00:0${i}Z`, wants: [], verdict }));
-  let r = advance(s, { subscribers: 1205, date: '2026-10-02', commenters: say([['a', 'guilty'], ['a', 'innocent'], ['b', 'guilty'], ['c', 'innocent'], ['d', 'guilty']], '2026-10-02') });
-  assert.deepEqual(r.diff.verdicts, { innocent: 1, guilty: 3 });
-  assert.deepEqual([r.diff.story.id, r.diff.story.step, r.diff.story.guilty], ['trial', 'verdict', true]);
+  const accusedA = s.names[day1.accused.id].author, accuserA = s.names[day1.accuser.id].author;
+  const say = (list) => list.map(([author, likes], i) => ({ author, name: author, at: `2026-10-03T00:00:0${i}Z`, wants: [], likes }));
+  const verdict = (list) => { const r = advance(structuredClone(s), { subscribers: 1205, date: '2026-10-03', commenters: say(list) }); return r; };
+  let r = verdict([[accusedA, 3], [accusedA, 7], [accuserA, 12], ['someone', 50]]);
+  assert.deepEqual([r.diff.story.id, r.diff.story.step, r.diff.story.outcome, r.diff.story.guilty], ['trial', 'verdict', 'guilty', true]);
+  assert.deepEqual(r.diff.story.likes, { accused: 7, accuser: 12 });
   assert.ok(TRIAL_SENTENCES[r.diff.story.sentence] && r.diff.story.sentence !== 'pillory');
-  assert.equal(r.state.verdictTally, null);
-  // a tie is innocent
-  s.verdictTally = { innocent: 0, guilty: 0 };
-  r = advance(s, { subscribers: 1205, date: '2026-10-02', commenters: say([['a', 'guilty'], ['b', 'innocent']], '2026-10-02') });
-  assert.equal(r.diff.story.guilty, false);
-  // a villager who talked of overthrowing the King stands trial first, and goes to the pillory the day after a guilty verdict
+  assert.equal(r.state.trialLikes, null);
+  assert.equal(verdict([[accusedA, 12], [accuserA, 3]]).diff.story.outcome, 'innocent');
+  assert.equal(verdict([[accusedA, 4], [accuserA, 4]]).diff.story.outcome, 'innocent', 'a tie: the accused walks free');
+  assert.equal(verdict([[accuserA, 0]]).diff.story.outcome, 'guilty', 'only the accuser commented');
+  assert.equal(verdict([[accusedA, 0]]).diff.story.outcome, 'innocent', 'only the accused commented');
+  r = verdict([['someone', 9]]);
+  assert.deepEqual([r.diff.story.outcome, r.diff.story.guilty, r.diff.story.sentence], ['dismissed', false, null]);
+  // a villager who talked of overthrowing the King stands trial first, accused by a guard when there is one, and goes to the
+  // pillory the day after a guilty verdict
   s.storyArc = null;
   const rebelId = Number(Object.keys(s.names)[0]);
   s.names[rebelId].rebelDay = s.day;
   r = advance(s, { subscribers: 1206, date: '2026-10-03', commenters: [] });
-  assert.deepEqual([r.diff.story.id, r.diff.story.step, r.diff.story.accused.id, r.diff.story.charge], ['trial', 'trial', rebelId, 'rebel']);
+  assert.deepEqual([r.diff.story.id, r.diff.story.step, r.diff.story.accused.id, r.diff.story.charge], ['trial', 'trial', rebelId, 'talking of overthrowing the King']);
   let t = r.state;
-  t.verdictTally = { innocent: 0, guilty: 0 };
-  r = advance(t, { subscribers: 1207, date: '2026-10-04', commenters: say([['x', 'guilty']], '2026-10-04') });
+  const rebelA = t.names[rebelId].author;
+  r = advance(t, { subscribers: 1207, date: '2026-10-04', commenters: say([[t.names[r.diff.story.accuser.id].author, 2], [rebelA, 1]]) });
   assert.deepEqual([r.diff.story.step, r.diff.story.guilty, r.diff.story.sentence], ['verdict', true, 'pillory']);
   r = advance(r.state, { subscribers: 1208, date: '2026-10-05', commenters: [] });
   assert.equal(r.diff.story.id, 'rebel');

@@ -7,7 +7,7 @@
 // the fire at night, then leave (`steps`). (The rule of no story on days with 15 or more new commenters was
 // dropped by the owner on 2026-10-22.)
 import { rng } from './prng.js';
-import { TIERS } from './tiers.js';
+import { TIERS, JOBS } from './tiers.js';
 import { world, heightAt, MANORS } from './world.js';
 import { wallLayout, insideWall2 } from './wall.js';
 import { RIDDLES, RIDDLE } from './riddles.js';
@@ -21,12 +21,54 @@ const HEROES = ['knight', 'cavalier', 'warrior', 'guard', 'fletcher'];
 export const TOURNEY_ODDS = 0.85;
 const BUILDERS = ['carpenter', 'stonemason'];
 const COSTUMES = ['ghost', 'scarecrow', 'pumpkin']; // folk costumes only, nothing magic (owner)
-// owner 2026-11-14: the trial at the Hall of Justice, comic charges and sentences only (nobody is hurt, nobody a villain)
+// owner 2026-11-14: the trial at the Hall of Justice, comic charges and sentences only (nobody is hurt, nobody a villain).
+// Owner 2026-11-14 (later): one villager accuses another, and the charge fits the accused's job: "accused by the Farmer of
+// buying their potatoes for far too little" ("their", "them": the accuser). Each job: [the charge, the accusers' jobs that
+// fit it best (any other villager may accuse when none of them is there)]. The rebel: talking of overthrowing the King.
 export const TRIAL_CHARGES = {
-  fish: 'eating the giant fish all by themselves', goat: "letting a goat into the King's garden", bell: 'ringing the church bell at three in the morning',
-  apple: 'selling a cabbage painted gold as the Golden Apple', snore: 'snoring so loud the guards sounded the alarm', pie: 'stealing the last pie from the tavern',
-  dance: 'dancing on the market stalls', pig: 'racing a pig through the market', rebel: 'talking of overthrowing the King',
+  peasant: [['letting a goat eat their washing', []]], farmer: [['selling them a cart of turnips that was mostly mud', ['merchant', 'cook', 'baker']]],
+  woodcutter: [['felling a tree right onto their fence', ['farmer', 'shepherd']]], fisherman: [['selling them an old boot as the catch of the day', ['cook', 'innkeeper', 'merchant']]],
+  blacksmith: [['hammering so loud they could not sleep for a week', []]], baker: [['selling them a loaf that was mostly air', ['merchant', 'cook', 'innkeeper']]],
+  guard: [['falling asleep at the gate and letting their pigs out of town', ['farmer', 'shepherd', 'butcher']]], stonemason: [['building their chimney upside down', []]],
+  merchant: [['buying their potatoes for far too little', ['farmer']], ['selling them a cabbage painted gold as a golden apple', []]],
+  innkeeper: [['watering down their ale', ['brewer']]], priest: [['preaching so long that they missed the market', ['merchant', 'farmer']]],
+  miller: [['keeping a sack of their flour', ['farmer', 'baker']]], carpenter: [['making them a chair with three legs', []]],
+  reeve: [['counting their sheep twice for the tax', ['shepherd', 'farmer']]], sailor: [['using their washing line as a sail', []]],
+  knight: [['riding a horse through their cabbage patch', ['farmer']]], cavalier: [['leaving a horse to graze in their garden', ['farmer']]],
+  bishop: [['eating their share of the feast', ['cook']]], scholar: [['borrowing their book and writing all over it', ['librarian', 'teacher', 'philosopher']]],
+  mayor: [['promising them a new well and forgetting all about it', []]], weaver: [['weaving their cloak two sizes too small', ['tailor']]],
+  physician: [['telling them to cure the hiccups by standing on one leg for a day', []]], apothecary: [['selling them a hair tonic that turned their hair green', ['barber']]],
+  bard: [['singing a song about their snoring in the tavern', []]], taxcollector: [['taxing their chickens twice', ['farmer', 'peasant']]],
+  tailor: [['sewing their sleeves shut', ['weaver']]], potter: [['selling them a jug with a hole in the bottom', ['innkeeper', 'brewer']]],
+  cobbler: [['making them two left boots', []]], cooper: [['selling them a barrel that let all the ale run out', ['brewer', 'innkeeper']]],
+  beekeeper: [['letting the bees move into their chimney', ['chimneysweep']]], bellfounder: [['ringing the new bell under their window at dawn', ['priest']]],
+  clockmaker: [['setting their clock an hour late on market day', ['merchant']]], chronicler: [['writing in the chronicle that they are afraid of chickens', []]],
+  admiral: [['sailing the whole fleet through their fishing nets', ['fisherman']]], crier: [['shouting their secrets in the market square', []]],
+  executioner: [['cracking walnuts on the chopping block under their window all night', []]], fletcher: [['plucking their goose for arrow feathers', ['farmer']]],
+  weirdo: [['talking to their scarecrow for three hours', ['farmer']]], beggar: [['selling them their own lost hat', []]],
+  jester: [['spilling wine on their best tunic', []]], warrior: [['practising with the sword on their haystack', ['farmer', 'stablehand']]],
+  toolsmith: [['selling them a hammer with no handle', ['carpenter', 'stonemason']]], brewer: [['brewing an ale so strong they sang until morning', ['innkeeper']]],
+  apprentice: [['breaking their best jug while trying to help', []]], ratcatcher: [['letting the rats loose in their cellar', ['baker', 'miller', 'cook']]],
+  chimneysweep: [['leaving sooty footprints all over their floor', []]], falconer: [['letting a falcon snatch their lunch', []]],
+  cook: [['putting far too much salt in their stew', ['innkeeper']]], hunter: [['chasing a hare through their washing', []]],
+  butcher: [['selling them sausages that were mostly bread', ['cook', 'innkeeper']]], engineer: [['testing a catapult that threw cabbages into their garden', ['farmer']]],
+  shepherd: [['letting the sheep eat their flowers', ['farmer', 'beekeeper']]], tanner: [['drying smelly hides on their fence', []]],
+  teacher: [['giving them a hundred lines for sneezing', ['scholar', 'apprentice']]], philosopher: [['asking them "why?" until their bread burnt', ['baker']]],
+  barber: [['cutting off half of their beard', []]], astronomer: [['waking them at midnight to look at a star', []]],
+  stablehand: [['lending them the slowest horse in the stables', ['messenger', 'cavalier']]], adviser: [['advising them to plant turnips in the river', ['farmer']]],
+  miner: [['digging a tunnel under their cellar', []]], librarian: [['shushing them at their own wedding', []]],
+  prisoner: [['slipping out of the dungeon to eat their dinner, then slipping back in', ['guard']]], spy: [['listening at their window all evening', []]],
+  messenger: [['delivering their love letter to the wrong house', []]], sweeper: [['sweeping all the dust into their doorway', []]],
+  diplomat: [['promising their cow to a foreign envoy', ['farmer']]], bailiff: [['locking them out of the Hall of Justice by mistake', []]],
+  judge: [['falling asleep during their case', []]],
+  rebel: [['talking of overthrowing the King', ['guard', 'knight', 'cavalier', 'bailiff']]],
 };
+const CHARGE_ANY = [['letting a goat eat their washing', []]];
+/** "The Merchant stands accused by the Farmer of buying their potatoes for far too little" (job labels, never names). */
+export function trialCharge(e) {
+  const a = JOBS[e.accused?.job]?.label || 'Villager', b = JOBS[e.accuser?.job]?.label || 'Villager';
+  return `The ${a} stands accused by ${a === b ? `a fellow ${b}` : `the ${b}`} of ${e.charge}`;
+}
 export const TRIAL_SENTENCES = {
   pillory: 'a day in the pillory', tankards: 'washing every tankard in the tavern', sweep: 'sweeping the market square for a week',
   water: 'carrying water for the whole town', song: 'singing an apology in the square', pies: 'baking a pie for every guard',
@@ -182,11 +224,13 @@ export const STORIES = {
   ambush: { minPop: 500, cooldown: 30, weight: 3, urgent: true, takeover: true, steps: ['ambush', 'rescue'],
     needs: (s, o = {}) => teamOf(s, ['guard']).length >= 4 && !['rain', 'snow'].includes(s.weather) && !o.buildingShots
       && !Object.values(STORIES).some((x) => x.date === tomorrow(s)) && !timelapseDay(s.day + 1) },
-  // owner 2026-11-14: the trial at the Hall of Justice, over two days. Day 1 ('trial'): a named villager stands accused of a
-  // comic charge (TRIAL_CHARGES) before the Judge, a named witness points, the commenters judge: "!guilty" or "!innocent"
-  // (requests.js verdictFromText, simulate.js `state.verdictTally`). Day 2 ('verdict'): the count is read, guilty (more
-  // "!guilty") gets a comic sentence, else the accused walks free. A villager who talked of overthrowing the King stands trial
-  // first once the court stands (pickStory: the rebel), and goes to the pillory the next day only if found guilty
+  // owner 2026-11-14: the trial at the Hall of Justice, over two days. Day 1 ('trial'): a named villager accuses another of a
+  // comic charge that fits the accused's job (TRIAL_CHARGES), both picked first among the villagers whose commenters wrote
+  // since the day before (`names[id].seenDay`), so they are likely still around. Day 2 ('verdict'): the comments the two wrote
+  // since are read (simulate.js `state.trialLikes`): the one whose comment has the most likes wins (a tie: the accused); the
+  // only one who commented wins; neither: the court dismisses the case. The accuser wins: guilty, a comic sentence. A villager
+  // who talked of overthrowing the King stands trial first once the court stands (pickStory: the rebel, accused by a guard),
+  // and goes to the pillory the next day only if found guilty
   trial: { minPop: 1000, cooldown: 10, weight: 3, steps: ['trial', 'verdict'], needs: (s) => built(s, 'court') && namedVillagers(s).length >= 6 },
   eclipse: { minPop: 500, cooldown: 45, weight: 2, takeover: true,
     needs: (s, o = {}) => built(s, 'market') && s.weather === 'clear' && namedVillagers(s).length >= 4 && !o.buildingShots },
@@ -618,32 +662,49 @@ const BUILD = {
   trial(state, r, arc) {
     if (arc?.step === 'verdict') {
       const { id: _id, step: _step, ...d } = arc.data; // (yesterday's story as saved, without its id and step)
-      const tally = { innocent: state.verdictTally?.innocent ?? 0, guilty: state.verdictTally?.guilty ?? 0 };
-      state.verdictTally = null;
-      const guilty = tally.guilty > tally.innocent; // a tie, or no verdict at all: innocent
+      // the most likes on a comment each of the two wrote since the trial (null: no comment; simulate.js)
+      const likes = { accused: state.trialLikes?.accused ?? null, accuser: state.trialLikes?.accuser ?? null };
+      state.trialLikes = null;
+      const outcome = likes.accused === null && likes.accuser === null ? 'dismissed'
+        : likes.accused === null ? 'guilty' : likes.accuser === null ? 'innocent'
+          : likes.accuser > likes.accused ? 'guilty' : 'innocent'; // a tie: the accused walks free
+      const guilty = outcome === 'guilty';
       const sentence = guilty ? (d.rebel ? 'pillory' : r.pick(Object.keys(TRIAL_SENTENCES).filter((k) => k !== 'pillory'))) : null;
       // a rebel found guilty goes to the pillory tomorrow (BUILD.rebel)
       if (guilty && d.rebel && state.villagers[d.accused.id]) state.storyArc = { id: 'rebel', day: state.day + 1, rebel: d.accused.id };
-      return { ...d, tally, guilty, sentence };
+      return { ...d, likes, outcome, guilty, sentence };
     }
-    // the accused: the rebel waiting for the pillory (`arc.rebel`, pickStory), else one of the newest named villagers; a named
-    // Judge and a named Bailiff when the kingdom has them, a named witness, the newest named villagers on the benches
+    // a named Judge and a named Bailiff when the kingdom has them; the two parties picked first among the villagers whose
+    // commenters wrote in today's comments (then in the last three days, then any): the accused (the rebel waiting for the
+    // pillory, `arc.rebel`, pickStory), the accuser (a villager whose job fits the charge when there is one); the newest named
+    // villagers on the benches
     const named = namedVillagers(state);
     const judge = roleCast(state, r, ['judge'], 1)[0] || null;
     const bailiff = roleCast(state, r, ['bailiff'], 1, judge ? [judge] : [])[0] || null;
     const officers = [judge, bailiff].filter(Boolean);
+    const seen = (n) => state.names[n.id]?.seenDay ?? -1;
+    const free = (n, taken) => !taken.some((o) => o.id === n.id);
+    const tiers = (taken) => [named.filter((n) => free(n, taken) && seen(n) === state.day), named.filter((n) => free(n, taken) && seen(n) >= state.day - 3), named.filter((n) => free(n, taken))];
     const rebel = arc?.rebel !== undefined ? named.find((n) => n.id === arc.rebel) : null;
-    const accused = rebel || castMember(state, r, named.filter((n) => !officers.some((o) => o.id === n.id)));
+    const accused = rebel || (() => { const pool = tiers(officers).find((p) => p.length); return pool && r.pick(pool.slice(0, 12)); })();
     if (!accused?.name) return null;
-    const witness = castMember(state, r, named, [...officers, accused]);
-    const taken = [...officers, accused, ...(witness ? [witness] : [])];
+    const [text, fits] = r.pick(TRIAL_CHARGES[rebel ? 'rebel' : accused.job] || CHARGE_ANY);
+    let accuser = null;
+    for (const pool of tiers([...officers, accused])) {
+      if (!pool.length) continue;
+      const best = pool.filter((n) => fits.includes(n.job));
+      accuser = r.pick((best.length ? best : pool).slice(0, 12));
+      break;
+    }
+    if (!accuser) return null;
+    const taken = [...officers, accused, accuser];
     const crowd = named.filter((n) => !taken.some((x) => x.id === n.id)).slice(0, 6);
     state.names[accused.id].trialDay = state.day;
-    state.verdictTally = { innocent: 0, guilty: 0 };
+    state.trialLikes = { accused: null, accuser: null };
     return {
-      accused: strip(accused), charge: rebel ? 'rebel' : r.pick(Object.keys(TRIAL_CHARGES).filter((k) => k !== 'rebel')), rebel: !!rebel,
-      judge: judge && strip(judge), bailiff: bailiff && strip(bailiff), witness: witness && strip(witness), crowd: crowd.map(strip),
-      cast: [accused, ...taken.filter((x) => x !== accused), ...crowd].map(strip),
+      accused: strip(accused), accuser: strip(accuser), charge: text, rebel: !!rebel,
+      judge: judge && strip(judge), bailiff: bailiff && strip(bailiff), crowd: crowd.map(strip),
+      cast: [accused, accuser, ...officers, ...crowd].map(strip),
     };
   },
   raid(state, r, arc) {
@@ -921,9 +982,13 @@ export function storyFor(state, id) {
   const steps = STORIES[name].steps;
   if (step && !steps?.includes(step)) throw new Error(`story "${name}" has no step "${step}" (${(steps || []).join(', ') || 'one step only'})`);
   let story = BUILD[name](state, r, null, name === 'proclaim' ? state.unlockedTiers[state.unlockedTiers.length - 1] : undefined);
-  // (owner 2026-11-14: a test render of the trial's verdict shows a guilty one, 7 to 4; of the quarrel's peace once the Hall of
-  // Justice stands, the one in court)
-  if (name === 'trial' && step === 'verdict') state.verdictTally = { innocent: 4, guilty: 7 };
+  // (owner 2026-11-14: a test render of the trial's verdict shows a guilty one, the accuser's comment 12 likes to 7, or
+  // `trial:verdict` with TRIAL_LIKES="accused,accuser" ("-" for no comment); of the quarrel's peace once the Hall of Justice
+  // stands, the one in court)
+  if (name === 'trial' && step === 'verdict') {
+    const [a, b] = (process.env.TRIAL_LIKES || '7,12').split(',').map((x) => (x === '-' ? null : Number(x)));
+    state.trialLikes = { accused: a, accuser: b };
+  }
   if (story && step && step !== steps[0]) story = BUILD[name](state, r, { id: name, step, data: story });
   if (story && name === 'quarrel' && step === 'peace' && built(state, 'court') && !story.court) {
     const judge = roleCast(state, r, ['judge'], 1, story.cast)[0] || null;

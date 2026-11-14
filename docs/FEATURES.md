@@ -226,23 +226,33 @@ Add new owner decisions here.
   visitor; else `study` (the book of laws at a desk in the croft, the scales of justice rocking on it, his seal). The
   Bailiff: `doorway` (at the foot of the Hall's steps, the mace tapped in his palm) once it stands, else `drill` (the mace
   at a post). The trial (story `trial`, two days, from 1,000 once the Hall stands, six named villagers, cooldown 10,
-  weight 3): day 1 (`trial`) a named villager in the dock accused of a comic charge (`TRIAL_CHARGES`: eating the giant fish
-  all by themselves, a goat in the King's garden, the church bell at three in the morning...), a named witness pointing,
-  the named Judge and Bailiff when the kingdom has them, the newest named villagers on the benches; "Order in the court!",
-  at the bottom "Accused of ... Comment !guilty or !innocent"; the narrator reads the charge and asks the same. The comments
-  on that video vote, one for each commenter ("!guilty", "!innocent", "!not guilty", "!colpevole", "!innocente": a fixed
-  regex, `verdictFromText`; counted in `state.verdictTally` while the verdict waits, `diff.verdicts`). Day 2 (`verdict`):
-  "The verdict...", then "GUILTY!" (more "!guilty") or "INNOCENT!" (a tie or no vote at all), the count and the sentence at
-  the bottom; innocent: the accused jumps for joy and the public cheers; guilty: a comic sentence (`TRIAL_SENTENCES`:
-  washing every tankard in the tavern, sweeping the market square for a week...), the public gasps and the Bailiff leads
-  the accused out up the aisle. Once the Hall stands, a villager who talked of overthrowing the King stands trial first
-  (pickStory, the rebel's turn: charge "talking of overthrowing the King", `names[id].trialDay`) and goes to the pillory the
+  weight 3). Owner 2026-11-14 (later): no more "!guilty" / "!innocent" votes; one named villager accuses another, and the
+  likes on the two's own comments decide. Day 1 (`trial`): the accused in the dock, the accuser pointing from the witness
+  stand, the named Judge and Bailiff when the kingdom has them, the newest named villagers on the benches; both picked first
+  among the villagers whose commenters wrote in that day's comments (`names[id].seenDay`, set by simulate.js whenever a
+  commenter with a villager or in the name queue writes), then in the last three days, then anyone, so they are likely
+  still around. The charge fits the accused's job (`TRIAL_CHARGES`, one or more for every job: the Merchant "buying their
+  potatoes for far too little", the Jester "spilling wine on their best tunic", the Farmer "selling them a cart of turnips
+  that was mostly mud"...; "their"/"them" is the accuser), and the accuser is a villager whose job fits it when there is one
+  (the Farmer accuses the Merchant). "Order in the court!", at the bottom "Accused of ... You two, comment: most likes
+  wins!"; the narrator reads "The Merchant stands accused by the Farmer of ..." (`trialCharge`, job labels, never names)
+  and asks the two to comment. Day 2 (`verdict`): simulate.js keeps, for each of the two, the most likes on one comment
+  they wrote since (`likeCount`, read with the comments; `state.trialLikes`, null for no comment; only the number is kept).
+  The one with more likes wins (a tie: the accused); the only one who commented wins; neither: "CASE DISMISSED!", the dock
+  and the stand stay empty and the Judge waves the case away. "The verdict...", then "GUILTY!" (the accuser won) or
+  "INNOCENT!", the likes under the two names and at the bottom with the sentence; innocent: the accused jumps for joy and
+  the public cheers; guilty: a comic sentence (`TRIAL_SENTENCES`: washing every tankard in the tavern, sweeping the market
+  square for a week...), the public gasps and the Bailiff leads the accused out up the aisle. The likes are counted once,
+  when the next day's run reads the comments. Once the Hall stands, a villager who talked of overthrowing the King stands
+  trial first (pickStory, the rebel's turn: charge "talking of overthrowing the King", accused by a guard, a knight, a
+  cavalier or the bailiff when there is one; `names[id].trialDay`) and goes to the pillory the
   next day only if found guilty (`storyArc` rebel with `rebel: id`); innocent, they are not pilloried. The quarrel (story
   `quarrel`): once the Hall stands, half the time the two make up before the Judge (`court` on the 'peace' step,
   `buildCourtQuarrel`): the Judge speaks and points, the Bailiff cuts the cabbage in two with a cleaver (the chicken or the
   goat is shared), they shake hands, the public cheers ("Order in the court!", "Case closed!"). Test: `npm run render --
   --real --subs N --built court --gallery "judge:hearing,judge:verdict,judge:study,bailiff:doorway,bailiff:drill"`, and
-  `--built court --story trial` / `--story trial:verdict` (a test render shows a guilty verdict, 7 to 4) / `--story quarrel:peace`.
+  `--built court --story trial` / `--story trial:verdict` (a test render shows a guilty verdict, the accuser 12 likes to 7; `TRIAL_LIKES=accused,accuser`
+  sets them, `-` for no comment: `TRIAL_LIKES=-,-` the case dismissed) / `--story quarrel:peace`.
   The King's riddle (owner 2026-11-07; story `riddle`, `stories/riddle.js`, the riddles in `src/sim/riddles.js`): over
   two days, like the games, once the Engineers are in the kingdom (2,500), with at least two named scholars and the market
   square, never on a day a building must be shown, cooldown 14, weight 3. Day 1 (`announce`): the town crier reads the

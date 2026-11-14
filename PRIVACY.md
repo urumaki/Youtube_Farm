@@ -12,7 +12,9 @@ name (without the "@") may be given to one villager and shown in later videos. O
 and the public channel ID are stored (the ID makes sure each person names one villager only). The
 comment text is read once to spot a job request ("can I work at the tavern?") or a chosen name ("call me
 Violet"), or a note that you could not find your villager ("I can't see myself", so you are shown in the
-next video), and is then discarded: only the resulting job, name and the day of that note are stored, never the text. Names that are offensive are skipped. To have your name removed, reply to any
+next video), and is then discarded: only the resulting job, name and the day of that note are stored, never the text.
+The day you last commented is stored too, and when your villager stands trial in the video, the number of likes on your
+comment (a number YouTube shows with every public comment) is kept until the verdict the next day. Names that are offensive are skipped. To have your name removed, reply to any
 video asking for it or contact the channel: it is added to a block list and disappears from the next
 video. From time to time the owner also reads the public comments of a video, as any viewer can, sometimes with the help
 of an AI assistant (Anthropic's Claude), to decide what to build next and to find comments the tool misread; nothing from

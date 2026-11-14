@@ -284,16 +284,6 @@ const JOIN_RE = /!join\b/i;
 // each commenter; only the letter is kept
 const VOTE_RE = /!\s*vote\b[:\s-]*(?:for\s+)?(?:option\s+)?([ab12])\b/i;
 
-// owner 2026-11-14: the trial at the Hall of Justice (stories.js `trial`): "!guilty" or "!innocent" ("!not guilty", "!colpevole",
-// "!innocente"), one for each commenter; only the word is kept
-const VERDICT_RE = /!\s*(not\s+guilty|innocent[ei]?|guilty|colpevole)\b/i;
-
-/** 'innocent' or 'guilty' when the comment gives a verdict, else null. */
-export function verdictFromText(text) {
-  const m = VERDICT_RE.exec(plainText(text));
-  return m ? (/^(guilty|colpevole)$/i.test(m[1]) ? 'guilty' : 'innocent') : null;
-}
-
 /** 'a' or 'b' when the comment votes, else null. */
 export function voteFromText(text) {
   const m = VOTE_RE.exec(plainText(text));

@@ -1,7 +1,7 @@
 // Narration script from the day's diff: template-based with seeded variation, ~60-75 words for 30 s.
 import { rng } from '../sim/prng.js';
 import { JOBS, BUILDINGS, tavernScene } from '../sim/tiers.js';
-import { storyCue, TRIAL_CHARGES, TRIAL_SENTENCES } from '../sim/stories.js';
+import { storyCue, TRIAL_SENTENCES, trialCharge } from '../sim/stories.js';
 import { RIDDLE } from '../sim/riddles.js';
 import { VOTE, voteWinner } from '../sim/votes.js';
 import { featuredPeople, visitItem } from '../sim/featured.js';
@@ -51,11 +51,10 @@ const L = {
     tourney_semis: ['The semi-finals of the guards’ tournament!', 'Four guards left in the tournament.'],
     tourney_final: ['The final! The winner becomes Captain of the Guard.', 'One last bout, and a new Captain of the Guard!'],
     flood_recede: ['The water goes down: the sandbag wall held!', 'The river falls back, and the wall of sandbags held.'],
-    // owner 2026-11-14: the trial at the Hall of Justice; the commenters give the verdict
-    trial: [(e) => `Order in the court! A villager stands accused of ${TRIAL_CHARGES[e.charge]}. Guilty or innocent? Comment exclamation mark guilty, or exclamation mark innocent!`,
-      (e) => `The court is in session: the charge is ${TRIAL_CHARGES[e.charge]}. You decide! Comment exclamation mark guilty, or exclamation mark innocent!`],
-    trial_verdict: [(e) => (e.guilty ? `The people have spoken, ${e.tally.guilty} to ${e.tally.innocent}: guilty! The sentence: ${TRIAL_SENTENCES[e.sentence]}.`
-      : e.tally.guilty + e.tally.innocent ? `The people have spoken, ${e.tally.innocent} to ${e.tally.guilty}: innocent! The accused walks free.` : 'Nobody spoke against them: innocent! The accused walks free.')],
+    // owner 2026-11-14: the trial at the Hall of Justice; the two must comment, the comment with the most likes wins
+    trial: [(e) => `Order in the court! ${trialCharge(e)}. Accused and accuser, leave a comment! Tomorrow, the comment with the most likes wins the case.`,
+      (e) => `The court is in session! ${trialCharge(e)}. You two, comment! The comment with the most likes wins, so like the one you believe!`],
+    trial_verdict: [(e) => trialVerdict(e)],
     quarrel_peace_court: [(e) => (e.over === 'cabbage' ? 'The quarrel goes to court! The Judge hears them both, and cuts the cabbage in two. Case closed!'
       : `The quarrel goes to court! The Judge rules the ${e.over} belongs to them both. Case closed!`)],
     quarrel_peace: ['Yesterday they quarrelled, today they shake hands. Friends again!', 'Peace in the square: the two make up!'],
@@ -177,6 +176,17 @@ const words = (s) => s.split(/\s+/).filter(Boolean).length;
 /**
  * @returns {{ sentences: {text:string, role:string}[], text: string, words: number }}
  */
+function trialVerdict(e) {
+  const sentence = e.sentence ? ` The sentence: ${TRIAL_SENTENCES[e.sentence]}.` : '';
+  const { accused: a, accuser: b } = e.likes || {};
+  if (e.outcome === 'dismissed') return 'The verdict... but neither of them came to court! The Judge dismisses the case.';
+  if (a === null) return `The verdict... the accused never came to court: guilty!${sentence}`;
+  if (b === null) return 'The verdict... the accuser never came to court: innocent! The accused walks free.';
+  const n = (x) => `${x} like${x === 1 ? '' : 's'}`;
+  return e.guilty ? `The verdict! The accuser's comment got ${n(b)}, the accused's ${n(a)}: guilty!${sentence}`
+    : `The verdict! The accused's comment got ${n(a)}, the accuser's ${n(b)}: innocent! The accused walks free.`;
+}
+
 export function buildScript(state, diff, { seed = state.seed, shots = [] } = {}) {
   const r = rng(seed, 'narration', diff.date, 'en'); // 'en' keeps the draws of the days already published
   const pick = (a) => r.pick(a);

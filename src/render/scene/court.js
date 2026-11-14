@@ -5,15 +5,16 @@
 // own lights while the camera is in (interior). Used by:
 // - the Judge at work (`judge:hearing`: he hears a case and stamps the record with his seal; `judge:verdict`: he rises and
 //   raises his hand), the public on the benches and a nameless accused in the dock;
-// - the trial (stories.js `trial`): day 1 the named accused in the dock, a named witness pointing, the named public; day 2 the
-//   verdict the commenters gave ("!guilty" / "!innocent"): the accused cheers, or is led out by the Bailiff to the sentence;
+// - the trial (stories.js `trial`): day 1 the named accused in the dock, the named accuser pointing from the witness stand, the
+//   named public; day 2 the verdict (the likes on the two's comments): the accused cheers, or is led out by the Bailiff to the
+//   sentence; neither came: the dock and the stand stay empty and the Judge dismisses the case;
 // - the quarrel made up in court (stories.js `quarrel`, step 'peace' with `court`): the two before the Judge, the cabbage cut
 //   in two (or the chicken, the goat shared), a handshake.
 // Room frame: x across, y up from the floor, z from the bench (-z) toward the door (+z). Nobody gets hurt.
 import * as THREE from 'three';
 import { JOBS } from '../../sim/tiers.js';
 import { CASTLE } from '../../sim/world.js';
-import { TRIAL_CHARGES, TRIAL_SENTENCES } from '../../sim/stories.js';
+import { TRIAL_SENTENCES } from '../../sim/stories.js';
 import { Builder, boxGeo, cylGeo } from './kit.js';
 import { rig, nod, toolGeo, buildWorkScene } from './work.js';
 import { person, stride, castTag, flameMaterial, flicker, ease, clamp01 } from './stories/common.js';
@@ -201,37 +202,45 @@ export function buildTrial({ story, M }) {
   const verdict = story.step === 'verdict';
   const J = standing(R, M, story.judge, JOBS.judge.color, JUDGE, 0);
   const A = standing(R, M, story.accused, JOBS[story.accused.job]?.color || FOLK[0], DOCK, Math.PI);
-  const Wt = story.witness ? standing(R, M, story.witness, JOBS[story.witness.job]?.color || FOLK[1], WITNESS, -0.75) : null;
+  const Wt = story.accuser ? standing(R, M, story.accuser, JOBS[story.accuser.job]?.color || FOLK[1], WITNESS, -0.75) : null;
   const B = standing(R, M, story.bailiff, JOBS.bailiff.color, BAILIFF, Math.PI);
   B.r.hand.add(toolGeo('mace', M));
   const clerk = rig(M, '#4e5a6a', { seated: true });
   at(clerk, CLERK, 0);
   R.group.add(clerk.root);
   const pub = benches(R, M, (story.crowd || []).slice(0, 6), 12);
+  // the verdict: the likes under the names; a party who never commented is not in court
+  const likes = story.likes || {}, dismissed = story.outcome === 'dismissed';
+  const n = (x) => `${x} like${x === 1 ? '' : 's'}`;
+  const sub = (role, k) => (verdict && likes[k] !== null && likes[k] !== undefined ? `${role} · ${n(likes[k])}` : role);
+  const away = { accused: verdict && (likes.accused ?? null) === null, accuser: verdict && (likes.accuser ?? null) === null };
+  if (away.accused) A.root.visible = false;
+  if (Wt && away.accuser) Wt.root.visible = false;
   const labels = [
-    { P: A, ...tagFor(story.accused, 'Accused', 'Accused') },
+    ...(away.accused ? [] : [{ P: A, ...tagFor(story.accused, 'Accused', sub('Accused', 'accused')) }]),
     { P: J, ...tagFor(story.judge, 'The Judge', story.judge ? 'Judge' : ''), h: 2.5 },
-    ...(Wt ? [{ P: Wt, ...tagFor(story.witness, 'Witness', 'Witness'), h: 2.3 }] : []),
+    ...(Wt && !away.accuser ? [{ P: Wt, ...tagFor(story.accuser, 'Accuser', sub('Accuser', 'accuser')), h: 2.3 }] : []),
     ...(story.bailiff ? [{ P: B, ...tagFor(story.bailiff, 'Bailiff', 'Bailiff') }] : []),
     ...pub.filter((P) => P.c).slice(0, 3).map((P) => ({ P, ...castTag(P.c), h: 1.6 })),
   ];
   const guilty = !!story.guilty, REVEAL = 0.42;
-  const tally = story.tally || { innocent: 0, guilty: 0 };
-  const charge = TRIAL_CHARGES[story.charge] || 'mischief';
+  const why = dismissed ? 'Neither of them commented' : away.accused ? 'The accused never commented' : away.accuser ? 'The accuser never commented'
+    : guilty ? `Accuser ${n(likes.accuser)} · Accused ${n(likes.accused)}` : `Accused ${n(likes.accused)} · Accuser ${n(likes.accuser)}`;
   return {
     group: R.group, labels, interior: true, low: true,
     banner: verdict ? 'The verdict...' : 'Order in the court!',
-    bannerAt: verdict ? (t, t0, t1) => ((t - t0) / (t1 - t0) < REVEAL ? 'The verdict...' : guilty ? 'GUILTY!' : 'INNOCENT!') : undefined,
+    bannerAt: verdict ? (t, t0, t1) => ((t - t0) / (t1 - t0) < REVEAL ? 'The verdict...' : dismissed ? 'CASE DISMISSED!' : guilty ? 'GUILTY!' : 'INNOCENT!') : undefined,
     footer: verdict
-      ? `!guilty ${tally.guilty} · !innocent ${tally.innocent}${guilty && story.sentence ? ` · Sentence: ${TRIAL_SENTENCES[story.sentence]}` : ''}`
-      : `Accused of ${charge}. Comment !guilty or !innocent`,
+      ? `${why}${guilty && story.sentence ? ` · Sentence: ${TRIAL_SENTENCES[story.sentence]}` : ''}`
+      : `Accused of ${story.charge}. You two, comment: most likes wins!`,
     focus: R.toWorld(0, 1.6, -1.2),
     cam(u) {
       const k = ease(u);
-      // the trial: from over the back benches in toward the dock, the Judge behind; the verdict: from beside the witness stand
+      // (owner 2026-11-14: the accuser in the frame too) from the back of the room on the clerk's side, across the dock to the
+      // witness stand, the Judge behind them; the verdict lower and closer
       return verdict
-        ? { pos: R.toWorld(lerp(3.5, 2.6, k), lerp(2.1, 1.9, k), lerp(3.2, 2.0, k)), look: R.toWorld(-0.2, 1.5, -1.0), fov: 62 }
-        : { pos: R.toWorld(lerp(2.2, 1.6, k), lerp(3.7, 3.3, k), lerp(6.4, 4.4, k)), look: R.toWorld(0, 1.2, -1.6), fov: 58 };
+        ? { pos: R.toWorld(lerp(-2.0, -1.6, k), lerp(3.2, 2.9, k), lerp(5.4, 4.6, k)), look: R.toWorld(1.2, 1.1, -1.2), fov: 60 }
+        : { pos: R.toWorld(lerp(-1.6, -1.1, k), lerp(3.6, 3.2, k), lerp(6.2, 5.0, k)), look: R.toWorld(1.5, 1.3, -1.0), fov: 60 };
     },
     update(t, t0, t1) {
       const on = t >= t0 - 0.2 && t <= t1 + 0.2;
@@ -256,7 +265,11 @@ export function buildTrial({ story, M }) {
         J.root.position.y = JUDGE[1] + 0.12 * rise;
         J.r.g.rotation.set(-1.0 - 1.7 * rise, 0, -0.1); J.l.g.rotation.set(-0.4, 0, 0.1);
         const after = span(u, REVEAL, REVEAL + 0.08);
-        if (!guilty) {
+        if (dismissed) {
+          // nobody came: the Judge waves the case away, the public shrugs
+          J.r.g.rotation.set(-1.0 - 1.7 * rise + 0.9 * after * Math.abs(Math.sin(t * 2.5)), 0, -0.1 - 0.5 * after);
+          murmur(pub, t);
+        } else if (!guilty) {
           A.root.position.y = DOCK[1] + 0.18 * after * Math.abs(Math.sin(t * 7));
           A.r.g.rotation.set(-2.8 * after, 0, -0.3 * after); A.l.g.rotation.set(-2.7 * after, 0, 0.3 * after);
           nod(A, -0.2 * after);
