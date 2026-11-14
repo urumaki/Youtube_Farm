@@ -24518,31 +24518,10 @@
   "1085": 29
  },
  "storyArc": {
-  "id": "bigfish",
-  "step": "roast",
-  "day": 30,
-  "data": {
-   "cast": [
-    {
-     "id": 1048,
-     "name": "shannonneo409",
-     "job": "fisherman",
-     "day": 25
-    },
-    {
-     "id": 1086,
-     "name": "Jase",
-     "job": "merchant",
-     "day": 29
-    },
-    {
-     "id": 1079,
-     "name": "keyfunk",
-     "job": "peasant",
-     "day": 29
-    }
-   ]
-  }
+  "id": "ambush",
+  "step": "ambush",
+  "day": 31,
+  "owner": true
  },
  "sceneLog": {
   "tavern": 28,
