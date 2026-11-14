@@ -151,6 +151,10 @@ function buildWorld(seed) {
   // owner 2026-11-07: the Engineers' Workshop (the King's riddle, stories.js), after the Baths, the same way
   placeStreetLot(w, 'engineer_workshop', 6, 5, all);
   if (w.lots.engineer_workshop) Object.assign(w.lots.engineer_workshop, { virtual: true, clearTrees: true });
+  // owner 2026-11-14: the Hall of Justice, on the free ground nearest the Town Hall, after everything else (virtual, as above)
+  const th = w.lots.townhall;
+  placeStreetLot(w, 'court', 8, 7, all, th ? { x: th.x, z: th.z } : MARKET);
+  if (w.lots.court) Object.assign(w.lots.court, { virtual: true, clearTrees: true });
   return w;
 }
 

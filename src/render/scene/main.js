@@ -11,7 +11,7 @@ import { buildBuildings } from './buildings.js';
 import { buildNature } from './nature.js';
 import { buildLife } from './life.js';
 import { buildEnvironment } from './env.js';
-import { makePlan, evaluate, indoorScene, barScene, dungeonScene, mineScene, AWAY_VARIANTS } from './timeline.js';
+import { makePlan, evaluate, indoorScene, barScene, dungeonScene, mineScene, courtScene, AWAY_VARIANTS } from './timeline.js';
 import { createOverlay } from './overlay.js';
 import { buildWorkScene, sceneOf, rig } from './work.js';
 import { buildCaravan } from './caravan.js';
@@ -28,6 +28,7 @@ import { povCamera } from './pov.js';
 import { buildVisit } from './visit.js';
 import { buildBakehouse } from './bakery.js';
 import { buildSweepRoom, buildLectureRoom, buildLibraryRoom } from './room.js';
+import { buildCourtJob, COURT_AT } from './court.js';
 import { buildDungeon } from './dungeon.js';
 import { buildMine } from './mine.js';
 import { huntSpot } from '../../sim/wall.js';
@@ -268,6 +269,10 @@ async function setup(data) {
       const it = buildings.items.mine, e = it.toWorld([0, 0, 1]).sub(it.toWorld([0, 0, 0])).setY(0).normalize();
       return { anchor: it.toWorld([0, 0, 0]), ax: e.x, az: e.z, floorAt: () => it.base - 18, face: undefined };
     }
+    // owner 2026-11-14: the Judge in the courtroom of the Hall of Justice (a room of its own under the castle, court.js); the
+    // Bailiff at the foot of its steps, beside the door
+    if (courtScene(job, variant)) return { anchor: COURT_AT.clone(), ax: 0, az: 1, floorAt: () => COURT_AT.y, face: undefined };
+    if (variant === 'doorway' && buildings.items.court) return { ...atLot(buildings.items.court, 2.4, 4.9), face: undefined };
     // the priest blesses one of the fields
     if (variant === 'bless' && fieldCount > 1) return atField(id);
     // the crier up on the Crier's Stand, calling to the square
@@ -397,6 +402,7 @@ async function setup(data) {
         .sort((a, b) => (b[1].requestDay ?? 0) - (a[1].requestDay ?? 0)).map(([, n]) => ({ name: n.name }));
       return buildMine({ anchor, away, M, seed: state.seed, id, heightAt: floorAt || ((x, z) => heightAt(w, x, z)), mates, t0, t1 });
     }
+    if (courtScene(job, variant)) return buildCourtJob({ variant, M, seed: state.seed, id });
     // inside a building (the Bakery) the room stands on its floor
     if (indoorScene(job, variant)) {
       const build = { chimneysweep: buildSweepRoom, scholar: buildLectureRoom, librarian: buildLibraryRoom }[job] || buildBakehouse;

@@ -26,6 +26,7 @@ const ACTIVITIES = {
   fletcher: 'fletches a bundle of arrows', weirdo: 'dances alone in the square for no reason', beggar: 'raises a mug to every passer-by',
   jester: 'juggles for a crowd of children', warrior: 'trains with the sword until sunset', toolsmith: 'forges new hoes and sickles for the farmers',
   brewer: 'taps a barrel of honey mead',
+  judge: 'hears a case about a goat and a missing cabbage', bailiff: 'keeps order at the door of the Hall of Justice',
   spy: 'hides behind a barrel and writes down who buys the most pies', messenger: 'runs a sealed letter across town without dropping it once',
   sweeper: 'sweeps the square clean just before the market opens', diplomat: 'signs a treaty of friendship with a distant kingdom', apprentice: 'sweeps the workshop and dreams of the future',
 };

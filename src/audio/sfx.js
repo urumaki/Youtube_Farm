@@ -506,6 +506,9 @@ const SCENES = {
   // a new Noble (owner 2026-11-07): the fanfare in the throne room, the cheers at the manor's gate
   ev_noble: [['fanfare', 0.5], ['cheer', 0.45]],
   ev_noble_manor: [['cheer', 0.5], ['birds', 0.4]],
+  // the trial at the Hall of Justice (owner 2026-11-14): the murmur of the public, the cheers or the gasp at the verdict
+  ev_trial: [['chatter', 0.45]],
+  ev_trial_verdict: [['chatter', 0.4], ['cheer', 0.45]],
   // the ambush in the forest (owner 2026-11-13): the cart's wheels and hooves, the forest gone quiet, the fight (sword clangs
   // from the shots' own hits), the cart away at a gallop; the next day the ring, the horn and the cavalry, the cheers
   ev_ambush_road: [['hooves', 0.3], ['creak', 0.3], ['birds', 0.4], ['breeze', 0.3]],
@@ -589,7 +592,7 @@ function hit(kind, r) {
   }
   return o;
 }
-const WORK_BEDS = { blacksmith: [['fire', 0.25]], toolsmith: [['fire', 0.25]], brewer: [['chatter', 0.3]], baker: [['fire', 0.3], ['chatter', 0.1]], fisherman: [['water', 0.5]], merchant: [['chatter', 0.3]], innkeeper: [['chatter', 0.3]], stonemason: [['stone', 0.2]],
+const WORK_BEDS = { judge: [['chatter', 0.2]], 'judge:hearing': [['chatter', 0.3]], 'judge:verdict': [['chatter', 0.35]], blacksmith: [['fire', 0.25]], toolsmith: [['fire', 0.25]], brewer: [['chatter', 0.3]], baker: [['fire', 0.3], ['chatter', 0.1]], fisherman: [['water', 0.5]], merchant: [['chatter', 0.3]], innkeeper: [['chatter', 0.3]], stonemason: [['stone', 0.2]],
   // the other scenes of a job (VARIANTS in src/render/scene/timeline.js)
   'carpenter:saw': [['saw', 0.5]], 'blacksmith:bellows': [['fire', 0.45]], 'toolsmith:bellows': [['fire', 0.45]],
   'baker:knead': [['chatter', 0.1]], 'brewer:stir': [['fire', 0.2], ['chatter', 0.1]], 'stonemason:stack': [['stone', 0.4]], 'miller:quern': [['stone', 0.15]],

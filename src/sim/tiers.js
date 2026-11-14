@@ -96,6 +96,9 @@ export const JOBS = {
   sweeper: { label: 'Street Sweeper', color: '#8b8a6e', requestOnly: true },
   // owner 2026-11-13: the kingdom's one Diplomat, only the commenter who asked for it day after day (`only`: their channel ids)
   diplomat: { label: 'Diplomat', color: '#1f5a5a', requestOnly: true, only: ['UC4EhWDIDSVx1mVTSKQk03gw'] },
+  // owner 2026-11-14: the court (the 'court' goal at 3,400): the Judge in a scarlet robe, the Bailiff with his mace at the door
+  judge: { label: 'Judge', color: '#8c1c24' },
+  bailiff: { label: 'Bailiff', color: '#33405a' },
 };
 
 export const BUILDINGS = {
@@ -127,6 +130,7 @@ export const BUILDINGS = {
   mine: { label: 'the Mine', days: 3 },
   dungeon: { label: 'the Dungeon', days: 2 }, // owner 2026-11-04: cells under the castle, stairs down from its courtyard
   baths: { label: 'the Baths', days: 2, plural: true }, // owner 2026-11-07: steaming pools near the market square
+  court: { label: 'the Hall of Justice', days: 4 }, // owner 2026-11-14: the court, near the Town Hall (the commenters asked for one)
   // owner 2026-11-07: begun by the first scholars who solve the King's riddle, on the day they become Engineers (stories.js)
   engineer_workshop: { label: "the Engineers' Workshop", days: 2 },
   bank: { label: 'the Bank', days: 3 }, // owner 2026-10-27: the money changers' bench under a loggia, on the East Ward's square
@@ -178,6 +182,8 @@ export const TIERS = [
   // owner 2026-11-04: the Dungeon under the castle. The prisoner's weight 0 only unlocks the job for requests (availableJobs):
   // no villager is ever drawn a prisoner, nor does anyone change job
   { id: 'dungeon', at: 3250, title: 'Town of Iron Bars', unique: [], pool: { prisoner: 0 }, buildings: ['dungeon'], goal: 'the Dungeon opens beneath the castle' },
+  // owner 2026-11-14: the Hall of Justice, the Judge and the Bailiffs (no villager before 3,400 changes job)
+  { id: 'court', at: 3400, title: 'Town of Justice', unique: ['judge'], pool: { judge: 0.1, bailiff: 0.3 }, buildings: ['court'], goal: 'the Hall of Justice opens its doors' },
   { id: 'coin', at: 3500, title: 'Town of Coin', unique: [], pool: {}, buildings: ['bank'], goal: 'the Bank opens its doors' }, // owner 2026-10-27
   // owner 2026-11-07: the Baths, a goal of their own (no new job, so no villager changes job)
   { id: 'baths', at: 3750, title: 'Town of Baths', unique: [], pool: {}, buildings: ['baths'], goal: 'the Baths open their steaming pools' },

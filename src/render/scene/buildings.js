@@ -235,6 +235,37 @@ export const BUILD = { // (exported for the overlap check, scripts/zfight.js)
     out.lights.push([0, 3.2, 0.2]);
     out.focusH = 5;
   },
+  court(b, lot, out) {
+    // the Hall of Justice (owner 2026-11-14): a tall stone hall under a slate roof, a portico of six columns on a raised step
+    // with a pediment, the great pointed door, tall windows, the gold scales of justice over the door and the kingdom's
+    // banners on the roof (front, +z, faces the street). The courtroom inside is a room of its own (court.js)
+    b.add('stone', boxGeo(12, 6.5, 7), 0, 3.25, -2.6);
+    b.add('slate', gableGeo(12.8, 7.8, 3.2), 0, 6.5, -2.6);
+    b.add('stoneDark', boxGeo(12.4, 0.35, 7.4), 0, 6.5, -2.6); // the cornice
+    // the portico: a platform, two steps, six columns, the entablature and the pediment over them
+    b.add('stone', boxGeo(10, 0.5, 2.8), 0, 0.25, 2.3);
+    b.add('stone', boxGeo(9, 0.25, 0.7), 0, 0.12, 4.05);
+    for (let i = 0; i < 6; i++) {
+      const x = -3.75 + i * 1.5;
+      b.add('stoneDark', boxGeo(0.8, 0.25, 0.8), x, 0.62, 2.9);
+      b.add('stone', cylGeo(0.3, 0.34, 4.4, 14), x, 2.95, 2.9);
+      b.add('stoneDark', boxGeo(0.8, 0.3, 0.8), x, 5.3, 2.9);
+    }
+    b.add('stoneDark', boxGeo(10, 0.6, 2.9), 0, 5.75, 2.35);
+    b.add('stone', gableGeo(10, 2.9, 1.8), 0, 6.05, 2.35);
+    door(b, 0, 0.95, 2.0, 3.4, 0, { pointed: true });
+    for (const x of [-4.6, -2.4, 2.4, 4.6]) lancet(b, x, 2.0, 0.95, 0.9, 2.8, 0, 'windowWarm');
+    // the scales of justice in gold on the pediment
+    b.add('gold', boxGeo(0.12, 1.1, 0.12), 0, 6.75, 3.82);
+    b.add('gold', boxGeo(1.6, 0.1, 0.1), 0, 7.25, 3.85);
+    for (const s of [-1, 1]) {
+      b.add('gold', boxGeo(0.04, 0.5, 0.04), s * 0.75, 6.98, 3.86);
+      b.add('gold', cylGeo(0.25, 0.15, 0.08, 12), s * 0.75, 6.72, 3.86);
+    }
+    out.flags.push([-5.2, 10.4, -2.6, 1.0, 0.7], [5.2, 10.4, -2.6, 1.0, 0.7]);
+    out.lights.push([0, 2.6, 3.4]);
+    out.focusH = 5;
+  },
   manor(b, lot, out, ctx) {
     // a Noble's manor (owner 2026-11-07): a stone ground floor under a timbered upper floor and a slate roof, a round corner
     // tower with its pennant, a walled garden with a gate onto the street (+z) and, beside the gate, the sign: "NOBLE" and

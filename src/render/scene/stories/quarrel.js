@@ -8,7 +8,7 @@ import { person, stage, castTag } from './common.js';
 
 const CROWD = ['#8a6d4f', '#5f7a8a', '#9b5a3c', '#6f7d4a', '#7a5b7d'];
 
-function chicken(M) {
+export function chicken(M) {
   const g = new THREE.Group();
   const white = M.clothIvory;
   const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; g.add(m); };
@@ -20,7 +20,7 @@ function chicken(M) {
   return g;
 }
 
-function goat(M) {
+export function goat(M) {
   const g = new THREE.Group();
   const hide = M.people.clone();
   hide.color.set('#d8d0c0');

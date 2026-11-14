@@ -216,6 +216,10 @@ const JOB_SCENES = {
   messenger: { period: 3.0, raise: -1.3, down: -1.3, bend: 0, sound: 'none', tool: null, props: 'letterdoor', smooth: true, errand: true },
   sweeper: { period: 1.5, hit: 0.5, raise: -0.8, down: -0.8, bend: 0.2, fx: 'dust', sound: 'none', tool: 'broom', props: 'litter', sweep: true, both: true },
   diplomat: { period: 5.2, raise: -1.3, down: -1.08, bend: 0.2, sound: 'none', tool: null, props: 'treaty', smooth: true, treaty: true, left: -1.05 },
+  // owner 2026-11-14: the Judge reads the law at a desk in the croft (the scales of justice on it) and stamps the page with
+  // his seal; the Bailiff drills with his mace at a post
+  judge: { period: 2.4, hit: 0.5, raise: -1.55, down: -1.05, bend: 0.15, sound: 'none', tool: 'seal', props: 'lawdesk', left: -1.05 },
+  bailiff: { period: 2.0, hit: 0.5, raise: -2.2, down: -0.6, bend: 0.05, sound: 'none', tool: 'mace', props: 'post', left: -0.6, look: true },
 };
 const DEFAULT_SCENE = { period: 2.4, hit: 0.5, raise: -2.6, down: -0.2, bend: 0, fx: null, sound: 'none', tool: null, props: 'market', wave: true };
 // Other scenes of the same jobs, 'job:variant' (owner 2026-10-20: a job is not always shown the same way;
@@ -288,6 +292,12 @@ JOB_SCENES['cook:cauldron'] = JOB_SCENES.cook;
 JOB_SCENES['engineer:trebuchet'] = JOB_SCENES.engineer;
 JOB_SCENES['miner:face'] = JOB_SCENES.miner;
 // owner 2026-11-13 (asked for as a horse trainer): the stablehand lunges a horse, trotting round him on a long line
+// owner 2026-11-14: at the bench of the Hall of Justice (court.js): the Judge hears the case and stamps the record with his
+// seal ('hearing'), or rises and raises his hand for the verdict ('verdict'); the Bailiff keeps the court's door, tapping
+// his mace in his palm ('doorway')
+JOB_SCENES['judge:hearing'] = { period: 2.6, hit: 0.5, raise: -1.5, down: -0.95, bend: 0.12, sound: 'none', tool: 'seal', props: 'none' };
+JOB_SCENES['judge:verdict'] = { period: 4.4, raise: -2.75, down: -0.45, bend: -0.05, sound: 'none', tool: null, props: 'none', smooth: true };
+JOB_SCENES['bailiff:doorway'] = { period: 1.6, raise: -1.4, down: -0.9, bend: 0, sound: 'none', tool: 'mace', props: 'none', smooth: true, turn: 0.3 };
 JOB_SCENES['stablehand:lunge'] = { period: 6.0, raise: -1.35, down: -1.35, bend: 0, sound: 'none', tool: null, props: 'lunge', smooth: true, lunge: true, radius: 10 };
 // at the Apiary (owner 2026-10-25): its own bench of skeps, so only the bees (main.js puts him at the bench's end)
 JOB_SCENES['beekeeper:apiary'] = { ...JOB_SCENES.beekeeper, props: 'bees' };
@@ -435,6 +445,13 @@ export function toolGeo(kind, M) {
   } else if (kind === 'brush') { // the sweep's brush: a long pole on from the raised arms, a round bristle head at the end
     add(cylGeo(0.02, 0.02, 2.2, 6).translate(0, -1.1, 0.02), wood);
     add(new THREE.SphereGeometry(0.2, 10, 8).scale(1, 0.6, 1).translate(0, -2.25, 0.02), M.gear);
+  } else if (kind === 'seal') { // the Judge's seal: a turned wooden handle and a gold die
+    add(cylGeo(0.025, 0.035, 0.16, 8).translate(0, -0.02, 0.1), M.woodDark);
+    add(cylGeo(0.06, 0.06, 0.035, 12).translate(0, -0.11, 0.1), M.gold);
+  } else if (kind === 'mace') { // the Bailiff's mace: a black staff with a gold head
+    add(cylGeo(0.022, 0.026, 0.75, 8).translate(0, 0.2, 0.1), M.woodDark);
+    add(new THREE.SphereGeometry(0.07, 10, 8).translate(0, 0.6, 0.1), M.gold);
+    add(cylGeo(0.035, 0.035, 0.05, 8).translate(0, -0.18, 0.1), M.gold);
   } else if (kind === 'letter') { // a folded letter with a red wax seal, held up in the hand
     add(boxGeo(0.2, 0.02, 0.14).translate(0, -0.03, 0.1), M.clothIvory);
     add(cylGeo(0.03, 0.03, 0.012, 10).translate(0, -0.015, 0.1), M.clothRed);
@@ -703,6 +720,28 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       add(new THREE.SphereGeometry(0.025, 6, 4).scale(1, 1.6, 1).translate(-0.5, 1.05, 0.85), M.lamp);
       add(cylGeo(0.05, 0.05, 0.4, 8).rotateZ(Math.PI / 2).translate(-0.3, 0.87, 0.95), M.clothIvory); // a scroll
       return new THREE.Vector3(-0.1, 0.98, 0.55);
+    }
+    case 'lawdesk': { // owner 2026-11-14: the Judge's desk: the open book of laws, the scales of justice, a candle, scrolls
+      add(boxGeo(1.4, 0.08, 0.7).translate(0, 0.8, 0.62), M.wood);
+      for (const x of [-0.6, 0.6]) add(boxGeo(0.08, 0.8, 0.6).translate(x, 0.4, 0.62), M.woodDark);
+      add(boxGeo(0.56, 0.05, 0.4).translate(-0.1, 0.865, 0.55), M.clothIvory); // the open book
+      add(boxGeo(0.02, 0.06, 0.4).translate(-0.1, 0.87, 0.55), M.clothRed);
+      // the scales of justice: a gold post, a beam rocking slowly, two pans on chains
+      add(cylGeo(0.02, 0.03, 0.42, 8).translate(0.45, 1.05, 0.75), M.gold);
+      add(cylGeo(0.07, 0.08, 0.03, 10).translate(0.45, 0.855, 0.75), M.gold);
+      const beam = new THREE.Group();
+      beam.position.set(0.45, 1.26, 0.75);
+      holder.add(beam);
+      const bm = new THREE.Mesh(boxGeo(0.4, 0.018, 0.018), M.gold); bm.castShadow = true; beam.add(bm);
+      for (const s of [-1, 1]) {
+        const ch = new THREE.Mesh(boxGeo(0.006, 0.16, 0.006).translate(0, -0.08, 0), M.gold); ch.position.x = s * 0.19; beam.add(ch);
+        const pan = new THREE.Mesh(cylGeo(0.06, 0.04, 0.015, 10).translate(0, -0.165, 0), M.gold); pan.position.x = s * 0.19; beam.add(pan);
+      }
+      anim.push((t) => { beam.rotation.z = 0.08 * Math.sin(t * 0.9); });
+      for (let i = 0; i < 2; i++) add(cylGeo(0.035, 0.035, 0.42, 8).rotateZ(Math.PI / 2).translate(-0.45, 0.875 + i * 0.07, 0.85 - i * 0.05), M.clothIvory); // scrolls
+      add(cylGeo(0.035, 0.035, 0.18, 8).translate(-0.55, 0.93, 0.45), M.clothIvory); // the candle
+      add(new THREE.SphereGeometry(0.025, 6, 4).scale(1, 1.6, 1).translate(-0.55, 1.05, 0.45), M.lamp);
+      return new THREE.Vector3(-0.05, 0.9, 0.5);
     }
     case 'ledger': { // a table with the open tax book, a coin chest and stacks of coins
       add(boxGeo(1.4, 0.08, 0.7).translate(0, 0.8, 0.62), M.wood);

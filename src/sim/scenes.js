@@ -54,6 +54,9 @@ export const VARIANTS = {
   // street sweeper in the market square (or in the croft), the Diplomat's treaty; the stablehand also lunges a horse on the
   // grass beyond the fields (asked for as a horse trainer)
   spy: ['peek'], messenger: ['letter'], sweeper: ['square', 'street'], diplomat: ['treaty'], stablehand: ['stable', 'lunge'],
+  // owner 2026-11-14: the Judge hears a case at the bench of the Hall of Justice or gives the verdict there (court.js), else
+  // reads the law at a desk in the croft; the Bailiff keeps the court's door, else drills with his mace at a post
+  judge: ['hearing', 'verdict', 'study'], bailiff: ['doorway', 'drill'],
 };
 VARIANTS.guard.push('dungeon');
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
@@ -71,7 +74,7 @@ export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished
 const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop', inside: 'tavern', stand: 'crier_stand',
   square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth', lecture: 'university', library: 'university', haul: 'harbor',
-  dungeon: 'dungeon', cell: 'dungeon', delivery: 'tavern', windlass: 'mine', gallery: 'mine' };
+  dungeon: 'dungeon', cell: 'dungeon', delivery: 'tavern', windlass: 'mine', gallery: 'mine', hearing: 'court', verdict: 'court', doorway: 'court' };
 // croft scenes no longer used once the building stands (the innkeeper's barrel in the croft, once the tavern is open)
 const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern', remedies: 'physician_booth' };
 // the same for one job only (owner 2026-10-25): knights train in the lists of the Tournament Ground once it stands, no
@@ -82,10 +85,10 @@ const JOB_UNTIL = { knight: { walls: 'tournament' }, warrior: { walls: 'tourname
 // owner 2026-10-29: the shots through a villager's eyes are off for now (two bodies showed one inside the other); saves that
 // planned one render the usual shot (timeline.js), test renders can still ask for one with --pov
 export const POV_ON = false;
-const POV_AWAY = new Set(['inside', 'inn', 'house', 'lecture', 'library', 'dungeon', 'cell', 'gallery']);
+const POV_AWAY = new Set(['inside', 'inn', 'house', 'lecture', 'library', 'dungeon', 'cell', 'gallery', 'hearing', 'verdict']);
 // owner 2026-11-13: the market stalls, the Physician's Booth and the Counting House have their own queue, and a visitor stood
 // behind the counter or out of the frame
-const SOLO_VARIANTS = new Set(['stall', 'booth', 'counting', 'stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library', 'dungeon', 'cell', 'delivery', 'windlass', 'gallery', 'peek', 'letter', 'treaty', 'lunge']);
+const SOLO_VARIANTS = new Set(['stall', 'booth', 'counting', 'stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library', 'dungeon', 'cell', 'delivery', 'windlass', 'gallery', 'peek', 'letter', 'treaty', 'lunge', 'hearing', 'verdict', 'doorway']);
 // buildings with no shot of their own: no engineer stands in front of them
 const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');

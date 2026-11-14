@@ -27,7 +27,9 @@ export { VARIANTS, AWAY_VARIANTS, pickVariant };
 // scenes inside a building (the baker's bakehouse, bakery.js; the chimney sweep's room, room.js): own camera, a hard cut
 // in and out
 export const indoorScene = (job, variant) => (job === 'baker' && BAKEHOUSE_VARIANTS.has(variant)) || (job === 'chimneysweep' && variant === 'house') ||
-  (job === 'scholar' && variant === 'lecture') || (job === 'librarian' && variant === 'library') || dungeonScene(variant) || mineScene(variant);
+  (job === 'scholar' && variant === 'lecture') || (job === 'librarian' && variant === 'library') || dungeonScene(variant) || mineScene(variant) || courtScene(job, variant);
+// the courtroom of the Hall of Justice (owner 2026-11-14, court.js): the Judge at the bench
+export const courtScene = (job, variant) => job === 'judge' && (variant === 'hearing' || variant === 'verdict');
 // the Dungeon under the castle (owner 2026-11-04, dungeon.js): a guard with a torch past the cells, or a prisoner in his cell
 export const dungeonScene = (variant) => variant === 'dungeon' || variant === 'cell';
 // inside the Mine (owner 2026-11-10, mine.js): the miner at a seam in a timbered gallery

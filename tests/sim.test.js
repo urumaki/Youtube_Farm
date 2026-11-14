@@ -298,7 +298,7 @@ test('comment job requests read wrong on 2026-11-06/07 (owner 2026-11-07)', asyn
   assert.equal(first('I’ll make sure to put this bow to good use!'), '');
   assert.equal(first('I’ll be the executioner’s friend'), '');
   assert.equal(first('Can i be a crusaider for the church/chapel?'), 'guard');
-  assert.equal(first('Can I be bailiff'), 'taxcollector');
+  assert.equal(first('Can I be bailiff'), 'bailiff'); // owner 2026-11-14: the court's jobs (was the tax collector's)
   assert.equal(first('I wish to fight, instead of begging for booze'), 'guard');
   assert.equal(first("I wish to fight the knight at the tavern when he's drunk. Or just beg near the other beggars"), 'beggar');
   assert.equal(first('Send in the knights now'), '');
@@ -393,8 +393,8 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
     'a metalsmith named xc': 'blacksmith', 'Can i be a goldsmith?': 'blacksmith', 'a craftman': 'carpenter', 'a woodworker?': 'carpenter',
     'an shipwright': 'carpenter', 'the vows of monastic life': 'priest', 'Can I be the Deacon': 'priest', 'the pediatrician': 'physician',
     'Day 3 for sawbonee?': 'barber', 'the local winery boss': 'brewer', 'a stable worker': 'stablehand', 'the town speaker': 'crier',
-    'a simple laborer': 'peasant', 'wanna be the hobo': 'beggar', 'the mechanical expert': 'engineer', 'the Justiciar': 'taxcollector',
-    'a prosecutor': 'taxcollector', 'I am the fletcher so can the army use my bows': 'fletcher',
+    'a simple laborer': 'peasant', 'wanna be the hobo': 'beggar', 'the mechanical expert': 'engineer', 'the Justiciar': 'judge',
+    'a prosecutor': 'judge', 'I am the fletcher so can the army use my bows': 'fletcher',
   };
   for (const [text, job] of Object.entries(older)) assert.equal(wantsFromText(text)[0], job, text);
   for (const text of ['thank you sir', 'a night out', 'Make me a flower dealer']) assert.deepEqual(wantsFromText(text), [], text);
@@ -824,7 +824,7 @@ test('comment words of 2026-10-22: typos and synonyms reach the jobs, the new jo
     'May i be the Bishop of this great kingdom': 'bishop', 'Can I be a weaponsmith?': 'blacksmith', 'Can I own my own pub': 'innkeeper',
     'yo can i work on the harbour': 'fisherman', 'i want to be the herbalist': 'apothecary', 'I subbed can I be a messenger?': 'messenger',
     'May I be town idiot': 'jester', 'Can I be a military officer': 'guard', 'May I Be A Architect': 'stonemason', 'Subbed Can I be a politician': 'taxcollector',
-    'May I be a lawyer': 'taxcollector', 'Can i be the head of trade?': 'merchant', 'Can I be a scientist': 'scholar', 'can i be a groudnskeeper or gardener': 'peasant',
+    'May I be a lawyer': 'judge', 'Can i be the head of trade?': 'merchant', 'Can I be a scientist': 'scholar', 'can i be a groudnskeeper or gardener': 'peasant',
     'can I be a Hunter?': 'hunter', 'can i be a butcher': 'butcher', 'I request to be an egineer': 'engineer', 'May I be a Shepard tending to sheep?': 'shepherd',
     'Can I be a rancher? I like goats': 'shepherd', 'i want to be a tanner please': 'tanner', 'loyal military engineer': 'engineer',
     'call me Hunter, I want to bake bread': 'baker',
@@ -1776,4 +1776,67 @@ test('the ambush in the forest (owner 2026-11-13): two days that take the whole 
     assert.ok(end < 29.6, `the voice runs to ${end.toFixed(1)} s`);
     assert.ok(!/Amb\d/.test(sc.text), 'no name read aloud');
   }
+});
+
+test('the Hall of Justice (owner 2026-11-14): a goal at 3,400, the Judge and the Bailiff, the trial the commenters decide, the rebel tried first', async () => {
+  const { verdictFromText, wantsFromText } = await import('../src/sim/requests.js');
+  const { storyFor, STORIES, TRIAL_CHARGES, TRIAL_SENTENCES } = await import('../src/sim/stories.js');
+  const { TIERS, jobFor } = await import('../src/sim/tiers.js');
+  const { world } = await import('../src/sim/world.js');
+  // the goal, the jobs, the lot
+  const court = TIERS.find((t) => t.id === 'court');
+  assert.equal(court.at, 3400);
+  assert.deepEqual(court.buildings, ['court']);
+  assert.equal(jobFor(SEED, 3399), 'judge');
+  assert.ok(world(SEED).lots.court, 'the Hall of Justice has its lot');
+  assert.deepEqual(wantsFromText('can I be a judge'), ['judge']);
+  assert.deepEqual(wantsFromText('I want to be the bailiff'), ['bailiff']);
+  assert.deepEqual(wantsFromText('make me the court jester'), ['jester']);
+  // "!guilty" / "!innocent"
+  assert.equal(verdictFromText('!guilty'), 'guilty');
+  assert.equal(verdictFromText('he did it !GUILTY'), 'guilty');
+  assert.equal(verdictFromText('!not guilty'), 'innocent');
+  assert.equal(verdictFromText('!innocent'), 'innocent');
+  assert.equal(verdictFromText('!colpevole'), 'guilty');
+  assert.equal(verdictFromText('guilty'), null); // the exclamation mark, as for !vote
+  assert.deepEqual(wantsFromText('!guilty'), []);
+  // a kingdom with the Hall of Justice and named villagers
+  let s = genesis({ seed: SEED, date: '2026-09-30' });
+  const names = [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ author: `t${i}`, name: `Tri${i}`, at: `2026-10-01T0${i}:00:00Z` }));
+  s = advance(s, { subscribers: 1200, date: '2026-10-01', commenters: names }).state;
+  for (const id of ['court', 'pillory', 'market']) if (!s.buildings.some((b) => b.id === id && b.status === 'done')) s.buildings.push({ id, tier: 'test', status: 'done', startedDay: 1, doneDay: 1, daysTotal: 0 });
+  assert.ok(STORIES.trial.needs(s));
+  const day1 = storyFor(structuredClone(s), 'trial');
+  assert.equal(day1.step, 'trial');
+  assert.ok(day1.accused.name && TRIAL_CHARGES[day1.charge] && day1.charge !== 'rebel');
+  assert.ok(day1.witness && day1.witness.id !== day1.accused.id);
+  // the trial was yesterday: today's comments are counted, one for each commenter; more "!guilty": a comic sentence
+  s.storyArc = { id: 'trial', step: 'verdict', day: s.day + 1, data: day1 };
+  s.verdictTally = { innocent: 0, guilty: 0 };
+  const say = (list, date) => list.map(([author, verdict], i) => ({ author, name: author, at: `${date}T00:00:0${i}Z`, wants: [], verdict }));
+  let r = advance(s, { subscribers: 1205, date: '2026-10-02', commenters: say([['a', 'guilty'], ['a', 'innocent'], ['b', 'guilty'], ['c', 'innocent'], ['d', 'guilty']], '2026-10-02') });
+  assert.deepEqual(r.diff.verdicts, { innocent: 1, guilty: 3 });
+  assert.deepEqual([r.diff.story.id, r.diff.story.step, r.diff.story.guilty], ['trial', 'verdict', true]);
+  assert.ok(TRIAL_SENTENCES[r.diff.story.sentence] && r.diff.story.sentence !== 'pillory');
+  assert.equal(r.state.verdictTally, null);
+  // a tie is innocent
+  s.verdictTally = { innocent: 0, guilty: 0 };
+  r = advance(s, { subscribers: 1205, date: '2026-10-02', commenters: say([['a', 'guilty'], ['b', 'innocent']], '2026-10-02') });
+  assert.equal(r.diff.story.guilty, false);
+  // a villager who talked of overthrowing the King stands trial first, and goes to the pillory the day after a guilty verdict
+  s.storyArc = null;
+  const rebelId = Number(Object.keys(s.names)[0]);
+  s.names[rebelId].rebelDay = s.day;
+  r = advance(s, { subscribers: 1206, date: '2026-10-03', commenters: [] });
+  assert.deepEqual([r.diff.story.id, r.diff.story.step, r.diff.story.accused.id, r.diff.story.charge], ['trial', 'trial', rebelId, 'rebel']);
+  let t = r.state;
+  t.verdictTally = { innocent: 0, guilty: 0 };
+  r = advance(t, { subscribers: 1207, date: '2026-10-04', commenters: say([['x', 'guilty']], '2026-10-04') });
+  assert.deepEqual([r.diff.story.step, r.diff.story.guilty, r.diff.story.sentence], ['verdict', true, 'pillory']);
+  r = advance(r.state, { subscribers: 1208, date: '2026-10-05', commenters: [] });
+  assert.equal(r.diff.story.id, 'rebel');
+  assert.equal(r.diff.story.rebel.id, rebelId);
+  // the quarrel's peace may be made in court
+  const quarrel = storyFor(structuredClone(s), 'quarrel:peace');
+  assert.ok(quarrel.court, 'made up before the Judge');
 });

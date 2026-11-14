@@ -209,6 +209,40 @@ Add new owner decisions here.
   and call to action. The raid's drums (`mix.js`), sounds `ev_ambush_*` (`sfx.js`), no drawbridge. Titles "Day N: Bandits
   attacked the royal cart 🗡️ ..." and "Day N: The cavalry came just in time 🐎 ...". Test: `npm run render -- --real
   --subs N --story ambush --stills 2,6.5,11.5,14.5,19,23,28.5` and `--story ambush:rescue --stills 2,6.5,11,15,19.5,22.5`.
+  The Hall of Justice (owner 2026-11-14; the commenters asked for a court). A goal of its own at 3,400 ("Town of Justice",
+  tier `court`, "the Hall of Justice opens its doors"): the building `court` (4 days) and two jobs, the Judge (the villager
+  at 3,400, `unique`, and now and then later: pool 0.1) and the Bailiff (pool 0.3); no villager before 3,400 changes job.
+  Asking for a judge, a magistrate, a lawyer, a prosecutor, a justiciar ("giudice", "avvocato") now makes a Judge, a bailiff
+  ("usciere") a Bailiff (`requests.js`; before, both were the tax collector's). Its lot (`world.js`, laid out last, virtual,
+  trees cleared) is the free ground nearest the Town Hall. The building (`buildings.js` `court`): a tall stone hall under a
+  slate roof, a portico of six columns on a raised step with a pediment, a great pointed door, tall windows, the gold scales
+  of justice on the pediment, two banners on the roof. The courtroom inside (`court.js`) is a room of its own under the
+  castle (like the throne room), lit by its own lights: the Judge's high bench on a dais with the kingdom's arms, two
+  banners and the gold scales behind it, the clerk's table, the witness stand, the dock, three rows of public benches, a red
+  carpet up the aisle, tall windows. Outfits: the Judge in a white coif, a gold chain and a scarlet robe; the Bailiff in a
+  black cap and a blue tabard with a black mace with a gold head. Scenes (`VARIANTS`): the Judge `hearing` (at the bench,
+  stamping the record with his seal, the clerk writing, a nameless accused in the dock, the public whispering) and
+  `verdict` (he rises, his hand up, filmed from beside the dock), both in the courtroom once the Hall stands and with no
+  visitor; else `study` (the book of laws at a desk in the croft, the scales of justice rocking on it, his seal). The
+  Bailiff: `doorway` (at the foot of the Hall's steps, the mace tapped in his palm) once it stands, else `drill` (the mace
+  at a post). The trial (story `trial`, two days, from 1,000 once the Hall stands, six named villagers, cooldown 10,
+  weight 3): day 1 (`trial`) a named villager in the dock accused of a comic charge (`TRIAL_CHARGES`: eating the giant fish
+  all by themselves, a goat in the King's garden, the church bell at three in the morning...), a named witness pointing,
+  the named Judge and Bailiff when the kingdom has them, the newest named villagers on the benches; "Order in the court!",
+  at the bottom "Accused of ... Comment !guilty or !innocent"; the narrator reads the charge and asks the same. The comments
+  on that video vote, one for each commenter ("!guilty", "!innocent", "!not guilty", "!colpevole", "!innocente": a fixed
+  regex, `verdictFromText`; counted in `state.verdictTally` while the verdict waits, `diff.verdicts`). Day 2 (`verdict`):
+  "The verdict...", then "GUILTY!" (more "!guilty") or "INNOCENT!" (a tie or no vote at all), the count and the sentence at
+  the bottom; innocent: the accused jumps for joy and the public cheers; guilty: a comic sentence (`TRIAL_SENTENCES`:
+  washing every tankard in the tavern, sweeping the market square for a week...), the public gasps and the Bailiff leads
+  the accused out up the aisle. Once the Hall stands, a villager who talked of overthrowing the King stands trial first
+  (pickStory, the rebel's turn: charge "talking of overthrowing the King", `names[id].trialDay`) and goes to the pillory the
+  next day only if found guilty (`storyArc` rebel with `rebel: id`); innocent, they are not pilloried. The quarrel (story
+  `quarrel`): once the Hall stands, half the time the two make up before the Judge (`court` on the 'peace' step,
+  `buildCourtQuarrel`): the Judge speaks and points, the Bailiff cuts the cabbage in two with a cleaver (the chicken or the
+  goat is shared), they shake hands, the public cheers ("Order in the court!", "Case closed!"). Test: `npm run render --
+  --real --subs N --built court --gallery "judge:hearing,judge:verdict,judge:study,bailiff:doorway,bailiff:drill"`, and
+  `--built court --story trial` / `--story trial:verdict` (a test render shows a guilty verdict, 7 to 4) / `--story quarrel:peace`.
   The King's riddle (owner 2026-11-07; story `riddle`, `stories/riddle.js`, the riddles in `src/sim/riddles.js`): over
   two days, like the games, once the Engineers are in the kingdom (2,500), with at least two named scholars and the market
   square, never on a day a building must be shown, cooldown 14, weight 3. Day 1 (`announce`): the town crier reads the

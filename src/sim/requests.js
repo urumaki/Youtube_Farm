@@ -49,7 +49,10 @@ const KEYWORDS = [
   [/doctor|healer|physician|medico|guaritore|\bmedic\b|pediatric|clinic/, 'physician'],
   [/apothecar|\bapo\w*th\w*ry|alchemist|alchimista|\bchemist|\bchimico|speziale|farmacist|\bremed|rimedi|herbalist|erborist/, 'apothecary'], // medieval only: no wizards (owner)
   // running the town was the reeve's job (the council, politics, the law); owner 2026-10-23: the tax collector's now
-  [/\breeve\b|\bcouncil\b|administrat|(?<!\bno\s)politic|\bofficial\b|steward|\bclerk|lawyer|attorney|\bjudge|magistrat|avvocat|giudice|justiciar|prosecutor|\blawman|\bbailiff/, 'taxcollector'],
+  [/\breeve\b|\bcouncil\b|administrat|(?<!\bno\s)politic|\bofficial\b|steward|\bclerk/, 'taxcollector'],
+  // owner 2026-11-14: the court's jobs (the law was the tax collector's before)
+  [/\bbailiff|usciere|ufficiale giudiziario|court\s*(guard|officer)/, 'bailiff'],
+  [/\bjudge\b|\bjudges\b|magistrat|giudice|justiciar|\blawman|lawyer|attorney|prosecutor|avvocat/, 'judge'],
   // jobs folded into another (owner 2026-10-23): the weaver into the tailor, the chronicler into the scholar, the admiral into the sailor
   [/\bweaver|\bweav(e|ing)\b|\bloom\b|tessitor|telaio/, 'tailor'],
   [/chronicler|historian|(?<!\b(in|into|of|make|made|makes)\s)\bhistory\b|cronista|\bstorico/, 'scholar'],
@@ -280,6 +283,16 @@ const JOIN_RE = /!join\b/i;
 // owner 2026-11-10: "!vote A" or "!vote B" ("!vote 1", "!vote 2") is a vote in the kingdom's vote (stories.js `vote`), one for
 // each commenter; only the letter is kept
 const VOTE_RE = /!\s*vote\b[:\s-]*(?:for\s+)?(?:option\s+)?([ab12])\b/i;
+
+// owner 2026-11-14: the trial at the Hall of Justice (stories.js `trial`): "!guilty" or "!innocent" ("!not guilty", "!colpevole",
+// "!innocente"), one for each commenter; only the word is kept
+const VERDICT_RE = /!\s*(not\s+guilty|innocent[ei]?|guilty|colpevole)\b/i;
+
+/** 'innocent' or 'guilty' when the comment gives a verdict, else null. */
+export function verdictFromText(text) {
+  const m = VERDICT_RE.exec(plainText(text));
+  return m ? (/^(guilty|colpevole)$/i.test(m[1]) ? 'guilty' : 'innocent') : null;
+}
 
 /** 'a' or 'b' when the comment votes, else null. */
 export function voteFromText(text) {

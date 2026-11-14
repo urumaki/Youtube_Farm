@@ -154,6 +154,10 @@ const OUTFITS = {
   messenger: (O, M) => [HATS.beret(O, M.clothRed), satchel(O.leather)],
   sweeper: (O) => [HATS.knit(O, O.grey), apron(O.canvas)],
   diplomat: (O, M) => [HATS.wideFelt(O, O.navy), chain(O, M.gold), O.navy],
+  // owner 2026-11-14: the Judge in a white coif, a gold chain and a long scarlet robe; the Bailiff in a black cap and a blue
+  // tabard
+  judge: (O, M) => [HATS.coif(O, O.white), chain(O, M.gold), M.clothRed],
+  bailiff: (O, M) => [HATS.flatCap(O, O.black), tabard(M.clothBlue, false)],
   // owner 2026-10-25: clergy (a red stole; the bishop a mitre with a gold band)
   priest: (O, M) => [null, [[boxGeo(0.16, 0.85, 0.04).translate(0, 0.42, 0.29), M.clothRed]]],
   bishop: (O, M) => [[[new THREE.ConeGeometry(0.23, 0.62, 4).scale(1, 1, 0.7).translate(0, 1.47, 0), M.clothIvory],

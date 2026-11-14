@@ -21,6 +21,16 @@ const HEROES = ['knight', 'cavalier', 'warrior', 'guard', 'fletcher'];
 export const TOURNEY_ODDS = 0.85;
 const BUILDERS = ['carpenter', 'stonemason'];
 const COSTUMES = ['ghost', 'scarecrow', 'pumpkin']; // folk costumes only, nothing magic (owner)
+// owner 2026-11-14: the trial at the Hall of Justice, comic charges and sentences only (nobody is hurt, nobody a villain)
+export const TRIAL_CHARGES = {
+  fish: 'eating the giant fish all by themselves', goat: "letting a goat into the King's garden", bell: 'ringing the church bell at three in the morning',
+  apple: 'selling a cabbage painted gold as the Golden Apple', snore: 'snoring so loud the guards sounded the alarm', pie: 'stealing the last pie from the tavern',
+  dance: 'dancing on the market stalls', pig: 'racing a pig through the market', rebel: 'talking of overthrowing the King',
+};
+export const TRIAL_SENTENCES = {
+  pillory: 'a day in the pillory', tankards: 'washing every tankard in the tavern', sweep: 'sweeping the market square for a week',
+  water: 'carrying water for the whole town', song: 'singing an apology in the square', pies: 'baking a pie for every guard',
+};
 
 /**
  * Catalog. date: 'MM-DD' calendar event; minPop: population needed; cooldown: days before it can come
@@ -172,6 +182,12 @@ export const STORIES = {
   ambush: { minPop: 500, cooldown: 30, weight: 3, urgent: true, takeover: true, steps: ['ambush', 'rescue'],
     needs: (s, o = {}) => teamOf(s, ['guard']).length >= 4 && !['rain', 'snow'].includes(s.weather) && !o.buildingShots
       && !Object.values(STORIES).some((x) => x.date === tomorrow(s)) && !timelapseDay(s.day + 1) },
+  // owner 2026-11-14: the trial at the Hall of Justice, over two days. Day 1 ('trial'): a named villager stands accused of a
+  // comic charge (TRIAL_CHARGES) before the Judge, a named witness points, the commenters judge: "!guilty" or "!innocent"
+  // (requests.js verdictFromText, simulate.js `state.verdictTally`). Day 2 ('verdict'): the count is read, guilty (more
+  // "!guilty") gets a comic sentence, else the accused walks free. A villager who talked of overthrowing the King stands trial
+  // first once the court stands (pickStory: the rebel), and goes to the pillory the next day only if found guilty
+  trial: { minPop: 1000, cooldown: 10, weight: 3, steps: ['trial', 'verdict'], needs: (s) => built(s, 'court') && namedVillagers(s).length >= 6 },
   eclipse: { minPop: 500, cooldown: 45, weight: 2, takeover: true,
     needs: (s, o = {}) => built(s, 'market') && s.weather === 'clear' && namedVillagers(s).length >= 4 && !o.buildingShots },
 };
@@ -234,7 +250,12 @@ const BUILD = {
     return { cast: heroes, bandits: r.int(5, 7), guards, guardCast: roleCast(state, r, ['guard', 'knight'], guards, heroes) };
   },
   quarrel(state, r, arc) {
-    if (arc?.data) return { cast: arc.data.cast, over: arc.data.over }; // the same two make up
+    if (arc?.data) {
+      // the same two make up; owner 2026-11-14: once the Hall of Justice stands, half the time before the Judge
+      const court = built(state, 'court') && r.chance(0.5);
+      const judge = court ? roleCast(state, r, ['judge'], 1, arc.data.cast)[0] || null : null;
+      return { cast: arc.data.cast, over: arc.data.over, ...(court ? { court: true, judge: judge && strip(judge) } : {}) };
+    }
     const named = namedVillagers(state);
     const a = castMember(state, r, named);
     const b = a && castMember(state, r, named, [a]);
@@ -393,12 +414,14 @@ const BUILD = {
     if (!carter) return null;
     return { cast: [carter, ...roleCast(state, r, named.map((n) => n.job), 4, [carter])] };
   },
-  rebel(state, r) {
+  rebel(state, r, arc) {
     // the newest rebel not yet pilloried (test renders with none: the newest named villager), the executioner (a named one when
-    // there is one) and up to four named villagers throwing tomatoes
+    // there is one) and up to four named villagers throwing tomatoes; owner 2026-11-14: the one found guilty at the trial
+    // (`arc.rebel`, the day after the verdict)
     const named = namedVillagers(state);
-    const rebel = rebelsWaiting(state)[0] || named[0];
+    const rebel = (arc?.rebel !== undefined && named.find((n) => n.id === arc.rebel)) || rebelsWaiting(state)[0] || named[0];
     if (!rebel) return null;
+    if (arc?.rebel !== undefined) state.names[rebel.id].pilloryDay = state.day;
     const executioner = roleCast(state, r, ['executioner'], 1, [rebel])[0] || null;
     const throwers = roleCast(state, r, Object.keys(JOB_COUNT(state)), 4, [rebel, ...(executioner ? [executioner] : [])]);
     return { rebel, executioner, throwers, cast: [rebel, ...(executioner ? [executioner] : []), ...throwers] };
@@ -592,6 +615,37 @@ const BUILD = {
     return { guards: guards.map((c) => c && strip(c)), merchants: merchants.map((c) => c && strip(c)), bandits: r.int(14, 18), cargo,
       cast: [...merchants, ...guards].filter(Boolean).map(strip) };
   },
+  trial(state, r, arc) {
+    if (arc?.step === 'verdict') {
+      const { id: _id, step: _step, ...d } = arc.data; // (yesterday's story as saved, without its id and step)
+      const tally = { innocent: state.verdictTally?.innocent ?? 0, guilty: state.verdictTally?.guilty ?? 0 };
+      state.verdictTally = null;
+      const guilty = tally.guilty > tally.innocent; // a tie, or no verdict at all: innocent
+      const sentence = guilty ? (d.rebel ? 'pillory' : r.pick(Object.keys(TRIAL_SENTENCES).filter((k) => k !== 'pillory'))) : null;
+      // a rebel found guilty goes to the pillory tomorrow (BUILD.rebel)
+      if (guilty && d.rebel && state.villagers[d.accused.id]) state.storyArc = { id: 'rebel', day: state.day + 1, rebel: d.accused.id };
+      return { ...d, tally, guilty, sentence };
+    }
+    // the accused: the rebel waiting for the pillory (`arc.rebel`, pickStory), else one of the newest named villagers; a named
+    // Judge and a named Bailiff when the kingdom has them, a named witness, the newest named villagers on the benches
+    const named = namedVillagers(state);
+    const judge = roleCast(state, r, ['judge'], 1)[0] || null;
+    const bailiff = roleCast(state, r, ['bailiff'], 1, judge ? [judge] : [])[0] || null;
+    const officers = [judge, bailiff].filter(Boolean);
+    const rebel = arc?.rebel !== undefined ? named.find((n) => n.id === arc.rebel) : null;
+    const accused = rebel || castMember(state, r, named.filter((n) => !officers.some((o) => o.id === n.id)));
+    if (!accused?.name) return null;
+    const witness = castMember(state, r, named, [...officers, accused]);
+    const taken = [...officers, accused, ...(witness ? [witness] : [])];
+    const crowd = named.filter((n) => !taken.some((x) => x.id === n.id)).slice(0, 6);
+    state.names[accused.id].trialDay = state.day;
+    state.verdictTally = { innocent: 0, guilty: 0 };
+    return {
+      accused: strip(accused), charge: rebel ? 'rebel' : r.pick(Object.keys(TRIAL_CHARGES).filter((k) => k !== 'rebel')), rebel: !!rebel,
+      judge: judge && strip(judge), bailiff: bailiff && strip(bailiff), witness: witness && strip(witness), crowd: crowd.map(strip),
+      cast: [accused, ...taken.filter((x) => x !== accused), ...crowd].map(strip),
+    };
+  },
   raid(state, r, arc) {
     if (arc?.step === 'rescue') {
       const { id: _id, step: _step, ...d } = arc.data; // (yesterday's story as saved, without its id and step)
@@ -763,7 +817,7 @@ function promote(state, id, job) {
 function rebelsWaiting(state) {
   return namedVillagers(state).filter((n) => {
     const x = state.names[n.id];
-    return x.rebelDay !== undefined && x.rebelDay >= state.day - 7 && !(x.pilloryDay >= x.rebelDay);
+    return x.rebelDay !== undefined && x.rebelDay >= state.day - 7 && !(x.pilloryDay >= x.rebelDay) && !(x.trialDay >= x.rebelDay);
   }).sort((a, b) => state.names[b.id].rebelDay - state.names[a.id].rebelDay || b.day - a.day);
 }
 
@@ -823,6 +877,16 @@ export function pickStory(state, { unlocked = [], buildingShots = 0 } = {}) {
   // a rebel waiting for the pillory (no more than once every 7 days)
   if (!id && rebelsWaiting(state).length && possible('rebel', STORIES.rebel)
     && (state.storyLog.rebel === undefined || state.day - state.storyLog.rebel >= STORIES.rebel.cooldown)) {
+    // owner 2026-11-14: once the Hall of Justice stands, the rebel stands trial first and the commenters decide (no story is
+    // waiting for a later day)
+    const trialOk = possible('trial', STORIES.trial) && !state.storyArc && (state.storyLog.trial === undefined || state.day - state.storyLog.trial >= STORIES.trial.cooldown);
+    const trial = trialOk ? BUILD.trial(state, r, { rebel: rebelsWaiting(state)[0].id }) : null;
+    if (trial) {
+      state.storyLog.trial = state.day;
+      state.storyLog.rebel = state.day;
+      state.storyArc = { id: 'trial', step: 'verdict', day: state.day + 1, data: trial };
+      return { id: 'trial', step: 'trial', ...trial };
+    }
     const story = BUILD.rebel(state, r);
     if (story) {
       state.storyLog.rebel = state.day;
@@ -857,7 +921,14 @@ export function storyFor(state, id) {
   const steps = STORIES[name].steps;
   if (step && !steps?.includes(step)) throw new Error(`story "${name}" has no step "${step}" (${(steps || []).join(', ') || 'one step only'})`);
   let story = BUILD[name](state, r, null, name === 'proclaim' ? state.unlockedTiers[state.unlockedTiers.length - 1] : undefined);
+  // (owner 2026-11-14: a test render of the trial's verdict shows a guilty one, 7 to 4; of the quarrel's peace once the Hall of
+  // Justice stands, the one in court)
+  if (name === 'trial' && step === 'verdict') state.verdictTally = { innocent: 4, guilty: 7 };
   if (story && step && step !== steps[0]) story = BUILD[name](state, r, { id: name, step, data: story });
+  if (story && name === 'quarrel' && step === 'peace' && built(state, 'court') && !story.court) {
+    const judge = roleCast(state, r, ['judge'], 1, story.cast)[0] || null;
+    story = { ...story, court: true, judge: judge && strip(judge) };
+  }
   return story && { id: name, ...(steps ? { step: step || steps[0] } : {}), ...story };
 }
 
