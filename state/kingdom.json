@@ -1,10 +1,10 @@
 {
  "schemaVersion": 1,
  "seed": 3999547794,
- "day": 29,
- "date": "2026-11-13",
- "subscriberCount": 3070,
- "peakPopulation": 3070,
+ "day": 30,
+ "date": "2026-11-14",
+ "subscriberCount": 3080,
+ "peakPopulation": 3080,
  "countSource": "public",
  "houses": [
   {
@@ -8911,7 +8911,8 @@
     3033,
     3043,
     3053,
-    3062
+    3062,
+    3074
    ],
    "fine": true
   },
@@ -8977,7 +8978,25 @@
     3066,
     3067,
     3068,
-    3069
+    3069,
+    3070,
+    3071,
+    3072
+   ]
+  },
+  {
+   "id": 575,
+   "plot": 200596,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 30,
+   "occupants": [
+    3073,
+    3075,
+    3076,
+    3077,
+    3078,
+    3079
    ]
   }
  ],
@@ -15901,6 +15920,18 @@
    "rot": 0.19062281132553885,
    "facing": -1,
    "road": "lane131"
+  },
+  {
+   "id": 200596,
+   "x": 528.6105064915691,
+   "z": -455.1242647212656,
+   "y": 3.733976150530625,
+   "yMin": 3.6226943477076525,
+   "hw": 3.0629682007012886,
+   "hd": 11.704383849981241,
+   "rot": -0.5684569814528782,
+   "facing": 1,
+   "road": "northeast"
   }
  ],
  "buildings": [
@@ -16191,11 +16222,8 @@
    "season": "autumn"
   },
   {
-   "type": "spotlight",
-   "villager": 934,
-   "name": "ketras5166",
-   "job": "farmer",
-   "activity": "brings in a cart of golden wheat"
+   "type": "festival",
+   "name": "Lantern Night"
   }
  ],
  "names": {
@@ -16901,7 +16929,7 @@
    "author": "UCzY-N6EGhuXG_Qt0gS3HZeg",
    "day": 7,
    "job": "guard",
-   "requestDay": 28,
+   "requestDay": 30,
    "rebelDay": 28,
    "pilloryDay": 28
   },
@@ -17380,7 +17408,7 @@
    "author": "UCaPHUq7eqpq_s45rLO2cImg",
    "day": 8,
    "job": "guard",
-   "requestDay": 15
+   "requestDay": 30
   },
   "188": {
    "name": "carbo",
@@ -17507,8 +17535,8 @@
    "author": "UCUgGBYqFUni8U2qBYD7wpDg",
    "day": 8,
    "job": "guard",
-   "requestDay": 29,
-   "complainDay": 29
+   "requestDay": 30,
+   "complainDay": 30
   },
   "207": {
    "name": "someguynamedsam6785",
@@ -17983,7 +18011,7 @@
    "author": "UCuixh6sZ-0VEB4pjGfzzMkQ",
    "day": 8,
    "job": "scholar",
-   "requestDay": 29,
+   "requestDay": 30,
    "complainDay": 29
   },
   "277": {
@@ -18068,7 +18096,7 @@
    "author": "UCSdVlxRXzAYGFUpwlnsVzsw",
    "day": 8,
    "job": "fisherman",
-   "requestDay": 28
+   "requestDay": 30
   },
   "290": {
    "name": "AnimatorMan",
@@ -18985,14 +19013,14 @@
    "day": 9,
    "job": "scholar",
    "requestDay": 23,
-   "rebelDay": 29
+   "rebelDay": 30
   },
   "428": {
    "name": "uknown",
    "author": "UCgymzvodAoRCt0eya81AXoQ",
    "day": 9,
    "job": "guard",
-   "requestDay": 29
+   "requestDay": 30
   },
   "429": {
    "name": "thatone_gunpladude",
@@ -19078,8 +19106,9 @@
    "name": "lianneabel6277",
    "author": "UCGe6Z1sQlm-2BL6xE6nYWXw",
    "day": 9,
-   "job": "teacher",
-   "requestDay": 26
+   "job": "bishop",
+   "requestDay": 30,
+   "rebelDay": 30
   },
   "442": {
    "name": "Death_Speed",
@@ -20359,8 +20388,8 @@
    "author": "UCRFsLPOtf3_IWTQ5Xs0iJqg",
    "day": 12,
    "job": "taxcollector",
-   "requestDay": 29,
-   "complainDay": 29
+   "requestDay": 30,
+   "complainDay": 30
   },
   "635": {
    "name": "Britishcolonizer1815",
@@ -21926,7 +21955,7 @@
    "author": "UCKyh7wACyRIOT9jAJZbteeQ",
    "day": 17,
    "job": "tanner",
-   "requestDay": 29
+   "requestDay": 30
   },
   "877": {
    "name": "nertano2518",
@@ -22048,7 +22077,7 @@
    "author": "UCDdkdzZTbLPlSh5pCgbpetQ",
    "day": 17,
    "job": "physician",
-   "requestDay": 26
+   "requestDay": 30
   },
   "896": {
    "name": "Greenman",
@@ -22295,8 +22324,8 @@
    "author": "UCliB9PmTC2i35qCYiVlRz3Q",
    "day": 20,
    "job": "merchant",
-   "requestDay": 29,
-   "complainDay": 29
+   "requestDay": 30,
+   "complainDay": 30
   },
   "937": {
    "name": "Terra_4",
@@ -22850,8 +22879,8 @@
    "name": "FbiOfficer-24",
    "author": "UCEzzY33fuuGun7i-0LfaXsg",
    "day": 24,
-   "job": "guard",
-   "requestDay": 29
+   "job": "priest",
+   "requestDay": 30
   },
   "1025": {
    "name": "Shrisankchannel",
@@ -23016,8 +23045,8 @@
    "name": "th3gr33nappl3studios",
    "author": "UC6zhpSKFpaaGHD3d6TJBcAQ",
    "day": 25,
-   "job": "engineer",
-   "requestDay": 25
+   "job": "baker",
+   "requestDay": 30
   },
   "1051": {
    "name": "Olginalq",
@@ -23110,7 +23139,9 @@
   "1065": {
    "name": "boidis",
    "author": "UC2j3vDWmlD5ZzwDWEkzlXbA",
-   "day": 27
+   "day": 27,
+   "job": "stonemason",
+   "requestDay": 30
   },
   "1066": {
    "name": "Alexurfren_onXBox",
@@ -23267,6 +23298,23 @@
    "day": 29,
    "job": "teacher",
    "requestDay": 29
+  },
+  "1091": {
+   "name": "Thundernut41",
+   "author": "UCKXkDNIcOrInu8hIv_qkz6Q",
+   "day": 30
+  },
+  "1092": {
+   "name": "blondiecoyote",
+   "author": "UCo5kWNDeZKFfTnVSEdqsLIQ",
+   "day": 30
+  },
+  "1093": {
+   "name": "northwolfwind2405",
+   "author": "UCuVXNDLXijORZGr1Zc-8JrQ",
+   "day": 30,
+   "job": "guard",
+   "requestDay": 30
   }
  },
  "nameQueue": [],
@@ -24361,9 +24409,12 @@
   "UCvJm2ipSvlJ4iQK31_LIbPg",
   "UC1lRtui6ubapnWmai9c4cuw",
   "UC5U3lVH2_4qA0pmNuCLOQNA",
-  "UCWy26LmUJSy597ThQbUiHJw"
+  "UCWy26LmUJSy597ThQbUiHJw",
+  "UCKXkDNIcOrInu8hIv_qkz6Q",
+  "UCo5kWNDeZKFfTnVSEdqsLIQ",
+  "UCuVXNDLXijORZGr1Zc-8JrQ"
  ],
- "commentsSeen": "2026-11-13T10:43:15Z",
+ "commentsSeen": "2026-11-14T09:22:26Z",
  "storyLog": {
   "royal": 12,
   "proclaim": 25,
@@ -24377,58 +24428,8 @@
   "martinmas": 27,
   "bigfish": 29
  },
- "story": {
-  "id": "bigfish",
-  "step": "catch",
-  "cast": [
-   {
-    "id": 1048,
-    "name": "shannonneo409",
-    "job": "fisherman",
-    "day": 25
-   },
-   {
-    "id": 1086,
-    "name": "Jase",
-    "job": "merchant",
-    "day": 29
-   },
-   {
-    "id": 1079,
-    "name": "keyfunk",
-    "job": "peasant",
-    "day": 29
-   }
-  ]
- },
- "featured": [
-  {
-   "id": 1083,
-   "name": "Daniel",
-   "job": "fletcher",
-   "today": true,
-   "with": {
-    "id": 206,
-    "name": "DavidGamesOfFriends",
-    "job": "guard",
-    "today": false
-   },
-   "pair": "arrows"
-  },
-  {
-   "id": 1085,
-   "name": "Icaca",
-   "job": "baker",
-   "today": true,
-   "with": {
-    "id": 634,
-    "name": "premierak56",
-    "job": "taxcollector",
-    "today": false
-   },
-   "pair": "visit"
-  }
- ],
+ "story": null,
+ "featured": [],
  "lastShown": {
   "13": 22,
   "16": 25,
@@ -24560,14 +24561,11 @@
  },
  "scenes": {
   "tavern": false,
-  "church": "cathedral",
-  "variants": {
-   "1083": "fletch",
-   "1085": "oven"
-  },
-  "ambient": "pasture",
+  "church": false,
+  "variants": {},
+  "ambient": "laundry",
   "pov": null,
-  "opening": "story"
+  "opening": "castle"
  },
  "wall2": {
   "day": 8,
@@ -24704,7 +24702,7 @@
  },
  "nextPlot": 195,
  "plotsV": 2,
- "nextDense": 596,
+ "nextDense": 597,
  "buildQueue": [],
  "nextFine": 20,
  "guardCaptain": 88,
