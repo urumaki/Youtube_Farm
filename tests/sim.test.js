@@ -294,7 +294,7 @@ test('comment job requests read wrong on 2026-11-06/07 (owner 2026-11-07)', asyn
   const first = (t) => w(t)[0] || '';
   assert.equal(first('If any farmers are having problems with rats then I may help you, I have cats for rent'), 'ratcatcher');
   assert.equal(first('Sorry didn’t realize blacksmith was taken so I want priest'), 'priest');
-  assert.equal(first('since I’m serving a Swordmaster I have a new idea, I’m still a guard but for a promotion, a Archer'), 'fletcher');
+  assert.equal(first('since I’m serving a Swordmaster I have a new idea, I’m still a guard but for a promotion, a Archer'), 'archer'); // owner 2026-11-15: a guard with a bow
   assert.equal(first('I’ll make sure to put this bow to good use!'), '');
   assert.equal(first('I’ll be the executioner’s friend'), '');
   assert.equal(first('Can i be a crusaider for the church/chapel?'), 'guard');
@@ -359,7 +359,7 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
   assert.deepEqual(wantsFromText('Has anybody Requested to be a paladin'), ['guard']);
   assert.deepEqual(wantsFromText('can I be the chief of war against other villages'), ['guard']);
   assert.deepEqual(wantsFromText('can I be a banker'), ['merchant']);
-  assert.deepEqual(wantsFromText('Day 6 of asking to be a physicist'), ['scholar']);
+  assert.deepEqual(wantsFromText('Day 6 of asking to be a physicist'), ['physicist']); // owner 2026-11-15: the one Physicist
   assert.deepEqual(wantsFromText('I request to be a chemist'), ['apothecary']);
   assert.deepEqual(wantsFromText('Can I be a minor in the cave'), ['miner']);
   assert.deepEqual(wantsFromText('I be mining.'), ['miner']);
@@ -389,7 +389,7 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
     'Im the town crier but can I be a teacher as well': 'teacher', 'Great sir, may I be a blacksmith please': 'blacksmith',
     'Hello sir I am chezzkahn and I would like to be a librarian': 'librarian', 'could I be a army engineer': 'engineer',
     'may I be an academic so I may study engineering': 'scholar', 'can I be kight plssss': 'guard', 'to be the king’s night': 'guard',
-    'Can i be a men at arms': 'guard', 'May I serve as a defender of the city?': 'guard', 'can I be a crossbowman': 'fletcher',
+    'Can i be a men at arms': 'guard', 'May I serve as a defender of the city?': 'guard', 'can I be a crossbowman': 'archer',
     'a metalsmith named xc': 'blacksmith', 'Can i be a goldsmith?': 'blacksmith', 'a craftman': 'carpenter', 'a woodworker?': 'carpenter',
     'an shipwright': 'carpenter', 'the vows of monastic life': 'priest', 'Can I be the Deacon': 'priest', 'the pediatrician': 'physician',
     'Day 3 for sawbonee?': 'barber', 'the local winery boss': 'brewer', 'a stable worker': 'stablehand', 'the town speaker': 'crier',
@@ -1845,4 +1845,43 @@ test('the Hall of Justice (owner 2026-11-14): a goal at 3,400, the Judge and the
   // the quarrel's peace may be made in court
   const quarrel = storyFor(structuredClone(s), 'quarrel:peace');
   assert.ok(quarrel.court, 'made up before the Judge');
+});
+
+test('an archer is a guard with a bow; the one Physicist, shown on the day the owner set (owner 2026-11-15)', async () => {
+  const { wantsFromText } = await import('../src/sim/requests.js');
+  const { JOBS } = await import('../src/sim/tiers.js');
+  const { VARIANTS, BOW_VARIANTS, pickVariant, archerOf } = await import('../src/sim/scenes.js');
+  for (const [text, want] of [['can I be an archer', 'archer'], ['I want to be a bowman', 'archer'], ['can I be a crossbowman', 'archer'], ["voglio fare l'arciere", 'archer'],
+    ['make me a fletcher', 'fletcher'], ['I make bows and arrows', 'fletcher'], ['Day 6 of asking to be a physicist', 'physicist'], ['can I be a scientist', 'scholar']]) {
+    assert.deepEqual(wantsFromText(text), [want], text);
+  }
+  assert.ok(VARIANTS.physicist.includes('ramp'));
+  const only = JOBS.physicist.only[0];
+  const W = (author, name, text, at) => ({ author, name, at, wants: wantsFromText(text) });
+  const { state: s } = run([60]);
+  let r = advance(s, { subscribers: 60, date: dateOf(5), commenters: [W('a1', 'Bowie', 'can I be an archer', '1'), W(only, 'Newton', 'day 9 of asking to be a physicist', '2'),
+    W('o1', 'Other', 'make me a physicist', '3')] });
+  const idOf = (name) => r.state.villagers.find((v) => v.name === name).id;
+  const bowie = idOf('Bowie');
+  assert.deepEqual([r.state.villagers[bowie].job, r.state.names[bowie].bow], ['guard', true]);
+  assert.equal(r.state.villagers[idOf('Newton')].job, 'physicist');
+  assert.notEqual(r.state.villagers[idOf('Other')].job, 'physicist');
+  // the archer's scenes all carry the bow (the walls, the target in the croft); another guard never shoots at the target
+  assert.ok(archerOf(r.state, bowie, 'guard'));
+  for (let day = 0; day < 30; day++) {
+    assert.ok(BOW_VARIANTS.includes(pickVariant('guard', 'x', day, bowie, new Set(), { bow: true })));
+    assert.equal(pickVariant('guard', 'x', day, bowie, new Set(), { bow: true, croft: true }), 'shoot');
+    assert.notEqual(pickVariant('guard', 'x', day, 1), 'shoot');
+  }
+  // asking for another job later puts the bow down
+  r = advance(r.state, { subscribers: 60, date: dateOf(6), commenters: [W('a1', 'Bowie', 'can I be a baker', '4')] });
+  assert.equal(r.state.names[bowie].bow, undefined);
+  checkInvariants(r.state);
+  // a shot the owner set for a day comes before everybody, on that day
+  const t = r.state;
+  const newton = idOf('Newton');
+  t.names[newton].showDay = t.day + 2;
+  r = advance(t, { subscribers: 60, date: dateOf(7), commenters: [] });
+  r = advance(r.state, { subscribers: 60, date: dateOf(8), commenters: [] });
+  assert.equal(r.diff.featured[0]?.id, newton);
 });

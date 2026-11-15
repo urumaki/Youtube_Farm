@@ -152,9 +152,10 @@ function bandit(M, i, kind = i % 3 ? 'torch' : 'club') {
   return P;
 }
 
-/** A guard of the kingdom, a spear or (k) a sword. */
+/** A guard of the kingdom, a spear or (k) a sword; an archer (owner 2026-11-15: c.bow) his bow. */
 function guardRig(M, c, sword = false) {
   const P = person(M, c ? JOBS[c.job]?.color || GUARD : GUARD);
+  if (c?.bow) { P.l.hand.add(bowGeo(M)); return P; }
   P.r.hand.add(toolGeo(sword || ['knight', 'cavalier'].includes(c?.job) ? 'sword' : 'spear', M));
   return P;
 }
@@ -167,7 +168,7 @@ export function nightLights(group, power = 1.1) {
 }
 
 /** A longbow held upright in the left hand (hand frame, the arm along -y). */
-function bowGeo(M) {
+export function bowGeo(M) {
   const g = new THREE.Group();
   const stave = new THREE.Mesh(new THREE.TorusGeometry(0.62, 0.022, 5, 18, Math.PI * 0.8).rotateZ(Math.PI * 0.6).translate(0.62, 0, 0), M.woodDark);
   stave.castShadow = true;

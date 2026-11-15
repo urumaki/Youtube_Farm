@@ -59,7 +59,8 @@ export const TRIAL_CHARGES = {
   miner: [['digging a tunnel under their cellar', []]], librarian: [['shushing them at their own wedding', []]],
   prisoner: [['slipping out of the dungeon to eat their dinner, then slipping back in', ['guard']]], spy: [['listening at their window all evening', []]],
   messenger: [['delivering their love letter to the wrong house', []]], sweeper: [['sweeping all the dust into their doorway', []]],
-  diplomat: [['promising their cow to a foreign envoy', ['farmer']]], bailiff: [['locking them out of the Hall of Justice by mistake', []]],
+  diplomat: [['promising their cow to a foreign envoy', ['farmer']]],
+  physicist: [['rolling a bronze ball down a ramp straight into their market stall', ['merchant', 'cook', 'butcher']]], bailiff: [['locking them out of the Hall of Justice by mistake', []]],
   judge: [['falling asleep during their case', []]],
   rebel: [['talking of overthrowing the King', ['guard', 'knight', 'cavalier', 'bailiff']]],
 };
@@ -256,7 +257,7 @@ function built(state, id) {
 /** Named villagers living in the kingdom today, newest first. */
 function namedVillagers(state) {
   return Object.entries(state.names || {})
-    .map(([id, n]) => ({ id: Number(id), name: n.name, job: state.villagers[Number(id)]?.job ?? n.job, day: n.day ?? 0 }))
+    .map(([id, n]) => ({ id: Number(id), name: n.name, job: state.villagers[Number(id)]?.job ?? n.job, day: n.day ?? 0, ...(n.bow ? { bow: true } : {}) }))
     .filter((n) => n.id < state.villagers.length)
     .sort((a, b) => b.day - a.day || a.id - b.id);
 }
@@ -757,7 +758,8 @@ const BUILD = {
     };
   },
 };
-const strip = ({ id, name, job, day }) => ({ id, name, job, day });
+// (owner 2026-11-15: an archer keeps the bow in the stories, `bow`)
+const strip = ({ id, name, job, day, bow }) => ({ id, name, job, day, ...(bow && job === 'guard' ? { bow: true } : {}) });
 
 /**
  * The gate of the Second Wall the bandits break (owner 2026-11-07: never a north gate; the one at the top of the hill stood

@@ -16,7 +16,10 @@ const KEYWORDS = [
   [/\bbeggar|\bbegger|\bdrunk|\bdrink|sit all day|mendicant|ubriac|homeless|senza\s*tetto|vagabond|\btramp\b|\bhobo/, 'beggar'],
   [/weirdo|\bweird\b|\bfool\b|\bdumb\s+(person|guy|man|one|villager)\b|crazy(?!\s+(begg|drunk|hobo|tramp))|lunatic|\bscemo|\bmatto|\bidiot|nitwit/, 'jester'],
   [/jester|\bclown|juggl|giullare|buffone/, 'jester'],
-  [/fletcher|\barrow|\bbowyer|\barcher|\bbow\b(?!\s+(to|before|down|my|our|your)\b)|crossbow|long\s*bow|frecce|arciere/, 'fletcher'],
+  // owner 2026-11-15: an archer (bowman, crossbowman, arciere) is a guard who always carries a bow (the token 'archer':
+  // simulate.js makes a guard and sets names[id].bow); the fletcher makes bows and arrows
+  [/\barcher|\b(cross|long)?\s*bow\s*m[ae]n\b|arcier[ei]|balestrier/, 'archer'],
+  [/fletcher|\barrow|\bbowyer|\bbow\b(?!\s+(to|before|down|my|our|your|m[ae]n)\b)|crossbow(?!\s*m[ae]n)|long\s*bow(?!\s*m[ae]n)|frecce/, 'fletcher'],
   // owner 2026-10-28: a Knight, a Cavalier and the Captain of the Guard are only won at the tournaments, so asking makes a guard
   // (2026-10-29: "teutonic Kinght", "kight", "the king's night", paladin, "chief of war", men-at-arms, a defender of the city;
   // "sir" alone is how people speak to the king, "an army engineer" asks for the engineer)
@@ -43,7 +46,9 @@ const KEYWORDS = [
   // owner 2026-11-01: the sailor is a job of its own (before, a fisherman)
   [/\bsailor|\bseaman|\bseamen|\bdeck\s*hand|\bpirate|captain of (a|the) (\w+ )?(ship|boat|vessel)|\b(sea|boat|ship)\s*captain|ship'?s captain|marinaio|pirata/, 'sailor'],
   [/\bbard\b|\bsing(s|er|ers|ing)?\b|\bmusic|\blute|bardo|cantante/, 'bard'],
-  [/scholar|\bscribe|studioso|scientist|physicist|academic|scienziat|inventor|professor|professore/, 'scholar'],
+  // owner 2026-11-15: the kingdom's one Physicist (tiers.js `only`; anyone else asking for it gets no job from it)
+  [/physicist|\bphysics\b/, 'physicist'],
+  [/scholar|\bscribe|studioso|scientist|academic|scienziat|inventor|professor|professore/, 'scholar'],
   // owner 2026-10-30: the librarian is a job of its own (before, a scholar)
   [/librar|bibliotecari|keeper of (the )?books/, 'librarian'],
   [/doctor|healer|physician|medico|guaritore|\bmedic\b|pediatric|clinic/, 'physician'],

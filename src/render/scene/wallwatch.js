@@ -136,7 +136,8 @@ export function buildWallWatch({ where = 'castle', mode = 'day', castle, w, stat
   const faceAlong = Math.atan2(dir.x, dir.z), faceBack = Math.atan2(-dir.x, -dir.z), faceOut = Math.atan2(-inside.x, -inside.z);
   const group = new THREE.Group();
   group.visible = false;
-  const archer = (id) => hero?.job === 'guard' && rand01(seed, 'bow', id) < BOW_SHARE;
+  // owner 2026-11-15: a guard who asked to be an archer always carries the bow (names[id].bow)
+  const archer = (id) => hero?.job === 'guard' && (!!state.names?.[id]?.bow || rand01(seed, 'bow', id) < BOW_SHARE);
   const heroColor = hero ? JOBS[hero.job]?.color || ROYAL.blue : ROYAL.blue;
   const H = guard(M, heroColor, hero ? archer(hero.id) : rand01(seed, 'bow', state.day) < BOW_SHARE);
   group.add(H.root);

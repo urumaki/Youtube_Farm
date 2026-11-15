@@ -722,6 +722,25 @@ Add new owner decisions here.
     trainer, was set to stablehand in the state.
   - With a visitor, or in a POV shot: none of `peek`, `letter`, `treaty` or `lunge` (`SOLO_VARIANTS`).
   - Test: `npm run render -- --real --subs 3100 --gallery "spy:peek,messenger:letter,sweeper:square,sweeper:street,diplomat:treaty,stablehand:lunge" --gallery-times 0.6,1.5,2.4,3.1`.
+- Archers and the one Physicist (owner 2026-11-15, from the comments: `requests.js`, `simulate.js`, `scenes.js`, `work.js`).
+  - An archer is a guard who always carries a bow. Archer, bowman, crossbowman, longbowman, arciere, balestriere give the token
+    'archer' (`requests.js`); `applyRequest` (`simulate.js`) makes a guard and sets `names[id].bow`; a later request for
+    another job removes it. Fletcher, bow, arrow, bowyer, crossbow, longbow still ask for the fletcher (who makes them).
+  - The archer's own shots are only `BOW_VARIANTS` (`scenes.js`, `pickVariant`'s `bow`): on the walls with a bow
+    (`wallwatch.js`), or shooting at a target in the croft (`guard:shoot`, the fletcher's `shoot`); never the spear or the
+    sword. In the stories the cast keeps `bow` (`strip` in `stories.js`): the ambush's guards (`ambush.js`) and the raid's
+    (`guardRig` in `raid.js`) hold his bow.
+  - The 14 villagers whose commenters had asked to be an archer (found by running the comments since 2026-10-16 through
+    `fetchCommenters` and the new regexes; 12 had become fletchers, one was a guard, one had no job) set to guard with the bow
+    in the state. Those who asked for another job later kept it.
+  - Physicist (physicist, physics): only one, `JOBS.physicist.only` holds the channel id of the commenter who asked for it
+    day after day (GreenfewFewgreen, a scholar before); the same words from anyone else are no request. Before, physicist asked
+    for the scholar. A dark teal cap and robe. Scene `ramp` (`physicist: ['ramp']`): a bronze ball rolls down a long ramp on
+    trestles past four bells hung over it, set so it rings them at equal times, and drops into a bucket; an hourglass and an
+    open book on a table beside him. Set to Physicist in the state.
+  - `names[id].showDay` (`featured.js`, score +60): the owner's shot for a villager on that day, or the first one after it
+    with villager shots. The Physicist's is day 33 (2026-11-17), after the ambush (day 31) and its rescue (day 32).
+  - Test: `npm run render -- --real --subs 3330 --gallery "physicist:ramp,guard:shoot" --gallery-times 0.3,1.5,2.4,3.4`.
 - From the comments on the day 14 video (owner 2026-10-30, `requests.js`): "begger" asks for the beggar, and "crazy"
   before a beggar or drunk no longer makes a jester; "townsguard", flag or standard bearer ask for a guard; "captain of a
   ship" and sea captain for the fisherman (a sailor), not a guard; herding pigs, ducks, goats or cows for the shepherd;

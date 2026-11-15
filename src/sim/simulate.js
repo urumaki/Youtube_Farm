@@ -17,6 +17,7 @@ export const DEFAULT_SEED = hash('Subscriber Kingdom');
 // new buildings the video can show on one day, and the ones with no shot of their own (see timeline.js)
 const SHOWN_STARTS = 2;
 const NO_SHOT = new Set(['fields', 'guardposts', 'charter_stone']);
+const ARCHER = 'archer'; // requests.js: a guard with a bow (owner 2026-11-15)
 
 export function genesis({ seed = DEFAULT_SEED, date = '1970-01-01' } = {}) {
   return {
@@ -306,9 +307,12 @@ function assignNames(s, commenters, blocked, diff) {
   const villagerOf = (author) => Object.keys(s.names).find((id) => s.names[id].author === author);
   // a request sets the job if the kingdom has it, otherwise the villager is an apprentice until it does;
   // only the first job named counts (owner 2026-10-23: never a later one in its place)
+  // owner 2026-11-15: an archer is a guard who always carries a bow (names[id].bow, the render's guards; requests.js 'archer')
   const applyRequest = (id, wants) => {
     const n = s.names[id];
-    const want = JOBS[wants[0]].earned ? 'guard' : wants[0]; // a Knight or a Cavalier is won, not asked for (a request saved before)
+    const archer = wants[0] === ARCHER;
+    const want = archer || JOBS[wants[0]].earned ? 'guard' : wants[0]; // a Knight or a Cavalier is won, not asked for (a request saved before)
+    if (archer) n.bow = true; else delete n.bow;
     const pick = avail.has(want) ? want : null;
     n.job = pick || 'apprentice';
     if (pick) delete n.wants; else n.wants = want;
@@ -333,7 +337,7 @@ function assignNames(s, commenters, blocked, diff) {
       for (const k of ['accused', 'accuser']) if (parties[k] && c.author === parties[k]) s.trialLikes[k] = Math.max(s.trialLikes[k] ?? 0, likes);
     }
     // owner 2026-11-13: a job only some commenters may have (the Diplomat, tiers.js `only`) is no request from anyone else
-    const wants = (Array.isArray(c.wants) ? c.wants : []).filter((j) => typeof j === 'string' && Object.hasOwn(JOBS, j) && (!JOBS[j].only || JOBS[j].only.includes(c.author)));
+    const wants = (Array.isArray(c.wants) ? c.wants : []).filter((j) => typeof j === 'string' && (j === ARCHER || Object.hasOwn(JOBS, j)) && (j === ARCHER || !JOBS[j].only || JOBS[j].only.includes(c.author)));
     const call = c.call ? valid(c.call) : null; // "call me Violet"
     if (known.has(c.author)) {
       // someone who already has a villager asks for a (new) job or a new name

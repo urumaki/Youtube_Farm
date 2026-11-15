@@ -57,7 +57,14 @@ export const VARIANTS = {
   // owner 2026-11-14: the Judge hears a case at the bench of the Hall of Justice or gives the verdict there (court.js), else
   // reads the law at a desk in the croft; the Bailiff keeps the court's door, else drills with his mace at a post
   judge: ['hearing', 'verdict', 'study'], bailiff: ['doorway', 'drill'],
+  // owner 2026-11-15: the one Physicist rolls a bronze ball down a long ramp past a row of bells (work.js 'ramp')
+  physicist: ['ramp'],
 };
+// owner 2026-11-15: a guard who asked to be an archer (names[id].bow) always carries a bow: on the walls (wallwatch.js) or
+// shooting at a target in the croft ('shoot', the fletcher's), never with a spear or a sword
+export const BOW_VARIANTS = ['shoot', 'walls', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change'];
+/** True when the villager is a guard with a bow (an archer, owner 2026-11-15). */
+export const archerOf = (state, id, job) => job === 'guard' && !!state?.names?.[id]?.bow;
 VARIANTS.guard.push('dungeon');
 // scenes away from the croft (at the castle, on the river, in the street at dusk): own camera, a hard cut in and out
 // the fisherman always fishes on the river (owner 2026-10-22): from a jetty with a rod or a net, or in a boat
@@ -158,10 +165,10 @@ export function introVariant(state, job, used = new Set()) {
 /**
  * The scene for a villager of this job today (null: the job's only scene), not one already used today and,
  * when there is a choice, not one shown in the last days (`isRecent(variant)`); one never shown yet first (`isNew(variant)`,
- * owner 2026-11-13).
+ * owner 2026-11-13); an archer's scenes only (`bow`, BOW_VARIANTS).
  */
-export function pickVariant(job, seed, day, id, used = new Set(), { croft = false, isRecent = () => false, ready = () => true, isNew = () => false } = {}) {
-  const opts = VARIANTS[job]?.filter((v) => !(croft && (AWAY_VARIANTS.has(v) || SOLO_VARIANTS.has(v))) && ready(v));
+export function pickVariant(job, seed, day, id, used = new Set(), { croft = false, isRecent = () => false, ready = () => true, isNew = () => false, bow = false } = {}) {
+  const opts = (bow ? BOW_VARIANTS : VARIANTS[job])?.filter((v) => !(croft && (AWAY_VARIANTS.has(v) || SOLO_VARIANTS.has(v))) && ready(v));
   if (!opts?.length) return null;
   const k = Math.floor(rand01(seed, 'variant', day, id) * opts.length);
   const order = opts.map((_, i) => opts[(k + i) % opts.length]);
@@ -195,7 +202,7 @@ export function planScenes(state, { featured, tavern, church = null, avoidJobs =
     const n = state.names[f.id];
     const job = f.job === 'apprentice' && n?.wants ? n.wants : f.job;
     // no innkeeper or bard shot inside the tavern on the day the tavern interior closes the video
-    const v = (f.today && !f.with && introVariant(state, job, used)) || pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), isNew: (x) => state.sceneLog?.[sceneKey(job, x)] === undefined, ready: (x) => sceneReady(state, x, job) && !(tavern && (x === 'inside' || x === 'inn')) });
+    const v = (f.today && !f.with && introVariant(state, job, used)) || pickVariant(job, state.seed, day, f.id, used, { croft: !!f.with, isRecent: (x) => recentScene(state, sceneKey(job, x)), isNew: (x) => state.sceneLog?.[sceneKey(job, x)] === undefined, ready: (x) => sceneReady(state, x, job) && !(tavern && (x === 'inside' || x === 'inn')), bow: archerOf(state, f.id, job) });
     if (v) used.add(v);
     variants[f.id] = v;
   }

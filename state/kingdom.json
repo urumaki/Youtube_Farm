@@ -16307,10 +16307,11 @@
    "name": "The_Knight_Of_Dice",
    "author": "UCRn79g9kHNpn1avTlvMH2vA",
    "day": 3,
-   "job": "fletcher",
+   "job": "guard",
    "requestDay": 28,
    "complainDay": 22,
-   "joinDay": 13
+   "joinDay": 13,
+   "bow": true
   },
   "14": {
    "name": "MeepDoesVR",
@@ -17473,8 +17474,9 @@
    "name": "Thomas",
    "author": "UCVXuWd-mmeZHgkDh3iFqXpg",
    "day": 8,
-   "job": "fletcher",
-   "requestDay": 8
+   "job": "guard",
+   "requestDay": 8,
+   "bow": true
   },
   "198": {
    "name": "un-tocino-muy-fachero",
@@ -18010,9 +18012,10 @@
    "name": "GreenfewFewgreen",
    "author": "UCuixh6sZ-0VEB4pjGfzzMkQ",
    "day": 8,
-   "job": "scholar",
+   "job": "physicist",
    "requestDay": 30,
-   "complainDay": 29
+   "complainDay": 29,
+   "showDay": 33
   },
   "277": {
    "name": "Someperson",
@@ -18164,9 +18167,10 @@
    "name": "VinceDannErnestDiaz",
    "author": "UCsK8RWmCIwWNkNECCMuaDrQ",
    "day": 8,
-   "job": "fletcher",
+   "job": "guard",
    "requestDay": 15,
-   "complainDay": 15
+   "complainDay": 15,
+   "bow": true
   },
   "300": {
    "name": "LiamMossor",
@@ -18807,8 +18811,9 @@
    "name": "GaborMolnar",
    "author": "UChrIrq7Bxrj0iC5jTUqmRQQ",
    "day": 9,
-   "job": "fletcher",
-   "requestDay": 12
+   "job": "guard",
+   "requestDay": 12,
+   "bow": true
   },
   "397": {
    "name": "Cavan357",
@@ -18968,7 +18973,9 @@
   "420": {
    "name": "Jacob-Da-Elephant",
    "author": "UCA-DQEt-85OXu9c9i-BzkZg",
-   "day": 9
+   "day": 9,
+   "job": "guard",
+   "bow": true
   },
   "421": {
    "name": "ntjok",
@@ -19624,8 +19631,9 @@
    "name": "kka",
    "author": "UCFYtVlarwJjzoNEyHbe1bPg",
    "day": 10,
-   "job": "fletcher",
-   "requestDay": 10
+   "job": "guard",
+   "requestDay": 10,
+   "bow": true
   },
   "520": {
    "name": "joseangelhe",
@@ -20465,8 +20473,9 @@
    "name": "MJPGAMING",
    "author": "UCH8Xc1q8Zs2YT-AcP6_aJlg",
    "day": 12,
-   "job": "fletcher",
-   "requestDay": 17
+   "job": "guard",
+   "requestDay": 17,
+   "bow": true
   },
   "646": {
    "name": "Idkjustgowithit_2011",
@@ -21663,8 +21672,9 @@
    "name": "idiotic_bofoon",
    "author": "UCMD3NVIi8nRifo6rp7Jy3jg",
    "day": 15,
-   "job": "fletcher",
-   "requestDay": 15
+   "job": "guard",
+   "requestDay": 15,
+   "bow": true
   },
   "827": {
    "name": "hibrozzz34628",
@@ -21894,8 +21904,9 @@
    "name": "S3RO_01",
    "author": "UCP6EI1ji_hXS6EUD9N2U6HQ",
    "day": 16,
-   "job": "fletcher",
-   "requestDay": 21
+   "job": "guard",
+   "requestDay": 21,
+   "bow": true
   },
   "867": {
    "name": "shiandysiewanto1281",
@@ -22133,8 +22144,9 @@
    "name": "venuscalo5474",
    "author": "UCrOPJn9k8NRkM1rkDQw7JGQ",
    "day": 17,
-   "job": "fletcher",
-   "requestDay": 17
+   "job": "guard",
+   "requestDay": 17,
+   "bow": true
   },
   "906": {
    "name": "tea827",
@@ -22248,7 +22260,8 @@
    "author": "UCwvkwt5s4eMMn91GZlk-mGw",
    "day": 19,
    "job": "guard",
-   "requestDay": 24
+   "requestDay": 24,
+   "bow": true
   },
   "925": {
    "name": "Clunkiesttunic0",
@@ -23071,8 +23084,9 @@
    "name": "PraveenKumarRai",
    "author": "UCJoUHvmudLyguXo_nVltgcQ",
    "day": 25,
-   "job": "fletcher",
-   "requestDay": 29
+   "job": "guard",
+   "requestDay": 29,
+   "bow": true
   },
   "1055": {
    "name": "IndigoTheKitsune",
@@ -23251,8 +23265,9 @@
    "name": "Daniel",
    "author": "UCPsxrEKpDV9yhqAIFCt2Raw",
    "day": 29,
-   "job": "fletcher",
-   "requestDay": 29
+   "job": "guard",
+   "requestDay": 29,
+   "bow": true
   },
   "1084": {
    "name": "the_bee_with_flees",
@@ -23289,8 +23304,9 @@
    "name": "sgxmarshal6031",
    "author": "UC5U3lVH2_4qA0pmNuCLOQNA",
    "day": 29,
-   "job": "fletcher",
-   "requestDay": 29
+   "job": "guard",
+   "requestDay": 29,
+   "bow": true
   },
   "1090": {
    "name": "gottliebru",

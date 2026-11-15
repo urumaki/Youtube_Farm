@@ -28,7 +28,8 @@ const ACTIVITIES = {
   brewer: 'taps a barrel of honey mead',
   judge: 'hears a case about a goat and a missing cabbage', bailiff: 'keeps order at the door of the Hall of Justice',
   spy: 'hides behind a barrel and writes down who buys the most pies', messenger: 'runs a sealed letter across town without dropping it once',
-  sweeper: 'sweeps the square clean just before the market opens', diplomat: 'signs a treaty of friendship with a distant kingdom', apprentice: 'sweeps the workshop and dreams of the future',
+  sweeper: 'sweeps the square clean just before the market opens', diplomat: 'signs a treaty of friendship with a distant kingdom',
+  physicist: 'rolls a ball down a long ramp and listens to the bells ring', apprentice: 'sweeps the workshop and dreams of the future',
 };
 
 function season(date) {

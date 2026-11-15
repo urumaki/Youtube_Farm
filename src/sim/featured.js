@@ -75,12 +75,15 @@ export function pickFeatured(state, { avoidJobs = [], slots, tavern = tavernScen
         asked: fresh(n.requestDay) || (n.requestDay !== undefined && day - n.requestDay <= 5 && !(last >= n.requestDay && last < day)),
         // a complaint keeps its place until they are shown, for up to 3 days (owner 2026-10-29: when their job is already on
         // screen that day, they come first on the next)
-        complained: n.complainDay !== undefined && day - n.complainDay <= 3 && !(last >= n.complainDay && last < day) };
+        complained: n.complainDay !== undefined && day - n.complainDay <= 3 && !(last >= n.complainDay && last < day),
+        // owner 2026-11-15: a shot the owner set for a day (names[id].showDay, the new Physicist after the ambush), on that day or
+        // the first one after it with villager shots, before everybody
+        spot: n.showDay !== undefined && day >= n.showDay && !(last >= n.showDay && last < day) };
     })
     // innkeepers and brewers serve in the tavern scene when it closes the video
     .filter((n) => n.id < state.subscriberCount && n.job && !(tavern && (n.job === 'innkeeper' || n.job === 'brewer')) && !(clergy && (n.job === 'priest' || n.job === 'bishop')));
   // someone who wrote they could not find themselves in the last video comes before everybody (owner 2026-10-21)
-  const score = (n) => (n.complained ? 30 : 0) + (n.today ? 8 : 0) + (n.asked ? 3 + 0.2 * (day - (n.req ?? day)) : 0) + (n.last === undefined ? 4 : Math.min(3, (day - n.last) / 3))
+  const score = (n) => (n.spot ? 60 : 0) + (n.complained ? 30 : 0) + (n.today ? 8 : 0) + (n.asked ? 3 + 0.2 * (day - (n.req ?? day)) : 0) + (n.last === undefined ? 4 : Math.min(3, (day - n.last) / 3))
     + (avoid.has(n.job) ? -6 : 0) + (n.last === day - 1 ? -10 : 0) + (stale(n.job) ? -4 : 0) + (novel(n.scene) ? 2 : 0);
   // owner 2026-11-13: most villagers were never shown (score 4 for all of them), and the tie went to INTEREST: the same
   // ten jobs every day. Now the tie goes to the job whose scenes were seen longest ago (never first), then to the rarer job

@@ -215,6 +215,8 @@ const JOB_SCENES = {
   spy: { period: 4.6, raise: -1.0, down: -1.0, bend: 0.25, sound: 'none', tool: null, props: 'hideout', smooth: true, peek: true, left: -1.1, turn: -0.47 },
   messenger: { period: 3.0, raise: -1.3, down: -1.3, bend: 0, sound: 'none', tool: null, props: 'letterdoor', smooth: true, errand: true },
   sweeper: { period: 1.5, hit: 0.5, raise: -0.8, down: -0.8, bend: 0.2, fx: 'dust', sound: 'none', tool: 'broom', props: 'litter', sweep: true, both: true },
+  // owner 2026-11-15: the one Physicist rolls a bronze ball down a ramp past four bells (props 'ramp')
+  physicist: { period: 4.0, raise: -1.2, down: -0.55, bend: 0.1, sound: 'none', tool: null, props: 'ramp', smooth: true, left: -0.45 },
   diplomat: { period: 5.2, raise: -1.3, down: -1.08, bend: 0.2, sound: 'none', tool: null, props: 'treaty', smooth: true, treaty: true, left: -1.05 },
   // owner 2026-11-14: the Judge reads the law at a desk in the croft (the scales of justice on it) and stamps the page with
   // his seal; the Bailiff drills with his mace at a post
@@ -301,6 +303,8 @@ JOB_SCENES['bailiff:doorway'] = { period: 1.6, raise: -1.4, down: -0.9, bend: 0,
 JOB_SCENES['stablehand:lunge'] = { period: 6.0, raise: -1.35, down: -1.35, bend: 0, sound: 'none', tool: null, props: 'lunge', smooth: true, lunge: true, radius: 10 };
 // at the Apiary (owner 2026-10-25): its own bench of skeps, so only the bees (main.js puts him at the bench's end)
 JOB_SCENES['beekeeper:apiary'] = { ...JOB_SCENES.beekeeper, props: 'bees' };
+// owner 2026-11-15: a guard who asked to be an archer shoots at a target in the croft (scenes.js BOW_VARIANTS)
+JOB_SCENES['guard:shoot'] = JOB_SCENES['fletcher:shoot'];
 for (const [from, to] of [['toolsmith', 'blacksmith'], ['brewer', 'innkeeper'], ['bishop', 'priest']]) {
   for (const k of Object.keys(JOB_SCENES)) if (k === to || k.startsWith(to + ':')) JOB_SCENES[from + k.slice(to.length)] ??= JOB_SCENES[k];
 }
@@ -1367,6 +1371,60 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       add(cylGeo(0.18, 0.15, 0.34, 10).translate(-1.0, 0.17, 0.45), M.wood);
       add(new THREE.TorusGeometry(0.17, 0.012, 4, 14).rotateX(Math.PI / 2).translate(-1.0, 0.3, 0.45), M.iron);
       return new THREE.Vector3(0, 0.05, 1.1);
+    }
+    case 'ramp': { // owner 2026-11-15, the Physicist: a bronze ball rolls down a long ramp on trestles past four bells hung over it,
+      // set so the ball rings them at equal times (each gap longer than the one before), and drops into a bucket at the end.
+      // The ramp runs beside him and away to his front (+z), across the camera's view
+      const X = 0.55, top = new THREE.Vector3(X, 1.15, -0.15), low = new THREE.Vector3(X, 0.48, 1.4);
+      const along = low.clone().sub(top), len = along.length(), tilt = Math.atan2(-along.y, along.z);
+      const mid = top.clone().lerp(low, 0.5);
+      add(boxGeo(0.2, 0.04, len + 0.1).rotateX(tilt).translate(mid.x, mid.y, mid.z), M.wood);
+      for (const dx of [-0.09, 0.09]) add(boxGeo(0.025, 0.05, len + 0.1).rotateX(tilt).translate(mid.x + dx, mid.y + 0.04, mid.z), M.woodDark); // the groove's rails
+      for (const k of [0.04, 0.5, 0.96]) { // the trestles
+        const p = top.clone().lerp(low, k);
+        for (const dx of [-0.12, 0.12]) add(boxGeo(0.05, p.y, 0.06).translate(p.x + dx, p.y / 2, p.z), M.woodDark);
+        add(boxGeo(0.3, 0.05, 0.08).translate(p.x, p.y - 0.04, p.z), M.woodDark);
+      }
+      add(cylGeo(0.16, 0.13, 0.3, 10, 1, true).translate(low.x, 0.15, low.z + 0.2), M.wood); // the bucket the ball drops into
+      add(cylGeo(0.13, 0.13, 0.02, 10).translate(low.x, 0.02, low.z + 0.2), M.woodDark);
+      // the bells, at the points the ball reaches after a quarter, a half, three quarters and all of its run (distance grows as
+      // time squared), each on a post behind the ramp with an arm over it
+      const RUN = [0.22, 0.8]; // the part of the cycle the ball rolls in
+      const bells = [0.25, 0.5, 0.75, 0.97].map((tau) => {
+        const p = top.clone().lerp(low, tau * tau);
+        add(boxGeo(0.05, p.y + 0.42, 0.05).translate(p.x + 0.3, (p.y + 0.42) / 2, p.z), M.woodDark);
+        add(boxGeo(0.34, 0.04, 0.04).translate(p.x + 0.15, p.y + 0.4, p.z), M.woodDark);
+        const g = new THREE.Group();
+        g.position.set(p.x, p.y + 0.38, p.z);
+        holder.add(g);
+        const bell = new THREE.Mesh(cylGeo(0.025, 0.065, 0.1, 10).translate(0, -0.08, 0), M.gold);
+        bell.castShadow = true;
+        g.add(bell);
+        return { g, at: RUN[0] + tau * (RUN[1] - RUN[0]) };
+      });
+      // a little table on his other side with an hourglass and an open book of figures
+      add(boxGeo(0.45, 0.05, 0.6).translate(-0.15, 0.72, -0.85), M.wood);
+      for (const [x, z] of [[-0.33, -1.1], [0.03, -1.1], [-0.33, -0.6], [0.03, -0.6]]) add(boxGeo(0.05, 0.72, 0.05).translate(x, 0.36, z), M.woodDark);
+      add(boxGeo(0.24, 0.02, 0.34).translate(-0.15, 0.755, -0.9), M.clothIvory);
+      for (const [y, flip] of [[0.83, 0], [0.93, 1]]) add(new THREE.ConeGeometry(0.05, 0.1, 10).rotateX(flip ? 0 : Math.PI).translate(-0.1, y, -0.65), M.clothIvory);
+      for (const y of [0.765, 0.995]) add(cylGeo(0.065, 0.065, 0.02, 10).translate(-0.1, y, -0.65), M.woodDark);
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 10), M.gold);
+      ball.castShadow = true;
+      holder.add(ball);
+      const up = new THREE.Vector3(0, Math.cos(tilt), Math.sin(tilt)).multiplyScalar(0.085);
+      anim.push((t, c) => {
+        const u = c - Math.floor(c);
+        if (u < RUN[0]) ball.position.copy(top).add(up); // held at the top of the ramp
+        else if (u < RUN[1]) { const tau = (u - RUN[0]) / (RUN[1] - RUN[0]); ball.position.copy(top).lerp(low, tau * tau).add(up); }
+        else { const k = Math.min(1, (u - RUN[1]) / 0.05); ball.position.set(low.x, low.y + 0.085 - 0.45 * k * k, low.z + 0.2 * k); }
+        ball.visible = u < RUN[1] + 0.06;
+        ball.rotation.x = u * 40;
+        for (const b of bells) {
+          const since = (u - b.at) * 4.0; // seconds (the physicist's period)
+          b.g.rotation.z = since > 0 ? 0.5 * Math.exp(-since * 2.2) * Math.sin(since * 16) : 0;
+        }
+      });
+      return new THREE.Vector3(X, 0.85, 0.65);
     }
     case 'treaty': { // a table with the treaty, an inkpot and a seal; across it a foreign envoy (cfg.treaty); the two banners
       add(boxGeo(1.3, 0.07, 0.8).translate(0, 0.8, 0.72), M.wood);

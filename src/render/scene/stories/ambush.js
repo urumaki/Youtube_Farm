@@ -20,6 +20,7 @@ import { rig, toolGeo, nod } from '../work.js';
 import { person, stride, castTag, ease, clamp01 } from './common.js';
 import { horse } from './royal.js';
 import { mount, gallop } from './joust.js';
+import { bowGeo } from './raid.js';
 
 export const AMBUSH_SHOTS = {
   ambush: [['road', 0, 4.5], ['escort', 4.5, 8.5], ['trap', 8.5, 12.5], ['defend', 12.5, 17], ['flee', 17, 21.5], ['clash', 21.5, 30]],
@@ -162,6 +163,8 @@ let shieldMat = null;
 function guard(M, c) {
   const P = person(M, c ? JOBS[c.job]?.color || GUARD : GUARD);
   P.c = c;
+  // owner 2026-11-15: a guard who asked to be an archer has his bow instead
+  if (c?.bow) { P.l.hand.add(bowGeo(M)); return P; }
   P.r.hand.add(toolGeo('sword', M));
   shieldMat ??= new THREE.MeshStandardMaterial({ color: '#2a4a8a', roughness: 0.6 });
   const sh = new THREE.Mesh(boxGeo(0.07, 0.62, 0.46).translate(-0.06, -0.42, 0.12), shieldMat);

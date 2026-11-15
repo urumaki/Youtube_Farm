@@ -96,6 +96,8 @@ export const JOBS = {
   sweeper: { label: 'Street Sweeper', color: '#8b8a6e', requestOnly: true },
   // owner 2026-11-13: the kingdom's one Diplomat, only the commenter who asked for it day after day (`only`: their channel ids)
   diplomat: { label: 'Diplomat', color: '#1f5a5a', requestOnly: true, only: ['UC4EhWDIDSVx1mVTSKQk03gw'] },
+  // owner 2026-11-15: the kingdom's one Physicist, only the commenter who asked for it day after day (before, a scholar)
+  physicist: { label: 'Physicist', color: '#2f5f6f', requestOnly: true, only: ['UCuixh6sZ-0VEB4pjGfzzMkQ'] },
   // owner 2026-11-14: the court (the 'court' goal at 3,400): the Judge in a scarlet robe, the Bailiff with his mace at the door
   judge: { label: 'Judge', color: '#8c1c24' },
   bailiff: { label: 'Bailiff', color: '#33405a' },

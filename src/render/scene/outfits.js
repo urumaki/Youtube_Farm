@@ -21,7 +21,7 @@ function mats(M) {
     steel: std('#b9bec4', { roughness: 0.35, metalness: 0.75 }), steelBoth: std('#b9bec4', { roughness: 0.35, metalness: 0.75, side: THREE.DoubleSide }), mail: std('#8d9298', { roughness: 0.5, metalness: 0.6 }),
     black: std('#151214'), soot: std('#3a312c', { roughness: 0.95 }), felt: std('#3b2f28'), navy: std('#22344f'), wool: std('#7d2a24'),
     brown: std('#5e4630'), grey: std('#77746c'), canvas: std('#a59d88'), clay: std('#9a5f42'), blood: std('#8e2c25'),
-    green: std('#3f5a2a'), purple: std('#4a2766'), blue: std('#24346e'), plume: std('#b3262e'), feather: std('#f2efe6'),
+    green: std('#3f5a2a'), purple: std('#4a2766'), blue: std('#24346e'), plume: std('#b3262e'), teal: std('#1f4f5a'), feather: std('#f2efe6'),
     veil: std('#e8e4d8', { transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false }),
     glass: std('#cfe3ea', { roughness: 0.1, metalness: 0.3 }),
     bandana: std('#5e1518', { side: THREE.DoubleSide }),
@@ -154,6 +154,8 @@ const OUTFITS = {
   messenger: (O, M) => [HATS.beret(O, M.clothRed), satchel(O.leather)],
   sweeper: (O) => [HATS.knit(O, O.grey), apron(O.canvas)],
   diplomat: (O, M) => [HATS.wideFelt(O, O.navy), chain(O, M.gold), O.navy],
+  // owner 2026-11-15: the Physicist in a dark teal cap and robe
+  physicist: (O) => [HATS.pileus(O, O.teal), [], O.teal],
   // owner 2026-11-14: the Judge in a white coif, a gold chain and a long scarlet robe; the Bailiff in a black cap and a blue
   // tabard
   judge: (O, M) => [HATS.coif(O, O.white), chain(O, M.gold), M.clothRed],
