@@ -657,9 +657,11 @@ function cavalryShot(args) {
         const [dx, dz] = FILES[k];
         const z = head - dz;
         const x = pathX(z) + dx;
-        m.h.g.position.set(x, F.ground(x, z), z);
-        m.h.g.rotation.set(0, Math.atan(slope(z)) + Math.PI, 0);
+        // gallop() sets the horse's height (its bob, from y = 0): the ground goes on top of it, after (2026-11-16: the riders
+        // were under the path)
         gallop(m.h, z * 2.4 + k, 0.65);
+        m.h.g.position.set(x, F.ground(x, z) + m.h.g.position.y, z);
+        m.h.g.rotation.set(0, Math.atan(slope(z)) + Math.PI, 0);
         if (k) m.R.r.g.rotation.set(-2.6 + 0.2 * Math.sin(t * 7 + k), 0, -0.15);
       });
       const s = head + 16;
