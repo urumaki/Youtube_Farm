@@ -3,7 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { publish, metadata, MAX_HASHTAGS } from '../src/publish/index.js';
+import { publish, metadata, MAX_HASHTAGS, HASHTAGS } from '../src/publish/index.js';
+// owner 2026-11-16: a week without hashtags (HASHTAGS false): the titles end without ' #shorts'
+const SH = HASHTAGS ? ' #shorts' : '';
 import { publishAtFor, videoResource } from '../src/publish/youtube.js';
 
 function mockFetch(calls) {
@@ -21,15 +23,16 @@ const quiet = { log() {}, error() {} };
 
 test('at most 5 hashtags per video, none repeated', () => {
   const m = metadata(sample());
-  const tags = `${m.title} ${m.description}`.match(/#\w+/g);
+  const tags = `${m.title} ${m.description}`.match(/#\w+/g) || [];
+  if (!HASHTAGS) assert.deepEqual(tags, [], 'the week without hashtags');
   assert.ok(tags.length <= MAX_HASHTAGS, tags.join(' '));
   assert.equal(new Set(tags.map((t) => t.toLowerCase())).size, tags.length);
 });
 const sample = () => ({ state: { day: 3, date: '2026-10-16', subscriberCount: 87 }, diff: { delta: 11 } });
 
 test('the title: the day, the new villagers, the kingdom (owner 2026-10-30)', () => {
-  assert.equal(metadata(sample()).title, 'Day 3: +11 villagers — 87 in the kingdom 👑 #shorts');
-  assert.equal(metadata({ ...sample(), diff: { delta: -4 } }).title, 'Day 3: -4 villagers — 87 in the kingdom 👑 #shorts');
+  assert.equal(metadata(sample()).title, 'Day 3: +11 villagers — 87 in the kingdom 👑' + SH);
+  assert.equal(metadata({ ...sample(), diff: { delta: -4 } }).title, 'Day 3: -4 villagers — 87 in the kingdom 👑' + SH);
   assert.ok(metadata(sample()).title.length <= 100, 'YouTube cuts titles at 100 characters');
 });
 
@@ -43,7 +46,7 @@ test('publish uploads to YouTube once per day', async () => {
   assert.equal(r.youtube, 'vid123');
   const init = calls.find((c) => c.url.includes('uploadType=resumable'));
   const res = JSON.parse(init.init.body);
-  assert.match(res.snippet.title, /#shorts/);
+  assert.equal(/#shorts/.test(res.snippet.title), HASHTAGS);
   assert.equal(res.status.privacyStatus, 'public');
   assert.equal(res.status.selfDeclaredMadeForKids, false);
   assert.equal(init.init.headers.authorization, 'Bearer AT');
@@ -74,7 +77,7 @@ test('scheduled publishing time', () => {
 
 test('the two days of the night raid say what happened in the title (owner 2026-10-30)', () => {
   const day = (step) => metadata({ ...sample(), diff: { ...sample().diff, story: { id: 'raid', step } } }).title;
-  assert.equal(day('attack'), 'Day 3: The kingdom was attacked tonight 🔥 +11 villagers — 87 in the kingdom 👑 #shorts');
-  assert.equal(day('rescue'), 'Day 3: The guards brought them home 🛡️ +11 villagers — 87 in the kingdom 👑 #shorts');
+  assert.equal(day('attack'), 'Day 3: The kingdom was attacked tonight 🔥 +11 villagers — 87 in the kingdom 👑' + SH);
+  assert.equal(day('rescue'), 'Day 3: The guards brought them home 🛡️ +11 villagers — 87 in the kingdom 👑' + SH);
   assert.ok(day('attack').length <= 100 && day('rescue').length <= 100);
 });

@@ -10,9 +10,19 @@ import { accessToken, publishAtFor, uploadVideo, videoResource } from './youtube
 // Usual advice for Shorts: #shorts once as the format tag (in the title), then the channel's own tag and a
 // few niche ones; the first hashtags of the description show as links above the title.
 export const MAX_HASHTAGS = 5;
+// Owner 2026-11-16: a week without any hashtag, title and description (the videos from 2026-11-16 to 2026-11-22), to compare
+// the views and the share watched to the end with the week before; HASHTAGS = true puts them back. YouTube still knows a Short
+// by its shape and length, and the metadata tags (`tags`, never shown) stay.
+export const HASHTAGS = false;
 const DESCRIPTION_TAGS = '#subscriberkingdom #medieval #citybuilder #castle';
+const hashtags = (text) => (HASHTAGS ? text : text.replace(/\s*#\w+/g, '').trim());
 
-export function metadata({ state, diff }) {
+export function metadata(args) {
+  const m = withHashtags(args);
+  return { ...m, title: hashtags(m.title), description: hashtags(m.description) };
+}
+
+function withHashtags({ state, diff }) {
   const d = diff.delta;
   // owner 2026-11-11: every 30th day the video is the time-lapse of the last 30 days
   if (diff.timelapse) {

@@ -604,6 +604,9 @@ Add new owner decisions here.
   of work scenes and visits (`output/gallery/`), in the croft of the first named villager.
 - Hashtags (owner 2026-10-20): at most 5 per video, title and description together, none repeated
   (`#shorts` in the title, four niche tags in the description; tested).
+  Owner 2026-11-16, a week's trial (the videos of 2026-11-16 to 2026-11-22): no hashtags at all, in the title or the
+  description (`HASHTAGS = false` in `src/publish/index.js`; the hidden metadata tags stay). Then compare the average views and
+  the share watched to the end with the week before, and set `HASHTAGS` back to true or keep it off.
 - Title (owner 2026-10-29, `metadata` in `src/publish/index.js`): the hook first for new viewers, the numbers after:
   "Your name could be in this kingdom 👑 Day 14 · +70 villagers #shorts" (before: "Day 14: +70 villagers — 2310 in the kingdom 👑").
   Tried on 2026-10-29 with the day first ("Day 14 · Your name could be in this kingdom 👑 +140 villagers #shorts"):
