@@ -600,7 +600,7 @@ const WORK_BEDS = { judge: [['chatter', 0.2]], 'judge:hearing': [['chatter', 0.3
   'carpenter:saw': [['saw', 0.5]], 'blacksmith:bellows': [['fire', 0.45]], 'toolsmith:bellows': [['fire', 0.45]],
   'baker:knead': [['chatter', 0.1]], 'brewer:stir': [['fire', 0.2], ['chatter', 0.1]], 'stonemason:stack': [['stone', 0.4]], 'miller:quern': [['stone', 0.15]],
   // the Dungeon (owner 2026-11-04): the guard's torch crackling in the stone corridor
-  'miner:gallery': [['stone', 0.3]], 'guard:dungeon': [['fire', 0.3]], 'prisoner:cell': [['fire', 0.3]] };
+  'miner:gallery': [['stone', 0.3]], 'miner:adit': [['cart', 0.45], ['stone', 0.2]], 'guard:dungeon': [['fire', 0.3]], 'prisoner:cell': [['fire', 0.3]] };
 
 function sceneFor(cue) {
   if (cue.kind === 'house') return cue.rebuilt ? 'rebuilt' : 'house';

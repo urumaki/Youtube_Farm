@@ -284,7 +284,7 @@ async function setup(data) {
       const at = atLot(bakery, -2.7, -0.2), e = bakery.toWorld([1, 0, 0]).sub(bakery.toWorld([0, 0, 0]));
       return { ...at, ax: e.x, az: e.z, face: undefined };
     }
-    const apiary = job === 'beekeeper' && done('apiary');
+    const apiary = job === 'beekeeper' && !['honey', 'swarm'].includes(variant) && done('apiary'); // owner 2026-11-17: those two in the croft
     if (apiary) {
       const e = apiary.toWorld([1, 0, 0]).sub(apiary.toWorld([0, 0, 0]));
       return { ...atLot(apiary, 2.55, 0.1), face: Math.atan2(-e.x, -e.z), as: 'apiary' };
@@ -303,6 +303,12 @@ async function setup(data) {
     // of the Mine's yard from its own (clear of the plank way, the cart and the spoil heap), the engineer's model trebuchet in front of the Engineers' Workshop
     if (variant === 'delivery' && done('tavern')) return { ...atLot(done('tavern'), 1.6, 7.4), face: undefined };
     if (variant === 'windlass' && done('mine')) return { ...atLot(done('mine'), 3.8, 9.2), face: undefined };
+    // owner 2026-11-17: the cart out of the adit along the plank way (the scene's frame is the lot's, 2 m out from the adit), seen
+    // from the front and to the side of the ore pile
+    if (variant === 'adit' && done('mine')) {
+      const it = done('mine'), o = it.toWorld([0, 0, 0]), ez = it.toWorld([0, 0, 1]).sub(o), cam = it.toWorld([0.75, 0, 0.66]).sub(o);
+      return { ...atLot(it, 0, 2.0), ax: cam.x, az: cam.z, face: Math.atan2(ez.x, ez.z) };
+    }
     if (variant === 'trebuchet' && done('engineer_workshop')) return { ...atLot(done('engineer_workshop'), 0.4, 5.6), face: undefined };
     const place = PLACES[job] && done(PLACES[job][0]);
     if (place) return { ...atLot(place, ...PLACES[job].slice(1)), face: undefined };

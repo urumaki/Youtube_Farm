@@ -705,7 +705,10 @@ test('scenes away from the croft of 2026-10-23: the market, the tavern, a buildi
   assert.deepEqual([...picks('engineer', { ...bare, pendingConstruction: [{ building: 'chapel' }] })].sort(), ['site', 'trebuchet']);
   // owner 2026-11-08: the miner's windlass once the Mine stands
   assert.deepEqual([...picks('miner', town)], ['face']);
-  assert.deepEqual([...picks('miner', { ...town, buildings: [...town.buildings, { id: 'mine', status: 'done' }] })].sort(), ['face', 'gallery', 'windlass']);
+  assert.deepEqual([...picks('miner', { ...town, buildings: [...town.buildings, { id: 'mine', status: 'done' }] })].sort(), ['adit', 'face', 'gallery', 'windlass']);
+  // owner 2026-11-17: the cart out of the adit; the beekeeper's honey and the swarm (no room for a visitor in the chase)
+  assert.deepEqual([...picks('beekeeper', town)].sort(), ['honey', 'smoke', 'swarm']);
+  assert.deepEqual([...picks('beekeeper', town, true)].sort(), ['honey', 'smoke']);
   assert.deepEqual([...picks('chimneysweep', town)], ['house']);
   assert.deepEqual([...picks('chimneysweep', town, true)], [null], 'a visitor: the croft');
   assert.deepEqual([...picks('hunter', town)].sort(), ['boar', 'stag']);

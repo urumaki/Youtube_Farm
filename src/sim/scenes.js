@@ -59,7 +59,12 @@ export const VARIANTS = {
   judge: ['hearing', 'verdict', 'study'], bailiff: ['doorway', 'drill'],
   // owner 2026-11-15: the one Physicist rolls a bronze ball down a long ramp past a row of bells (work.js 'ramp')
   physicist: ['ramp'],
+  // owner 2026-11-17: the beekeeper smokes the skeps (the old scene), cuts a comb into the honey tub, or a jester after the honey
+  // is chased off by the bees (work.js; in the croft, with skeps of its own, even once the Apiary stands)
+  beekeeper: ['smoke', 'honey', 'swarm'],
 };
+// owner 2026-11-17: the miner and a mate push a cart of ore out of the Mine's adit and tip it onto the ore pile ('adit')
+VARIANTS.miner.push('adit');
 // owner 2026-11-15: a guard who asked to be an archer (names[id].bow) always carries a bow: on the walls (wallwatch.js) or
 // shooting at a target in the croft ('shoot', the fletcher's), never with a spear or a sword
 export const BOW_VARIANTS = ['shoot', 'walls', 'wallnight', 'change', 'wall2', 'wall2night', 'wall2change'];
@@ -81,7 +86,7 @@ export const NIGHT_VARIANTS = new Set(['night', 'wallnight', 'wall2night']);
 // scenes that need a building finished
 const NEEDS = { wall2: 'wall2', wall2night: 'wall2', wall2change: 'wall2', stall: 'market', counting: 'counting_house', shop: 'apothecary_shop', inside: 'tavern', stand: 'crier_stand',
   square: 'market', inn: 'tavern', proclaim: 'market', preach: 'market', bless: 'fields', booth: 'physician_booth', lecture: 'university', library: 'university', haul: 'harbor',
-  dungeon: 'dungeon', cell: 'dungeon', delivery: 'tavern', windlass: 'mine', gallery: 'mine', hearing: 'court', verdict: 'court', doorway: 'court' };
+  dungeon: 'dungeon', cell: 'dungeon', delivery: 'tavern', windlass: 'mine', gallery: 'mine', adit: 'mine', hearing: 'court', verdict: 'court', doorway: 'court' };
 // croft scenes no longer used once the building stands (the innkeeper's barrel in the croft, once the tavern is open)
 const UNTIL = { tavern: 'tavern', barrel: 'tavern', stir: 'tavern', remedies: 'physician_booth' };
 // the same for one job only (owner 2026-10-25): knights train in the lists of the Tournament Ground once it stands, no
@@ -95,7 +100,7 @@ export const POV_ON = false;
 const POV_AWAY = new Set(['inside', 'inn', 'house', 'lecture', 'library', 'dungeon', 'cell', 'gallery', 'hearing', 'verdict']);
 // owner 2026-11-13: the market stalls, the Physician's Booth and the Counting House have their own queue, and a visitor stood
 // behind the counter or out of the frame
-const SOLO_VARIANTS = new Set(['stall', 'booth', 'counting', 'stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library', 'dungeon', 'cell', 'delivery', 'windlass', 'gallery', 'peek', 'letter', 'treaty', 'lunge', 'hearing', 'verdict', 'doorway']);
+const SOLO_VARIANTS = new Set(['stall', 'booth', 'counting', 'stand', 'cart', 'inn', 'house', 'rounds', 'proclaim', 'preach', 'bless', 'lecture', 'library', 'dungeon', 'cell', 'delivery', 'windlass', 'gallery', 'adit', 'swarm', 'peek', 'letter', 'treaty', 'lunge', 'hearing', 'verdict', 'doorway']);
 // buildings with no shot of their own: no engineer stands in front of them
 const NO_SITE = new Set(['wall2', 'fields', 'guardposts', 'charter_stone']);
 const built = (state, id) => !!state?.buildings?.some((b) => b.id === id && b.status === 'done');

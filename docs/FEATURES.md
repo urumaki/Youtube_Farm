@@ -763,6 +763,18 @@ Add new owner decisions here.
   - `names[id].showDay` (`featured.js`, score +60): the owner's shot for a villager on that day, or the first one after it
     with villager shots. The Physicist's is day 33 (2026-11-17), after the ambush (day 31) and its rescue (day 32).
   - Test: `npm run render -- --real --subs 3330 --gallery "physicist:ramp,guard:shoot" --gallery-times 0.3,1.5,2.4,3.4`.
+- One more scene for the miner, two for the beekeeper (owner 2026-11-17, `scenes.js`, `work.js`, `main.js`):
+  - `miner:adit` (needs the Mine, no visitor): at the Mine's own adit, its frame the lot's (2 m out along the plank way, the
+    camera to the front and the ore-pile side): the miner and a mate push a cart of ore out of the dark, tip it onto an ore
+    pile beside the planks (a thud and dust, the stones tumbling), set it back and pull it back into the adit (`cfg.adit`,
+    `once`: it starts as the shot does, 4.2 s; the name tag walks with the miner, `liveLabel`; the cart rumbling).
+  - `beekeeper: ['smoke', 'honey', 'swarm']` (smoke: the old scene, at the Apiary's bench once it stands; the other two always
+    in the croft with skeps of their own). `honey`: from an open skep on a stand at his right he cuts a comb and lays it in a
+    honey tub in front, honey dripping off it (`cfg.drip`, tool `comb`). `swarm` (no visitor): a jester creeps up behind the
+    bench and reaches into the middle skep, the bees pour out, he jumps and runs round and round the bench with the swarm a
+    step behind his head, arms flailing; the beekeeper turns to follow him, pointing and shaking with laughter (`cfg.swarm`,
+    `once`, 3.8 s). Nobody gets stung on screen.
+  - Test: `npm run render -- --real --subs 3140 --gallery "miner:adit,beekeeper:honey,beekeeper:swarm" --gallery-times 0.6,1.3,1.9,2.9,3.6`.
 - From the comments on the day 31 and 32 videos (owner 2026-11-17, read with yt-dlp; `requests.js`): a suggestion ("might I give
   a suggestion", "my suggestion") is no request even after "may I"; helping with someone else's crops (his, her, their) asks
   for no farmer; cheering others ("hail", "glory to", "cheers for", "long live") asks for nothing; the people one leads

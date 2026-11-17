@@ -88,6 +88,8 @@ let dotTexture = null;
 let horseCoat = null; // the stablehand's brown horse
 let mineDark = null, rockMat = null; // the miner's mine mouth and rough rock
 let herbPurple = null; // the physician's lavender
+let honeyMaterial = null; // the beekeeper's honey and combs
+const honeyMat = () => (honeyMaterial ??= new THREE.MeshStandardMaterial({ color: '#e3a21a', roughness: 0.3, metalness: 0.05, emissive: '#3a2200' }));
 function roundDot() {
   if (dotTexture || typeof document === 'undefined') return dotTexture;
   const c = document.createElement('canvas');
@@ -303,6 +305,14 @@ JOB_SCENES['bailiff:doorway'] = { period: 1.6, raise: -1.4, down: -0.9, bend: 0,
 JOB_SCENES['stablehand:lunge'] = { period: 6.0, raise: -1.35, down: -1.35, bend: 0, sound: 'none', tool: null, props: 'lunge', smooth: true, lunge: true, radius: 10 };
 // at the Apiary (owner 2026-10-25): its own bench of skeps, so only the bees (main.js puts him at the bench's end)
 JOB_SCENES['beekeeper:apiary'] = { ...JOB_SCENES.beekeeper, props: 'bees' };
+// owner 2026-11-17: at the Mine (main.js), the miner and a mate push a cart of ore out of the adit along the plank way, tip it
+// onto the ore pile beside it (a thud and dust) and pull it back into the dark (cfg.adit); the scene starts as the shot does
+JOB_SCENES['miner:adit'] = { period: 4.2, hit: 0.46, raise: -1.4, down: -1.4, bend: 0.3, fx: 'dust', sound: 'hoe', tool: null, props: 'adit', smooth: true, once: true, adit: true, radius: 8.5 };
+// owner 2026-11-17, the beehives (in the croft, with skeps of its own): the beekeeper cuts a comb from an open skep and lays it in
+// the honey tub, honey dripping from it (cfg.drip); or a jester creeps up to the skeps for the honey, the bees pour out and chase
+// him off, arms flailing, while the beekeeper points and laughs (cfg.swarm)
+JOB_SCENES['beekeeper:honey'] = { radius: 4.8, period: 3.0, hit: 0.5, raise: -1.45, down: -0.75, bend: 0.45, fx: null, sound: 'none', tool: 'comb', props: 'honey', smooth: true, both: true, carry: true, drip: true };
+JOB_SCENES['beekeeper:swarm'] = { ...JOB_SCENES.beekeeper, props: 'swarm', period: 3.8, once: true, swarm: true, radius: 7.5 };
 // owner 2026-11-15: a guard who asked to be an archer shoots at a target in the croft (scenes.js BOW_VARIANTS)
 JOB_SCENES['guard:shoot'] = JOB_SCENES['fletcher:shoot'];
 for (const [from, to] of [['toolsmith', 'blacksmith'], ['brewer', 'innkeeper'], ['bishop', 'priest']]) {
@@ -443,6 +453,10 @@ export function toolGeo(kind, M) {
   } else if (kind === 'basket') {
     add(cylGeo(0.24, 0.18, 0.24, 10).translate(-0.28, -0.05, 0.08), M.wood); // carried between both hands, by its sides
     for (let i = 0; i < 3; i++) add(new THREE.SphereGeometry(0.06, 6, 5).scale(3, 0.8, 0.6).translate(-0.33 + i * 0.05, 0.1, 0.05 + i * 0.03), M.iron);
+  } else if (kind === 'comb') { // a honeycomb cut from the skep on its wooden bar, honey running off it (owner 2026-11-17)
+    add(boxGeo(0.3, 0.035, 0.05).translate(0, -0.02, 0.1), wood);
+    add(boxGeo(0.26, 0.22, 0.04).translate(0, -0.15, 0.1), honeyMat());
+    for (let i = 0; i < 6; i++) add(cylGeo(0.022, 0.022, 0.045, 6).rotateX(Math.PI / 2).translate(-0.08 + (i % 3) * 0.08, -0.1 - Math.floor(i / 3) * 0.08, 0.1), M.gold);
   } else if (kind === 'smoker') { // a small tin can with a spout, smoke comes out of it
     add(cylGeo(0.08, 0.08, 0.2, 10).rotateX(Math.PI / 2).translate(0, -0.05, 0.12), iron);
     add(new THREE.ConeGeometry(0.06, 0.12, 8).rotateX(Math.PI / 2).translate(0, -0.05, 0.28), iron);
@@ -906,6 +920,60 @@ function buildProps(kind, M, add, anim = [], holder = null) {
         }
       });
       return new THREE.Vector3(0, 0.95, 0.8);
+    }
+    case 'honey': { // owner 2026-11-17: two skeps on a bench behind a honey tub; at his right an open skep on a stand, its combs
+      // showing, its straw dome on the ground beside it; bees about (cfg.carry takes a comb from the stand to the tub)
+      add(boxGeo(1.7, 0.45, 0.55).translate(-0.3, 0.225, 1.55), M.woodDark);
+      for (const x of [-0.75, 0.05]) add(new THREE.SphereGeometry(0.3, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 1.3, 1).translate(x, 0.45, 1.55), M.hay);
+      add(cylGeo(0.3, 0.26, 0.46, 14).translate(0, 0.23, 0.72), M.wood); // the tub, full of honey
+      for (const y of [0.08, 0.4]) add(new THREE.TorusGeometry(0.29, 0.015, 4, 16).rotateX(Math.PI / 2).translate(0, y, 0.72), M.iron);
+      add(cylGeo(0.27, 0.27, 0.02, 14).translate(0, 0.44, 0.72), honeyMat());
+      add(boxGeo(0.5, 0.36, 0.5).translate(0.95, 0.18, 0.35), M.wood); // the open skep's stand and its combs
+      for (const dz of [-0.12, 0, 0.12]) add(boxGeo(0.28, 0.24, 0.035).translate(0.95, 0.5, 0.35 + dz), honeyMat());
+      add(new THREE.SphereGeometry(0.3, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 1.3, 1).rotateX(1.7).translate(1.35, 0.3, 1.0), M.hay);
+      const bees = [];
+      for (const [x, y, z] of [[-0.75, 0.75, 1.55], [0.05, 0.75, 1.55], [0.95, 0.65, 0.35], [0, 0.6, 0.72]]) for (let k = 0; k < 4; k++) bees.push({ m: add(new THREE.SphereGeometry(0.03, 6, 4), M.iron), x, y, z, k });
+      anim.push((t) => {
+        for (const b of bees) {
+          const a = t * (2.5 + b.k * 0.4) + b.k * 1.6 + b.x * 3;
+          b.m.position.set(b.x + Math.cos(a) * (0.3 + 0.1 * b.k), b.y + 0.15 * Math.sin(a * 1.7), b.z + Math.sin(a) * (0.3 + 0.1 * b.k));
+        }
+      });
+      return new THREE.Vector3(0, 0.5, 0.72);
+    }
+    case 'swarm': { // owner 2026-11-17: the skeps on their bench (as 'hives'), and a jester after the honey (cfg.swarm)
+      add(boxGeo(2.0, 0.5, 0.6).translate(0, 0.25, 0.9), M.woodDark);
+      for (const x of [-0.65, 0, 0.65]) add(new THREE.SphereGeometry(0.3, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 1.3, 1).translate(x, 0.5, 0.9), M.hay);
+      const J = rig(M, JOBS.jester.color, { walk: true });
+      holder.add(J.root);
+      const N = 70, cloud = particles(N, '#2b2412', 0.08, false);
+      cloud.material.opacity = 1;
+      holder.add(cloud);
+      const idle = [0, 1, 2, 3, 4, 5].map((k) => ({ m: add(new THREE.SphereGeometry(0.03, 6, 4), M.iron), k }));
+      holder.userData.swarm = { J, cloud, N, idle };
+      return new THREE.Vector3(0, 0.95, 0.8);
+    }
+    case 'adit': { // owner 2026-11-17: at the Mine's adit (buildings.js mine; this frame is the lot's, 2 m out from the adit along the
+      // plank way): a cart of ore and the miner's mate, an ore pile beside the planks, the stones that fall onto it (cfg.adit)
+      const rock = (rockMat ??= new THREE.MeshStandardMaterial({ color: '#77736b', roughness: 0.95, flatShading: true }));
+      const cart = new THREE.Group(), tip = new THREE.Group();
+      holder.add(cart);
+      cart.add(tip);
+      tip.position.set(0.45, 0.3, 0); // the cart tips over its right-hand side, onto the pile
+      const part = (g, geo, m, x, y, z) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; g.add(o); return o; };
+      part(tip, boxGeo(0.9, 0.08, 1.0), M.woodDark, -0.45, 0.04, 0);
+      for (const s of [-1, 1]) { part(tip, boxGeo(0.06, 0.42, 1.0), M.wood, -0.45 + s * 0.42, 0.25, 0); part(tip, boxGeo(0.9, 0.42, 0.06), M.wood, -0.45, 0.25, s * 0.47); }
+      for (const s of [-1, 1]) part(tip, boxGeo(0.92, 0.05, 0.05), M.iron, -0.45, 0.45, s * 0.47);
+      const load = [[-0.62, 0.42, -0.25], [-0.3, 0.45, -0.2], [-0.5, 0.48, 0.1], [-0.22, 0.4, 0.25], [-0.65, 0.44, 0.3]].map(([x, y, z], i) => part(tip, new THREE.DodecahedronGeometry(0.13 + 0.02 * (i % 2), 0), rock, x, y, z));
+      const wheels = [];
+      for (const x of [-0.45, 0.45]) for (const z of [-0.32, 0.32]) wheels.push(part(cart, cylGeo(0.17, 0.17, 0.06, 10).rotateZ(Math.PI / 2), M.iron, x, 0.17, z));
+      const mate = rig(M, JOBS.miner.color, { walk: true });
+      holder.add(mate.root);
+      // the ore pile beside the planks, and the stones that tumble onto it
+      for (const [x, y, z, r] of [[1.45, 0.15, 1.2, 0.3], [1.75, 0.12, 1.55, 0.25], [1.3, 0.1, 1.65, 0.22], [1.6, 0.32, 1.35, 0.2], [1.9, 0.1, 1.1, 0.2]]) part(holder, new THREE.DodecahedronGeometry(r, 0), rock, x, y, z);
+      const falling = load.map(() => part(holder, new THREE.DodecahedronGeometry(0.13, 0), rock, 0, 0, 0));
+      holder.userData.adit = { cart, tip, wheels, mate, load, falling };
+      return new THREE.Vector3(1.5, 0.35, 1.35);
     }
     case 'bell': { // a new bronze bell hanging from a timber frame; it swings a little when struck
       for (const x of [-0.9, 0.9]) add(boxGeo(0.16, 2.3, 0.16).translate(x, 1.15, 0.9), M.woodDark);
@@ -1716,7 +1784,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
   const group = new THREE.Group();
   group.position.copy(anchor);
   group.rotation.y = face;
-  const P = rig(M, color || JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer || !!cfg.haul || !!cfg.errand, ground: !!cfg.ground, seated: !!cfg.seated });
+  const P = rig(M, color || JOBS[job]?.color || '#7a6a55', { walk: !!cfg.archer || !!cfg.haul || !!cfg.errand || !!cfg.adit, ground: !!cfg.ground, seated: !!cfg.seated });
   if (cfg.lute) P.body.add(lute(M));
   group.add(P.root);
   const propsG = new THREE.Group();
@@ -1882,13 +1950,25 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     return out;
   };
   const v = new THREE.Vector3(), w = new THREE.Vector3();
+  const labelPos = anchor.clone().add(new THREE.Vector3(0, cfg.labelH ?? 2.45, 0));
+  // honey running off the comb in drops (cfg.drip)
+  const drips = cfg.drip ? particles(10, '#e3a21a', 0.05, false) : null;
+  if (drips) group.add(drips);
+  // the jester's way (cfg.swarm, props 'swarm'), s seconds into the scene: creeping in behind the bench to the middle skep, then
+  // round and round the bench and the beekeeper with the bees after him (an ellipse round JC, ROUND radians a second)
+  const JFROM = new THREE.Vector3(0.9, 0, 3.2), JNEAR = new THREE.Vector3(0.1, 0, 1.55), JC = new THREE.Vector3(0.25, 0, 0.55);
+  const BURST = 1.35, RUN = 1.6, RX = 1.5, RZ = 1.75, ROUND = 2.0;
+  const loopAt = (s, out) => { const q = (s - RUN) * ROUND; return out.set(JC.x + RX * Math.sin(q), 0, JC.z + RZ * Math.cos(q)); };
+  const jesterAt = (s, out) => (s < 1.1 ? out.copy(JFROM).lerp(JNEAR, s / 1.1) : s < RUN ? out.copy(JNEAR)
+    : loopAt(s, out).sub(JNEAR).multiplyScalar(Math.min(1, (s - RUN) / 0.35)).add(JNEAR));
   // the archer's target is a few metres away: frame the archer and the target together
   group.updateMatrixWorld(true);
   const focus = cfg.archer ? group.localToWorld(new THREE.Vector3(0, 1.1, 0).lerp(impact, 0.4)) : anchor.clone().add(new THREE.Vector3(0, cfg.focusH ?? 1.1, 0));
   return {
     group,
     focus,
-    labelPos: anchor.clone().add(new THREE.Vector3(0, cfg.labelH ?? 2.45, 0)),
+    labelPos,
+    liveLabel: !!cfg.adit, // the miner walks out of the adit: the label goes with him
     radius: cfg.radius, // closer than usual for people on the ground
     face,
     sound: cfg.sound,
@@ -2065,6 +2145,104 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
         D.H.r.g.rotation.set(lerp(-0.2, -1.4, THREE.MathUtils.clamp((s - 2.35) / 0.4, 0, 1)) + (handed ? 0.5 * THREE.MathUtils.clamp((s - 2.8) / 0.4, 0, 1) : 0), 0, 0);
         D.letter.visible = handed;
         nod(D.H, handed ? 0.3 : 0);
+      }
+      if (cfg.adit) {
+        // out of the adit with the full cart, both pushing; tipped onto the pile; pulled back into the dark, empty
+        const A = propsG.userData.adit, s = cycleU * cfg.period;
+        const OUT = 1.4, TIP = [1.5, 1.9], HOLD = 2.25, BACK = [2.65, 4.0], Z0 = -3.0, Z1 = 1.4;
+        const zc = s < OUT ? lerp(Z0, Z1, 1 - (1 - s / OUT) ** 2) : s < BACK[0] ? Z1 : lerp(Z1, Z0, ease(Math.min(1, (s - BACK[0]) / (BACK[1] - BACK[0]))));
+        const moving = s < OUT || s > BACK[0], back = s > BACK[0];
+        A.cart.position.set(0, 0, zc);
+        A.cart.visible = zc > -2.5;
+        for (const wh of A.wheels) wh.rotation.x = zc / 0.17;
+        const ang = s < TIP[0] ? 0 : s < TIP[1] ? 1.9 * ease((s - TIP[0]) / (TIP[1] - TIP[0])) : s < HOLD ? 1.9 : s < HOLD + 0.35 ? 1.9 * (1 - ease((s - HOLD) / 0.35)) : 0;
+        A.tip.rotation.z = -ang;
+        const dt = s - TIP[0] - 0.25;
+        A.load.forEach((m) => { m.visible = dt <= 0; });
+        A.falling.forEach((m, i) => {
+          m.visible = dt > 0 && s < BACK[1];
+          if (!m.visible) return;
+          const k = Math.min(1, dt / 0.45), ld = A.load[i].position;
+          const fx = 0.65, fz = Z1 + ld.z, ex = 1.3 + 0.15 * (i % 3), ez = Z1 - 0.25 + 0.15 * i;
+          m.position.set(lerp(fx, ex, k), lerp(0.75, 0.22 + 0.08 * (i % 2), k * k) + 0.25 * Math.sin(Math.PI * k), lerp(fz, ez, k));
+          m.rotation.set(k * 5 + i, k * 3, i);
+        });
+        // the two behind the cart, hands on its back
+        const zp = zc - 0.95, tipping = s >= TIP[0] - 0.1 && s < HOLD + 0.35;
+        [[P, 0.27], [A.mate, -0.27]].forEach(([R, x], i) => {
+          R.root.position.set(x, 0, zp);
+          R.root.rotation.set(0, 0, 0);
+          R.root.visible = zp > -2.05;
+          const ph = s * 9 + i * 0.6, amp = moving ? 0.45 : 0;
+          R.legs[0].rotation.x = amp * Math.sin(ph); R.legs[1].rotation.x = -amp * Math.sin(ph);
+          R.root.position.y = moving ? 0.05 * Math.abs(Math.cos(ph)) : 0;
+          R.body.rotation.set(back ? -0.05 : tipping ? 0.1 : 0.35, 0, 0);
+          R.r.g.position.x = 0.3;
+          R.r.g.rotation.set(tipping ? -2.0 : -1.35, 0, -0.1); R.l.g.rotation.set(tipping ? -2.0 : -1.35, 0, 0.1);
+        });
+        group.updateMatrixWorld(true);
+        labelPos.copy(group.localToWorld(v.set(0.27, 2.35, Math.max(zp, -1.6))));
+      }
+      if (cfg.swarm) {
+        // the jester creeps up and reaches for the honey; the bees pour out of the skep after him and he runs for it, arms
+        // flailing over his head; the beekeeper points and laughs
+        const S = propsG.userData.swarm, J = S.J, s = cycleU * cfg.period;
+        const pos = jesterAt(s, new THREE.Vector3());
+        J.body.rotation.set(0, 0, 0); J.r.g.rotation.set(0, 0, 0); J.l.g.rotation.set(0, 0, 0);
+        J.root.position.copy(pos);
+        let face, amp = 0, ph = 0;
+        if (s < 1.1) { // on tiptoe, hands out, leaning in
+          face = Math.atan2(JNEAR.x - JFROM.x, JNEAR.z - JFROM.z); amp = 0.3; ph = s * 6;
+          J.body.rotation.x = 0.35; J.r.g.rotation.set(-0.9, 0, -0.3); J.l.g.rotation.set(-0.9, 0, 0.3);
+        } else if (s < RUN) { // the hand into the skep; the bees out, a jump
+          face = Math.atan2(0 - JNEAR.x, 0.9 - JNEAR.z);
+          const jump = s > BURST ? Math.sin((Math.PI * (s - BURST)) / (RUN - BURST)) : 0;
+          J.root.position.y = 0.3 * jump;
+          J.body.rotation.x = s > BURST ? -0.2 : 0.3;
+          J.r.g.rotation.set(s > BURST ? -2.9 : -1.45, 0, 0); J.l.g.rotation.set(s > BURST ? -2.9 : -0.6, 0, 0.3);
+        } else { // running for it
+          const ahead = jesterAt(s + 0.05, new THREE.Vector3());
+          face = Math.atan2(ahead.x - pos.x, ahead.z - pos.z); amp = 0.8; ph = s * 16;
+          J.body.rotation.x = 0.25;
+          J.r.g.rotation.set(-2.7 + 0.6 * Math.sin(t * 22), 0, -0.4); J.l.g.rotation.set(-2.7 + 0.6 * Math.cos(t * 22), 0, 0.4);
+          J.root.position.y = 0.08 * Math.abs(Math.cos(ph));
+        }
+        J.root.rotation.y = face;
+        J.legs[0].rotation.x = amp * Math.sin(ph); J.legs[1].rotation.x = -amp * Math.sin(ph);
+        // the swarm: out of the skep onto his head, then after him a step behind
+        const arr = S.cloud.geometry.attributes.position.array, skep = w.set(0, 0.8, 0.9);
+        for (let i = 0; i < S.N; i++) {
+          const age = s - BURST - (i / S.N) * 0.25;
+          if (age < 0) { arr[i * 3 + 1] = -1e4; continue; }
+          const head = jesterAt(Math.max(BURST, s - 0.22), v).add(new THREE.Vector3(0, 1.95, 0));
+          const k = ease(Math.min(1, age / 0.35)), r = 0.25 + 0.25 * rand01(seed, 'swarm', i);
+          const a = t * (6 + (i % 5)) + i * 2.4, b = t * (4 + (i % 3)) + i;
+          arr[i * 3] = lerp(skep.x, head.x, k) + r * Math.cos(a) * Math.cos(b);
+          arr[i * 3 + 1] = lerp(skep.y, head.y, k) + r * Math.sin(b) * 0.7;
+          arr[i * 3 + 2] = lerp(skep.z, head.z, k) + r * Math.sin(a) * Math.cos(b);
+        }
+        S.cloud.geometry.attributes.position.needsUpdate = true;
+        S.idle.forEach((b, i) => {
+          const x = [-0.65, 0, 0.65][i % 3], a = t * (2.5 + b.k * 0.4) + b.k * 1.6;
+          b.m.position.set(x + Math.cos(a) * 0.4, 0.8 + 0.15 * Math.sin(a * 1.7), 0.9 + Math.sin(a) * 0.4);
+        });
+        if (s > RUN) { // turning to follow him round, pointing, shaking with laughter
+          P.root.rotation.y = Math.atan2(pos.x, pos.z);
+          P.body.rotation.set(0.12 + 0.1 * Math.abs(Math.sin(t * 14)), 0, 0);
+          P.r.g.rotation.set(-1.55, 0, 0.1); P.l.g.rotation.set(-0.8, 0, 0.45);
+        }
+      }
+      if (drips) {
+        // honey running off the comb while it is carried to the tub
+        const arr = drips.geometry.attributes.position.array, show = !!tool?.visible;
+        group.updateMatrixWorld(true);
+        const hand = group.worldToLocal(P.r.hand.getWorldPosition(v));
+        for (let i = 0; i < 10; i++) {
+          const q = (t * 1.7 + i / 10) % 1, y = hand.y - 0.28 - 0.9 * q * q;
+          if (!show || y < 0.05) { arr[i * 3 + 1] = -1e4; continue; }
+          arr[i * 3] = hand.x + 0.05 * Math.sin(i * 2.3); arr[i * 3 + 1] = y; arr[i * 3 + 2] = hand.z + 0.04 * Math.cos(i * 1.7);
+        }
+        drips.geometry.attributes.position.needsUpdate = true;
       }
       if (cfg.treaty) {
         // stands up from the treaty to shake the envoy's hand across the table (props 'treaty'), then back to the quill
