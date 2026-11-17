@@ -393,6 +393,25 @@ Add new owner decisions here.
     14): three rowing boats in red, blue and gold race down the river to the end of the pier, a named rower in each
     (fishermen and sailors first), four named villagers cheering by the finish pennant; the winner crosses first and raises
     an arm. Test with `--story regatta`.
+  - The brawl in the tavern (owner 2026-11-17, a commenter had asked for a tavern fight several days running; `brawl`,
+    `stories/brawl.js`, from 50 subscribers once the tavern stands, cooldown 12, weight 2, or 8 while someone who asked in
+    the last 14 days waits). Who fights: first the commenters who asked ("tavern fight", "bar brawl", "a fight in the
+    tavern", "rissa in taverna": `brawlFromText` in `requests.js`, `names[id].brawlDay`, cleared once they have fought; the
+    words are taken out before the job requests are read, so they never ask for the innkeeper or the guard), then named
+    villagers drawn among the newest; a named innkeeper or brewer behind the bar, two named guards, two named drinkers who
+    throw. One shot of 11 s (`BRAWL_SECONDS`, `seconds` in `timeline.js`) with hard cuts inside it, all in the open strip along
+    the tavern's front wall (the drinkers on the two benches along it are gone): the two argue and one shoves the other;
+    slow motion (`SLOWS`, a quarter speed, `act`/`real` turn the shot's seconds into action time and back): over the shoulder
+    of a drinker winding up a tankard, side on as a haymaker misses (the other ducks, only their hat flies off) and the
+    tankard spins between the two heads spilling ale, then from low behind them as a counter-swing misses and a stool hurled
+    from the top of the bar smashes on the floor behind them; full speed, the one who dodged staggers into a small table and
+    sits down hard as it tips over. The door bursts open (slow motion again: the leaf, daylight and dust), everyone freezes,
+    two named guards stride in and one points. The bill: one hammers the table back together, the other sweeps up the stool,
+    the innkeeper stomps with both arms up, red in the face, steam over the head ("Furious!"), the guards look on. Name tags
+    over the heads in every part (at most four), banners "A brawl in the tavern!", "The guards!", "Fix what you broke!"; synced
+    sounds (the shove, the tankard, the stool, the table, the door, the hammer); title "A brawl broke out in the tavern 🍺".
+    Comic: every swing misses, nobody gets hurt. Never on a tavern day (the brawl is the tavern's shot). Test with
+    `npm run render -- --real --subs 3140 --story brawl --stills ...` (the shot's times are in the `[shots]` line).
   The night raid (owner 2026-10-30, after the views of the shorts dropped: an event that breaks the format; `raid`, scene
   `stories/raid.js`): two days that take the whole video (`takeover` in `STORIES`; `makePlan` in `timeline.js` lays out
   `RAID_SHOTS` with hard cuts, no hook, no counter or day label; nobody is shown at work, so nobody loses their turn). Day 1

@@ -44,6 +44,7 @@ import { buildRiddle } from './riddle.js';
 import { buildVote } from './vote.js';
 import { buildCrusade } from './crusade.js';
 import { buildAmbush } from './ambush.js';
+import { buildBrawl } from './brawl.js';
 import { buildTrial, buildCourtQuarrel } from '../court.js';
 
 const BUILDERS = {
@@ -59,6 +60,7 @@ const BUILDERS = {
   riddle: buildRiddle,
   vote: buildVote, // the kingdom's vote: asked, then counted (vote.js)
   trial: buildTrial, // the trial at the Hall of Justice (owner 2026-11-14): the charge, then the verdict (court.js)
+  brawl: buildBrawl, // the brawl in the tavern (owner 2026-11-17): one long shot, slow motion and cuts inside it (brawl.js)
   ambush: buildAmbush, // the ambush in the forest (owner 2026-11-13): one scene per shot, both days (ambush.js)
   crusade: buildCrusade, // the Crusade's quest: one scene per shot (crusade.js); its call is 'crusade:announce' // the King's riddle: read out, then answered (riddle.js)
   noble: buildThrone, // a villager the owner makes a Noble: the throne room, then the manor (step 'manor', manor.js) // the Dungeon escape and the eclipse: one scene per shot (escape.js, eclipse.js)

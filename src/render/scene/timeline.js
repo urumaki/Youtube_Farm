@@ -11,6 +11,7 @@ import { ESCAPE_SHOTS } from './stories/escape.js';
 import { ECLIPSE_SHOTS } from './stories/eclipse.js';
 import { CRUSADE_SHOTS } from './stories/crusade.js';
 import { AMBUSH_SHOTS } from './stories/ambush.js';
+import { BRAWL_SECONDS } from './stories/brawl.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
 import { BAKEHOUSE_VARIANTS } from './bakery.js';
@@ -105,8 +106,9 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     targets.splice(today.length ? 1 : 0, 0, {
       kind: 'event', id: storyCue(diff.story), story: diff.story, pos: (buildings.items.market || buildings.items.well)?.focus.clone() ?? castle.keep.clone(),
       // a hard cut in and out ("meanwhile..."): no high flight over the town, and dusk scenes change the light
-      // the King's riddle is read out in full (owner 2026-11-07): a longer shot (`seconds`)
-      radius: 12, front: 0, label: null, labels: [], weight: 2, seconds: diff.story.id === 'riddle' && diff.story.step !== 'answer' ? 9.5 : diff.story.id === 'vote' ? (diff.story.step === 'result' ? 6 : 7.5) : undefined, cut: true, phase: night ? 1 : undefined,
+      // the King's riddle is read out in full (owner 2026-11-07): a longer shot (`seconds`); the brawl in the tavern too (11 s,
+      // owner 2026-11-17: its slow motion and its cuts, brawl.js)
+      radius: 12, front: 0, label: null, labels: [], weight: 2, seconds: diff.story.id === 'riddle' && diff.story.step !== 'answer' ? 9.5 : diff.story.id === 'vote' ? (diff.story.step === 'result' ? 6 : 7.5) : diff.story.id === 'brawl' ? BRAWL_SECONDS : undefined, cut: true, phase: night ? 1 : undefined,
     });
     // the results of a game at the Tournament Ground: right after it, the King gives the winner their title in the throne
     // room (owner 2026-10-28, stories/throne.js)

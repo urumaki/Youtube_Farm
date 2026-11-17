@@ -462,6 +462,9 @@ const SCENES = {
   ev_fogboat: [['water', 0.5], ['bell', 0.35], ['fire', 0.3], ['cheer', 0.25]],
   ev_census: [['chatter', 0.5]],
   ev_pies: [['chatter', 0.55], ['cheer', 0.4]],
+  // owner 2026-11-17: the brawl in the tavern, the crowd egging them on (the shove, the tankard, the stool, the table, the door
+  // and the hammer are synced hits, brawl.js)
+  ev_brawl: [['chatter', 0.6], ['cheer', 0.35]],
   ev_regatta: [['water', 0.55], ['oars', 0.4], ['cheer', 0.45]],
   // the night raid (owner 2026-10-30): fire and shouting, then the smoke in silence; the next day hammers, the chase, the cheers
   ev_raid_arrow: [['fire', 0.6], ['chatter', 0.45]],

@@ -37,6 +37,7 @@ function withHashtags({ state, diff }) {
     : diff.story?.id === 'dayinlife' ? 'A day as a Scholar 📜 '
     : diff.story?.id === 'escape' ? 'The prisoners escaped! ⛓️ ' // owner 2026-11-05
     : diff.story?.id === 'eclipse' ? 'The sun went dark at noon 🌑 '
+    : diff.story?.id === 'brawl' ? 'A brawl broke out in the tavern 🍺 ' // owner 2026-11-17
     // owner 2026-11-13: the ambush in the forest, a cliffhanger, then the rescue
     : diff.story?.id === 'ambush' ? { ambush: 'Bandits attacked the royal cart 🗡️ ', rescue: 'The cavalry came just in time 🐎 ' }[diff.story.step] || ''
     : diff.story?.id === 'crusade' && diff.story.step === 'quest' ? 'The Crusaders found the Golden Apple 🍎 ' : '';

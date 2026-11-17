@@ -101,6 +101,9 @@ const L = {
     bell_raise: ['Heave! The new bell is hauled up into the bell tower.', 'Everyone on the rope: up goes the new bell!'],
     fogboat: ['A fisherman is lost in the fog! The villagers light a beacon on the pier.', 'Thick fog on the river: a fire and a bell guide the fisherman home!'],
     census: [(e) => `The census! The clerk counts every villager: ${(e.count || 0).toLocaleString('en-US')} in all.`, (e) => `Line up for the census! The kingdom counts ${(e.count || 0).toLocaleString('en-US')} villagers.`],
+    // owner 2026-11-17: the brawl in the tavern (11 s shot)
+    brawl: ['A brawl in the tavern! Fists swing, tankards fly, a stool smashes... until the guards burst in. Now they fix it all, and the innkeeper is furious!',
+      'Chaos in the tavern! Swings, misses, flying tankards... then the guards walk in. Time to mend the table, while the innkeeper fumes!'],
     pies: ['A pie eating contest in the tavern! Who can finish the stack first?', 'Three hungry villagers, a mountain of pies, and only one winner!'],
     regatta: ['The regatta! Three boats race down the river to the pier.', 'Row, row, row! A boat race on the river!'],
   },

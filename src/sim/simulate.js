@@ -246,10 +246,10 @@ export function planDay(s, prev, diff) {
     diff.events[0].weather = sky;
   }
   diff.avoidJobs = prev.day > 0 ? shownJobs(prev) : [];
-  // (the hen in the tavern is the tavern's shot that day); a story that takes the whole video (the raid) shows nobody at
+  // (the hen in the tavern, and the brawl, owner 2026-11-17, are the tavern's shot that day); a story that takes the whole video (the raid) shows nobody at
   // work, so nobody loses their turn
   const takeover = takesOver(diff.story);
-  const tavern = !takeover && diff.story?.id !== 'chicken' && tavernToday(s), church = !takeover && churchToday(s, tavern);
+  const tavern = !takeover && !['chicken', 'brawl'].includes(diff.story?.id) && tavernToday(s), church = !takeover && churchToday(s, tavern);
   diff.featured = takeover ? [] : pickFeatured(s, { avoidJobs: diff.avoidJobs, tavern, church, stale: (job) => staleJob(s, job), intro: (job) => !!introVariant(s, job),
     lastJob: (job) => jobLastShown(s, job), novel: (job) => novelJob(s, job) });
   s.featured = diff.featured;
@@ -275,7 +275,7 @@ export function beginWorkshop(s, diff) {
 /**
  * Commenters name villagers: each new commenter (oldest comment first, one villager per person)
  * joins the queue; queued names go to the unnamed villagers with the lowest ids.
- * commenters: [{ author, name, at, wants?, asks?, vote?, call?, complains?, rebel?, join? }] (call: a name asked for in the comment); blocked: { authors?: [], names?: [] }.
+ * commenters: [{ author, name, at, wants?, asks?, vote?, call?, complains?, rebel?, brawl?, join? }] (call: a name asked for in the comment); blocked: { authors?: [], names?: [] }.
  */
 function assignNames(s, commenters, blocked, diff) {
   const blockedAuthors = new Set(blocked.authors || []);
@@ -354,6 +354,8 @@ function assignNames(s, commenters, blocked, diff) {
       if (c.complains && id !== undefined) { s.names[id].complainDay = s.day; diff.complaints.push({ id: Number(id), name: s.names[id].name }); }
       if (c.rebel && id !== undefined) { s.names[id].rebelDay = s.day; diff.rebels.push({ id: Number(id), name: s.names[id].name }); }
       else if (c.rebel && q) q.rebel = true;
+      // owner 2026-11-17: asked for a fight in the tavern (stories.js `brawl`: one of the two who fight)
+      if (c.brawl && id !== undefined) s.names[id].brawlDay = s.day; else if (c.brawl && q) q.brawl = true;
       // "!join" (owner 2026-10-29): only a villager who was a guard before today enters the games, and is one still after
       // this comment's own request; never one made a guard today, never the Captain of the Guard. Owner 2026-11-01: only
       // in the comments on the announcement (the day before the results), so the list is empty for the next games
@@ -385,7 +387,7 @@ function assignNames(s, commenters, blocked, diff) {
     known.add(c.author);
     s.namedAuthors.push(c.author);
     diff.newCommenters += 1;
-    s.nameQueue.push({ name, author: c.author, seenDay: s.day, ...(wants.length ? { wants } : {}), ...(c.rebel ? { rebel: true } : {}) });
+    s.nameQueue.push({ name, author: c.author, seenDay: s.day, ...(wants.length ? { wants } : {}), ...(c.rebel ? { rebel: true } : {}), ...(c.brawl ? { brawl: true } : {}) });
   }
   // names blocked after they were given are taken back
   for (const [id, n] of Object.entries(s.names)) {
@@ -398,8 +400,8 @@ function assignNames(s, commenters, blocked, diff) {
   for (const v of s.villagers) {
     if (!s.nameQueue.length) break;
     if (s.names[v.id]) continue;
-    const { wants, rebel, ...n } = s.nameQueue.shift();
-    s.names[v.id] = { ...n, day: s.day, ...(rebel ? { rebelDay: s.day } : {}) };
+    const { wants, rebel, brawl, ...n } = s.nameQueue.shift();
+    s.names[v.id] = { ...n, day: s.day, ...(rebel ? { rebelDay: s.day } : {}), ...(brawl ? { brawlDay: s.day } : {}) };
     if (rebel) diff.rebels.push({ id: v.id, name: n.name });
     if (n.job) v.job = n.job; // a named villager who left and came back keeps the job they chose
     if (typeof wants === 'string') s.names[v.id].wants = wants; // still an apprentice

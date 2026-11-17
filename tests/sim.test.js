@@ -1898,3 +1898,51 @@ test('comment job requests read wrong on 2026-11-15/16 (owner 2026-11-17)', asyn
     ['can I lead the guards', ['guard']], ['my crops failed, make me a guard', ['guard']], ['I want to farm the crops', ['farmer']],
   ]) assert.deepEqual(w(text), want, text);
 });
+
+test('the brawl in the tavern (owner 2026-11-17): asked for in the comments, the ones who asked fight, slow motion inside the shot', async () => {
+  const { storyFor, STORIES } = await import('../src/sim/stories.js');
+  const { brawlFromText, wantsFromText } = await import('../src/sim/requests.js');
+  const { buildScript } = await import('../src/audio/narration.js');
+  const { act, real, BRAWL_SECONDS } = await import('../src/render/scene/stories/brawl.js');
+  // the request (paraphrased), and the words are no job request
+  for (const t of ['we need a tavern fight', 'Day 5 of asking for a bar brawl', 'start a fight in the tavern please', 'rissa nella taverna!']) assert.ok(brawlFromText(t), t);
+  for (const t of ['the tavern looks great', 'fight the bandits', 'I want to be the innkeeper']) assert.ok(!brawlFromText(t), t);
+  assert.deepEqual(wantsFromText('we need a tavern fight'), []);
+  assert.deepEqual(wantsFromText('I want to fight at the inn'), []);
+  assert.deepEqual(wantsFromText('make me a guard and start a tavern brawl'), ['guard']);
+  // only once the tavern stands; much likelier while someone has asked
+  const jobs = ['innkeeper', 'guard', 'guard', 'farmer', 'baker', 'merchant', 'fisherman', 'miller'];
+  const kingdom = (built = ['tavern']) => ({
+    seed: SEED, date: '2026-11-18', day: 34, subscriberCount: 3130, weather: 'rain', storyLog: {},
+    buildings: built.map((id) => ({ id, status: 'done' })), houses: [],
+    villagers: jobs.map((job, id) => ({ id, job })),
+    names: Object.fromEntries(jobs.map((_, id) => [id, { name: `V${id}`, day: 1 + id }])),
+  });
+  assert.ok(!STORIES.brawl.needs(kingdom([])) && STORIES.brawl.needs(kingdom()));
+  const k = kingdom();
+  assert.equal(STORIES.brawl.weight(k), 2);
+  k.names[3].brawlDay = 30;
+  assert.equal(STORIES.brawl.weight(k), 8);
+  k.names[3].brawlDay = 10; // asked too long ago
+  assert.equal(STORIES.brawl.weight(k), 2);
+  // the one who asked fights, and is not asked for again; the innkeeper and the guards are named ones
+  k.names[3].brawlDay = 33;
+  const b = storyFor(k, 'brawl');
+  assert.ok(b.fighters.some((f) => f.id === 3));
+  assert.equal(b.fighters.length, 2);
+  assert.equal(k.names[3].brawlDay, undefined);
+  assert.equal(b.keeper.job, 'innkeeper');
+  assert.ok(b.guards.every((g) => g.job === 'guard') && b.guards.length === 2);
+  assert.equal(new Set(b.cast.map((c) => c.id)).size, b.cast.length, 'nobody twice');
+  const diff = { day: 34, from: 3130, to: 3130, delta: 0, added: [], removed: [], housesBuilt: [], housesRebuilt: [], housesReoccupied: [], housesAbandoned: [], housesRuined: [], unlocked: [], buildingsStarted: [], buildingsCompleted: [], events: [], weather: 'rain', story: { id: 'brawl', ...b }, next: null };
+  assert.equal(buildScript(k, diff).sentences.filter((l) => l.role === 'story').length, 1, 'narrated');
+  // a commenter who asks gets the flag (a new one from the day they get their villager)
+  const s = genesis({ seed: SEED, date: '2026-09-30' });
+  const r = advance(s, { subscribers: 30, date: '2026-10-01', commenters: [{ author: 'UCbrawl00000000000000000', name: 'Brawler', at: '2026-10-01T01:00:00Z', brawl: true }] });
+  const id = Object.keys(r.state.names).find((i) => r.state.names[i].name === 'Brawler');
+  assert.equal(r.state.names[id].brawlDay, r.state.day);
+  // the slow motion: action time runs slower inside the two slowed parts, and back again
+  assert.equal(BRAWL_SECONDS, 11);
+  for (const sec of [0, 1, 2.4, 3, 5.4, 6, 6.5, 7, 11]) assert.ok(Math.abs(real(act(sec)) - sec) < 1e-9, `${sec}`);
+  assert.ok(act(5.4) - act(2.4) < 1 && act(11) - act(10) === 1);
+});

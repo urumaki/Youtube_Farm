@@ -231,6 +231,7 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [],
   return {
     group,
     labels,
+    people, // the rigs and what they do ({ P, kind: 'drinker' | 'bard' | 'guest' | 'pour' | 'wipe' }): a story may pose them after update (the brawl)
     cam: minstrel ? bardCam : bar ? barCam : cam,
     focus: minstrel ? toWorld(-4.2, F + 1.0, 2.9) : bar ? toWorld(BAR_X + 0.75, F + 1.2, barSpots[0].z) : toWorld(0, 1.2, 0),
     labelPos: minstrel ? toWorld(-4.2, F + 2.3, 2.9) : toWorld(BAR_X + 0.75, F + 2.45, barSpots[0].z),

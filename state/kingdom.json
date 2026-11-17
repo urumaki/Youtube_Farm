@@ -21629,7 +21629,8 @@
    "job": "taxcollector",
    "requestDay": 23,
    "complainDay": 33,
-   "seenDay": 33
+   "seenDay": 33,
+   "brawlDay": 33
   },
   "785": {
    "name": "francisvicalegado439",

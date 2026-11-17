@@ -151,6 +151,11 @@ export const STORIES = {
   // the census at the Counting House: named villagers queue at the clerk's table, and the count reaches the kingdom's
   // number (1 subscriber = 1 villager)
   census: { minPop: 250, cooldown: 21, weight: 2, needs: (s) => built(s, 'counting_house') },
+  // owner 2026-11-17 (a commenter asked for a tavern fight several days running): a brawl in the tavern. Two named villagers
+  // (first the commenters who asked for one in the last 14 days, `brawlDay`) argue, then fight in slow motion while named
+  // drinkers throw a tankard and a stool; the guards burst in, everyone freezes, and the two mend the broken table and sweep
+  // up while the innkeeper fumes. Comic: every swing misses, nobody gets hurt. Much likelier while someone has asked
+  brawl: { minPop: 50, cooldown: 12, weight: (s) => (brawlersWaiting(s).length ? 8 : 2), needs: (s) => built(s, 'tavern') && namedVillagers(s).length >= 2 },
   // a pie eating contest in the tavern: three named villagers, stacks of pies, one winner
   pies: { minPop: 50, cooldown: 12, weight: 2, needs: (s) => built(s, 'tavern') },
   // a rowing race on the river past the dock, three boats with named rowers, the crowd on the pier
@@ -513,6 +518,19 @@ const BUILD = {
     const clerk = roleCast(state, r, ['taxcollector', 'reeve', 'teacher', 'philosopher'], 1)[0] || null;
     const queue = roleCast(state, r, Object.keys(JOB_COUNT(state)), 5, clerk ? [clerk] : []);
     return { clerk, count: state.subscriberCount, cast: [...(clerk ? [clerk] : []), ...queue] };
+  },
+  brawl(state, r) {
+    // the two who fight: the commenters who asked first (the newest request first), then named villagers drawn among the
+    // newest; the innkeeper (a named innkeeper or brewer when there is one), two named guards, two named drinkers who throw
+    const fighters = brawlersWaiting(state).slice(0, 2);
+    const pool = namedVillagers(state).filter((n) => !fighters.some((f) => f.id === n.id)).slice(0, 14);
+    while (fighters.length < 2 && pool.length) fighters.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    if (fighters.length < 2) return null;
+    for (const f of fighters) delete state.names[f.id]?.brawlDay; // asked and answered
+    const keeper = roleCast(state, r, ['innkeeper', 'brewer'], 1, fighters)[0] || null;
+    const guards = roleCast(state, r, GUARDS, 2, [...fighters, ...(keeper ? [keeper] : [])]);
+    const throwers = roleCast(state, r, Object.keys(JOB_COUNT(state)).filter((j) => !GUARDS.includes(j)), 2, [...fighters, ...guards, ...(keeper ? [keeper] : [])]);
+    return { fighters, keeper, guards, throwers, cast: [...fighters, ...(keeper ? [keeper] : []), ...guards, ...throwers] };
   },
   pies(state, r) {
     // three named villagers at the table; the winner drawn now
@@ -877,6 +895,12 @@ function promote(state, id, job) {
   if (state.villagers[id]) state.villagers[id].job = job;
 }
 /** Named villagers who talked of overthrowing the king in the last 7 days and were not pilloried since, newest first. */
+/** The named villagers who asked for a fight in the tavern in the last 14 days, the newest request first. */
+function brawlersWaiting(state) {
+  return namedVillagers(state).filter((n) => state.names[n.id].brawlDay >= state.day - 14)
+    .sort((a, b) => state.names[b.id].brawlDay - state.names[a.id].brawlDay || b.day - a.day);
+}
+
 function rebelsWaiting(state) {
   return namedVillagers(state).filter((n) => {
     const x = state.names[n.id];
@@ -962,7 +986,7 @@ export function pickStory(state, { unlocked = [], buildingShots = 0 } = {}) {
     const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && !s.onUnlock && !s.onComment && !s.once && !s.manual && possible(k, s)
       && (state.storyLog[k] === undefined || state.day - state.storyLog[k] >= s.cooldown));
     if (!options.length) return null;
-    id = r.weighted(options, ([, s]) => s.weight)[0];
+    id = r.weighted(options, ([, s]) => (typeof s.weight === 'function' ? s.weight(state) : s.weight))[0];
   }
   const story = BUILD[id](state, r);
   if (!story) return null;

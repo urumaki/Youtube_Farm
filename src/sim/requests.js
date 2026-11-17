@@ -204,7 +204,7 @@ export function plainText(raw) {
 
 /** Requested jobs in the order they appear in the comment (no duplicates). */
 export function wantsFromText(text) {
-  const t = plainText(text).toLowerCase().replace(/[’‘]/g, "'");
+  const t = plainText(text).toLowerCase().replace(/[’‘]/g, "'").replace(BRAWL_ALL, ' ');
   if (ADVICE.test(t) && !ASKS.test(t.replace(SUGGEST, ' '))) return [];
   // the name asked for is not a job: "call me Hunter, I want to bake" asks for the baker
   const n = NAME_RE.exec(t);
@@ -326,6 +326,17 @@ export function answerFromText(text) {
     for (const q of RIDDLES) if (q.re.test(said)) answers.add(q.id);
   }
   return { rest: t.replace(ANSWER_RE, ' '), answers: [...answers] };
+}
+
+// owner 2026-11-17: "a tavern fight", "bar brawl", "a fight in the tavern", "rissa all'osteria": the commenter asks for the
+// brawl in the tavern and is one of the two who fight (stories.js `brawl`, `names[id].brawlDay`). The words are no job request
+// ("we need a tavern fight" never asks for the innkeeper, "fight at the inn" never for the guard: wantsFromText takes them out)
+const BRAWL_RE = /\b(tavern|inn|pub|bar|alehouse)\s*(fight|brawl|scuffle|punch\s*-?\s*up|fist\s*fight)s?\b|\b(fight|brawl|scuffle|fist\s*fight)s?\s+(in|at|inside)\s+(the\s+|a\s+)?(tavern|inn|pub|bar|alehouse)\b|\b(rissa|scazzottata)\b[^.!?]{0,30}\b(taverna|osteria|locanda)\b/i;
+const BRAWL_ALL = new RegExp(BRAWL_RE.source, 'gi');
+
+/** True when the comment asks for a fight in the tavern. */
+export function brawlFromText(text) {
+  return BRAWL_RE.test(plainText(text));
 }
 
 /** True when the comment talks of overthrowing the king (a rebel for the pillory). */
