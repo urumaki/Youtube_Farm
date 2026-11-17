@@ -34,6 +34,10 @@ test('the title: the day, the new villagers, the kingdom (owner 2026-10-30)', ()
   assert.equal(metadata(sample()).title, 'Day 3: +11 villagers — 87 in the kingdom 👑' + SH);
   assert.equal(metadata({ ...sample(), diff: { delta: -4 } }).title, 'Day 3: -4 villagers — 87 in the kingdom 👑' + SH);
   assert.ok(metadata(sample()).title.length <= 100, 'YouTube cuts titles at 100 characters');
+  // owner 2026-11-17: the count reads the same (rounded to tens): the villagers named today, never +0
+  assert.equal(metadata({ ...sample(), diff: { delta: 0, named: [{}, {}, {}] } }).title, 'Day 3: 3 new villagers — 87 in the kingdom 👑' + SH);
+  assert.equal(metadata({ ...sample(), diff: { delta: 0, named: [{}] } }).title, 'Day 3: 1 new villager — 87 in the kingdom 👑' + SH);
+  assert.equal(metadata({ ...sample(), diff: { delta: 0 } }).title, 'Day 3: 87 in the kingdom 👑' + SH);
 });
 
 test('publish uploads to YouTube once per day', async () => {

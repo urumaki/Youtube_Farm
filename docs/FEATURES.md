@@ -631,6 +631,10 @@ Add new owner decisions here.
   Tried on 2026-10-29 with the day first ("Day 14 · Your name could be in this kingdom 👑 +140 villagers #shorts"):
   that short flopped, so the owner went back to the hook first on 2026-10-30, then the same day to the first title of
   all: "Day 15: +X villagers — N in the kingdom 👑 #shorts" (`#shorts` kept for the hashtag count).
+  Owner 2026-11-17 (day 33 read "+0" though people came): above 1,000 YouTube gives the count rounded to tens, so a day can
+  read the same. Then the title counts the villagers named today ("Day 33: 3 new villagers — 3130 in the kingdom 👑"), or
+  leaves the change out when nobody was ("Day 33: 3130 in the kingdom 👑"); the counter in the video says "3 new villagers!"
+  in place of "No change today" (`metadata` in `src/publish/index.js`, `overlay.js`).
 - In-between goals (owner, 2026-10-20): tier at 175 (Town Crier + Crier's Stand) and 750 (Executioner,
   who chops cabbages, + Pillory). Their structures are virtual lots on the market square (`onPlaza`), so
   house plots never move. Only add tiers above the current population, or existing villagers change job.

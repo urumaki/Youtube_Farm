@@ -89,7 +89,9 @@ export function createOverlay(root, data) {
   day.textContent = `${s.day} ${data.state.day} · ${s.weather[diff.weather] || ''}`;
   unit.textContent = pop === 1 ? s.villager : s.villagers;
   const d = diff.delta;
-  delta.textContent = d > 0 ? `+${d.toLocaleString('en-US')} ${d === 1 ? 'villager!' : 'villagers!'}` : d < 0 ? `${d.toLocaleString('en-US')} villagers` : s.none;
+  // owner 2026-11-17: the public count moves in tens above 1,000; on a day it reads the same, the villagers named today
+  const named = (diff.named || []).length;
+  delta.textContent = d > 0 ? `+${d.toLocaleString('en-US')} ${d === 1 ? 'villager!' : 'villagers!'}` : d < 0 ? `${d.toLocaleString('en-US')} villagers` : named ? `${named} new ${named === 1 ? 'villager!' : 'villagers!'}` : s.none;
   if (d < 0) delta.classList.add('down');
   if (diff.next) {
     const frac = Math.max(0.03, Math.min(1, pop / diff.next.at));

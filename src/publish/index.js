@@ -41,7 +41,11 @@ function withHashtags({ state, diff }) {
     // owner 2026-11-13: the ambush in the forest, a cliffhanger, then the rescue
     : diff.story?.id === 'ambush' ? { ambush: 'Bandits attacked the royal cart 🗡️ ', rescue: 'The cavalry came just in time 🐎 ' }[diff.story.step] || ''
     : diff.story?.id === 'crusade' && diff.story.step === 'quest' ? 'The Crusaders found the Golden Apple 🍎 ' : '';
-  const title = `Day ${state.day}: ${raid}${d >= 0 ? '+' : ''}${d} villagers — ${state.subscriberCount} in the kingdom 👑 #shorts`;
+  // owner 2026-11-17: YouTube shows the count rounded to tens above 1,000, so a day can read +0 while people came: then the
+  // title counts the villagers named today ("3 new villagers"), or leaves the change out when nobody was
+  const n = (diff.named || []).length;
+  const change = d !== 0 ? `${d > 0 ? '+' : ''}${d} villagers — ` : n ? `${n} new villager${n === 1 ? '' : 's'} — ` : '';
+  const title = `Day ${state.day}: ${raid}${change}${state.subscriberCount} in the kingdom 👑 #shorts`;
   const description = `Every subscriber is one villager of Subscriber Kingdom. Subscribe to move in!\n${DESCRIPTION_TAGS}`;
   return { title, description, tags: ['subscriber kingdom', 'medieval', 'kingdom builder', 'castle', 'shorts'] };
 }
