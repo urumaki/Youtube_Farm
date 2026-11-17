@@ -16506,11 +16506,12 @@
    "name": "The_Knight_Of_Dice",
    "author": "UCRn79g9kHNpn1avTlvMH2vA",
    "day": 3,
-   "job": "blacksmith",
-   "requestDay": 33,
+   "job": "guard",
+   "requestDay": 28,
    "complainDay": 22,
    "joinDay": 13,
-   "seenDay": 33
+   "seenDay": 33,
+   "bow": true
   },
   "14": {
    "name": "MeepDoesVR",
@@ -17337,7 +17338,7 @@
    "name": "RandomPerson-hello",
    "author": "UCAO3BMcykJoRDd593ILpbDA",
    "day": 7,
-   "job": "peasant",
+   "job": "guard",
    "requestDay": 32,
    "seenDay": 32
   },
@@ -22527,8 +22528,8 @@
    "name": "DiesAlotol",
    "author": "UCVPx1LGlXgFO-61as1pXljQ",
    "day": 19,
-   "job": "guard",
-   "requestDay": 33,
+   "job": "hunter",
+   "requestDay": 32,
    "seenDay": 33
   },
   "928": {
@@ -23430,8 +23431,8 @@
    "name": "beetlekight4501",
    "author": "UC3Tn1v2115hZ6Jg0aySi18w",
    "day": 27,
-   "job": "farmer",
-   "requestDay": 33,
+   "job": "guard",
+   "requestDay": 27,
    "seenDay": 33
   },
   "1068": {
@@ -23691,7 +23692,9 @@
    "name": "Pan-nie-wiadomka",
    "author": "UCinL5-KnP02cx9lyzEVjD3A",
    "seenDay": 33,
-   "day": 33
+   "day": 33,
+   "job": "guard",
+   "requestDay": 33
   },
   "1108": {
    "name": "BaboonMan",

@@ -744,6 +744,12 @@ Add new owner decisions here.
   - `names[id].showDay` (`featured.js`, score +60): the owner's shot for a villager on that day, or the first one after it
     with villager shots. The Physicist's is day 33 (2026-11-17), after the ambush (day 31) and its rescue (day 32).
   - Test: `npm run render -- --real --subs 3330 --gallery "physicist:ramp,guard:shoot" --gallery-times 0.3,1.5,2.4,3.4`.
+- From the comments on the day 31 and 32 videos (owner 2026-11-17, read with yt-dlp; `requests.js`): a suggestion ("might I give
+  a suggestion", "my suggestion") is no request even after "may I"; helping with someone else's crops (his, her, their) asks
+  for no farmer; cheering others ("hail", "glory to", "cheers for", "long live") asks for nothing; the people one leads
+  ("lead the peasants' militia") are not the request, except guards; "garde", "gurd", "milita" ask for a guard. Set back in the
+  state: The_Knight_Of_Dice guard with the bow (made a blacksmith), beetlekight4501 guard (made a farmer), DiesAlotol hunter
+  (made a guard), RandomPerson-hello guard (made a peasant), Pan-nie-wiadomka guard (asked, got nothing).
 - From the comments on the day 14 video (owner 2026-10-30, `requests.js`): "begger" asks for the beggar, and "crazy"
   before a beggar or drunk no longer makes a jester; "townsguard", flag or standard bearer ask for a guard; "captain of a
   ship" and sea captain for the fisherman (a sailor), not a guard; herding pigs, ducks, goats or cows for the shepherd;

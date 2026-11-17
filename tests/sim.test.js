@@ -1885,3 +1885,16 @@ test('an archer is a guard with a bow; the one Physicist, shown on the day the o
   r = advance(r.state, { subscribers: 60, date: dateOf(8), commenters: [] });
   assert.equal(r.diff.featured[0]?.id, newton);
 });
+
+test('comment job requests read wrong on 2026-11-15/16 (owner 2026-11-17)', async () => {
+  const { wantsFromText: w } = await import('../src/sim/requests.js');
+  // paraphrased, not the commenters' words
+  for (const [text, want] of [
+    ['Might I give you a suggestion, more blacksmiths for better armour', []], // a suggestion made a guard a blacksmith
+    ['when I am home I will help my friend defend his crops', []], // a guard made a farmer
+    ['Glory to our army! Hail thy bold warriors, I bring venison', []], // a hunter made a guard
+    ['I will lead the peasants milita to your aid', ['guard']], // a merchant made a peasant
+    ['I want become a garde', ['guard']], ['let me be a gurd please', ['guard']],
+    ['can I lead the guards', ['guard']], ['my crops failed, make me a guard', ['guard']], ['I want to farm the crops', ['farmer']],
+  ]) assert.deepEqual(w(text), want, text);
+});

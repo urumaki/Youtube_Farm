@@ -27,7 +27,8 @@ const KEYWORDS = [
   // (2026-11-04: the jailer keeps the Dungeon, he is a guard)
   // (2026-11-07: "I wish to fight, instead of begging for booze")
   [/\b(want|wish|like|ready|here|eager)\s+to\s+fight\b(?!\s+(the|a|an|that|this|him|her|them|with|against|some|every|his|my|your)\b)/, 'guard'],
-  [/\bguard|towns?guard|\bjail[eo]r|\bgaoler|turnkey|dungeon\s*(keeper|master|guard)|carcerier|secondin|\b(flag|standard|banner)\s*bearer|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militia|\bsentry|sentinel/, 'guard'],
+  [/\bguard|towns?guard|\bjail[eo]r|\bgaoler|turnkey|dungeon\s*(keeper|master|guard)|carcerier|secondin|\b(flag|standard|banner)\s*bearer|watchman|soldier|\bsol+[ie]+d[ie]*e?r|soilder|\bsolder\b|guardia|soldato|\bg+a+u+r+d|\bgard\b|\bgarde\b|\bgurds?\b|mercenar|\bscout|police|polizi|sergea?nt|sarg[ea]nt|militi?a\b|\bsentry|sentinel/, 'guard'],
+  // (owner 2026-11-17, from the comments of 2026-11-15/16: "garde", "gurd", "milita" are guards too)
   // owner 2026-11-04: a church named as a place ("nailing a paper on the church doors") asks for nothing
   [/(?<!\b(on|at|to|into|near|outside|inside|of|for)\s+(the\s+|a\s+|our\s+|my\s+|your\s+)?)(chapel|church|cathedral|cappella|chiesa)/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
@@ -39,7 +40,8 @@ const KEYWORDS = [
   [/fisher|\bfish|pescator|\bpesca|harbou?r|\bdocks?\b|\bporto\b/, 'fisherman'],
   [/wood\s*cutt?er|lumber|\baxe\b|\bwood\b|taglialegna|boscaiolo/, 'woodcutter'],
   // (owner 2026-11-09: "the bandits destroyed my farm, I join the militia" kept a farmer farming: one's own farm is no request)
-  [/(?<!\b(my|our|his|their)\s)\bfarm(?!ing tools?)|\bcrops?\b|contadin|agricolt/, 'farmer'],
+  // (owner 2026-11-17: nor is helping a friend with his crops, which made a guard a farmer)
+  [/(?<!\b(my|our|his|her|their)\s)\bfarm(?!ing tools?)|(?<!\b(my|our|his|her|their)\s)\bcrops?\b|contadin|agricolt/, 'farmer'],
   [/\bpeasant|bracciant|\bcitizen|cittadin|commoner|gardener|grounds?\s*keeper|groudnskeeper|giardinier|labou?rer/, 'peasant'],
   // the banker is a money changer until the Bank (2026-10-29)
   [/merchant|\bbanker|banchier|money\s*(changer|lender)|\btrader|\bshop|mercante|negozi|head of trade|(?<!ministry of )\btrade\b(?!\s+(and|deals?|relations?|routes?|agreements?|alliances?|partners?))|(?<!news\s?paper\s)\bseller|\bvendor|venditor|grocer|store\s*man+a?ger|shop\s*keeper/, 'merchant'],
@@ -145,7 +147,13 @@ const NOT_ASKED = new RegExp([
   // guard and become a landlord" kept a guard a guard), nor is asking how ("How can I be a Noble?" made a tax collector)
   /\b(quit|quitting|leave|leaving|resign|retire|stop being|no longer)\s+(my\s+|the\s+)?((job|work|post|role|position)\s+)?((as|of|at)\s+)?(a\s+|an\s+|the\s+)?$/.source,
   /\bhow\s+(can|could|do|would|does)\s+(i|we|one|you|someone)\s+(be|become|get|get to be)\s+(a\s+|an\s+|the\s+)?$/.source,
+  // owner 2026-11-17, from the comments of 2026-11-16: cheering others is no request ("glory to our military might, hail thy brave
+  // warriors" made a hunter a guard)
+  /\b(hail|glory\s+(to|for)|cheers?\s+(to|for)|long\s+live|praise\s+(to|for|be\s+to)?|salute)\s+(\w+\s+){0,3}$/.source,
 ].join('|'));
+// owner 2026-11-17: nor are the people one leads ("I will lead the peasants' militia" made a merchant a peasant: the militia is
+// the request); leading guards still asks for a guard
+const LED = /\b(lead|leading|command|commanding|rally|rallying|gather)\s+(the\s+|my\s+|our\s+|your\s+|all\s+the\s+)?$/;
 // a job named as someone else's ("I'll be the executioner's friend"), or as taken ("blacksmith was taken so I want priest"), is
 // no request for it (owner 2026-11-07)
 const NOT_MINE = /^[\w-]*('s|s')\s/, TAKEN = /^[\w-]*\s+(was|is|were|are)\s+(already\s+)?(taken|full|gone)\b/;
@@ -154,7 +162,10 @@ const OTHERS = /^(\w+s|ladri|banditi|briganti|criminali|prigionieri|usurpatori|t
 // ...unless the commenter is one of them ('a band of brigands', 'can i become robbers', 'join the bandits')
 const ONE_OF = /\b(band|gang|group|crew|one|leader|member|chief|head|captain|king)\s+of\s+(the\s+|those\s+)?$|\b(be|become|join|joining|am|i'?m|we'?re|we are)\s+(the\s+|a\s+|one\s+of\s+the\s+)?$/;
 // ...unless a word like "job" follows the job: "can I get a blacksmith job" asks for the blacksmith
-const ADVICE = /\bi\s+(also\s+|would\s+|strongly\s+)?(advise|recommend|suggest)\b|\bmy\s+advice\b|\bin\s+my\s+opinion\b/;
+// (owner 2026-11-17: "might I give a suggestion, focus our manpower on the blacksmiths" made a guard a blacksmith)
+const ADVICE = /\bi\s+(also\s+|would\s+|strongly\s+)?(advise|recommend|suggest)\b|\bmy\s+(advice|suggestion)\b|\bin\s+my\s+opinion\b|\b(give|make|offer|have)\s+(you\s+)?(a|one|some)\s+(suggestion|advice|idea)\b/;
+// "may I give a suggestion" is no asking for a job (ASKS reads "may I")
+const SUGGEST = /\b(may|might|can|could)\s+i\s+(give|make|offer)\s+(you\s+)?(a|one|some)\s+(suggestion|advice|idea)\b/g;
 const ASKS = /\b(make\s+me|can\s+i|could\s+i|may\s+i|let\s+me\s+be|i\s+(want|wish|would\s+like|'d\s+like)\s+to\s+(be|become)|i\s+request)\b/;
 // Owner 2026-11-10: a comment that only talks about the video ("the tavern looks great", "send him to jail", "this channel
 // is the goat") changed the job of the commenter's villager. A commenter who already has a villager changes job only when
@@ -194,7 +205,7 @@ export function plainText(raw) {
 /** Requested jobs in the order they appear in the comment (no duplicates). */
 export function wantsFromText(text) {
   const t = plainText(text).toLowerCase().replace(/[’‘]/g, "'");
-  if (ADVICE.test(t) && !ASKS.test(t)) return [];
+  if (ADVICE.test(t) && !ASKS.test(t.replace(SUGGEST, ' '))) return [];
   // the name asked for is not a job: "call me Hunter, I want to bake" asks for the baker
   const n = NAME_RE.exec(t);
   const nameAt = n ? [n.index + n[0].length - n[1].length, n.index + n[0].length] : [-1, -1];
@@ -207,6 +218,7 @@ export function wantsFromText(text) {
       if (WISH.test(t.slice(Math.max(0, m.index - 60), m.index)) || ARRIVES.test(t.slice(m.index))) continue;
       if (NOW_BEFORE.test(t.slice(Math.max(0, m.index - 20), m.index)) && NOW_AFTER.test(t.slice(m.index))) continue;
       if (NOT_ASKED.test(t.slice(Math.max(0, m.index - 50), m.index)) && !JOB_AFTER.test(t.slice(m.index))) continue;
+      if (job !== 'guard' && LED.test(t.slice(Math.max(0, m.index - 30), m.index))) continue;
       if (NOT_MINE.test(t.slice(m.index + m[0].length)) || TAKEN.test(t.slice(m.index + m[0].length)) || (job === 'prisoner' && OTHERS.test(t.slice(m.index)) && !ONE_OF.test(t.slice(Math.max(0, m.index - 30), m.index)))) continue;
       hits.push([JOB_OF.test(t.slice(Math.max(0, m.index - 25), m.index)) ? -1 : m.index, job, m.index]);
       break;
