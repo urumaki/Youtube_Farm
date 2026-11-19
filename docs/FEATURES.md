@@ -61,13 +61,15 @@ Add new owner decisions here.
   bad-word list): that is input, not output.
 - Story events (`src/sim/stories.js`, scenes in `src/render/scene/stories/`): at most one a day, 4.5 s shot
   right after the caravan, hard cut in and out, own camera, banner and name tags. Calendar events always
-  happen on their date (Halloween 31/10); otherwise ~65% of days (owner 2026-11-05, was 50%), each kind with a cooldown
+  happen on their date (Halloween 31/10); otherwise ~65% of days (owner 2026-11-05, was 50%; on a rainy day 35% more often, 87.75%, owner 2026-11-19:
+  `storyChance`), each kind with a cooldown
   (`state.storyLog`). Done: quarrel in the square (chicken/goat/cabbage), merchant caravan on the
   south-east road, bandits at dusk on the mill track chased off by guards with named heroes, Halloween
   bonfire with named villagers in costume (ghost, scarecrow, pumpkin). Added 2026-10-20: house fire put out
   by a bucket chain (never a named villager's house; named villagers are the heroes) and rebuilt by the
   carpenters the next day (`state.storyArc`), wolves at night on the sawmill track scared off with
-  torches, thunderstorm over the square (only on grey days; the day turns to rain). Picked by the owner
+  torches, thunderstorm over the square (only on grey days; the day turns to rain). Owner 2026-11-19: rain is at least 50% rarer
+  (`weatherFor` in `src/sim/events.js`, its weight x0.4: autumn 18% -> 8% of days), since it keeps the outdoor stories away. Picked by the owner
   2026-10-20: the King (the owner) rides through town in an open carriage while the crowd cheers (`royal.js`),
   a pig loose in the square chased by the farmer (`pig.js`), an archery contest with a winner's rosette
   (`archery.js`), the river flooding with a sandbag wall on rainy days (`flood.js`), New Year's Eve

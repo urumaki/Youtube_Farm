@@ -254,6 +254,8 @@ export function takesOver(story) {
 const GUARDS = ['guard', 'knight'], LAND = ['farmer', 'peasant', 'shepherd'];
 const teamOf = (s, jobs) => namedVillagers(s).filter((n) => jobs.includes(n.job));
 const STORY_CHANCE = 0.65; // owner 2026-11-05: 65% (was 50%)
+// owner 2026-11-19: a rainy day has a story 35% more often (65% -> 87.75%), from the stories rain allows
+export const storyChance = (weather) => (weather === 'rain' ? STORY_CHANCE * 1.35 : STORY_CHANCE);
 
 function built(state, id) {
   return state.buildings.some((b) => b.id === id && b.status === 'done');
@@ -982,7 +984,7 @@ export function pickStory(state, { unlocked = [], buildingShots = 0 } = {}) {
     }
   }
   if (!id) {
-    if (!r.chance(STORY_CHANCE)) return null;
+    if (!r.chance(storyChance(state.weather))) return null;
     const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && !s.onUnlock && !s.onComment && !s.once && !s.manual && possible(k, s)
       && (state.storyLog[k] === undefined || state.day - state.storyLog[k] >= s.cooldown));
     if (!options.length) return null;

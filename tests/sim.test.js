@@ -1949,3 +1949,17 @@ test('the brawl in the tavern (owner 2026-11-17): asked for in the comments, the
   for (const sec of [0, 1, 2.4, 3, 5.4, 6, 6.5, 7, 11]) assert.ok(Math.abs(real(act(sec)) - sec) < 1e-9, `${sec}`);
   assert.ok(act(5.4) - act(2.4) < 1 && act(11) - act(10) === 1);
 });
+
+test('rain at least 50% rarer, and a rainy day has a story 35% more often (owner 2026-11-19)', async () => {
+  const { weatherFor } = await import('../src/sim/events.js');
+  const { storyChance } = await import('../src/sim/stories.js');
+  const was = { '01': 1 / 12, '04': 3 / 10, '07': 1 / 10, '10': 2 / 11 };
+  for (const [m, p] of Object.entries(was)) {
+    let rain = 0;
+    for (let i = 0; i < 4000; i++) if (weatherFor(`seed${i}`, `2026-${m}-15`) === 'rain') rain++;
+    assert.ok(rain / 4000 <= p * 0.5 + 0.015, `month ${m}: ${rain / 4000} (was ${p.toFixed(3)})`);
+    assert.ok(rain > 0, `month ${m}: it still rains`);
+  }
+  assert.equal(storyChance('clear'), 0.65);
+  assert.ok(Math.abs(storyChance('rain') - 0.65 * 1.35) < 1e-12);
+});

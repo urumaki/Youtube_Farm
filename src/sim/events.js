@@ -39,11 +39,13 @@ function season(date) {
 
 export function weatherFor(seed, date) {
   const r = rng(seed, 'weather', date);
+  // owner 2026-11-19: rain at least 50% rarer (its weight x0.4: autumn 18% -> 8%, spring 30% -> 15%, summer 10% -> 4%,
+  // winter 8% -> 4%), since rain keeps the outdoor stories away
   const table = {
-    winter: [['clear', 3], ['cloudy', 3], ['fog', 2], ['snow', 3], ['rain', 1]],
-    spring: [['clear', 4], ['cloudy', 2], ['rain', 3], ['fog', 1]],
-    summer: [['clear', 7], ['cloudy', 2], ['rain', 1]],
-    autumn: [['clear', 3], ['cloudy', 3], ['fog', 3], ['rain', 2]],
+    winter: [['clear', 3], ['cloudy', 3], ['fog', 2], ['snow', 3], ['rain', 0.4]],
+    spring: [['clear', 4], ['cloudy', 2], ['rain', 1.2], ['fog', 1]],
+    summer: [['clear', 7], ['cloudy', 2], ['rain', 0.4]],
+    autumn: [['clear', 3], ['cloudy', 3], ['fog', 3], ['rain', 0.8]],
   }[season(date)];
   return r.weighted(table, (x) => x[1])[0];
 }
