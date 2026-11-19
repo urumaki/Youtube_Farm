@@ -125,8 +125,9 @@ export const STORIES = {
   snowballs: { minPop: 20, cooldown: 5, weight: 3, needs: (s) => s.weather === 'snow' },
   // owner 2026-10-27: a commenter who talks of overthrowing the king ("kill the king", "revolution!") spends a day in the
   // pillory while named villagers pelt them with tomatoes and the executioner chops a cabbage on the block as a warning.
-  // Comic, nobody hurt; never drawn otherwise, at most once every 7 days, the newest rebel of the last 7 days (rebelDay).
-  rebel: { onComment: true, minPop: 1, cooldown: 7, needs: (s) => built(s, 'pillory') },
+  // Comic, nobody hurt; never drawn otherwise, at most once every 10 days, the newest rebel of the last 10 days (rebelDay;
+  // owner 2026-11-19: 10 days, was 7, so the other stories get more days).
+  rebel: { onComment: true, minPop: 1, cooldown: 10, needs: (s) => built(s, 'pillory') },
   // owner 2026-10-28: the games at the Tournament Ground are two events of two days each, the chariot race and the joust.
   // Day 1 ('announce'): the town crier reads the proclamation in the square and every guard may enter by commenting "!join"
   // (owner 2026-10-29: `state.gamesEntrants`, guards only, simulate.js; emptied when a game is run). Day 2 ('results'): the
@@ -896,7 +897,7 @@ function promote(state, id, job) {
   n[job + 'Day'] = state.day;
   if (state.villagers[id]) state.villagers[id].job = job;
 }
-/** Named villagers who talked of overthrowing the king in the last 7 days and were not pilloried since, newest first. */
+/** Named villagers who talked of overthrowing the king in the last 10 days and were not pilloried since, newest first. */
 /** The named villagers who asked for a fight in the tavern in the last 14 days, the newest request first. */
 function brawlersWaiting(state) {
   return namedVillagers(state).filter((n) => state.names[n.id].brawlDay >= state.day - 14)
@@ -906,7 +907,7 @@ function brawlersWaiting(state) {
 function rebelsWaiting(state) {
   return namedVillagers(state).filter((n) => {
     const x = state.names[n.id];
-    return x.rebelDay !== undefined && x.rebelDay >= state.day - 7 && !(x.pilloryDay >= x.rebelDay) && !(x.trialDay >= x.rebelDay);
+    return x.rebelDay !== undefined && x.rebelDay >= state.day - STORIES.rebel.cooldown && !(x.pilloryDay >= x.rebelDay) && !(x.trialDay >= x.rebelDay);
   }).sort((a, b) => state.names[b.id].rebelDay - state.names[a.id].rebelDay || b.day - a.day);
 }
 
@@ -963,7 +964,7 @@ export function pickStory(state, { unlocked = [], buildingShots = 0 } = {}) {
     const story = BUILD[k](state, r);
     if (story) { state.storyLog[k] = state.day; return { id: k, ...story }; }
   }
-  // a rebel waiting for the pillory (no more than once every 7 days)
+  // a rebel waiting for the pillory (no more than once every 10 days)
   if (!id && rebelsWaiting(state).length && possible('rebel', STORIES.rebel)
     && (state.storyLog.rebel === undefined || state.day - state.storyLog.rebel >= STORIES.rebel.cooldown)) {
     // owner 2026-11-14: once the Hall of Justice stands, the rebel stands trial first and the commenters decide (no story is

@@ -103,8 +103,8 @@ Add new owner decisions here.
   `tugofwar`, `haycart --built wall2`, `snowballs` (the test render gives `christmas` and `snowballs` snow).
   The would-be rebel (owner 2026-10-27, `rebel`, scene `stories/rebel.js`): a comment talking of overthrowing the king
   ("overthrow / kill / dethrone the king", "down with the king", "revolution", "abbasso il re"...; `rebelFromText` in
-  `requests.js`, only a flag is kept: `names[id].rebelDay`, `diff.rebels`) puts the newest such commenter of the last 7 days
-  in the pillory (needs the Pillory; at most once every 7 days, never drawn otherwise, after calendar days, the proclamation
+  `requests.js`, only a flag is kept: `names[id].rebelDay`, `diff.rebels`) puts the newest such commenter of the last 10 days
+  in the pillory (needs the Pillory; at most once every 10 days, owner 2026-11-19, was 7, never drawn otherwise, after calendar days, the proclamation
   and a story going on; `pilloryDay` so nobody goes twice for one comment). Asked for as an execution; the owner chose this
   comic version instead (nobody hurt, as the tone rule says): bent in the stocks with head and hands through the board, named
   villagers pelt them with tomatoes that stick, the hooded executioner brings the axe down on the cabbage on the block as a

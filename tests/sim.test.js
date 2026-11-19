@@ -1108,7 +1108,7 @@ test('comment words of 2026-10-25: typos and synonyms reach the jobs, six new jo
   for (const text of ['I go to school', '5 stars video', 'I love horses', 'good advice', 'nice shave']) assert.deepEqual(wantsFromText(text), [], text);
 });
 
-test('the would-be rebel (owner 2026-10-27): comments of overthrowing the king are spotted, the pillory at most once in 7 days', async () => {
+test('the would-be rebel (owner 2026-10-27): comments of overthrowing the king are spotted, the pillory at most once in 10 days', async () => {
   const { rebelFromText, wantsFromText } = await import('../src/sim/requests.js');
   for (const t of ['Can I start an organization or overthrow the king?', 'kill the king!!', 'down with the king', 'I will be the new king', 'VIVA LA REVOLUTION',
     'join the rebellion', 'abbasso il re', 'uccidere il re', 'steal the crown', 'dethrone his majesty', 'Day 5 trying to claim the kings throne']) assert.ok(rebelFromText(t), t);
@@ -1129,9 +1129,9 @@ test('the would-be rebel (owner 2026-10-27): comments of overthrowing the king a
   assert.equal(st.executioner.job, 'executioner', 'a named executioner');
   assert.ok(st.throwers.every((c) => c.id !== 3 && c.id !== 0));
   assert.equal(k.names[3].pilloryDay, 10);
-  // the next rebel waits until 7 days have passed; one already pilloried is not taken again
-  for (let d = 11; d <= 16; d++) { k.day = d; k.date = `2026-11-${d}`; k.names[4].rebelDay = 11; assert.notEqual(pickStory(k)?.id, 'rebel', `day ${d}`); }
-  k.day = 17; k.date = '2026-11-17'; k.storyArc = null; // (a story going on over several days comes first)
+  // the next rebel waits until 10 days have passed (owner 2026-11-19); one already pilloried is not taken again
+  for (let d = 11; d <= 19; d++) { k.day = d; k.date = `2026-11-${d}`; k.names[4].rebelDay = 11; assert.notEqual(pickStory(k)?.id, 'rebel', `day ${d}`); }
+  k.day = 20; k.date = '2026-11-20'; k.storyArc = null; // (a story going on over several days comes first)
   const again = pickStory(k);
   assert.equal(again.id, 'rebel');
   assert.equal(again.rebel.id, 4);
