@@ -63,7 +63,10 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [],
     b.add('woodDark', boxGeo(1.2, 0.1, 0.12), x, 2.2 - 0.7, -HZ + 0.05); b.add('woodDark', boxGeo(1.2, 0.1, 0.12), x, 2.2 + 0.7, -HZ + 0.05);
     b.add('woodDark', boxGeo(0.08, 1.3, 0.1), x, 2.2, -HZ + 0.05);
   }
-  b.add('woodDark', boxGeo(1.5, 2.5, 0.12), 1.5, F + 1.25, -HZ + 0.06);
+  // the door, a mesh of its own: the brawl swings its own leaf open in its place and hides this one (stories/brawl.js)
+  const door = new THREE.Mesh(boxGeo(1.5, 2.5, 0.12), M.woodDark);
+  door.position.set(1.5, F + 1.25, -HZ + 0.06);
+  door.castShadow = door.receiveShadow = true;
   // a royal banner on the back wall
   b.add('cloth', new THREE.PlaneGeometry(1.4, 2.0).rotateY(Math.PI), -0.6, 2.2, HZ - 0.08);
 
@@ -123,7 +126,7 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [],
     candles.push(new THREE.Vector3(x, CH.y + 0.2, z));
   }
   const room = b.build(mats);
-  group.add(room);
+  group.add(room, door);
 
   // flames: candles and the hearth flicker by scaling small cones
   const flames = [];
@@ -231,6 +234,7 @@ export function buildTavernInterior({ item, M, seed, patrons = [], keepers = [],
   return {
     group,
     labels,
+    door, // the front door (the brawl hides it while its own leaf swings open)
     people, // the rigs and what they do ({ P, kind: 'drinker' | 'bard' | 'guest' | 'pour' | 'wipe' }): a story may pose them after update (the brawl)
     cam: minstrel ? bardCam : bar ? barCam : cam,
     focus: minstrel ? toWorld(-4.2, F + 1.0, 2.9) : bar ? toWorld(BAR_X + 0.75, F + 1.2, barSpots[0].z) : toWorld(0, 1.2, 0),

@@ -372,6 +372,7 @@ export function buildBrawl({ story, M, buildings, seed }) {
     const open = ramp(a, DOOR, DOOR + 0.09);
     leaf.rotation.y = 1.95 * open - (open >= 1 ? 0.12 * Math.exp(-6 * (a - DOOR - 0.09)) * Math.sin((a - DOOR) * 30) : 0);
     leaf.visible = a >= DOOR - 0.3;
+    tav.door.visible = !leaf.visible; // the room's own door would stay shut behind the open leaf, the guards walking through it
     doorway.visible = a >= DOOR;
     dayLight.intensity = a >= DOOR ? 5 * (1 + 0.6 * Math.exp(-4 * (a - DOOR))) : 0;
     const darr = dust.geometry.attributes.position.array;
