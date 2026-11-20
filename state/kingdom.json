@@ -17202,7 +17202,7 @@
    "day": 7,
    "job": "guard",
    "requestDay": 30,
-   "rebelDay": 32,
+   "rebelDay": 36,
    "pilloryDay": 35,
    "seenDay": 36
   },
@@ -22698,8 +22698,7 @@
    "day": 20,
    "job": "guard",
    "requestDay": 33,
-   "seenDay": 36,
-   "rebelDay": 36
+   "seenDay": 36
   },
   "940": {
    "name": "roninowen7368",
@@ -23307,8 +23306,7 @@
    "day": 25,
    "job": "guard",
    "requestDay": 36,
-   "seenDay": 36,
-   "rebelDay": 36
+   "seenDay": 36
   },
   "1035": {
    "name": "lucianmihai7040",
@@ -23899,7 +23897,7 @@
    "requestDay": 36
   },
   "1123": {
-   "name": "CaouetteNoob5678",
+   "name": "Tony",
    "author": "UCceqllSK5lY5D532UboPTJQ",
    "seenDay": 36,
    "day": 36
@@ -23908,7 +23906,9 @@
    "name": "sumosino",
    "author": "UCio741qk3tkEFOEJhvKugZg",
    "seenDay": 36,
-   "day": 36
+   "day": 36,
+   "job": "stablehand",
+   "requestDay": 36
   },
   "1125": {
    "name": "liamjohns",

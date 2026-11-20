@@ -1963,3 +1963,16 @@ test('rain at least 50% rarer, and a rainy day has a story 35% more often (owner
   assert.equal(storyChance('clear'), 0.65);
   assert.ok(Math.abs(storyChance('rain') - 0.65 * 1.35) < 1e-12);
 });
+
+test('comments read wrong on the day 35 video: rebels, the dungeon as a place, horses, a name said first (owner 2026-11-20)', async () => {
+  const { rebelFromText, wantsFromText, nameFromText } = await import('../src/sim/requests.js');
+  for (const t of ['our rebel band will attack the kingdom by night', 'my rebellion grows every day', 'we will invade the kingdom']) assert.ok(rebelFromText(t), t);
+  for (const t of ['we pray we never have a rebellion, if the king fell we would fall too', 'I forgive the rebel, he gets one more chance']) assert.ok(!rebelFromText(t), t);
+  assert.deepEqual(wantsFromText('our rebel army marches at dawn'), []);
+  assert.deepEqual(wantsFromText('I would like to put guards at the gate of the dungeon once the dungeon opens'), ['guard']);
+  assert.deepEqual(wantsFromText('can I be thrown in the dungeon?'), ['prisoner']);
+  assert.deepEqual(wantsFromText('let me be someone who takes care of horses'), ['stablehand']);
+  assert.equal(nameFromText('Robin Hale is gonna be my villager\'s name'), 'Robin');
+  assert.equal(nameFromText('Wren is my villagers name'), 'Wren');
+  assert.equal(nameFromText('my villager\'s name is Oswin'), 'Oswin');
+});

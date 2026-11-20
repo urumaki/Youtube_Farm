@@ -23,7 +23,7 @@ const KEYWORDS = [
   // owner 2026-10-28: a Knight, a Cavalier and the Captain of the Guard are only won at the tournaments, so asking makes a guard
   // (2026-10-29: "teutonic Kinght", "kight", "the king's night", paladin, "chief of war", men-at-arms, a defender of the city;
   // "sir" alone is how people speak to the king, "an army engineer" asks for the engineer)
-  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|(?<!\bin\s)\bgeneral\b(?!\s+(store|idea|rule|public))|\barmy(?!\s*engineer)|(?<!(boat|ship|sea)\s?)captain(?!\s+of\s+(a|the)\s+(\w+\s+)?(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusa+i?der|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
+  [/\bknight|\bkinght|\bknigth|\bknigt\b|\bkight\b|king'?s\s+night|\bbe a night\b|\bpaladin|chief of war|war\s*chief|\b(a|be|become)\s+sir\b|men[\s-]+at[\s-]+arms|man[\s-]+at[\s-]+arms|\bmilitary(?!\s*engineer)|\bdefender|protect the (kingdom|city|town|realm)|\bretinue|cavaliere|commander|(?<!\bin\s)\bgeneral\b(?!\s+(store|idea|rule|public))|(?<!\brebels?\s)\barmy(?!\s*engineer)|(?<!(boat|ship|sea)\s?)captain(?!\s+of\s+(a|the)\s+(\w+\s+)?(ship|boat|vessel))|\bofficer|\bufficiale|lieutenant|\bcavalry|\bcalvary|crusa+i?der|crociat|\bjoust|giostr|hus+[sz]+ar|huzz?air|ussar/, 'guard'],
   // (2026-11-04: the jailer keeps the Dungeon, he is a guard)
   // (2026-11-07: "I wish to fight, instead of begging for booze")
   [/\b(want|wish|like|ready|here|eager)\s+to\s+fight\b(?!\s+(the|a|an|that|this|him|her|them|with|against|some|every|his|my|your)\b)/, 'guard'],
@@ -99,7 +99,7 @@ const KEYWORDS = [
   // the medieval surgeon was the barber (2026-10-29: "sawbone", "a surgeon")
   [/\bbarber|barbiere|hair\s*(cutter|dresser)|saw\s*bone|surgeon|chirurg/, 'barber'],
   [/astronom|astrolog|stargaz|star\s*gaz/, 'astronomer'],
-  [/stable\s*(hand|boy|keeper|master|man|worker)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom|trainer|breaker|whisperer)|carriage|coach\s*(man|driver)|wagon\s*(driver|master)|\bwagoner|cocchier|carrettier/, 'stablehand'],
+  [/stable\s*(hand|boy|keeper|master|man|worker)|\bstables\b|ostler|stallier|\bscuderi|horse\s*(keeper|tender|groom|trainer|breaker|whisperer)|(takes?|taking|look(s|ing)?|care)\s+(care\s+of|after|for)\s+(the\s+)?horses|tend(s|ing)?\s+(to\s+)?(the\s+)?horses|carriage|coach\s*(man|driver)|wagon\s*(driver|master)|\bwagoner|cocchier|carrettier/, 'stablehand'],
   [/advis[eo]r|counsell?or|council+or|consiglier/, 'adviser'],
   // owner 2026-10-29, from "a minor in the cave" and "I be mining" ("mine" alone is the word for mine, not a request;
   // 2026-11-04: "the mine worker", "a mine builder")
@@ -183,6 +183,10 @@ const INTENT = new RegExp([
   /\b(voglio|vorrei|posso|fammi|fatemi|rendimi|diventare|lavoro|lavorare|per\s+favore)\b|\b(fare|essere)\s+(il|la|lo|un|una)\b/.source,
 ].join('|'));
 const CELL = /^(jail|gaol|dungeon)$/;
+// owner 2026-11-20, from the comments on the day 35 video: the Dungeon named as a place ("guards at the gate of the
+// dungeon", "once the dungeon opens") asks for no prisoner
+const CELL_PLACE_BEFORE = /\b(when|once|until|after|before|of|at|guard|guards|guarding|open|opens|build|builds)\s+(the\s+)?$/;
+const CELL_PLACE_AFTER = /^\w+\s+(opens?|is\s+(built|open|ready|done)|will\s+(open|be))\b/;
 /** True when the comment asks for something (a word of asking), or is too short to be about anything else. */
 export function asksFromText(text) {
   const t = plainText(text).toLowerCase().replace(/[’‘]/g, "'");
@@ -214,7 +218,7 @@ export function wantsFromText(text) {
     const g = new RegExp(re.source, 'g');
     for (let m = g.exec(t); m; m = g.exec(t)) {
       if (m.index >= nameAt[0] && m.index < nameAt[1]) continue;
-      if (job === 'prisoner' && CELL.test(m[0]) && !asks) continue;
+      if (job === 'prisoner' && CELL.test(m[0]) && (!asks || CELL_PLACE_BEFORE.test(t.slice(Math.max(0, m.index - 25), m.index)) || CELL_PLACE_AFTER.test(t.slice(m.index)))) continue;
       if (WISH.test(t.slice(Math.max(0, m.index - 60), m.index)) || ARRIVES.test(t.slice(m.index))) continue;
       if (NOW_BEFORE.test(t.slice(Math.max(0, m.index - 20), m.index)) && NOW_AFTER.test(t.slice(m.index))) continue;
       if (NOT_ASKED.test(t.slice(Math.max(0, m.index - 50), m.index)) && !JOB_AFTER.test(t.slice(m.index))) continue;
@@ -282,12 +286,14 @@ export function complainsFromText(text) {
 const KING = String.raw`(the |our |this |that |your |his |my |da |le )?(king|kingdom|crown|throne|monarchy|majesty|ruler)`;
 const UPRISING = String.raw`(revolution|revolt|rebellion|rebel|rebels|uprising|insurrection|mutiny|treason|coup|anarchy|regicide|usurper|traitor)\b`;
 const REBEL_RE = new RegExp([
-  String.raw`(?<!\b(never|not|n't|dont|wont)\s+(ever\s+)?)\b(overthrow|over throw|overthrown|overthrowing|kill|killing|murder|assassinate|dethrone|depose|behead|usurp|topple|betray|defeat|destroy|stab|poison|take down|takedown|eradicate|conquer|burn down)\s+(the entire |the whole |this whole )?${KING}\b`,
+  String.raw`(?<!\b(never|not|n't|dont|wont)\s+(ever\s+)?)\b(overthrow|over throw|overthrown|overthrowing|kill|killing|murder|assassinate|dethrone|depose|behead|usurp|topple|betray|defeat|destroy|stab|poison|take down|takedown|eradicate|conquer|burn down|attack|invade|besiege|siege|storm)\s+(the entire |the whole |this whole )?${KING}\b`,
   String.raw`\bdown with ${KING}\b`, String.raw`\b(steal|take|seize|claim)\s+(the |your |the king'?s |his )?(crown|throne)\b`, String.raw`\bi('?ll| will| shall)\s+be (the )?(new )?king\b`,
   // (owner 2026-11-10: the words alone only in a comment of a few words, "revolution!"; in a longer one the commenter says
   // it of themselves, "we start a revolution", not of the video, "the rebels got tomatoes", "this is treason lol")
   String.raw`^\W*(\w+\W+){0,1}${UPRISING}\W*(\w+\W*)?$`,
-  String.raw`\b(i|we|let'?s|me)\b[^.!?]{0,40}\b${UPRISING}`,
+  // (owner 2026-11-20, the day 35 video: "our rebel band" is one; "we pray there is no rebellion" and "I forgive the rebel"
+  // are not)
+  String.raw`\b(i|we|let'?s|me|my|our)\b(?:(?!\b(?:dont|don'?t|do not|not|never|no|won'?t|wont|hope|pray|forgive|forgiven|against|stop|fight|fighting)\b)[^.!?]){0,40}\b${UPRISING}`,
   String.raw`\b(start|starting|join|joining|begin|lead|leading|plan|planning|plot|plotting|time for|viva la|long live the|call for|need|want)\s+(a |an |the )?${UPRISING}`,
   /\b(uccidere|uccido|ammazzare|ammazzo|rovesciare|rovescio|detronizzare|spodestare|tradire)\s+(il |del )?re\b/.source,
   /\babbasso (il )?re\b/.source, /\b(rivoluzione|ribellione|rivolta|ribelle|ribelli|colpo di stato|tradimento|traditore)\b/.source,
@@ -346,7 +352,7 @@ export function rebelFromText(text) {
 
 // "call me Violet", "a carpenter named henry", "can I be a villager called sopita?", "chiamami Pino".
 // Only the chosen name is kept (cleaned and checked like any display name in simulate.js).
-const NAME_RE = /\b(?:(?:call me|(?<!\bso[\s-])called|named)(?: as)?(?: (?:sir|ser|lady|mr|mrs|miss|dr)\b\.?)?|my name is sir|name me(?: as)?|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;
+const NAME_RE = /\b(?:(?:call me|(?<!\bso[\s-])called|named)(?: as)?(?: (?:sir|ser|lady|mr|mrs|miss|dr)\b\.?)?|my name is sir|my villager?'?s? name (?:is|will be|should be)|name me(?: as)?|name (?:one|it|him|her|mine|my villager|a villager)(?: after)?|i(?:'m| am) sir|chiamami|chiamato|chiamata|mi chiamo)\s+["“'‘]?([\p{L}][\p{L}\p{N}_-]{1,20})/iu;
 const NOT_NAMES = new Set(['a', 'an', 'the', 'me', 'it', 'one', 'him', 'her', 'please', 'pls', 'plz', 'villager', 'something', 'anything',
   'by', 'like', 'as', 'too', 'now', 'here', 'my', 'mine', 'that', 'this', 'what', 'whatever', 'un', 'una', 'come', 'per', 'favore',
   // named villagers are never villains (owner; 2026-11-04: "a villager named thief")
@@ -354,9 +360,12 @@ const NOT_NAMES = new Set(['a', 'an', 'the', 'me', 'it', 'one', 'him', 'her', 'p
   'maybe', 'out', 'back', 'upon', 'when', 'if', 'so', 'for', 'to', 'in', 'on', 'and', 'or', 'but', 'not', 'your', 'his', 'their', 'our', 'after', 'because',
   'thief', 'robber', 'bandit', 'brigand', 'criminal', 'murderer', 'killer', 'villain', 'crook', 'outlaw', 'assassin', 'ladro', 'brigante']);
 
+// owner 2026-11-20, the day 35 video: "Robin Hale is gonna be my villager's name" (the first word of one or two)
+const NAME_BEFORE_RE = /\b([\p{L}][\p{L}\p{N}_-]{1,20})(?:\s+[\p{L}][\p{L}\p{N}_-]{1,20})?\s+(?:is|will be|shall be)\s+(?:(?:gonna|gona|going to)\s+be\s+)?my\s+villager?'?s?\s+name\b/iu;
+
 /** A name the commenter asked for, or null. */
 export function nameFromText(text) {
-  const m = NAME_RE.exec(plainText(text));
+  const m = NAME_RE.exec(plainText(text)) || NAME_BEFORE_RE.exec(plainText(text));
   if (!m || NOT_NAMES.has(m[1].toLowerCase())) return null;
   return m[1].charAt(0).toUpperCase() + m[1].slice(1);
 }

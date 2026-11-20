@@ -781,6 +781,12 @@ Add new owner decisions here.
     step behind his head, arms flailing; the beekeeper turns to follow him, pointing and shaking with laughter (`cfg.swarm`,
     `once`, 3.8 s). Nobody gets stung on screen.
   - Test: `npm run render -- --real --subs 3140 --gallery "miner:adit,beekeeper:honey,beekeeper:swarm" --gallery-times 0.6,1.3,1.9,2.9,3.6`.
+- From the comments on the day 35 video (owner 2026-11-20, read with yt-dlp; `requests.js`): a rebel army of one's own ("my",
+  "our") and attacking, invading or besieging the kingdom make a rebel, and a rebel army asks for no guard; hoping or praying
+  for no rebellion, or forgiving a rebel, makes none; the Dungeon named as a place ("once the dungeon opens", "at the gate of
+  the dungeon") asks for no prisoner; taking care of horses asks for the stablehand; "<Name> is gonna be my villager's name"
+  and "my villager's name is <Name>" choose the name. Set back in the state (day 36): Torturle and Slade no rebels, Gwain a
+  rebel again, sumosino a stablehand (made a peasant), CaouetteNoob5678 named Tony as asked.
 - From the comments on the day 31 and 32 videos (owner 2026-11-17, read with yt-dlp; `requests.js`): a suggestion ("might I give
   a suggestion", "my suggestion") is no request even after "may I"; helping with someone else's crops (his, her, their) asks
   for no farmer; cheering others ("hail", "glory to", "cheers for", "long live") asks for nothing; the people one leads
