@@ -105,7 +105,8 @@ Add new owner decisions here.
   ("overthrow / kill / dethrone the king", "down with the king", "revolution", "abbasso il re"...; `rebelFromText` in
   `requests.js`, only a flag is kept: `names[id].rebelDay`, `diff.rebels`) puts the newest such commenter of the last 10 days
   in the pillory (needs the Pillory; at most once every 10 days, owner 2026-11-19, was 7, never drawn otherwise, after calendar days, the proclamation
-  and a story going on; `pilloryDay` so nobody goes twice for one comment). Asked for as an execution; the owner chose this
+  and a story going on; `pilloryDay`: owner 2026-11-20, nobody goes to the pillory twice, and with nobody new there is no
+  pillory scene). Asked for as an execution; the owner chose this
   comic version instead (nobody hurt, as the tone rule says): bent in the stocks with head and hands through the board, named
   villagers pelt them with tomatoes that stick, the hooded executioner brings the axe down on the cabbage on the block as a
   warning and the rebel flinches. Synced sounds: the axe (a whoosh, then a deep thunk) and each tomato's splat (`hits` on

@@ -907,7 +907,8 @@ function brawlersWaiting(state) {
 function rebelsWaiting(state) {
   return namedVillagers(state).filter((n) => {
     const x = state.names[n.id];
-    return x.rebelDay !== undefined && x.rebelDay >= state.day - STORIES.rebel.cooldown && !(x.pilloryDay >= x.rebelDay) && !(x.trialDay >= x.rebelDay);
+    // owner 2026-11-20: only someone never in the pillory before; with nobody new, no pillory scene
+    return x.rebelDay !== undefined && x.rebelDay >= state.day - STORIES.rebel.cooldown && x.pilloryDay === undefined && !(x.trialDay >= x.rebelDay);
   }).sort((a, b) => state.names[b.id].rebelDay - state.names[a.id].rebelDay || b.day - a.day);
 }
 

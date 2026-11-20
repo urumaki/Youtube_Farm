@@ -1135,6 +1135,11 @@ test('the would-be rebel (owner 2026-10-27): comments of overthrowing the king a
   const again = pickStory(k);
   assert.equal(again.id, 'rebel');
   assert.equal(again.rebel.id, 4);
+  // owner 2026-11-20: a rebel already pilloried once is never pilloried again; with nobody new, no pillory scene
+  k.day = 30; k.date = '2026-11-30'; k.storyArc = null; k.names[3].rebelDay = 29; k.names[4].rebelDay = 29;
+  assert.notEqual(pickStory(k)?.id, 'rebel');
+  k.names[5].rebelDay = 29;
+  assert.equal(pickStory(k)?.rebel?.id, 5);
   // no pillory, no rebel story; nobody waiting, never drawn
   const none = kingdom(10, { buildings: [{ id: 'market', status: 'done' }] });
   none.names[3].rebelDay = 9;
