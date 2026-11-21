@@ -56,6 +56,13 @@ const CSS = `
 #ov .foot{position:absolute;left:0;right:0;bottom:230px;padding:0 70px;line-height:1.25;text-align:center;font-weight:800;font-size:34px;letter-spacing:1px;color:#fff4d6;text-shadow:0 2px 0 #000,0 3px 12px rgba(0,0,0,.95)}
 #ov .cap span{display:inline-block;margin:0 8px;font-weight:900;font-size:64px;line-height:1.15;color:#fff;text-shadow:0 0 6px #000,0 4px 0 #000,0 6px 18px rgba(0,0,0,.9);-webkit-text-stroke:2px #000}
 #ov .cap span.on{color:#ffd35a}
+#ov .premise{position:absolute;left:-20px;right:-20px;top:-170px;text-align:center}
+#ov .premise span{display:inline-block;padding:12px 30px 14px;border-radius:16px;background:rgba(18,29,71,.88);border:4px solid #e3b23c;box-shadow:0 10px 30px rgba(0,0,0,.5);font-family:'Cinzel',serif;font-weight:700;font-size:52px;line-height:1.05;color:#fff4d6;text-shadow:0 3px 0 #6b4a12}
+#ov .premise span b{color:#ffd35a}
+#ov .you{position:absolute;transform:translate(-50%,-100%);text-align:center;white-space:nowrap}
+#ov .you .q{display:inline-block;padding:10px 26px 12px;border-radius:40px;background:#c4302b;border:4px solid #fff4d6;font-weight:900;font-size:54px;letter-spacing:1px;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+#ov .you .arr{width:0;height:0;margin:-2px auto 0;border-left:22px solid transparent;border-right:22px solid transparent;border-top:30px solid #fff4d6}
+#ov .tag.me,#ov .label.me{border-color:#ffd35a;box-shadow:0 0 0 4px #c4302b,0 0 30px 8px rgba(255,211,90,.85)}
 `;
 
 const STR = { villagers: 'VILLAGERS', villager: 'VILLAGER', day: 'Day', more: (n) => `+${n} more homes`, until: (n, g) => `<b>${n}</b> more villager${n === 1 ? '' : 's'} until <b>${g}</b>`, cta1: 'Subscribe to', cta2: 'become a villager', btn: 'SUBSCRIBE', cmt: 'Comment to name a villager', credits: 'The villagers', others: (n) => `and ${n} more villager${n === 1 ? '' : 's'}`, realm: 'SUBSCRIBER KINGDOM', weather: { clear: 'Clear skies', cloudy: 'Cloudy', fog: 'Fog', rain: 'Rain', snow: 'Snow' }, none: 'No change today' };
@@ -77,10 +84,12 @@ export function createOverlay(root, data) {
     <div class="bracket"></div>
     <div class="foot"></div>
     <div class="cap"></div>
+    <div class="premise"><span>1 SUBSCRIBER = <b>1 VILLAGER</b></span></div>
+    <div class="you"><div class="q">IS THIS YOU?</div><div class="arr"></div></div>
   </div>`;
   root.appendChild(ov);
   const $ = (q) => ov.querySelector(q);
-  const banner = $('.banner'), foot = $('.foot'), bracket = $('.bracket');
+  const banner = $('.banner'), foot = $('.foot'), bracket = $('.bracket'), premise = $('.premise'), you = $('.you');
   let bracketKey = null;
   const tagEls = [];
   const counter = $('.counter'), num = $('.num'), unit = $('.unit'), delta = $('.delta'), goal = $('.goal'), cta = $('.cta'), cap = $('.cap'), day = $('.day');
@@ -237,6 +246,42 @@ export function createOverlay(root, data) {
           el.style.left = `${cx}px`; el.style.top = `${it.y}px`;
           el.style.opacity = Math.min(1, (ev.activeU - tagFrom) * 6, (0.97 - ev.activeU) * 12);
         });
+      }
+      // the hook (src/render/hook.js, from 2026-11-23): the idea of the channel at the top of the frame, and "IS THIS YOU?"
+      // over the name nearest the middle of the opening shot
+      const hookOn = !!data.hook && hook;
+      // owner 2026-11-21: the line at the top of the frame, above the counter, for the whole first scene
+      const firstEnd = ev.firstEnd ?? 2.2;
+      premise.style.opacity = data.hook && t < firstEnd && (!ev.takeover || ev.stats) ? Math.max(0, Math.min(1, t / 0.15, (firstEnd - t) * 6)) : 0;
+      // (the tags' class is set again every frame, so the enlarged one is found by its transform, not by .me)
+      for (const el of ov.querySelectorAll('.me')) el.classList.remove('me');
+      for (const el of tagEls) el.style.transform = '';
+      you.style.opacity = 0;
+      if (hookOn) {
+        // only a villager's name (never a building's label), below the counter (top 430 px of the safe area)
+        const FREE = 430 + you.offsetHeight;
+        const below = (el) => el.style.display === 'block' && parseFloat(el.style.top) - el.offsetHeight > FREE;
+        const shownTags = tagEls.filter(below);
+        const big = tg?.kind === 'villager' ? [...labelEls.values()].find(below) : null;
+        const sw = W - SAFE.left - SAFE.right;
+        // the tag nearest the middle of the frame, else the big label
+        const me = big || shownTags.sort((a, b) => Math.abs(parseFloat(a.style.left) - sw / 2) - Math.abs(parseFloat(b.style.left) - sw / 2))[0];
+        if (me) {
+          me.classList.add('me');
+          me.style.transform = `translate(-50%,-100%) scale(${big ? 1.1 : 1.6})`;
+          me.style.transformOrigin = '50% 100%';
+          const x = parseFloat(me.style.left), yTop = parseFloat(me.style.top) - me.offsetHeight * (big ? 1.1 : 1.6);
+          you.style.left = `${Math.min(sw - you.offsetWidth / 2, Math.max(you.offsetWidth / 2, x))}px`;
+          you.style.top = `${yTop - 6}px`;
+          you.style.opacity = Math.min(1, (t - 0.25) * 6, (2.2 - t) * 6, Number(me.style.opacity || 1));
+          // the other names under the question are hidden while it shows
+          const ux = parseFloat(you.style.left), uy = parseFloat(you.style.top), uw = you.offsetWidth / 2 + 10, uh = you.offsetHeight + 10;
+          for (const el of tagEls) {
+            if (el === me || el.style.display !== 'block') continue;
+            const ex = parseFloat(el.style.left), ey = parseFloat(el.style.top), ew = el.offsetWidth / 2;
+            if (Math.abs(ex - ux) < uw + ew && ey > uy - uh && ey - el.offsetHeight < uy + 10) el.style.display = 'none';
+          }
+        }
       }
       // captions: the current phrase, the spoken word highlighted
       const c = (data.captions || []).find((p) => t >= p.start && t < p.end + 0.15);

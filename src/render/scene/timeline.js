@@ -444,6 +444,8 @@ export function evaluate(plan, t) {
   const start = plan.start ?? HOOK, end = plan.end ?? UPDATE_END;
   out.takeover = !!plan.takeover && t < end; // the raid's own shots: no counter, credits or call to action over them
   out.stats = !!plan.stats; // ...but a villager's day keeps the counter and the day line
+  // the end of the video's first scene (the flight to the castle, or the shot that opens the video)
+  out.firstEnd = start > 0 ? start : plan.targets[0]?.t1 ?? end;
   if (t < start) {
     pose = mixPose(HOOK_FROM, HOOK_TO, easeOut(t / HOOK));
     out.shadowRadius = 140;

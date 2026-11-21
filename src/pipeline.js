@@ -13,6 +13,7 @@ import { wantsFromText, nameFromText, complainsFromText } from './sim/requests.j
 import { buildScript, sentenceAnchors } from './audio/narration.js';
 import { synthesize, captionPhrases } from './audio/tts/index.js';
 import { mixSoundtrack, VOICE_DELAY } from './audio/mix.js';
+import { hookOn } from './render/hook.js';
 import { renderVideo, renderStills, renderGallery, preparePage } from './render/capture.js';
 import { publish } from './publish/index.js';
 import { renderTimelapse } from './render/timelapse.js';
@@ -73,7 +74,7 @@ export async function produceVideo(state, diff, { out, quality, tts, log = conso
   const dir = workDir || path.join('.cache', 'work', `${state.date}_en_${state.subscriberCount}`);
   fs.mkdirSync(dir, { recursive: true });
   // the shot plan first, so each sentence can wait for the shot it talks about; the same page renders frames later
-  const prepared = await preparePage({ mode: 'video', state, diff, quality }, { log });
+  const prepared = await preparePage({ mode: 'video', state, diff, quality, hook: hookOn(state.date) }, { log });
   let handed = false;
   try {
     const cues = prepared.stats.cues || [];
@@ -86,7 +87,7 @@ export async function produceVideo(state, diff, { out, quality, tts, log = conso
     // owner 2026-10-29: a saved day made again always has the narrator (no silent video when the voice could not run)
     if (needVoice && voice.provider === 'none') throw new Error('no narrator voice (is PYTHON set in .env for Kokoro?); pass --tts none for a silent test');
     const captions = captionPhrases(voice.words, VOICE_DELAY);
-    const data = { mode: 'video', state, diff, captions, quality };
+    const data = { mode: 'video', state, diff, captions, quality, hook: hookOn(state.date) };
     const audio = async (stats) => {
       const file = mixSoundtrack({ narration: voice.file, outDir: dir, seed: state.seed, date: state.date, weather: diff.weather, cues: stats?.cues || [] });
       log.log(`[audio] soundtrack mixed with ${stats?.cues?.length || 0} camera cues`);
@@ -227,7 +228,7 @@ export async function testRender(args, log = console) {
   }
   if (args.stills) {
     const times = args.stills.split(',').map(Number);
-    const r = await renderStills({ mode: 'video', state, diff, quality: args.quality }, times, path.join("output", `stills_${args.day || args.subs}`));
+    const r = await renderStills({ mode: 'video', state, diff, quality: args.quality, hook: hookOn(state.date) }, times, path.join("output", `stills_${args.day || args.subs}`));
     log.log('[shots] ' + (r.stats.cues || []).map((c) => `${c.kind}:${c.id ?? ''} ${c.t0.toFixed(1)}-${c.t1.toFixed(1)}`).join(' | '));
     if (r.errors.length) log.error('[render] browser errors: ' + r.errors.join(' | '));
     log.log(r.files.join('\n'));

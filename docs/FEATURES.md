@@ -53,6 +53,14 @@ Add new owner decisions here.
   the caravan's line waits for the caravan. The counter still shows over the first 2.2 s. Days saved before (no
   `scenes.opening`) and the stories that take the whole video keep their order. Test: `npm run render -- --real --subs
   <n> --story pig --names "A,B" --stills 0.6,2.5,6` (the `[shots]` line starts with `event:pig 0.0-4.5`).
+  The hook (owner 2026-11-21, `src/render/hook.js`, `overlay.js`; day 35's short: 57% stayed, 43% swiped away): from the
+  video of 2026-11-23 on (after the week without hashtags, so the two trials are not mixed), the line
+  "1 SUBSCRIBER = 1 VILLAGER" sits at the very top of the frame, above the counter, for the whole first scene (the
+  opening shot, or the flight to the castle), and for the first 2.2 s "IS THIS YOU?" points at the villager's name nearest
+  the middle of the opening shot (that tag enlarged, the names under the question hidden). Only a person's name, never a
+  building's label, and only a name below the counter: with none (a story shot whose names sit behind the counter) the
+  question is left out. `HOOK=1` / `HOOK=0` force it on or off in a test render. The time-lapse, the thumbnail and the
+  gallery never show it. Test: `HOOK=1 npm run render -- --day 2026-11-20 --stills 1,3,4.3,4.8`.
   Narration sentences follow the same order (`src/audio/narration.js`).
 - English only (owner 2026-10-28: the project will never be in Italian): narration, on-screen titles and tags, the video's
   title and description, the voices. The Italian templates, word tables and the `--lang` option are gone; file names and

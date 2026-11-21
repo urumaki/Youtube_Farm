@@ -85,3 +85,13 @@ test('the two days of the night raid say what happened in the title (owner 2026-
   assert.equal(day('rescue'), 'Day 3: The guards brought them home 🛡️ +11 villagers — 87 in the kingdom 👑' + SH);
   assert.ok(day('attack').length <= 100 && day('rescue').length <= 100);
 });
+
+test('the hook starts with the video of 2026-11-23 (owner 2026-11-21); HOOK=1/0 force it in a test render', async () => {
+  const { hookOn, HOOK_FROM } = await import('../src/render/hook.js');
+  assert.equal(HOOK_FROM, '2026-11-23');
+  assert.equal(hookOn('2026-11-22', ''), false); // the last day of the week without hashtags
+  assert.equal(hookOn('2026-11-23', ''), true);
+  assert.equal(hookOn('2026-12-01', ''), true);
+  assert.equal(hookOn('2026-11-20', '1'), true);
+  assert.equal(hookOn('2026-12-01', '0'), false);
+});
