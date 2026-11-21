@@ -893,6 +893,16 @@ function knockout(riders, r) {
 function promote(state, id, job) {
   const n = state.names?.[id];
   if (!n) return;
+  // owner 2026-11-21: one Knight at a time: when a new one is made, the Knight before goes back to the guards (their
+  // knightDay stays, as a record; the job is what counts)
+  if (job === 'knight') {
+    for (const [k, x] of Object.entries(state.names)) {
+      if (Number(k) === Number(id) || x.job !== 'knight') continue;
+      x.job = 'guard';
+      x.guardAgainDay = state.day;
+      if (state.villagers[k]) state.villagers[k].job = 'guard';
+    }
+  }
   n.job = job;
   n[job + 'Day'] = state.day;
   if (state.villagers[id]) state.villagers[id].job = job;
@@ -987,7 +997,11 @@ export function pickStory(state, { unlocked = [], buildingShots = 0 } = {}) {
   }
   if (!id) {
     if (!r.chance(storyChance(state.weather))) return null;
+    // owner 2026-11-21: while a story the owner set for a later day waits (state.storyArc), no story of several days begins,
+    // or it would take the owner's place
+    const waiting = !!state.storyArc;
     const options = Object.entries(STORIES).filter(([k, s]) => !s.date && !s.arc && !s.onUnlock && !s.onComment && !s.once && !s.manual && possible(k, s)
+      && !(waiting && (s.steps || s.next))
       && (state.storyLog[k] === undefined || state.day - state.storyLog[k] >= s.cooldown));
     if (!options.length) return null;
     id = r.weighted(options, ([, s]) => (typeof s.weight === 'function' ? s.weight(state) : s.weight))[0];

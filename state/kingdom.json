@@ -25327,7 +25327,12 @@
   "1106": 33,
   "1126": 36
  },
- "storyArc": null,
+ "storyArc": {
+  "id": "joust",
+  "step": "announce",
+  "day": 39,
+  "owner": true
+ },
  "sceneLog": {
   "tavern": 37,
   "blacksmith:bellows": 19,

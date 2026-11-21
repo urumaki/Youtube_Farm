@@ -940,8 +940,25 @@ test('the games at the Tournament Ground (owner 2026-10-28): announced, guards w
     assert.equal(s.names[res.winner][`${title}Day`], 20);
     assert.ok(res.crowd.every((c) => !res.riders.some((x) => x.id === c.id)), 'the stands hold others');
   }
+  // owner 2026-11-21: one Knight at a time: the joust's champion is the Knight, the Knight before goes back to the guards
+  {
+    const s = kingdom('2026-11-04');
+    s.villagers[12].job = s.names[12].job = 'knight';
+    s.names[12].knightDay = 5;
+    const res = storyFor(s, 'joust:results');
+    assert.equal(s.villagers[res.winner].job, 'knight');
+    assert.deepEqual([s.villagers[12].job, s.names[12].job, s.names[12].guardAgainDay], ['guard', 'guard', 20]);
+    assert.equal(Object.values(s.names).filter((n) => n.job === 'knight').length, 1);
+  }
   // owner 2026-10-29: a joust set by the owner for a day comes before the calendar and a new goal
   const { pickStory } = await import('../src/sim/stories.js');
+  // owner 2026-11-21: while it waits for its day, no story of several days begins and takes its place
+  for (let d = 0; d < 60; d++) {
+    const w = { ...kingdom(`2026-09-${String(1 + (d % 28)).padStart(2, '0')}`), day: 18, storyLog: {}, storyArc: { id: 'joust', step: 'announce', day: 20, owner: true } };
+    const st = pickStory(w);
+    assert.ok(!st || !STORIES[st.id].steps, `${d}: ${st?.id}`);
+    assert.deepEqual(w.storyArc, { id: 'joust', step: 'announce', day: 20, owner: true });
+  }
   const set = { ...kingdom('2026-10-31'), storyLog: {}, storyArc: { id: 'joust', step: 'announce', day: 20, owner: true } };
   const st = pickStory(set, { unlocked: ['north'] });
   assert.deepEqual([st.id, st.step], ['joust', 'announce']);

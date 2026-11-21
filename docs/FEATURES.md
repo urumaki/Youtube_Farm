@@ -369,6 +369,13 @@ Add new owner decisions here.
   cavalry and the like makes a guard (`requests.js`). The 80 or so villagers who had asked to be knights before became
   guards on the next day (`assignNames`: an earned job with no `knightDay` / `cavalierDay`, or an apprentice waiting for one).
   Test with `npm test` ("a Knight and a Cavalier are only won").
+  One Knight at a time (owner 2026-11-21, `promote` in `stories.js`): when the joust makes a new Knight, the Knight before
+  goes back to the guards (`names[id].guardAgainDay`; their `knightDay` stays as a record, the job is what counts), so
+  they may ride the next joust. While a story the owner set for a later day waits (`state.storyArc`), no story of several
+  days begins at random (it would take the owner's place). Owner 2026-11-21: the joust forced for day 39 (2026-11-23, the
+  announcement; rain that day) and day 40 (2026-11-24, the Grand Joust), `state.storyArc = { id: 'joust', step: 'announce',
+  day: 39, owner: true }`; blueberry9333 (Knight since day 17) goes back to the guards on day 40. Tested in "the games at the
+  Tournament Ground".
   The decree (owner 2026-10-28): the rule is announced once. Story `decree` (`once: true` in `STORIES`, read on the first
   day it can be once the Tournament Ground stands, after a story of several days and before the pillory; never drawn at
   random): the crier's dais of `proclaim.js` (`buildDecree` in `stories/games.js`), five named guards in front, the title
