@@ -183,6 +183,19 @@ test('no long silences: a line alone over its shot stays, a second line follows 
     { kind: 'villager', job: 'farmer', job2: 'miner', t0: 18.3, t1: 23.5 },
   ]);
   assert.ok(r.worst < 2.6, `${r.worst.toFixed(1)} s of silence: ${r.s.text}`);
+  // owner 2026-11-22: day 38's preview heard the shepherd 1.3 s and the bishop 1.8 s before their shots (the script too long,
+  // the voice pulled forward to fit): lines go, those without a shot first, until each line starts with its shot
+  const { startsEarly } = await import('../src/audio/narration.js');
+  for (const date of ['2026-11-10', '2026-11-12', '2026-11-21']) {
+    const { state, diff } = day(date);
+    const f = diff.featured || [];
+    const cues = [{ kind: 'caravan', id: 'caravan', t0: 0, t1: 4.5 }, { kind: 'event', id: diff.story.id, t0: 4.5, t1: 9 },
+      { kind: 'villager', job: f[0]?.job, job2: f[0]?.with?.job, t0: 9, t1: 12.13 }, { kind: 'villager', job: f[1]?.job, job2: f[1]?.with?.job, t0: 12.13, t1: 15.25 },
+      { kind: 'ambient', id: 'pasture', t0: 15.25, t1: 18.38 }, { kind: 'church', id: 'cathedral', t0: 18.38, t1: 23.5 }];
+    const s = buildScript(migrate(state), diff, { shots: cues });
+    assert.ok(!startsEarly(s.sentences, cues), `${date}: ${s.text}`);
+    for (const role of ['story', 'ambient', 'goal', 'cta']) assert.ok(s.sentences.some((x) => x.role === role), `${date} ${role}: ${s.text}`);
+  }
   // the raid: the burning house and the guards' return were silent for 4.5 s
   for (const date of ['2026-11-07', '2026-11-08']) {
     const { state, diff } = day(date);

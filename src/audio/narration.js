@@ -285,10 +285,10 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   if (prog) addT(L.progress, [bname(prog.building), Math.round(prog.progress * 100)], 'progress', 3);
   add(L.weather[diff.weather], 'weather', 2);
   if (diff.next) {
-    add(pick(L.goal)(diff.next.remaining.toLocaleString('en-US'), diff.next.goal), 'goal', 8);
+    addT(L.goal, [diff.next.remaining.toLocaleString('en-US'), diff.next.goal], 'goal', 8); // (the other way as an alt: startsEarly)
   }
-  add(pick(L.cta), 'cta', 10);
-  add(pick(L.comment), 'comment', 7);
+  addT(L.cta, [], 'cta', 10);
+  addT(L.comment, [], 'comment', 7);
   if (S.reduce((n, x) => n + words(x.text), 0) < 60) {
     const pop = state.subscriberCount.toLocaleString('en-US');
     add(`The kingdom now counts ${pop} souls.`, 'weather', 2);
@@ -322,6 +322,24 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
     const victim = [...S].sort((a, b) => (shots.length ? own.has(a) - own.has(b) : 0) || a.priority - b.priority || own.has(a) - own.has(b))[0];
     if (victim.priority >= 9) break;
     S.splice(S.indexOf(victim), 1);
+  }
+  // owner 2026-11-22: day 38's preview heard the shepherd 1.3 s and the bishop 1.8 s before their shots. The script was too
+  // long for its shots, and the voice (`schedule` in src/audio/tts/index.js) pulls lines forward so the rest fits in the
+  // video. First the shorter way of saying a line (the lowest priority first), then lines are dropped, those with no shot of
+  // their own first (the lowest priority first), until every line that waits for its shot can start with it
+  if (shots.length) {
+    for (const s of [...S].sort((a, b) => a.priority - b.priority)) {
+      if (!startsEarly(S, shots)) break;
+      const short = (s.alts || []).filter((a) => !S.some((o) => o.text === a)).reduce((x, y) => (spokenLength(y) < spokenLength(x) ? y : x), s.text);
+      s.text = short;
+    }
+    while (startsEarly(S, shots)) {
+      const at = sentenceAnchors(S, shots);
+      const anchored = new Set(S.filter((_, i) => at[i] !== null));
+      const victim = S.filter((s) => !MUST.has(s.role) && s.priority < 9).sort((a, b) => anchored.has(a) - anchored.has(b) || a.priority - b.priority)[0];
+      if (!victim) break;
+      S.splice(S.indexOf(victim), 1);
+    }
   }
   const text = S.map((s) => s.text).join(' ');
   return { sentences: S.map(({ text, role, job: about, building }) => ({ text, role, ...(about ? { job: about } : {}), ...(building ? { building } : {}) })), text, words: words(text) };
@@ -486,6 +504,31 @@ export const spokenLength = (t) => 0.055 * (t.match(/\p{L}/gu) || []).length + 0
 const GAP = 0.28, FIRST = 0.38; // the pause between sentences and the first word (src/audio/tts/index.js)
 // never dropped for time: the opening, the story event, the goal and the call to action
 const MUST = new Set(['open', 'delta', 'caravan', 'story', 'goal', 'cta']);
+// the last moment the voice may end, video time (synthesize's maxDuration 28.3 s on the narration track, which starts
+// VOICE_DELAY 0.35 s into the video), and how early a line may start before its shot: 0.7 s, while the camera still flies
+// into it (the comment line of day 29 needs that much to stay; day 38 heard lines 1.3 and 1.8 s early)
+const VOICE_END = 28.65, EARLY = 0.7;
+
+/**
+ * True when some line that waits for its shot would start more than EARLY before it: the voice's own schedule
+ * (src/audio/tts/index.js) with the estimated lengths, each line after the one before or at its shot, but never so late
+ * that the rest no longer fits before VOICE_END.
+ */
+export function startsEarly(S, shots) {
+  const at = sentenceAnchors(S, shots), len = S.map((s) => spokenLength(s.text));
+  const rest = new Array(S.length + 1).fill(0);
+  for (let i = S.length - 1; i >= 0; i--) rest[i] = rest[i + 1] + len[i] + GAP;
+  let t = FIRST;
+  for (let i = 0; i < S.length; i++) {
+    if (at[i] !== null) {
+      t = Math.max(t, Math.min(at[i], VOICE_END - rest[i] + GAP));
+      // (the goal and the call to action have times of their own, FIXED_AT, that the end of the video moves: no shot)
+      if (t < at[i] - EARLY && !(S[i].role in FIXED_AT)) return true;
+    }
+    t += len[i] + GAP;
+  }
+  return false;
+}
 
 /**
  * Owner 2026-10-23: the voice ran late over the shots (a building shot lasts 2.3 s; a long line about it ran into the next

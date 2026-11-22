@@ -62,6 +62,13 @@ Add new owner decisions here.
   question is left out. `HOOK=1` / `HOOK=0` force it on or off in a test render. The time-lapse, the thumbnail and the
   gallery never show it. Test: `HOOK=1 npm run render -- --day 2026-11-20 --stills 1,3,4.3,4.8`.
   Narration sentences follow the same order (`src/audio/narration.js`).
+  Owner 2026-11-22 (the preview of day 38 heard the shepherd 1.3 s and the bishop 1.8 s before their shots): when the
+  script is too long for its shots, the voice pulls lines forward so the rest fits in 30 s. `startsEarly` in `narration.js`
+  plays the voice's schedule with the estimated lengths; while a line that waits for its shot would start more than 0.7 s
+  before it (the camera still flying in), the lines take their shorter wording (lowest priority first; the comment
+  invitation, the goal and the call to action have one too), then lines are dropped, those with no shot of their own
+  first (the weather, the new houses...). The goal and the call to action keep their own times. Tested in "no long
+  silences" (days 2026-11-10, 11-12 and 11-21 had lines that early).
 - English only (owner 2026-10-28: the project will never be in Italian): narration, on-screen titles and tags, the video's
   title and description, the voices. The Italian templates, word tables and the `--lang` option are gone; file names and
   `state/published.json` keys keep `_en` (the days already published use them), and the narration's draws still use
