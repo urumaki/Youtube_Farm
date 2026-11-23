@@ -300,8 +300,9 @@ const REBEL_RE = new RegExp([
 ].join('|'), 'i');
 
 // owner 2026-10-29: only "!join", anywhere in the comment ("count me in !join"), enters the commenter's villager, if a guard,
-// for the games at the Tournament Ground (simulate.js, stories.js); a plain "join" ("can I join the army") does not
-const JOIN_RE = /!join\b/i;
+// for the games at the Tournament Ground (simulate.js, stories.js); a plain "join" ("can I join the army") does not.
+// Owner 2026-11-23: "join!" counts too (the voice said "type join!", and many wrote the mark after the word)
+const JOIN_RE = /!join\b|\bjoin ?!/i;
 
 // owner 2026-11-10: "!vote A" or "!vote B" ("!vote 1", "!vote 2") is a vote in the kingdom's vote (stories.js `vote`), one for
 // each commenter; only the letter is kept

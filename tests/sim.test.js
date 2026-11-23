@@ -911,7 +911,9 @@ test('the games at the Tournament Ground (owner 2026-10-28): announced, guards w
   assert.ok(!STORIES.joust.needs(noGround), 'only once the Tournament Ground stands');
   // owner 2026-10-29: only "!join", anywhere in the comment
   assert.ok(joinFromText('!join') && joinFromText('!JOIN') && joinFromText('count me in for the race !join please'));
-  for (const t of ['JOIN!', 'join', 'i want to join the race', 'Can I join the army', 'partecipo', 'joined the kingdom', '!joined']) assert.ok(!joinFromText(t), t);
+  // owner 2026-11-23: the mark after the word counts too
+  for (const t of ['join!', 'JOIN!', 'Join !', 'count me in join!!', 'I want to join!']) assert.ok(joinFromText(t), t);
+  for (const t of ['join', 'joined!', 'i want to join the race', 'Can I join the army', 'partecipo', 'joined the kingdom', '!joined']) assert.ok(!joinFromText(t), t);
   // day 1: the crier and named guards in front of him
   const ann = storyFor(kingdom('2026-11-03'), 'race');
   assert.equal(ann.step, 'announce');

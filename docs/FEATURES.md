@@ -387,7 +387,7 @@ Add new owner decisions here.
   Day 1 (`announce`, scene `stories/games.js` on the crier's dais of `proclaim.js`): the town crier reads the
   proclamation, named guards in front; the title says "Guards: comment !join" and the narration says every guard may
   enter by commenting join with an exclamation mark. Owner 2026-10-29: only "!join", anywhere in the comment
-  (`joinFromText` in `requests.js`, a fixed regex; a plain "join" does not count), from a commenter whose villager is a
+  (`joinFromText` in `requests.js`, a fixed regex; a plain "join" does not count; owner 2026-11-23: "join!" counts too, the voice said "type join!"), from a commenter whose villager is a
   guard since before that day and still one after that comment (never one made a guard that day, never the Captain of
   the Guard) puts the villager once on `state.gamesEntrants`
   (`simulate.js`, `diff.joins`); the list is emptied when a game is run. Owner 2026-11-01: a "!join" counts only in the
