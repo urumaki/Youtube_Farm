@@ -136,9 +136,10 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
      * phase 0 = afternoon, 1 = dusk; focus = point the shadows should cover; radius = shadow extent;
      * interior 1 = the camera is inside a building lit by its own lamps (the tavern); fog: a thicker fog for one shot (the
      * boat lost in the fog, stories/fogboat.js), as an exponential density; eclipse: how far the moon has come over the sun
-     * (0 = not at all, 1 = total, owner 2026-11-05, stories/eclipse.js)
+     * (0 = not at all, 1 = total, owner 2026-11-05, stories/eclipse.js); deep: the dark of midnight, 0..1, on top of phase 1
+     * (owner 2026-11-23, the smugglers' harbour: a deep blue sky and fog, a cold moonlight instead of the low red sun)
      */
-    set(phase, focus, radius, t, interior = 0, fog = 0, eclipse = 0) {
+    set(phase, focus, radius, t, interior = 0, fog = 0, eclipse = 0, deep = 0) {
       const el = THREE.MathUtils.degToRad(THREE.MathUtils.lerp(33, 1.5, phase));
       const az = THREE.MathUtils.lerp(0.95, 0.35, phase); // from the south-east toward the south-west
       sunDir.set(Math.cos(el) * Math.sin(az + 0.6), Math.sin(el), Math.cos(el) * Math.cos(az + 0.6)).normalize();
@@ -173,6 +174,18 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
         bloom.enabled = true;
         bloom.strength = Math.max(bloom.strength, 0.55 * dark);
       } else domeU.moonDir.value.set(0, -1, 0);
+      if (deep > 0) {
+        domeU.zenith.value.lerp(DEEP_ZENITH, deep);
+        domeU.horizon.value.lerp(DEEP_HORIZON, deep);
+        sun.color.lerp(MOONLIGHT, deep);
+        sun.intensity *= 1 - 0.75 * deep;
+        domeU.sunCol.value.multiplyScalar(1 - 0.9 * deep);
+        hemi.color.lerp(MOONLIGHT, deep);
+        scene.environmentIntensity *= 1 - 0.5 * deep;
+        grade.uniforms.warmth.value *= 1 - 0.85 * deep;
+        bloom.enabled = true;
+        bloom.strength = Math.max(bloom.strength, 0.6 * deep);
+      }
       scene.fog.color.copy(domeU.horizon.value).multiplyScalar(0.97);
       const alt = Math.max(1, camera.position.y);
       // high wide shots look through much less haze, so the whole town stays readable on foggy days
@@ -185,7 +198,7 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
       sc.left = sc.bottom = -radius; sc.right = sc.top = radius;
       sc.updateProjectionMatrix();
       for (const c of clouds) c.position.x = c.userData.base.x + (t || 0) * 3;
-      for (const c of clouds) c.material.color.setScalar((1 - 0.45 * phase) * (1 - 0.75 * dark));
+      for (const c of clouds) c.material.color.setScalar((1 - 0.45 * phase) * (1 - 0.75 * dark) * (1 - 0.7 * deep));
       if (interior > 0) {
         // indoors: no sun, little sky light, the room's own warm lamps do the work; candles bloom
         sun.intensity *= 1 - interior;
@@ -202,3 +215,5 @@ export function buildEnvironment(renderer, scene, camera, { viewer = false, weat
 }
 const UP = new THREE.Vector3(0, 1, 0);
 const ECL_ZENITH = new THREE.Color(0.02, 0.03, 0.07), ECL_HORIZON = new THREE.Color(0.5, 0.33, 0.26);
+// the dark of midnight (owner 2026-11-23, deep): a deep blue sky, a cold moonlight
+const DEEP_ZENITH = new THREE.Color(0.012, 0.02, 0.055), DEEP_HORIZON = new THREE.Color(0.05, 0.07, 0.12), MOONLIGHT = new THREE.Color('#9fb6dd');

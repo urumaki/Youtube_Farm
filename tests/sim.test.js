@@ -1036,6 +1036,56 @@ test('the joust grows with those who joined (owner 2026-11-23): 8, 16 or 32 ride
   }
 });
 
+test('four more big events (owner 2026-11-23): football and the guild take "!join", the treasure and the smugglers run on', async () => {
+  const { storyFor, openEvent, canEnter, pickStory, STORIES } = await import('../src/sim/stories.js');
+  // "!join": anyone named for the match, only a craftsman for the guild contest, on the day after the announcement
+  const { state } = run([600]);
+  const named = (id, job) => { state.names[id] = { name: `V${id}`, author: `a${id}`, day: 1, job }; state.namedAuthors.push(`a${id}`); state.villagers[id].job = job; };
+  named(15, 'farmer'); named(16, 'blacksmith'); named(17, 'guard');
+  const c = (id) => ({ author: `a${id}`, name: `V${id}`, at: `${dateOf(2)}T10:00:00Z`, wants: [], join: true });
+  const entered = (arc) => { const t = structuredClone(state); t.storyArc = arc; return advance(t, { subscribers: 600, date: dateOf(2), commenters: [c(15), c(16), c(17)] }).state.eventEntrants; };
+  assert.deepEqual(entered({ id: 'football', step: 'match', day: state.day + 30 }), [15, 16, 17]);
+  assert.deepEqual(entered({ id: 'guild', step: 'contest', day: state.day + 30 }), [16]);
+  assert.deepEqual(entered(null), []);
+  assert.deepEqual(entered({ id: 'football', step: 'announce', day: state.day + 30 }), []); // only an announcement the owner set
+  assert.deepEqual(entered({ id: 'football', step: 'announce', day: state.day + 30, owner: true }), [15, 16, 17]);
+  assert.equal(openEvent({ storyArc: { id: 'joust', step: 'results' } }), null);
+  assert.ok(canEnter('football', 'prisoner') && canEnter('guild', 'potter') && !canEnter('guild', 'farmer'));
+  // the match: ten a side, those who joined first; the guild: four trades
+  const jobs = ['farmer', 'blacksmith', 'carpenter', 'potter', 'tailor', 'miner', 'miner', 'scholar', 'guard', 'guard', 'guard', 'guard', 'fisherman'];
+  const k = {
+    seed: SEED, date: dateOf(30), day: 30, subscriberCount: 3000, weather: 'rain', storyLog: {}, storyArc: null, houses: [], unlockedTiers: [],
+    buildings: ['tournament', 'market', 'mine', 'harbor'].map((id) => ({ id, status: 'done' })),
+    villagers: Array.from({ length: 40 }, (_, id) => ({ id, job: jobs[id % jobs.length] })),
+    names: Object.fromEntries(Array.from({ length: 40 }, (_, id) => [id, { name: `V${id}`, day: 1 + id, job: jobs[id % jobs.length] }])),
+    eventEntrants: [3, 5, 7],
+  };
+  const m = storyFor(structuredClone(k), 'football:match');
+  assert.equal(m.reds.length + m.blues.length, 20);
+  assert.deepEqual([...m.reds, ...m.blues].filter((p) => p.joined).map((p) => p.id).sort(), [3, 5, 7]);
+  assert.equal(Math.max(m.score.red, m.score.blue), m.score[m.winner]);
+  assert.equal(m.goals.at(-1).side, m.winner);
+  const g = storyFor(structuredClone({ ...k, eventEntrants: [1] }), 'guild:contest');
+  assert.equal(new Set(g.crafters.map((x) => x.job)).size, 4);
+  assert.ok(g.crafters[0].joined && g.finalists.includes(g.winner) && g.finalists.length === 2);
+  // rain blocks none of the four
+  for (const id of ['football', 'guild', 'treasure', 'smugglers']) assert.ok(STORIES[id].needs({ ...k, weather: 'rain' }), id);
+  // the treasure's three days and the smugglers' two nights follow one another (urgent: nothing takes their place)
+  for (const [id, steps] of [['treasure', ['breach', 'tunnel', 'gold']], ['smugglers', ['watch', 'chase']]]) {
+    const s = structuredClone(k);
+    s.storyArc = { id, step: steps[0], day: s.day, owner: true };
+    for (const step of steps) {
+      const st = pickStory(s);
+      assert.equal(`${st.id}:${st.step}`, `${id}:${step}`);
+      s.day += 1;
+      s.date = dateOf(s.day);
+    }
+  }
+  const gold = storyFor(structuredClone(k), 'treasure:gold');
+  assert.ok(gold.coins >= 400 && gold.crew.filter(Boolean).length === 5);
+  assert.deepEqual(gold.crew.map((c) => c.job), ['miner', 'miner', 'miner', 'miner', 'guard']); // a crew of the Mine, no scholar
+});
+
 test('the decree (owner 2026-10-28): the crier proclaims once that Knights and Cavaliers are won at the Tournament Ground', async () => {
   const { pickStory } = await import('../src/sim/stories.js');
   const kingdom = (day, storyLog = {}, buildings = [{ id: 'tournament', status: 'done' }]) => ({

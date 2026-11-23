@@ -88,3 +88,74 @@ export function castTag(c, sub) {
 
 export const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 export const clamp01 = (x) => Math.max(0, Math.min(1, x));
+
+/**
+ * Owner 2026-11-23: people never pass through one another. Pushes the rigs (same parent, their root positions) at least
+ * `d` apart on the ground, a few rounds of pairwise pushes, after a shot has placed them for the frame (the same input
+ * gives the same output, so frames stay steady). Rigs out of the way (put far below) and ones lifted off the ground
+ * (carried on shoulders) are left alone; `fixed` ones (at a bench, on a dais) push the others but never move.
+ */
+export function apart(list, d = 0.6, { iters = 4, fixed = [] } = {}) {
+  const ps = list.filter((P) => P && P.root.visible !== false && Math.abs(P.root.position.y) < 0.9);
+  const still = new Set(fixed);
+  for (let it = 0; it < iters; it++) {
+    let moved = false;
+    for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {
+      const a = ps[i].root.position, b = ps[j].root.position;
+      let dx = b.x - a.x, dz = b.z - a.z, dist = Math.hypot(dx, dz);
+      if (dist >= d) continue;
+      if (dist < 1e-4) { dx = 1e-4 * Math.cos(i * 2.4 + j); dz = 1e-4 * Math.sin(i * 2.4 + j); dist = 1e-4; } // the same spot: a fixed way apart
+      const fa = still.has(ps[i]), fb = still.has(ps[j]);
+      if (fa && fb) continue;
+      const push = (d - dist) / dist, sa = fa ? 0 : fb ? 1 : 0.5, sb = fb ? 0 : fa ? 1 : 0.5;
+      a.x -= dx * push * sa; a.z -= dz * push * sa;
+      b.x += dx * push * sb; b.z += dz * push * sb;
+      moved = true;
+    }
+    if (!moved) break;
+  }
+}
+
+/**
+ * Petals thrown over a winner (owner 2026-11-23, the King's prizes): red and gold specks drifting down around (x, y, z).
+ * Returns { group, at(t, k, x, y, z) }; k 0 hides them, 1 is the full shower.
+ */
+export function petals(seed, n = 90) {
+  const group = new THREE.Group();
+  const sets = ['#d8333a', '#f2c14e'].map((c) => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: c, size: 0.07, transparent: true, opacity: 0.95, depthWrite: false }));
+    pts.frustumCulled = false;
+    group.add(pts);
+    return pts;
+  });
+  const h = (i, k) => { const s = Math.sin((seed % 997) * 12.9898 + i * 78.233 + k * 37.719) * 43758.5453; return s - Math.floor(s); };
+  return {
+    group,
+    at(t, k, x, y, z, spread = 2.2) {
+      sets.forEach((pts, s) => {
+        const arr = pts.geometry.attributes.position.array;
+        for (let i = 0; i < n; i++) {
+          if (h(i, s) > k) { arr[i * 3 + 1] = -1e4; continue; }
+          const f = (t * (0.22 + 0.1 * h(i, s + 2)) + h(i, s + 4)) % 1;
+          arr[i * 3] = x + (h(i, s + 6) - 0.5) * spread * 2 + 0.25 * Math.sin(t * 2 + i);
+          arr[i * 3 + 1] = y + 4 - 4 * f;
+          arr[i * 3 + 2] = z + (h(i, s + 8) - 0.5) * spread * 2 + 0.25 * Math.cos(t * 1.7 + i);
+        }
+        pts.geometry.attributes.position.needsUpdate = true;
+      });
+    },
+  };
+}
+
+/**
+ * Which of the King's prize-givings a day gets (owner 2026-11-23: not always the same): 0, 1 or 2, from the seed and the day,
+ * or the story's own `award` (test renders: --award).
+ */
+export function awardOf(args, n = 3) {
+  const a = args.story?.award;
+  if (a !== undefined && a !== null) return ((Number(a) % n) + n) % n;
+  const d = Number(args.state?.day || 0), s = Number(args.seed || 0);
+  return Math.abs(d + (s % n)) % n;
+}

@@ -11,6 +11,13 @@ import { ESCAPE_SHOTS } from './stories/escape.js';
 import { ECLIPSE_SHOTS } from './stories/eclipse.js';
 import { CRUSADE_SHOTS } from './stories/crusade.js';
 import { AMBUSH_SHOTS } from './stories/ambush.js';
+import { FOOTBALL_SHOTS } from './stories/football.js';
+import { GUILD_SHOTS } from './stories/guild.js';
+import { TREASURE_SHOTS } from './stories/treasure.js';
+import { SMUGGLER_SHOTS } from './stories/smugglers.js';
+// owner 2026-11-23: the four events that take the whole video on some of their days (by step), and the light of the usual
+// wide shot after them
+const EVENT_SHOTS = { football: [{ match: FOOTBALL_SHOTS }, 0.25], guild: [{ contest: GUILD_SHOTS }, 0.25], treasure: [TREASURE_SHOTS, 0.25], smugglers: [SMUGGLER_SHOTS, 0.3] };
 import { BRAWL_SECONDS } from './stories/brawl.js';
 import { pickFeatured } from '../../sim/featured.js';
 import { rand01 } from '../../sim/prng.js';
@@ -57,6 +64,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
   // owner 2026-11-13: both days of the ambush in the forest (ambush.js); the first runs to the end (the cliffhanger)
   const OWN = diff.story?.id === 'crusade' ? (diff.story.step === 'quest' ? [CRUSADE_SHOTS, 0.3] : null)
     : diff.story?.id === 'ambush' ? (AMBUSH_SHOTS[diff.story.step] ? [AMBUSH_SHOTS[diff.story.step], 0.25] : null)
+    : EVENT_SHOTS[diff.story?.id] ? (EVENT_SHOTS[diff.story.id][0][diff.story.step] ? [EVENT_SHOTS[diff.story.id][0][diff.story.step], EVENT_SHOTS[diff.story.id][1]] : null)
     : { escape: [ESCAPE_SHOTS, 0.45], eclipse: [ECLIPSE_SHOTS, 0.3] }[diff.story?.id];
   const day = diff.story?.id === 'dayinlife' ? DAY_SHOTS[diff.story.job] : OWN ? OWN[0] : null;
   const ownShots = diff.story?.id === 'raid' ? RAID_SHOTS[diff.story.step] : diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds ? joustShots(diff.story) : day;

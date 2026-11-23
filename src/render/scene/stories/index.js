@@ -45,6 +45,10 @@ import { buildVote } from './vote.js';
 import { buildCrusade } from './crusade.js';
 import { buildAmbush } from './ambush.js';
 import { buildBrawl } from './brawl.js';
+import { buildFootball } from './football.js';
+import { buildGuild } from './guild.js';
+import { buildTreasure } from './treasure.js';
+import { buildSmugglers } from './smugglers.js';
 import { buildTrial, buildCourtQuarrel } from '../court.js';
 
 const BUILDERS = {
@@ -62,6 +66,9 @@ const BUILDERS = {
   trial: buildTrial, // the trial at the Hall of Justice (owner 2026-11-14): the charge, then the verdict (court.js)
   brawl: buildBrawl, // the brawl in the tavern (owner 2026-11-17): one long shot, slow motion and cuts inside it (brawl.js)
   ambush: buildAmbush, // the ambush in the forest (owner 2026-11-13): one scene per shot, both days (ambush.js)
+  // owner 2026-11-23: mob football and the guild contest (their match and contest days), the treasure of the Mine, the
+  // smugglers: one scene per shot
+  football: buildFootball, guild: buildGuild, treasure: buildTreasure, smugglers: buildSmugglers,
   crusade: buildCrusade, // the Crusade's quest: one scene per shot (crusade.js); its call is 'crusade:announce' // the King's riddle: read out, then answered (riddle.js)
   noble: buildThrone, // a villager the owner makes a Noble: the throne room, then the manor (step 'manor', manor.js) // the Dungeon escape and the eclipse: one scene per shot (escape.js, eclipse.js)
 };
@@ -72,7 +79,7 @@ const BUILDERS = {
 // second shot of the results day, step 'crown', timeline.js)
 const STEP_BUILDERS = {
   'merchants:camp': buildCamp, 'royal:feast': buildFeast,
-  'race:announce': buildGamesAnnounce, 'joust:announce': buildGamesAnnounce, 'race:crown': buildThrone, 'joust:crown': buildThrone, 'noble:manor': buildManor, 'crusade:announce': buildGamesAnnounce,
+  'race:announce': buildGamesAnnounce, 'joust:announce': buildGamesAnnounce, 'race:crown': buildThrone, 'joust:crown': buildThrone, 'noble:manor': buildManor, 'crusade:announce': buildGamesAnnounce, 'football:announce': buildGamesAnnounce, 'guild:announce': buildGamesAnnounce,
 };
 
 export function buildStory(args) {

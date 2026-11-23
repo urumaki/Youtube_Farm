@@ -5,7 +5,7 @@ import { availableJobs } from './requests.js';
 import { TIERS, BUILDINGS, JOBS, COMMISSIONS, jobFor, houseCapacity, tiersReached, mergedJob } from './tiers.js';
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
-import { pickStory, takesOver, GAMES } from './stories.js';
+import { pickStory, takesOver, GAMES, openEvent, canEnter } from './stories.js';
 import { pickFeatured, shownJobs, markShown, timelapseDay } from './featured.js';
 import { planScenes, tavernToday, churchToday, staleJob, introVariant, jobLastShown, novelJob } from './scenes.js';
 import { planWall2, wallBlockers, insideWall2, crossesFields } from './wall.js';
@@ -291,6 +291,8 @@ function assignNames(s, commenters, blocked, diff) {
   diff.joins = []; // guards whose commenter wrote "!join": entered for the next games at the Tournament Ground (stories.js)
   // owner 2026-10-29: the guards entered for the next games, emptied when a game is run (stories.js)
   s.gamesEntrants ??= [];
+  s.eventEntrants ??= []; // owner 2026-11-23: football and the guild contest, any named villager who may take part
+  const event = openEvent(s);
   // owner 2026-11-10: the kingdom's vote (stories.js `vote`): the comments since the crier asked, one vote for each commenter
   // (with a villager or not), counted until the crier reads the result (`state.voteTally`)
   const voting = s.storyArc?.id === 'vote' && s.storyArc.step === 'result', voted = new Set();
@@ -379,6 +381,13 @@ function assignNames(s, commenters, blocked, diff) {
         s.gamesEntrants.push(Number(id));
         diff.joins.push({ id: Number(id), name: s.names[id].name });
       }
+      // owner 2026-11-23: "!join" for the match (anyone named) or the guild contest (a craftsman after this comment's own
+      // request), on the comments of its announcement
+      const job = s.villagers[id]?.job ?? s.names[id]?.job;
+      if (c.join && event && id !== undefined && canEnter(event, job) && !s.eventEntrants.includes(Number(id))) {
+        s.eventEntrants.push(Number(id));
+        diff.joins.push({ id: Number(id), name: s.names[id].name, event });
+      }
       if (riddle && (c.answers || []).includes(riddle) && scholarBefore && isScholar() && !s.riddleSolvers.includes(Number(id))) {
         s.riddleSolvers.push(Number(id));
         diff.answers.push({ id: Number(id), name: s.names[id].name });
@@ -390,7 +399,7 @@ function assignNames(s, commenters, blocked, diff) {
     known.add(c.author);
     s.namedAuthors.push(c.author);
     diff.newCommenters += 1;
-    s.nameQueue.push({ name, author: c.author, seenDay: s.day, ...(wants.length ? { wants } : {}), ...(c.rebel ? { rebel: true } : {}), ...(c.brawl ? { brawl: true } : {}) });
+    s.nameQueue.push({ name, author: c.author, seenDay: s.day, ...(wants.length ? { wants } : {}), ...(c.rebel ? { rebel: true } : {}), ...(c.brawl ? { brawl: true } : {}), ...(c.join && event ? { join: true } : {}) });
   }
   // names blocked after they were given are taken back
   for (const [id, n] of Object.entries(s.names)) {
@@ -403,13 +412,15 @@ function assignNames(s, commenters, blocked, diff) {
   for (const v of s.villagers) {
     if (!s.nameQueue.length) break;
     if (s.names[v.id]) continue;
-    const { wants, rebel, brawl, ...n } = s.nameQueue.shift();
+    const { wants, rebel, brawl, join, ...n } = s.nameQueue.shift();
     s.names[v.id] = { ...n, day: s.day, ...(rebel ? { rebelDay: s.day } : {}), ...(brawl ? { brawlDay: s.day } : {}) };
     if (rebel) diff.rebels.push({ id: v.id, name: n.name });
     if (n.job) v.job = n.job; // a named villager who left and came back keeps the job they chose
     if (typeof wants === 'string') s.names[v.id].wants = wants; // still an apprentice
     else if (wants?.length) applyRequest(v.id, wants);
     v.name = n.name;
+    // a newcomer's "!join" (owner 2026-11-23: everyone may play): entered once named, if the event still takes entries
+    if (join && openEvent(s) && canEnter(openEvent(s), v.job) && !s.eventEntrants.includes(v.id)) { s.eventEntrants.push(v.id); diff.joins.push({ id: v.id, name: n.name, event: openEvent(s) }); }
     diff.named.push({ id: v.id, name: n.name, job: v.job, house: v.house });
     const added = diff.added.find((a) => a.id === v.id);
     if (added) { added.name = n.name; added.job = v.job; }

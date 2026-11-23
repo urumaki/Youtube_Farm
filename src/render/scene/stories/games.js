@@ -5,10 +5,14 @@ import { buildProclaim } from './proclaim.js';
 
 export function buildGamesAnnounce(args) {
   const { story } = args;
-  const name = { race: 'A chariot race', joust: 'A joust', crusade: 'A Crusade' }[story.id] || 'A joust';
+  const name = { race: 'A chariot race', joust: 'A joust', crusade: 'A Crusade', football: 'Mob football', guild: 'The Guild Contest' }[story.id] || 'A joust';
   const st = buildProclaim({ ...args, story: { ...story, title: name } });
   if (!st) return null;
-  st.banner = `${name}! Guards: comment !join`;
+  // owner 2026-11-23: everyone may play the match, every craftsman may enter the contest
+  const who = { football: 'Everyone', guild: 'Craftsmen' }[story.id] || 'Guards';
+  st.banner = `${name}! ${who}: comment !join`;
+  if (story.id === 'football') st.footer = 'Reds against Blues, tomorrow at the Tournament Ground';
+  if (story.id === 'guild') st.footer = 'Four craftsmen, one medal from the King';
   if (story.id === 'crusade') st.footer = 'Ride as a Crusader to win back the lost relic'; // owner 2026-11-07
   return st;
 }

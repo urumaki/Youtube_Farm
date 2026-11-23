@@ -241,7 +241,66 @@ export const STORIES = {
   trial: { minPop: 1000, cooldown: 10, weight: 3, steps: ['trial', 'verdict'], needs: (s) => built(s, 'court') && namedVillagers(s).length >= 6 },
   eclipse: { minPop: 500, cooldown: 45, weight: 2, takeover: true,
     needs: (s, o = {}) => built(s, 'market') && s.weather === 'clear' && namedVillagers(s).length >= 4 && !o.buildingShots },
+  // owner 2026-11-23: four more big events, for every weather (rain and fog blocked most of the others).
+  // Mob football (stories/football.js): day 1 ('announce') the crier calls everyone to play, any named villager enters by
+  // commenting "!join" (simulate.js `state.eventEntrants`); day 2 ('match') takes the whole video at the Tournament Ground,
+  // Reds against Blues, ten a side (`FOOTBALL_SIDE`): those who joined first (by seniority when more joined), the other
+  // named villagers fill the places. Comic: piles of players, falls in the mud, the ball in the hay. Any weather.
+  football: { minPop: 200, cooldown: 21, weight: 3, steps: ['announce', 'match'], takeover: ['match'], needs: (s) => built(s, 'tournament') && namedVillagers(s).length >= 12 },
+  // The guild contest (stories/guild.js): day 1 the crier calls the craftsmen, a named craftsman enters with "!join"; day 2
+  // ('contest') takes the whole video in a pavilion on the market square (rain on its roof): four craftsmen of four trades
+  // at their benches, two tasks, the King judges, two go on to the final, the winner gets the King's medal
+  guild: { minPop: 200, cooldown: 21, weight: 3, steps: ['announce', 'contest'], takeover: ['contest'], needs: (s) => built(s, 'market') && crafters(s).length >= 4 },
+  // The treasure of the Mine (stories/treasure.js), three days that take the whole video, underground (any weather): the
+  // miners break through into an old tunnel ('breach', a cliffhanger), the expedition with lanterns and the rockfall behind
+  // them ('tunnel', a cliffhanger: trapped, nobody hurt), the draught of air, the chest of old coins and the way out to
+  // daylight, the town cheering the chest to the Counting House ('gold')
+  treasure: { minPop: 500, cooldown: 30, weight: 3, urgent: true, takeover: true, steps: ['breach', 'tunnel', 'gold'],
+    needs: (s) => built(s, 'mine') && namedVillagers(s).filter((n) => n.job === 'miner').length >= 2 },
+  // The smugglers (stories/smugglers.js), two nights that take the whole video at the harbour (fog helps): the guards
+  // hide and watch a boat with no lights unload, a guard sneezes ('watch', a cliffhanger); the chase on the quay, the
+  // smugglers in the water, fished out with a net at dawn, their crates opened ('chase'). Smugglers have no names
+  smugglers: { minPop: 500, cooldown: 30, weight: 3, urgent: true, takeover: true, steps: ['watch', 'chase'],
+    needs: (s) => (built(s, 'harbor') || built(s, 'dock')) && namedVillagers(s).filter((n) => n.job === 'guard').length >= 4 },
 };
+// the trades of the guild contest (owner 2026-11-23): those whose work makes a thing at a bench or a forge
+export const CRAFTS = ['blacksmith', 'toolsmith', 'carpenter', 'potter', 'cooper', 'cobbler', 'tailor', 'weaver', 'baker', 'brewer', 'fletcher', 'tanner', 'clockmaker', 'bellfounder'];
+const crafters = (s) => namedVillagers(s).filter((n) => CRAFTS.includes(n.job));
+export const FOOTBALL_SIDE = 10; // players a side (owner 2026-11-23)
+export const GUILD_SIZE = 4; // craftsmen in the contest
+/** Who may enter the open event by "!join" (simulate.js): football anyone named, the guild contest a craftsman. */
+export function canEnter(eventId, job) {
+  return eventId === 'football' || (eventId === 'guild' && CRAFTS.includes(job));
+}
+/** The event taking "!join" today: the step after its announcement is next (or an announcement the owner set). */
+export function openEvent(state) {
+  const a = state.storyArc;
+  if (!a) return null;
+  if ((a.id === 'football' && a.step === 'match') || (a.id === 'guild' && a.step === 'contest')) return a.id;
+  if ((a.id === 'football' || a.id === 'guild') && a.step === 'announce' && a.owner) return a.id;
+  return null;
+}
+/**
+ * n named villagers for an event, those who commented "!join" first (`state.eventEntrants`, still allowed), then the
+ * others; each pool weighted by seniority as the games' riders (`drawGuards`). `ok(villager)` says who may take part.
+ */
+function drawEntrants(state, r, n, ok, exclude = []) {
+  const all = namedVillagers(state).filter((v) => ok(v) && !exclude.some((e) => e && e.id === v.id));
+  const entered = new Set(state.eventEntrants || []);
+  const joined = all.filter((v) => entered.has(v.id)), rest = all.filter((v) => !entered.has(v.id));
+  const out = [];
+  for (const pool of [joined, rest]) {
+    const line = [...pool].sort((a, b) => a.day - b.day || a.id - b.id);
+    const w = new Map(line.map((g, i) => [g.id, 1 + 0.9 * (line.length > 1 ? (line.length - 1 - i) / (line.length - 1) : 1)]));
+    const left = [...line];
+    while (out.length < n && left.length) {
+      const g = r.weighted(left, (x) => w.get(x.id));
+      out.push({ ...strip(g), joined: pool === joined });
+      left.splice(left.indexOf(g), 1);
+    }
+  }
+  return out;
+}
 // the votes whose two events the kingdom can hold (their buildings, their people; the weather is the day's own)
 const holds = (s, id) => s.subscriberCount >= (STORIES[id].minPop ?? 1) && (!STORIES[id].needs || STORIES[id].needs({ ...s, weather: 'clear' }));
 const openVotes = (s) => VOTES.filter((v) => holds(s, v.a.story) && holds(s, v.b.story));
@@ -581,6 +640,95 @@ const BUILD = {
       crusaders: crusaders.map((c) => ({ ...strip(c), joined: !!c.joined })), joined: crusaders.filter((c) => c.joined).length,
       crowd: crowd.map(strip), cast: [...(knight ? [knight] : []), ...crusaders, ...crowd].map(strip),
     };
+  },
+  football(state, r, arc) {
+    if (arc?.step !== 'match') {
+      const crier = roleCast(state, r, ['crier'], 1)[0] || null;
+      const folk = namedVillagers(state).filter((n) => n.id !== crier?.id).slice(0, 5);
+      return { game: 'football', day: state.day, crier: crier && strip(crier), cast: [...(crier ? [crier] : []), ...folk].map(strip) };
+    }
+    const players = drawEntrants(state, r, FOOTBALL_SIDE * 2, () => true);
+    if (players.length < 8) return null;
+    state.eventEntrants = []; // the match is played: the next event takes new entries
+    // the draw alternates the sides, so those who joined are on both
+    const reds = players.filter((_, i) => i % 2 === 0), blues = players.filter((_, i) => i % 2 === 1);
+    const winner = r.chance(0.5) ? 'red' : 'blue';
+    const won = r.int(2, 3), lost = r.int(0, won - 1);
+    // the goals in order: the losers' (if any) first, the winners' last one the winning goal (the video shows the last)
+    const side = (s) => (s === 'red' ? reds : blues);
+    const order = [...Array(lost).fill(winner === 'red' ? 'blue' : 'red'), ...Array(won).fill(winner)];
+    const goals = order.map((s) => ({ side: s, by: r.pick(side(s)).id }));
+    const taken = new Set(players.map((p) => p.id));
+    const crowd = namedVillagers(state).filter((n) => !taken.has(n.id)).slice(0, 8).map(strip);
+    return { reds, blues, winner, score: { red: winner === 'red' ? won : lost, blue: winner === 'blue' ? won : lost }, goals,
+      joined: players.filter((p) => p.joined).length, crowd, cast: [...players, ...crowd].map(strip) };
+  },
+  guild(state, r, arc) {
+    if (arc?.step !== 'contest') {
+      const crier = roleCast(state, r, ['crier'], 1)[0] || null;
+      const folk = crafters(state).filter((n) => n.id !== crier?.id).slice(0, 5);
+      return { game: 'guild', day: state.day, crier: crier && strip(crier), cast: [...(crier ? [crier] : []), ...folk].map(strip) };
+    }
+    // four craftsmen, four trades when there are: those who joined first, then the others (one of each trade first)
+    const out = [];
+    const trades = new Set();
+    for (const distinct of [true, false]) {
+      while (out.length < GUILD_SIZE) {
+        const next = drawEntrants(state, r, 1, (v) => CRAFTS.includes(v.job) && !(distinct && trades.has(v.job)), out)[0];
+        if (!next) break;
+        out.push(next);
+        trades.add(next.job);
+      }
+    }
+    if (out.length < 3) return null;
+    state.eventEntrants = [];
+    // two tasks decide the final pair, the King's choice decides the winner
+    const ids = out.map((c) => c.id);
+    const pool = [...ids], finalists = [pool.splice(r.int(0, pool.length - 1), 1)[0], pool.splice(r.int(0, pool.length - 1), 1)[0]];
+    const winner = r.pick(finalists);
+    const task = r.pick(['something useful for the kingdom', 'something fit for the King', 'something for the winter']);
+    const taken = new Set(ids);
+    const crowd = namedVillagers(state).filter((n) => !taken.has(n.id)).slice(0, 8).map(strip);
+    return { crafters: out, finalists, winner, task, joined: out.filter((c) => c.joined).length, crowd, cast: [...out, ...crowd].map(strip) };
+  },
+  treasure(state, r, arc) {
+    if (arc?.step === 'tunnel' || arc?.step === 'gold') {
+      const { id: _id, step: _step, ...d } = arc.data;
+      const keep = (c) => (c && state.villagers[c.id] && state.names[c.id] ? c : null); // still in the kingdom
+      const crew = (d.crew || []).map(keep);
+      const out = { ...d, crew };
+      if (arc.step === 'gold') {
+        const taken = new Set(crew.filter(Boolean).map((c) => c.id));
+        out.crowd = namedVillagers(state).filter((n) => !taken.has(n.id)).slice(0, 10).map(strip);
+        out.coins = d.coins;
+      }
+      out.cast = [...crew.filter(Boolean), ...(out.crowd || [])].map(strip);
+      return out;
+    }
+    // owner 2026-11-23: a crew of the Mine only, four miners (the last the old hand who reads the rock) and a guard
+    const miners = roleCast(state, r, ['miner'], 4);
+    if (miners.length < 2) return null;
+    while (miners.length < 4) miners.push(null);
+    const guard = roleCast(state, r, ['guard'], 1, miners.filter(Boolean))[0] || null;
+    const crew = [...miners, guard].map((c) => c && strip(c));
+    return { crew, coins: r.int(4, 9) * 100, cast: crew.filter(Boolean) };
+  },
+  smugglers(state, r, arc) {
+    if (arc?.step === 'chase') {
+      const { id: _id, step: _step, ...d } = arc.data;
+      const still = (c) => (c && ['guard', 'knight', 'cavalier'].includes(state.villagers[c.id]?.job) ? c : null);
+      const guards = (d.guards || []).map(still);
+      const nets = roleCast(state, r, ['fisherman', 'sailor'], 2, guards.filter(Boolean)).map(strip);
+      const taken = new Set([...guards, ...nets].filter(Boolean).map((c) => c.id));
+      const crowd = namedVillagers(state).filter((n) => !taken.has(n.id)).slice(0, 6).map(strip);
+      return { ...d, guards, nets, crowd, cast: [...guards.filter(Boolean), ...nets, ...crowd] };
+    }
+    const guards = roleCast(state, r, ['guard'], 4);
+    if (guards.length < 3) return null;
+    while (guards.length < 4) guards.push(null);
+    const cargo = r.pick(['barrels of wine without the King\'s seal', 'wheels of cheese nobody paid the tax on', 'sacks of pepper hidden under fish', 'bolts of silk in herring barrels']);
+    const sneezer = r.int(0, guards.filter(Boolean).length - 1);
+    return { guards: guards.map((c) => c && strip(c)), sneezer, cargo, smugglers: r.int(4, 5), cast: guards.filter(Boolean).map(strip) };
   },
   riddle(state, r, arc) {
     const crier = roleCast(state, r, ['crier'], 1)[0] || null;

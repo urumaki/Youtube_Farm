@@ -514,6 +514,7 @@ async function setup(data) {
       if (st.phase !== undefined) tg.phase = st.phase;
       if (st.interior) tg.interior = true; // inside a building (the hen in the tavern): its own lamps, no ground clamp
       if (st.fog) tg.fog = st.fog; // a thicker fog for this shot
+      if (st.deep) tg.deep = st.deep; // the moonlit dark of midnight (the smugglers' harbour), not dusk
       if (st.work) tg.work = st.work; // arrows hitting the targets
       if (st.focus) tg.pos.copy(st.focus);
       // a small line at the bottom; "Subscribe to join..." only once, on the video's last story shot (owner 2026-11-07: not on
@@ -679,7 +680,7 @@ function applyFrame(ctx, t) {
   if (camera.near !== near) { camera.near = near; camera.updateProjectionMatrix(); }
   camera.updateMatrixWorld();
   const eclipse = ev.active?.eclipseAt && ev.section === 'update' ? ev.active.eclipseAt(ev.activeU) : 0;
-  const night = env.set(ev.phase, ev.camera.look, ev.shadowRadius, t, indoor, ev.flying ? 0 : ev.active?.fog || 0, eclipse);
+  const night = env.set(ev.phase, ev.camera.look, ev.shadowRadius, t, indoor, ev.flying ? 0 : ev.active?.fog || 0, eclipse, ev.flying ? 0 : ev.active?.deep || 0);
   M.setNight(night);
   castle.update(t, { bridgeOpen: ev.bridge });
   for (const [id, a] of animated) a.set(ev.progress.has('h' + id) ? ev.progress.get('h' + id) : 1);

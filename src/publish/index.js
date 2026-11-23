@@ -40,7 +40,12 @@ function withHashtags({ state, diff }) {
     : diff.story?.id === 'brawl' ? 'A brawl broke out in the tavern 🍺 ' // owner 2026-11-17
     // owner 2026-11-13: the ambush in the forest, a cliffhanger, then the rescue
     : diff.story?.id === 'ambush' ? { ambush: 'Bandits attacked the royal cart 🗡️ ', rescue: 'The cavalry came just in time 🐎 ' }[diff.story.step] || ''
-    : diff.story?.id === 'crusade' && diff.story.step === 'quest' ? 'The Crusaders found the Golden Apple 🍎 ' : '';
+    : diff.story?.id === 'crusade' && diff.story.step === 'quest' ? 'The Crusaders found the Golden Apple 🍎 '
+    // owner 2026-11-23: the four new events
+    : diff.story?.id === 'football' ? { announce: 'Mob football tomorrow! Comment !join ⚽ ', match: `${diff.story.winner === 'blue' ? 'Blues' : 'Reds'} win the mob football ⚽ ` }[diff.story.step] || ''
+    : diff.story?.id === 'guild' ? { announce: 'The King calls the craftsmen 🔨 ', contest: 'A new Master of the Guild 🏅 ' }[diff.story.step] || ''
+    : diff.story?.id === 'treasure' ? { breach: 'The miners found a secret tunnel ⛏️ ', tunnel: 'Trapped under the kingdom ⛏️ ', gold: 'Treasure in the Mine! 💰 ' }[diff.story.step] || ''
+    : diff.story?.id === 'smugglers' ? { watch: 'Smugglers in the harbour at midnight 🌙 ', chase: 'The smugglers ended up in the sea 🌊 ' }[diff.story.step] || '' : '';
   // owner 2026-11-17: YouTube shows the count rounded to tens above 1,000, so a day can read +0 while people came: then the
   // title counts the villagers named today ("3 new villagers"), or leaves the change out when nobody was
   const n = (diff.named || []).length;

@@ -74,6 +74,9 @@ const L = {
     race_results: ['The chariot race! Then the King makes the winner a Cavalier.', 'Chariots thunder round the lists, and the winner kneels before the King!'],
     joust: ['Hear ye! A joust at the Tournament Ground! Every guard may enter: comment join, with an exclamation mark in front!', 'A joust is announced! Guards, comment exclamation mark join to take up the lance!'],
     joust_results: ['The joust! Then the King knights the winner.', 'Lances down! And the winner kneels before the King to be knighted!'],
+    // owner 2026-11-23: the announcements of the match and of the guild contest
+    football: ['Hear ye! Mob football tomorrow, Reds against Blues! Anyone may play: comment join, with an exclamation mark in front!', 'A football match is called for tomorrow! Everyone can play: comment exclamation mark join!'],
+    guild: ['Hear ye! A contest of the guilds tomorrow, before the King! Craftsmen: comment join, with an exclamation mark in front!', 'The King calls the craftsmen to a contest! Comment exclamation mark join to win his medal!'],
     // owner 2026-11-07: a villager the owner makes a Noble, then their manor (a second line over its shot); names never read
     noble: ['By order of the King, one of our villagers kneels... and rises a Noble!', 'A great honour today: the King makes one of our villagers a Noble!'],
     noble_manor: ['And every Noble needs a manor. Read the name on the sign!', 'A new manor for the new Noble, name and all!'],
@@ -195,6 +198,7 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   const pick = (a) => r.pick(a);
   if (diff.story?.id === 'raid') return raidScript(state, diff, pick);
   if (diff.story?.id === 'ambush') return ambushScript(diff, pick);
+  if (['football', 'guild', 'treasure', 'smugglers'].includes(diff.story?.id) && EVENT_LINES[diff.story.id]?.[diff.story.step]) return eventScript(diff, pick);
   if (diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds) return grandJoustScript(diff);
   if (diff.story?.id === 'dayinlife') return dayInLifeScript(diff);
   if (diff.story?.id === 'escape' || diff.story?.id === 'eclipse' || (diff.story?.id === 'crusade' && diff.story.step === 'quest')) return takeoverScript(diff, pick);
@@ -462,6 +466,101 @@ function dayInLifeScript(diff) {
     ['Night falls. One more page by candlelight...', 21.7],
     ['...until the moon becomes the sun, and it all begins again.', 26.2],
   ];
+  const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
+  const text = sentences.map((x) => x.text).join(' ');
+  return { sentences, text, words: words(text) };
+}
+
+/**
+ * Owner 2026-11-23: the four events that take the whole video (mob football's match, the guild contest, the treasure of the
+ * Mine, the smugglers): one script each day, each line at its shot (the SHOTS of each one's file in
+ * src/render/scene/stories/). A day that ends on a cliffhanger runs to the end (no goal); the others end with the goal and
+ * the call to action. Names stay on screen, never read aloud.
+ */
+const NUM = ['No', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+const EVENT_LINES = {
+  football: {
+    match: (e, d) => [
+      [`Day ${d}. Mob football! Reds against Blues, ten a side.`, 0.4],
+      [e.joined ? `${e.joined} of them answered the call.` : 'Here comes the ball!', 2.6],
+      ['Everyone piles in. Where is the ball?', 4.3],
+      ['There it goes!', 7.4],
+      ['And down they go, all of them!', 9.6],
+      ['One more run at the goal...', 12.8],
+      ['Past the keeper... GOAL!', 15.6],
+      [`The ${e.winner === 'blue' ? 'Blues' : 'Reds'} win, ${Math.max(e.score?.red ?? 0, e.score?.blue ?? 0)} to ${Math.min(e.score?.red ?? 0, e.score?.blue ?? 0)}!`, 18.4],
+      ['And the losers just laugh it off in the mud.', 20.8],
+    ],
+  },
+  guild: {
+    contest: (e, d) => [
+      [`Day ${d}. The Guild Contest, before the King himself.`, 0.4],
+      ['Four craftsmen, four trades. The task: ' + (e.task || 'something useful') + '.', 2.4],
+      ['Hammers ring, ovens roar, needles fly!', 5.0],
+      ['The King looks over every piece...', 9.3],
+      ['Two go on to the final!', 12.0],
+      ['The final! Twice as fast now!', 13.8],
+      ['And the medal goes to...', 18.8],
+      ['the new Master of the Guild!', 20.6],
+    ],
+  },
+  treasure: {
+    breach: () => [
+      ['Deep in the Mine, the miners dig on.', 0.4],
+      ['Then a pick strikes the rock... and it rings hollow.', 5.2],
+      ['Stand back!', 10.2],
+      ['The wall falls in!', 11.6],
+      ['Behind it, an old tunnel. Nobody knew it was there.', 15.3],
+      ['Old carvings on the walls...', 21.2],
+      ['And a cold draught, from somewhere deep below.', 23.5],
+      ['What is down there? Find out tomorrow.', 26.8],
+    ],
+    tunnel: () => [
+      ['The expedition: four miners and a guard.', 0.4],
+      ['Down the old steps, lanterns up.', 4.8],
+      ['A great cavern, untouched for a thousand years!', 10.2],
+      ['Then... a rumble.', 15.2],
+      ['Run! The roof is coming down!', 16.8],
+      ['Everyone made it. But the way back is gone.', 21.3],
+      ['Trapped under the kingdom. Will they find a way out? Find out tomorrow.', 24.4],
+    ],
+    gold: (e) => [
+      ['The oldest miner feels a draught. Air means a way out!', 0.4],
+      ['And in a side chamber... an old iron chest.', 4.8],
+      ['Gold! Hundreds of old coins!', 7.6],
+      ['Now dig upward... Daylight!', 10.3],
+      [`${Number(e.coins || 500).toLocaleString('en-US')} gold coins for the kingdom! The whole town cheers the crew home.`, 15.3],
+    ],
+  },
+  smugglers: {
+    watch: (e) => [
+      ['Midnight at the harbour. Mist on the water.', 0.4],
+      ['Four guards lie in wait behind the barrels.', 4.8],
+      ['A boat... with no lights.', 9.3],
+      ['Smugglers! Carrying crates to the shed.', 14.3],
+      [`Their cargo: ${e.cargo || 'crates nobody paid the tax on'}.`, 16.8],
+      ['Then one of the guards... has to sneeze.', 20.3],
+      ['They heard it. Caught... or found out? Find out tomorrow.', 25.0],
+    ],
+    chase: (e) => [
+      ['In the name of the King! Drop those crates!', 0.4],
+      ['After them!', 4.3],
+      ['Along the quay, over the nets, and one guard slips on a fish!', 5.4],
+      ['Off the end of the jetty... SPLASH!', 9.4],
+      ['At dawn, the fishermen haul them out in a net.', 13.8],
+      [`And in the crates: ${e.cargo || 'smuggled goods'}. Seized for the kingdom!`, 18.8],
+    ],
+  },
+};
+function eventScript(diff, pick) {
+  const e = diff.story, n = (x) => Number(x || 0).toLocaleString('en-US');
+  const lines = EVENT_LINES[e.id][e.step](e, diff.day);
+  // a cliffhanger day runs to the end; the others end with the goal and the call to action
+  const cliff = (e.id === 'treasure' && e.step !== 'gold') || (e.id === 'smugglers' && e.step === 'watch');
+  if (!cliff) {
+    if (diff.next) lines.push([pick(L.goal)(n(diff.next.remaining), diff.next.goal), FIXED_AT.goal]);
+    lines.push([pick(L.cta), FIXED_AT.cta]);
+  }
   const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
   const text = sentences.map((x) => x.text).join(' ');
   return { sentences, text, words: words(text) };

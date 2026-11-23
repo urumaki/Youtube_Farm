@@ -161,6 +161,39 @@ Add new owner decisions here.
   once the final is won and all through the new Knight's ride. The champion comes to be knighted in plate armour
   (`plateArmor` in `outfits.js`: polished breastplate with a gold ridge and belt, pauldrons, vambraces, gauntlets,
   greaves, blue surcoat and cape, an open-faced helmet with a blue and white plume) and rides the lists in it.
+  Four more big events (owner 2026-11-23: "there are few events unless I push them"), each taking the whole video like the
+  Grand Joust (`football`, `guild`, `treasure`, `smugglers` in `stories.js`; one scene file each in `stories/`, the shots in
+  `timeline.js` `EVENT_SHOTS`, own narration `eventScript` in `narration.js`, sounds `ev_<story>_<shot>` in `sfx.js`, titles
+  in `publish/index.js`). None of them is stopped by the weather (the guild and the Mine are indoors, the harbour is a night
+  in the mist, football is played in the mud). Weather that stops the other events: rain and snow stop the fire, archery,
+  the tourney, the tug of war, the race, the joust, the ship, the raid, the Crusade and the ambush; the royal visit also the
+  storm; the regatta and a day in the life also fog; the hay cart only snow; the eclipse wants a clear day, the storm rain
+  or clouds, the flood rain, the snowballs snow, the boat in the fog fog.
+  - Mob football (`football`, needs the Tournament Ground and 12 named): the crier announces it ('football:announce', the
+    games' announcement, "Everyone: comment !join"), the next day the match. Anyone named may join, a newcomer too once
+    named (`eventEntrants`, `openEvent`/`canEnter` in `stories.js`, `simulate.js`; the owner's own announce counts the same
+    day). Ten a side (`FOOTBALL_SIDE`), twenty players: those who joined first (drawn by seniority past twenty), the other
+    named fill the empty places. Shots (`FOOTBALL_SHOTS`): the line-up and the ball thrown up, the scrum (three rings round
+    the ball), the slide (four down side by side, mud on a wet day), the winning goal seen from behind the scorer (the
+    keeper dives the wrong way, the scorer turns to the camera), the scorer carried on the winners' shoulders, the score.
+  - The guild contest (`guild`, needs the market and 4 named craftsmen): announced, then four craftsmen of four trades at
+    their benches in the Guild Hall (under the castle like the throne room), the King inspects, two go on to the final at
+    double speed, the King gives the medal. Only craftsmen may join (`CRAFTS`).
+  - The treasure of the Mine (`treasure`, urgent, three days, needs the Mine and 2 named miners): the breach into an old
+    tunnel (cliffhanger), the expedition and the rockfall behind them (cliffhanger, nobody hurt), the draught, the chest of
+    old coins, daylight and the chest carried through the market. The crew is of the Mine only: four miners (the fourth
+    the old hand who reads the carvings) and a guard, no scholar (owner 2026-11-23).
+  - The smugglers (`smugglers`, urgent, two nights, needs the harbour and named guards): the guards hide behind barrels, a
+    dark boat unloads, a guard sneezes (cliffhanger); the chase, the smugglers off the jetty into the water, fished out in a
+    net, the goods seized. A deep moonlit night, not the purple of dusk (`deep` on the shot, `env.set`).
+  Owner 2026-11-23, checked on every one of them: people never pass through one another (`apart` in `stories/common.js`
+  pushes the rigs at least a body apart after each frame's placing), and the King's prize-giving is not always the same
+  (`awardOf` in `stories/common.js`, from the day): in the throne room (race and joust) (0) the sword on each shoulder,
+  (1) a red cloak laid on the kneeling winner and the arm raised under petals, (2) a golden cup lifted to the hall (a Noble
+  always gets the sword); in the Guild Hall the medal, then (0) the work held up, (1) the arm raised by the King under
+  petals, (2) the guild's banner waved, the other three holding up their work. Tests: `four more big events (owner
+  2026-11-23)`; renders `npm run render -- --real --subs 3200 --story football:match|guild:contest|treasure:breach|
+  smugglers:watch --stills ...`, and `--award 0|1|2` with `--story joust:results` or `guild:contest` (which prize-giving).
   A day in the life (owner 2026-11-01): one named villager's day takes the whole video like the Grand Joust (`dayinlife`
   in `stories.js`, `takeover: true`; `DAY_SHOTS` and the scenes in `stories/dayinlife.js`), but it keeps the counter and
   the day line at the start (`plan.stats`, `ev.stats` in `overlay.js`). So far only the scholar (`story.job`; one of the
