@@ -204,10 +204,11 @@ export function createOverlay(root, data) {
       // outlined), so it stays up across the cut from one round to the next and can be read (owner's second look)
       const bk0 = tg?.bracket, u = ev.activeU;
       const late = !!bk0?.end && u >= bk0.end.from;
-      const bk = bk0 && (late ? { ...bk0, ...bk0.end } : bk0);
+      const step = bk0?.steps?.filter((x) => u >= x.from).at(-1); // the line-up of 16 or 32: the first rounds decided in turn
+      const bk = bk0 && (late ? { ...bk0, ...bk0.end } : step ? { ...bk0, ...step } : bk0);
       const key = bk ? JSON.stringify([bk.decided, bk.current, bk.champion, bk.mode]) : null;
       if (key !== bracketKey) { bracketKey = key; bracket.innerHTML = bk ? bracketHTML(bk) : ''; }
-      bracket.style.opacity = !bk ? 0 : bk.mode === 'big' ? Math.max(0, Math.min(1, (u - 0.05) * 8, (0.97 - u) * 12))
+      bracket.style.opacity = !bk ? 0 : bk.mode === 'big' || bk.mode === 'roster' ? Math.max(0, Math.min(1, (u - 0.05) * 8, (0.97 - u) * 12))
         : late ? Math.max(0, Math.min(1, (u - bk.from) * 10, (0.995 - u) * 40)) : Math.max(0, Math.min(1, u * 40, (0.3 - u) * 10));
       foot.textContent = tg?.footer || '';
       foot.style.opacity = tg?.footer ? Math.max(0, Math.min(1, (ev.activeU - 0.05) * 6, (0.97 - ev.activeU) * 12)) : 0;
@@ -299,6 +300,7 @@ export function createOverlay(root, data) {
  * decided, the champion and a cup at the end; lines join each pair to the one who went on. No backdrop (owner 2026-11-01).
  */
 function bracketHTML(b) {
+  if (b.mode === 'roster') return rosterHTML(b);
   // as wide as the safe area (860), the boxes as tall and the names as big as fit (owner's second look: readable)
   const BW = 200, BH = 46, X = [0, 220, 440, 660], TOP = 60, GAP = 58;
   const ys = [Array.from({ length: 8 }, (_, i) => TOP + i * GAP)];
@@ -322,6 +324,26 @@ function bracketHTML(b) {
   const cup = b.champion ? `<svg style="position:absolute;left:${X[3] + 55}px;top:${ys[3][0] + 60}px" width="90" height="100" viewBox="0 0 80 90"><path d="M18 6h44v18c0 16-10 28-22 28S18 40 18 24z" fill="#e3b23c" stroke="#6b4a12" stroke-width="3"/><path d="M18 12H6c0 14 6 20 14 20M62 12h12c0 14-6 20-14 20" fill="none" stroke="#e3b23c" stroke-width="5"/><rect x="34" y="52" width="12" height="14" fill="#e3b23c"/><rect x="22" y="66" width="36" height="12" rx="2" fill="#e3b23c" stroke="#6b4a12" stroke-width="3"/></svg>` : '';
   return `<svg style="position:absolute;left:0;top:0" width="860" height="520"><g fill="none" stroke="#f4f0e6" stroke-width="3" style="filter:drop-shadow(0 2px 3px rgba(0,0,0,.8))">${lines}</g></svg>`
     + (b.mode === 'big' ? '<div class="ttl">THE GRAND<br>JOUST</div>' : '') + html + cup;
+}
+
+/**
+ * The riders of a joust of 16 or 32 (owner 2026-11-23): their names in columns of eight, each bout's pair one above the
+ * other; as the first rounds are decided the losers fade and the ones still in get the green bar.
+ */
+function rosterHTML(b) {
+  const ids = b.rounds[0].flatMap((bt) => [bt.a, bt.b]);
+  const cols = Math.ceil(ids.length / 8), X = [0, 220, 440, 660], TOP = cols > 2 ? 130 : 60, GAP = 54;
+  const isOut = (id) => b.rounds.slice(0, b.decided).some((r) => r.some((bt) => (bt.a === id || bt.b === id) && bt.winner !== id));
+  let html = '';
+  ids.forEach((id, i) => {
+    const name = b.names[id] || '';
+    const cls = ['bx', b.decided && !isOut(id) ? 'up' : '', isOut(id) ? 'out' : ''].filter(Boolean).join(' ');
+    const y = TOP + (i % 8) * GAP + Math.floor((i % 8) / 2) * 8;
+    html += `<div class="${cls}" style="left:${X[Math.floor(i / 8)]}px;top:${y}px;font-size:${name.length > 15 ? 16 : name.length > 12 ? 18 : 21}px">${esc(name)}</div>`;
+  });
+  const left = ids.length >> b.decided;
+  const count = `<div class="ttl" style="top:${TOP + 8 * GAP + 40}px;font-size:34px">${ids.length} RIDERS${b.decided ? ` &middot; ${left} LEFT` : ''}</div>`;
+  return '<div class="ttl">THE GRAND<br>JOUST</div>' + count + html;
 }
 
 function esc(s) {

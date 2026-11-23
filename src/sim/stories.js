@@ -827,7 +827,22 @@ function jousters(state) {
 }
 
 // how many ride in each game, and what the winner is made
-export const GAMES = { race: { riders: 4, title: 'cavalier' }, joust: { riders: 8, title: 'knight', bracket: true } };
+// (owner 2026-11-23: the joust grows with the guards who commented "!join": 16 or 32 riders, `ridersFor`)
+export const GAMES = { race: { riders: 4, title: 'cavalier' }, joust: { riders: 8, max: 32, title: 'knight', bracket: true } };
+
+/**
+ * How many ride (owner 2026-11-23): for the joust the most a knockout allows among those who joined (a power of two),
+ * at least 8 (the other guards fill the places) and at most 32: 10 joined ride 8, 20 ride 16, 36 ride 32.
+ */
+export function ridersFor(state, id) {
+  const g = GAMES[id];
+  if (!g.max) return g.riders;
+  const ids = new Set(jousters(state).map((x) => x.id));
+  const joined = new Set((state.gamesEntrants || []).filter((x) => ids.has(x))).size;
+  let n = g.riders;
+  while (n * 2 <= Math.min(joined, g.max)) n *= 2;
+  return n;
+}
 
 /**
  * The entrants of a game (owner 2026-10-28): n named guards drawn without replacement, first among those who commented
@@ -863,10 +878,11 @@ function game(state, r, arc, id) {
     return { game: id, day: state.day, crier, cast: [...(crier ? [crier] : []), ...guards] };
   }
   const since = arc.data?.day ?? state.day - 1;
-  const riders = drawGuards(state, r, GAMES[id].riders);
+  const riders = drawGuards(state, r, ridersFor(state, id));
   if (riders.length < 2) return null;
   state.gamesEntrants = []; // the game is run: the next games take new entries
-  // the Grand Joust (owner 2026-11-01): a knockout in the order drawn, each bout 50/50, the rounds decided now
+  // the Grand Joust (owner 2026-11-01): a knockout in the order drawn, each bout 50/50, the rounds decided now (8, 16 or 32
+  // riders, owner 2026-11-23: three, four or five rounds; the video shows the champion's last three)
   const rounds = GAMES[id].bracket ? knockout(riders, r) : null;
   const winner = rounds ? rounds.at(-1)[0].winner : r.pick(riders).id;
   promote(state, winner, GAMES[id].title);

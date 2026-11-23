@@ -5,7 +5,7 @@ import { BUILDINGS, JOBS, tavernScene } from '../../sim/tiers.js';
 import { CASTLE } from '../../sim/world.js';
 import { NIGHT_STORIES, storyCue } from './stories/index.js';
 import { RAID_SHOTS } from './stories/raid.js';
-import { JOUST_SHOTS } from './stories/grandjoust.js';
+import { joustShots } from './stories/grandjoust.js';
 import { DAY_SHOTS } from './stories/dayinlife.js';
 import { ESCAPE_SHOTS } from './stories/escape.js';
 import { ECLIPSE_SHOTS } from './stories/eclipse.js';
@@ -59,7 +59,7 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
     : diff.story?.id === 'ambush' ? (AMBUSH_SHOTS[diff.story.step] ? [AMBUSH_SHOTS[diff.story.step], 0.25] : null)
     : { escape: [ESCAPE_SHOTS, 0.45], eclipse: [ECLIPSE_SHOTS, 0.3] }[diff.story?.id];
   const day = diff.story?.id === 'dayinlife' ? DAY_SHOTS[diff.story.job] : OWN ? OWN[0] : null;
-  const ownShots = diff.story?.id === 'raid' ? RAID_SHOTS[diff.story.step] : diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds ? JOUST_SHOTS : day;
+  const ownShots = diff.story?.id === 'raid' ? RAID_SHOTS[diff.story.step] : diff.story?.id === 'joust' && diff.story.step === 'results' && diff.story.rounds ? joustShots(diff.story) : day;
   if (ownShots) {
     const own = ownShots.map(([shot, t0, t1]) => ({
       kind: 'event', id: `${diff.story.id}_${shot}`, story: { ...diff.story, shot, ...(shot === 'crown' ? { step: 'crown' } : {}) }, pos: castle.keep.clone(), radius: 12, front: 0,
@@ -323,6 +323,14 @@ export function makePlan({ state, diff, houses, animated, buildings, castle, max
  */
 function bracketAt(story, shot) {
   const names = Object.fromEntries(story.riders.map((r) => [r.id, r.name]));
+  // owner 2026-11-23: with 16 or 32 riders the line-up shows them all and the first rounds decided one after the other
+  // (the losers fade, `steps`); then the bracket of the last eight, as with eight riders
+  const early = story.rounds.length - 3;
+  if (shot === 'intro' && early > 0) {
+    return { rounds: story.rounds.slice(0, early), names, mode: 'roster', decided: 0, current: null, champion: null,
+      steps: Array.from({ length: early }, (_, k) => ({ from: 0.3 + 0.3 * k, decided: k + 1 })) };
+  }
+  if (early > 0) story = { ...story, rounds: story.rounds.slice(early) };
   const round = { quarter: 0, semi: 1, final: 2 }[shot];
   if (shot === 'intro' || shot === 'outro') {
     const done = shot === 'outro';

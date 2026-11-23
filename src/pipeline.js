@@ -41,6 +41,7 @@ export function parseArgs(argv) {
     else if (k === '--day') a.day = v(); // test renders: a saved day again (state/history/DATE.json), never saved
     else if (k === '--gallery') a.gallery = v(); // test renders: work scenes, e.g. "farmer:sow,blacksmith:anvil+guard:sword"
     else if (k === '--gallery-times') a.galleryTimes = v();
+    else if (k === '--entrants') a.entrants = Number(v()); // test renders: the first N named guards commented "!join" (the joust's size)
     else if (k === '--story') a.story = v(); // test renders: force today's story event (bandits, quarrel, merchants, halloween)
     else if (k === '--real') a.real = true; // test renders: start from the real state/ (read only)
     else if (k === '--pov') a.pov = v(); // test renders: the first villager shot ('work') or the first alone ('stroll') seen through their eyes
@@ -199,6 +200,7 @@ export async function testRender(args, log = console) {
   if (args.story === 'riddle:answer' && !(state.riddleSolvers || []).length) {
     state.riddleSolvers = Object.keys(state.names || {}).map(Number).filter((id) => state.villagers[id]?.job === 'scholar').slice(0, 2);
   }
+  if (args.entrants) state.gamesEntrants = Object.keys(state.names || {}).map(Number).filter((id) => state.villagers[id]?.job === 'guard' && id !== state.guardCaptain).slice(0, args.entrants);
   if (args.story) diff.story = state.story = storyFor(state, args.story);
   // the result of the kingdom's vote with no votes yet: made-up numbers (a test render, never saved)
   if (args.story === 'vote:result' && diff.story && !(diff.story.tally.a + diff.story.tally.b)) Object.assign(diff.story, { tally: { a: 12, b: 31 }, winner: 'b' });

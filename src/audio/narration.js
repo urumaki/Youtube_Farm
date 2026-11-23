@@ -423,7 +423,7 @@ function ambushScript(diff, pick) {
  * src/render/scene/stories/grandjoust.js). Names stay on screen.
  */
 function grandJoustScript(diff) {
-  const n = diff.story.riders.length, word = { 8: 'Eight', 4: 'Four', 2: 'Two' }[n] || String(n);
+  const n = diff.story.riders.length, word = { 32: 'Thirty-two', 16: 'Sixteen', 8: 'Eight', 4: 'Four', 2: 'Two' }[n] || String(n);
   const joined = diff.story.joined || 0;
   // owner 2026-11-01 (second look): more lines through the bouts, for the thrill; no call to "!join" at the end (that is
   // the announcement's), the blows at about 6.4, 11.9 and 18.2 s (grandjoust.js)
@@ -439,6 +439,10 @@ function grandJoustScript(diff) {
     ['Kneel... and rise, a Knight of the kingdom!', 21.9],
     ['Hear the crowd roar! Long live the new Knight!', 25.9],
   ];
+  // owner 2026-11-23: 16 or 32 riders (JOUST_SHOTS_BIG: a longer line-up, the bouts from 5 s, the blows at about 7.6 and
+  // 12.6 s): the first rounds go by in the bracket, then the last eight ride
+  if (n > 8) lines.splice(1, 4, ['After the first rounds, only eight are left. Lances down!', 3.2], ['What a blow! Out of the saddle!', 7.7],
+    ['The semi-final! Only four are left.', 10.4], ['Crack! Down he goes, into the sand!', 12.7]);
   const sentences = lines.map(([text, at], i) => ({ text, role: i ? 'story' : 'open', at }));
   const text = sentences.map((x) => x.text).join(' ');
   return { sentences, text, words: words(text) };

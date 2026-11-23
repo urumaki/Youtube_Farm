@@ -138,6 +138,16 @@ Add new owner decisions here.
   for who went on, lines joining each pair, no backdrop): big over the line-up and the end (with the champion and a cup),
   small at the start of each bout with that bout's two names outlined. Own narration (`grandJoustScript`, names on screen
   only), title "Day N: The Grand Joust ⚔️ ...", lance and fall sounds synced. At least 14 days apart (cooldown 14, tested).
+  Owner 2026-11-23: the joust grows with those who joined (`ridersFor` in `stories.js`, `GAMES.joust.max` 32): the most a
+  knockout allows among the guards who commented "!join" (the Captain does not count), at least 8 and at most 32: up to 15
+  joined ride 8 (other guards fill the places), 16-31 ride 16, 32 or more ride 32, drawn by seniority as before. With 16 or
+  32 (`JOUST_SHOTS_BIG`): the line-up takes 0-5 s, every rider in rows of eight, the camera higher; over it all the names
+  in columns of eight (`rosterHTML` in `overlay.js`, `mode: 'roster'`), and the first rounds are decided one after the
+  other (losers fade, those still in get the green bar, "32 RIDERS · 16 LEFT · 8 LEFT"); then the champion's last three
+  bouts (5-10, 10-15, 15-21.5 s) under the bracket of the last eight, the crowning and the ride as with eight. The narration:
+  "Thirty-two guards ride for one title. After the first rounds, only eight are left. Lances down!". Test:
+  `npm run render -- --real --subs 3200 --story joust:results --entrants 36 --stills 1,2.6,4.4,5.6,28` (`--entrants N`: the
+  first N named guards commented "!join"); `the joust grows with those who joined`.
   The day of 2026-11-01 (blueberry9333 knighted, DawleyTownFc in the final) was set as such a bracket in its saved story,
   the other six riders from those who had commented "!join". Test with `npm run render -- --real --subs N --story
   joust:results` or `--day 2026-11-01`.

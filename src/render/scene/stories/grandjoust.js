@@ -13,6 +13,10 @@ import { mount, gallop, stands, COLORS, COATS } from './joust.js';
 import { plateArmor } from '../outfits.js';
 
 export const JOUST_SHOTS = [['intro', 0, 3.5], ['quarter', 3.5, 9], ['semi', 9, 14.5], ['final', 14.5, 21.5], ['crown', 21.5, 25.5], ['outro', 25.5, 30]];
+// owner 2026-11-23: 16 or 32 riders (stories.js `ridersFor`): a longer line-up, where the bracket shows the first rounds
+// decided (overlay.js), then the champion's last three bouts as with eight
+export const JOUST_SHOTS_BIG = [['intro', 0, 5], ['quarter', 5, 10], ['semi', 10, 15], ['final', 15, 21.5], ['crown', 21.5, 25.5], ['outro', 25.5, 30]];
+export const joustShots = (story) => ((story?.riders?.length || 8) > 8 ? JOUST_SHOTS_BIG : JOUST_SHOTS);
 const ROUND = { quarter: 0, semi: 1, final: 2 };
 const lerp = THREE.MathUtils.lerp;
 const SPEED = 6; // m/s at full gallop
@@ -67,7 +71,8 @@ function bout({ story, M, buildings, seed }, round, T) {
   const L0 = lot(buildings);
   if (!L0) return null;
   const { group, toWorld } = L0;
-  const bt = story.rounds?.[round]?.find((b) => b.a === story.winner || b.b === story.winner);
+  // (the champion's last three rounds: with 16 or 32 riders the first ones are only in the bracket)
+  const bt = story.rounds?.[story.rounds.length - 3 + round]?.find((b) => b.a === story.winner || b.b === story.winner);
   if (!bt) return null;
   const who = (id) => story.riders.find((r) => r.id === id);
   const a = who(bt.a), b = who(bt.b);
@@ -186,16 +191,19 @@ function bout({ story, M, buildings, seed }, round, T) {
   };
 }
 
-/** 0-3.5 s: the eight riders lined up before the far stand, lances up, the crowd on its feet. */
+/** 0-3.5 s (0-5 s with 16 or 32): the riders lined up before the far stand, lances up, the crowd on its feet. */
 function intro({ story, M, buildings, seed }) {
   const L0 = lot(buildings);
   if (!L0) return null;
   const { group, toWorld } = L0;
   const labels = [];
   const { cheer } = stands({ group, M, story, seed, toWorld, labels: [] });
+  // eight in a row; 16 or 32 in rows of eight one behind the other, each a little to the side (owner 2026-11-23)
+  const rows = Math.ceil(story.riders.length / 8);
   const line = story.riders.map((c, i) => {
     const m = mount(M, colorOf(story, c.id), coatOf(story, c.id));
-    m.h.g.position.set(-11 + i * 3.1, 0, -7.5 + (i % 2) * 1.2);
+    const row = Math.floor(i / 8), k = i % 8;
+    m.h.g.position.set(-11 + k * 3.1 + (row % 2) * 1.5, 0, -7.5 + (k % 2) * 1.2 - row * 3.2);
     m.h.g.rotation.y = 0.75; // turned a little, so the horses show side on
     m.lance.rotation.x = -1.2; // upright
     group.add(m.h.g);
@@ -208,7 +216,8 @@ function intro({ story, M, buildings, seed }) {
     focus: toWorld(0, 1.6, -7.5),
     cam(u) {
       const e = ease(u);
-      return { pos: toWorld(-6 + 8 * e, 5.5 - 1.5 * e, 16 - 3 * e), look: toWorld(1 * e, 2.8, -9) };
+      const up = (rows - 1) * 2.2; // higher over more rows, so the ones behind show
+      return { pos: toWorld(-6 + 8 * e, 5.5 - 1.5 * e + up, 16 - 3 * e + up * 0.6), look: toWorld(1 * e, 2.8, -9 - (rows - 1) * 1.6) };
     },
     update(t, t0, t1) {
       const on = t >= t0 - 0.2 && t <= t1 + 0.2;
@@ -270,7 +279,7 @@ function outro({ story, M, buildings, seed }) {
 /** The scene of one shot of the Grand Joust (story.shot); the crowning is throne.js (step 'crown', timeline.js). */
 export function buildGrandJoust(args) {
   const shot = args.story.shot;
-  const span = JOUST_SHOTS.find((s) => s[0] === shot);
+  const span = joustShots(args.story).find((s) => s[0] === shot);
   if (shot === 'intro') return intro(args);
   if (shot === 'outro') return outro(args);
   if (shot in ROUND && span) return bout(args, ROUND[shot], span[2] - span[1]);

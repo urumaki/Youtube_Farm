@@ -1012,6 +1012,30 @@ test('"!join" (owner 2026-10-29): only guards go on the list of entrants for the
   assert.deepEqual(announced(false), []);
 });
 
+test('the joust grows with those who joined (owner 2026-11-23): 8, 16 or 32 riders, the champion through every round', async () => {
+  const { ridersFor, storyFor } = await import('../src/sim/stories.js');
+  const guards = 40;
+  const s = {
+    seed: SEED, date: dateOf(30), day: 30, subscriberCount: 600, weather: 'clear', storyLog: {}, storyArc: null, buildings: [{ id: 'tournament', status: 'done' }], houses: [], unlockedTiers: [],
+    villagers: Array.from({ length: guards }, (_, id) => ({ id, job: 'guard' })), guardCaptain: 0,
+    names: Object.fromEntries(Array.from({ length: guards }, (_, id) => [id, { name: `V${id}`, day: 1, job: 'guard' }])),
+  };
+  const size = (n) => { s.gamesEntrants = Array.from({ length: n }, (_, i) => i + 1); return ridersFor(s, 'joust'); };
+  assert.deepEqual([0, 7, 8, 10, 15, 16, 20, 31, 32, 36].map(size), [8, 8, 8, 8, 8, 16, 16, 16, 32, 32]);
+  s.gamesEntrants = [0, ...Array.from({ length: 15 }, (_, i) => i + 1)]; // the Captain never rides: 15 joined, 8 ride
+  assert.equal(ridersFor(s, 'joust'), 8);
+  assert.equal(ridersFor(s, 'race'), 4);
+  for (const n of [10, 20, 36]) {
+    size(n);
+    const st = storyFor(structuredClone(s), 'joust:results');
+    const want = n >= 32 ? 32 : n >= 16 ? 16 : 8;
+    assert.equal(st.riders.length, want);
+    assert.equal(st.rounds.length, Math.log2(want));
+    assert.ok(st.riders.every((r) => r.joined) || want === 8 && n < 8);
+    assert.ok(st.rounds.every((r) => r.some((b) => b.winner === st.winner)));
+  }
+});
+
 test('the decree (owner 2026-10-28): the crier proclaims once that Knights and Cavaliers are won at the Tournament Ground', async () => {
   const { pickStory } = await import('../src/sim/stories.js');
   const kingdom = (day, storyLog = {}, buildings = [{ id: 'tournament', status: 'done' }]) => ({
