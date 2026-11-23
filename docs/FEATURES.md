@@ -349,7 +349,9 @@ Add new owner decisions here.
   the Guard) puts the villager once on `state.gamesEntrants`
   (`simulate.js`, `diff.joins`); the list is emptied when a game is run. Owner 2026-11-01: a "!join" counts only in the
   comments read on the results day, the ones on the announcement (`gameOpen` in `simulate.js`), so the list is empty for
-  the next games. Day 2 (`results`): the riders are drawn
+  the next games. Owner 2026-11-23: a games' announcement the owner set (`storyArc.owner`) also takes the "!join" read on
+  its own day, the comments on the video before (the owner's pinned invitation of 2026-11-22: The_Knight_Of_Dice and
+  The_Kubas182 had been left out of the joust and were put on the list by hand). Day 2 (`results`): the riders are drawn
   (`drawGuards` in `stories.js`) among the guards on the list (still guards that day), then the other named guards fill
   the places left (owner: fill with random guards); each draw is weighted
   by seniority, the guard named longest ago 1.9, the newest 1.0, the rest in proportion. Only named guards, never the
@@ -1095,7 +1097,8 @@ Add new owner decisions here.
   comment still takes the job it names. A cell in the Dungeon is by request in a first comment too: "jail", "dungeon"
   alone ask for nothing. Rebels: the words alone ("revolution!", "treason") only in a comment of a few words, or said of
   oneself ("we start a revolution"); "the rebels got tomatoes" and "I would never betray the king" make no rebel. Names:
-  "the so called king" and "call me maybe" name nobody, "call me Sir Lancelot" is Lancelot. Still read wrong: "my friend
+  "the so called king" and "call me maybe" name nobody, "call me Sir Lancelot" is Lancelot. Owner 2026-11-23: no royal or
+  noble title is a name ("i want to be called lord of potatoes" had renamed lorenzo4797 Lord; set right by hand). Still read wrong: "my friend
   is called Bob" renames the commenter's villager Bob. Test: `requests: talk about the video changes no job`.
 
 - The kingdom's vote (owner 2026-11-10: the comments decide what happens; story `vote` in `stories.js`, catalog in

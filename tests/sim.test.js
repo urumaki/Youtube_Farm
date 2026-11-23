@@ -380,6 +380,11 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
   assert.deepEqual(wantsFromText('with my trusty broom, let me do my street sweeper duties'), ['sweeper'], 'the street sweeper (owner 2026-11-13)');
   assert.equal(nameFromText('My king may i be named as GeorgeK. May i be born into your kingdom'), 'GeorgeK');
   assert.equal(nameFromText('For my name is sir gwain I am a knight'), 'Gwain');
+  // owner 2026-11-23: no royal or noble title for a name
+  assert.equal(nameFromText('i want to be called lord of potatoes'), null);
+  assert.equal(nameFromText('call me King'), null);
+  assert.equal(nameFromText('call me lady'), null);
+  assert.equal(nameFromText('call me Lady Violet'), 'Violet');
   const { complainsFromText } = await import('../src/sim/requests.js');
   assert.ok(complainsFromText('I subscribed Bruh I’m still not in this village') && complainsFromText('Still looking for myself'));
   const uni = { day: 20, date: '2026-11-03', buildings: [{ id: 'university', status: 'done' }] };
@@ -1000,6 +1005,11 @@ test('"!join" (owner 2026-10-29): only guards go on the list of entrants for the
   // baker after this comment: only 15, a guard from before today, enters
   assert.deepEqual(r.state.gamesEntrants, [15]);
   assert.deepEqual(r.diff.joins.map((j) => j.id), [15]);
+  // owner 2026-11-23: a games' announcement the owner set takes "!join" on its own day too (a pinned invitation the
+  // day before); one picked by the stories does not
+  const announced = (owner) => { const t = structuredClone(state); t.gamesEntrants = []; t.storyArc = { id: 'joust', step: 'announce', day: t.day + 1, ...(owner ? { owner: true } : {}) }; return advance(t, { subscribers: 600, date: dateOf(2), commenters: [c(15)] }).state.gamesEntrants; };
+  assert.deepEqual(announced(true), [15]);
+  assert.deepEqual(announced(false), []);
 });
 
 test('the decree (owner 2026-10-28): the crier proclaims once that Knights and Cavaliers are won at the Tournament Ground', async () => {

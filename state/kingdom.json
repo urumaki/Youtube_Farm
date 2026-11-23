@@ -22881,7 +22881,7 @@
    "requestDay": 21
   },
   "936": {
-   "name": "Lord",
+   "name": "lorenzo4797",
    "author": "UCliB9PmTC2i35qCYiVlRz3Q",
    "day": 20,
    "job": "merchant",
@@ -25990,7 +25990,10 @@
  "buildQueue": [],
  "nextFine": 22,
  "guardCaptain": 88,
- "gamesEntrants": [],
+ "gamesEntrants": [
+  13,
+  951
+ ],
  "ennoble": [],
  "riddleSolvers": []
 }

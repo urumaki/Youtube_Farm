@@ -360,7 +360,10 @@ function assignNames(s, commenters, blocked, diff) {
       // this comment's own request; never one made a guard today, never the Captain of the Guard. Owner 2026-11-01: only
       // in the comments on the announcement (the day before the results), so the list is empty for the next games
       // (and the Crusade, owner 2026-11-07: the comments on its call, the day before the quest)
-      const gameOpen = (s.storyArc?.step === 'results' && s.storyArc.id in GAMES) || (s.storyArc?.id === 'crusade' && s.storyArc.step === 'quest');
+      // (owner 2026-11-23: also the comments read on the day of a games' announcement the owner set, stories.js
+      // `storyArc.owner`: the owner may ask for "!join" the day before in a pinned comment, as for the joust of day 39)
+      const gameOpen = (s.storyArc?.id in GAMES && (s.storyArc.step === 'results' || (s.storyArc.step === 'announce' && s.storyArc.owner)))
+        || (s.storyArc?.id === 'crusade' && s.storyArc.step === 'quest');
       // "!answer" (owner 2026-11-07): the comments on the riddle's day, from a villager who was a scholar before today and is
       // one still after this comment's own request; the first right answers come first (the comments are in time order)
       const riddle = s.storyArc?.id === 'riddle' && s.storyArc.step === 'answer' ? s.storyArc.data?.riddle : null;

@@ -358,7 +358,12 @@ const NOT_NAMES = new Set(['a', 'an', 'the', 'me', 'it', 'one', 'him', 'her', 'p
   // named villagers are never villains (owner; 2026-11-04: "a villager named thief")
   // (2026-11-10: "call me maybe", "called out", "named after")
   'maybe', 'out', 'back', 'upon', 'when', 'if', 'so', 'for', 'to', 'in', 'on', 'and', 'or', 'but', 'not', 'your', 'his', 'their', 'our', 'after', 'because',
-  'thief', 'robber', 'bandit', 'brigand', 'criminal', 'murderer', 'killer', 'villain', 'crook', 'outlaw', 'assassin', 'ladro', 'brigante']);
+  'thief', 'robber', 'bandit', 'brigand', 'criminal', 'murderer', 'killer', 'villain', 'crook', 'outlaw', 'assassin', 'ladro', 'brigante',
+  // no royal or noble title for a name (owner 2026-11-23: "i want to be called lord of potatoes" had named a villager Lord)
+  'lord', 'lady', 'king', 'queen', 'prince', 'princess', 'duke', 'duchess', 'earl', 'count', 'countess', 'baron', 'baroness',
+  'marquis', 'marquess', 'viscount', 'emperor', 'empress', 'monarch', 'sovereign', 'majesty', 'highness', 'royal', 'noble',
+  'nobleman', 'noblewoman', 'tsar', 'czar', 'sultan', 'pharaoh', 'sire', 'sir', 'ser', 'dame', 're', 'regina', 'principe',
+  'principessa', 'duca', 'duchessa', 'conte', 'contessa', 'barone', 'baronessa', 'marchese', 'imperatore', 'imperatrice', 'nobile']);
 
 // owner 2026-11-20, the day 35 video: "Robin Hale is gonna be my villager's name" (the first word of one or two)
 const NAME_BEFORE_RE = /\b([\p{L}][\p{L}\p{N}_-]{1,20})(?:\s+[\p{L}][\p{L}\p{N}_-]{1,20})?\s+(?:is|will be|shall be)\s+(?:(?:gonna|gona|going to)\s+be\s+)?my\s+villager?'?s?\s+name\b/iu;
