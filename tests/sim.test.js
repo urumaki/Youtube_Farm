@@ -1611,6 +1611,12 @@ test('the Crusade (owner 2026-11-07): guards join with "!join", the quest the ne
   const c = (id, h) => ({ author: `a${id}`, name: `V${id}`, at: `2026-10-30T${h}:00:00Z`, wants: [], join: true });
   const r = advance(state, { subscribers: 1200, date: '2026-10-30', commenters: [c(16, 10), c(20, 11), c(18, 12)] });
   assert.deepEqual(r.state.gamesEntrants, [16, 18]);
+  // owner 2026-11-24: a guard who first asks for the job they already have ("I wish to join the joust") still enters with
+  // the "!join" written after it; a farmer made a guard today does not, whatever the order
+  const r2 = advance(structuredClone(state), { subscribers: 1200, date: '2026-10-30', commenters: [
+    { ...c(17, 10), join: false, wants: ['guard'] }, c(17, 11), { ...c(20, 12), wants: ['guard'] }, c(20, 13)] });
+  assert.deepEqual(r2.state.gamesEntrants, [17]);
+  assert.equal(r2.state.names[20].job, 'guard');
   // the quest: those who joined ride first, a named Knight leads; Crusader for the day, their job stays
   const s = r.state;
   s.storyArc = { id: 'crusade', step: 'quest', day: s.day, data: { day: s.day - 1 } };

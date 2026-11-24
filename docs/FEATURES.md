@@ -390,7 +390,9 @@ Add new owner decisions here.
   (`joinFromText` in `requests.js`, a fixed regex; a plain "join" does not count; owner 2026-11-23: "join!" counts too, the voice said "type join!"), from a commenter whose villager is a
   guard since before that day and still one after that comment (never one made a guard that day, never the Captain of
   the Guard) puts the villager once on `state.gamesEntrants`
-  (`simulate.js`, `diff.joins`); the list is emptied when a game is run. Owner 2026-11-01: a "!join" counts only in the
+  (`simulate.js`, `diff.joins`; owner 2026-11-24: "a guard since before that day" is the job before the day's comments,
+  `jobBefore`, so a guard whose earlier comment asked for the job they already had, "I wish to join the joust", still
+  enters: Clunkiesttunic0 was left out of the joust of day 40 that way); the list is emptied when a game is run. Owner 2026-11-01: a "!join" counts only in the
   comments read on the results day, the ones on the announcement (`gameOpen` in `simulate.js`), so the list is empty for
   the next games. Owner 2026-11-23: a games' announcement the owner set (`storyArc.owner`) also takes the "!join" read on
   its own day, the comments on the video before (the owner's pinned invitation of 2026-11-22: The_Knight_Of_Dice and

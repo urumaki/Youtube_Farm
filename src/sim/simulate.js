@@ -330,6 +330,10 @@ function assignNames(s, commenters, blocked, diff) {
     n.job = 'guard';
     if (s.villagers[id]) s.villagers[id].job = 'guard';
   }
+  // the jobs before today's comments: "a guard before today" (the games' "!join") and "a scholar before today" (the riddle's
+  // "!answer") read them, not requestDay (owner 2026-11-24, day 40: a guard who wrote "I wish to join the joust", read as
+  // asking for the job they already had, lost the "!join" written after it)
+  const jobBefore = Object.fromEntries(Object.keys(s.names).map((id) => [id, s.villagers[id]?.job ?? s.names[id].job]));
   for (const c of [...commenters].sort((a, b) => String(a.at).localeCompare(String(b.at)))) {
     if (c.at && (!s.commentsSeen || c.at > s.commentsSeen)) s.commentsSeen = c.at;
     if (!c.author || blockedAuthors.has(c.author)) continue;
@@ -370,9 +374,9 @@ function assignNames(s, commenters, blocked, diff) {
       // one still after this comment's own request; the first right answers come first (the comments are in time order)
       const riddle = s.storyArc?.id === 'riddle' && s.storyArc.step === 'answer' ? s.storyArc.data?.riddle : null;
       const isScholar = () => (s.villagers[id]?.job ?? s.names[id].job) === 'scholar';
-      const scholarBefore = id !== undefined && isScholar() && s.names[id].requestDay !== s.day;
+      const scholarBefore = id !== undefined && jobBefore[id] === 'scholar';
       const isGuard = () => (s.villagers[id]?.job ?? s.names[id].job) === 'guard';
-      const guardBefore = id !== undefined && isGuard() && s.names[id].requestDay !== s.day && Number(id) !== s.guardCaptain;
+      const guardBefore = id !== undefined && jobBefore[id] === 'guard' && Number(id) !== s.guardCaptain;
       // (owner 2026-11-10: a villager who has a job changes it only when the comment asks, `asks` from requests.js; a
       // commenter made without it, in tests and test renders, asks)
       if (id !== undefined && wants.length && c.asks !== false) applyRequest(id, wants);
