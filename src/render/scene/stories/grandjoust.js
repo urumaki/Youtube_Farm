@@ -22,7 +22,7 @@ const ROUND = { quarter: 0, semi: 1, final: 2 };
 // owner 2026-11-24 ("the same shots again get fewer views"): two looks, one joust after the other (stories.js `look`):
 // 0 the first one (the line-up, the charges seen from the stands, the fall on the sand, the ride along the lists);
 // 1 the parade past the camera with pennants, the quarter-final seen from behind the champion, the semi-final with the
-// camera turning round the blow, the final from above down to a heap of hay the loser lands in, the champion's horse
+// camera turning round the blow, the final from high above coming down to where the loser lands, the champion's horse
 // rearing before the lap of honour while the stands throw their hats. Test renders: --look 0|1.
 export const lookOf = (story) => (((Number(story?.look) || 0) % 2) + 2) % 2;
 const lerp = THREE.MathUtils.lerp;
@@ -127,25 +127,6 @@ function bout({ story, M, buildings, seed }, round, T) {
   const look = lookOf(story);
   // look 1: where the loser lands (lot frame: the horse runs on from under him, he stays where the blow came)
   const dirL = Lz === A ? 1 : -1, landX = -dirL * 0.72, landZ = (Lz === A ? -1 : 1) * 1.1;
-  const hayFall = look === 1 && final;
-  let straw = null;
-  if (hayFall) {
-    // a heap of hay by the tilt, ready for the loser (comic: he lands soft, straw flies)
-    const hay = new THREE.Group();
-    const hm = M.people.clone();
-    hm.color.set('#d9b85c');
-    for (let i = 0; i < 7; i++) {
-      const r1 = rand01(seed, 'hay', i), r2 = rand01(seed, 'hay2', i);
-      const o = new THREE.Mesh(new THREE.SphereGeometry(0.55 + 0.25 * r1, 10, 7).scale(1.2, 0.55, 1), hm);
-      o.position.set((r1 - 0.5) * 1.3, 0.18 + 0.12 * r2, (r2 - 0.5) * 1.0);
-      o.castShadow = true;
-      hay.add(o);
-    }
-    hay.position.set(landX, 0, landZ);
-    group.add(hay);
-    straw = particles(50, '#e2c766', 0.12, false);
-    group.add(straw);
-  }
   // where the champion is (lot frame) at action time s
   const dirW = W === A ? 1 : -1, zW = W === A ? -0.85 : 0.85;
   const champX = (s) => dirW * (-D0 + run(s));
@@ -155,7 +136,7 @@ function bout({ story, M, buildings, seed }, round, T) {
     (u) => ({ pos: toWorld(-12 + 4 * u, 3.0, 8.5), look: toWorld(0.5, 1.8, 0) }),
     (u) => ({ pos: toWorld(-3 + 5 * u, 9 - 3.5 * u, 15 - 2 * u), look: toWorld(0, 1.8, 0) }),
   ][round];
-  // look 1, each round its own camera: behind the champion's shoulder, round the blow, from above down to the hay
+  // look 1, each round its own camera: behind the champion's shoulder, round the blow, from above down to where he lands
   const cam1 = [
     (s) => {
       // behind and well out to his side (a diagonal), so the one coming on shows past him; the camera slows as they meet, so
@@ -226,11 +207,12 @@ function bout({ story, M, buildings, seed }, round, T) {
           Lz.R.root.rotation.x = k < 1 ? -(Math.PI * 2 + 0.15) * ease(k) : -0.15;
         } else if (look === 1 && round === 1) {
           // he spins round in the saddle and slides off the side away from the tilt
-          const side = Lz === A ? 1 : -1; // (in the horse's frame +x is the side away from the tilt for A)
+          // (in either horse's frame +x is the side away from the tilt: never into its planks, owner 2026-11-24)
+          const side = 1;
           Lz.R.root.position.x = side * 1.0 * ease(k);
           Lz.R.root.position.y = lerp(saddle.y, -0.38, ease(k)) + 0.35 * Math.sin(Math.PI * k);
           Lz.R.root.rotation.set(-0.15 * k, 2.6 * ease(k), side * 1.3 * Math.sin(Math.PI * k));
-        } else if (hayFall) Lz.R.root.position.y += 0.42 * ease(k); // onto the heap
+        }
 
         const sat = since - FALL;
         // dazed, then a wave to the stands
@@ -267,18 +249,6 @@ function bout({ story, M, buildings, seed }, round, T) {
         dArr[i * 3 + 2] = land.z + Math.sin(r1 * 6.28) * (0.3 + 1.6 * age);
       }
       dust.geometry.attributes.position.needsUpdate = true;
-      if (straw) {
-        // straw thrown up where he lands in the hay
-        const sArr = straw.geometry.attributes.position.array, age = since - FALL;
-        for (let i = 0; i < 50; i++) {
-          if (age < 0 || age > 1.6) { sArr[i * 3 + 1] = -1e4; continue; }
-          const r1 = rand01(seed, 'straw', i), r2 = rand01(seed, 'straw2', i);
-          sArr[i * 3] = landX + Math.cos(r1 * 6.28) * (0.2 + 1.3 * age);
-          sArr[i * 3 + 1] = 0.6 + (2.2 + 1.5 * r2) * age - 3.2 * age * age;
-          sArr[i * 3 + 2] = landZ + Math.sin(r1 * 6.28) * (0.2 + 1.3 * age);
-        }
-        straw.geometry.attributes.position.needsUpdate = true;
-      }
       cheer(t, after ? 1 : 0.35);
       shower?.(t, after ? clamp01((since - FALL) / 0.6) : 0);
       for (const l of riderTags) {

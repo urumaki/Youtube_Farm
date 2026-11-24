@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { genesis, advance } from '../src/sim/simulate.js';
 import { buildScript } from '../src/audio/narration.js';
-import { captionPhrases } from '../src/audio/tts/index.js';
+import { captionPhrases, sayForKokoro } from '../src/audio/tts/index.js';
 import { makeMusic } from '../src/audio/music.js';
 
 function days(counts) {
@@ -207,4 +207,10 @@ test('no long silences: a line alone over its shot stays, a second line follows 
       assert.ok(gap < 2.6, `${date}: ${gap.toFixed(1)} s of silence before "${s.sentences[i].text}"`);
     }
   }
+});
+
+test('Kokoro says "Long live" as liv, not laiv (owner 2026-11-24); the subtitles keep the spelling', () => {
+  assert.equal(sayForKokoro('Hear the crowd roar! Long live the new Knight!'), 'Hear the crowd roar! Long liv the new Knight!');
+  assert.equal(sayForKokoro('long-live the King'), 'long-liv the King');
+  assert.equal(sayForKokoro('where they live, a live show'), 'where they live, a live show');
 });

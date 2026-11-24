@@ -46,12 +46,18 @@ export function kokoroConfig(env = process.env) {
   };
 }
 
+/**
+ * The text as Kokoro should say it (its phonemizer gets some words wrong); the subtitles keep the real spelling.
+ * Owner 2026-11-24: "Long live the new Knight!" was read "laiv" (as in a live show): spelt "liv" it is /lɪv/.
+ */
+export const sayForKokoro = (text) => text.replace(/\b(long)([\s-]+)live\b/gi, '$1$2liv');
+
 function kokoro(sentences, { outDir, speed, limit }) {
   const cfg = kokoroConfig();
   if (!fs.existsSync(cfg.model) || !fs.existsSync(cfg.voices)) throw new Error(`kokoro model not found in ${path.dirname(cfg.model)} (run npm run setup:tts)`);
   const script = path.join(ROOT, 'scripts', 'py', 'kokoro_tts.py');
   const r = spawnSync(cfg.python, [script, cfg.model, cfg.voices, cfg.voice, cfg.lang, String(speed ?? cfg.speed), path.resolve(outDir)], {
-    input: sentences.map((s) => s.text.replace(/\s+/g, ' ')).join('\n'), encoding: 'utf8', maxBuffer: 1 << 24,
+    input: sentences.map((s) => sayForKokoro(s.text.replace(/\s+/g, ' '))).join('\n'), encoding: 'utf8', maxBuffer: 1 << 24,
   });
   if (r.status !== 0) throw new Error(`kokoro failed: ${(r.stderr || r.error?.message || '').slice(-400)}`);
   return assemble(sentences, sentences.map((_, i) => readWav(path.resolve(outDir, `tts_${i}.wav`))), outDir, 'kokoro', limit);

@@ -153,8 +153,8 @@ Add new owner decisions here.
   first published were look 0. Look 1: the riders parade in a file past a low camera by the rail, pennants on their
   lances, each dipping his lance to the King's box as he passes; the quarter-final seen from behind the champion's
   shoulder, the loser turning a whole somersault off the horse's quarters; the semi-final with the camera turning round
-  the blow through the slow motion, the loser spinning round and sliding off the side; the final from high above coming
-  down to a heap of hay by the tilt, the loser landing in it, straw flying; the new Knight's horse rears before the lap
+  the blow through the slow motion, the loser spinning round and sliding off the side away from the tilt (owner 2026-11-24: never into its planks); the final from high above coming
+  down to the sand where the loser lands (owner 2026-11-24: no heap of hay); the new Knight's horse rears before the lap
   of honour while the stands throw their hats. Test: `--look 0|1` (`npm run render -- --day 2026-11-24 --look 1 --stills
   ...`). Day 40 was replayed in look 1 with Clunkiesttunic0 among the riders (his "!join" lost to the bug fixed that day).
   The day of 2026-11-01 (blueberry9333 knighted, DawleyTownFc in the final) was set as such a bracket in its saved story,
@@ -1131,6 +1131,8 @@ Add new owner decisions here.
   a bench, shooting at a target, visits), with the street and the camera in front.
 - `src/audio/` narration templates (names are never read aloud), Kokoro TTS (`am_adam`), procedural
   music, camera-driven sound effects with strikes synced to the work animations (`sfx.js`).
+  Owner 2026-11-24: Kokoro read "Long live" as "laiv"; `sayForKokoro` in `tts/index.js` spells it "liv" for the voice
+  only (the subtitles keep "live"). Other words it gets wrong go in the same place.
   The voice follows the shots: `produceVideo` first sets the scene up once to get the shot plan
   (`sceneCues`), `sentenceAnchors` gives each sentence the start of the shot it talks about (goal at
   23.7 s, call to action at 27.1 s), and `schedule` in `tts/index.js` waits for those times but never
