@@ -1,10 +1,10 @@
 {
  "schemaVersion": 1,
  "seed": 3999547794,
- "day": 39,
- "date": "2026-11-23",
- "subscriberCount": 3200,
- "peakPopulation": 3200,
+ "day": 40,
+ "date": "2026-11-24",
+ "subscriberCount": 3210,
+ "peakPopulation": 3210,
  "countSource": "public",
  "houses": [
   {
@@ -9234,7 +9234,8 @@
    "builtDay": 38,
    "occupants": [
     3187,
-    3191
+    3191,
+    3202
    ],
    "fine": true
   },
@@ -9262,7 +9263,25 @@
    "status": "occupied",
    "builtDay": 38,
    "occupants": [
-    3199
+    3199,
+    3200,
+    3201,
+    3203,
+    3204,
+    3205,
+    3206,
+    3207
+   ]
+  },
+  {
+   "id": 592,
+   "plot": 200612,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 40,
+   "occupants": [
+    3208,
+    3209
    ]
   }
  ],
@@ -16392,6 +16411,18 @@
    "rot": -0.6906095571461138,
    "facing": 1,
    "road": "northeast"
+  },
+  {
+   "id": 200612,
+   "x": 759.6873894889533,
+   "z": 33.745333815794474,
+   "y": 3.294988410961504,
+   "yMin": 3.1846313038213427,
+   "hw": 2.942793255089782,
+   "hd": 11.294113698648289,
+   "rot": 0.11161203859754752,
+   "facing": 1,
+   "road": "east"
   }
  ],
  "buildings": [
@@ -16674,19 +16705,15 @@
   "honey"
  ],
  "pendingConstruction": [],
- "weather": "rain",
+ "weather": "cloudy",
  "events": [
   {
    "type": "weather",
-   "weather": "rain",
+   "weather": "cloudy",
    "season": "autumn"
   },
   {
-   "type": "spotlight",
-   "villager": 878,
-   "name": "EdricPalanan_BZ",
-   "job": "miner",
-   "activity": "brings up a cart of stone and one shiny pebble"
+   "type": "harvest"
   }
  ],
  "names": {
@@ -16775,7 +16802,7 @@
    "requestDay": 39,
    "complainDay": 22,
    "joinDay": 13,
-   "seenDay": 39
+   "seenDay": 40
   },
   "14": {
    "name": "MeepDoesVR",
@@ -16860,7 +16887,8 @@
    "author": "UC14NMAPMJ0NsYSqj2SWBpRw",
    "day": 4,
    "job": "guard",
-   "requestDay": 4
+   "requestDay": 4,
+   "seenDay": 40
   },
   "27": {
    "name": "Thebloodylucky",
@@ -17231,9 +17259,9 @@
    "author": "UCg6B1vTHDPanmz-EvB07eKw",
    "day": 7,
    "job": "apprentice",
-   "requestDay": 37,
+   "requestDay": 40,
    "wants": "prisoner",
-   "seenDay": 37
+   "seenDay": 40
   },
   "88": {
    "name": "ZackOOria",
@@ -17241,7 +17269,8 @@
    "day": 7,
    "job": "baker",
    "requestDay": 14,
-   "complainDay": 15
+   "complainDay": 15,
+   "seenDay": 40
   },
   "89": {
    "name": "A-chat47",
@@ -17399,11 +17428,11 @@
    "name": "Gwain",
    "author": "UCzY-N6EGhuXG_Qt0gS3HZeg",
    "day": 7,
-   "job": "guard",
-   "requestDay": 38,
-   "rebelDay": 38,
+   "job": "peasant",
+   "requestDay": 40,
+   "rebelDay": 40,
    "pilloryDay": 35,
-   "seenDay": 39
+   "seenDay": 40
   },
   "114": {
    "name": "theoneheavymain4123",
@@ -18065,7 +18094,7 @@
    "day": 8,
    "job": "guard",
    "requestDay": 24,
-   "seenDay": 37
+   "seenDay": 40
   },
   "214": {
    "name": "Jonnymad1245",
@@ -19160,7 +19189,7 @@
    "day": 9,
    "job": "ratcatcher",
    "requestDay": 11,
-   "seenDay": 39
+   "seenDay": 40
   },
   "375": {
    "name": "RedThlngs",
@@ -19173,7 +19202,7 @@
    "day": 9,
    "job": "beggar",
    "requestDay": 35,
-   "seenDay": 35
+   "seenDay": 40
   },
   "377": {
    "name": "mintyfrags",
@@ -19265,7 +19294,7 @@
    "name": "Kyorinrina",
    "author": "UCQlBGwCjTAV6kPiq1pjSf_Q",
    "day": 9,
-   "seenDay": 34
+   "seenDay": 40
   },
   "391": {
    "name": "InsideMinecraftOffici…",
@@ -19557,7 +19586,8 @@
    "author": "UC-rIBJWL-Krd1fkpuINlZDA",
    "day": 9,
    "job": "guard",
-   "requestDay": 14
+   "requestDay": 14,
+   "seenDay": 40
   },
   "434": {
    "name": "JohnMichaelPortes",
@@ -19999,7 +20029,7 @@
    "job": "guard",
    "requestDay": 14,
    "complainDay": 26,
-   "seenDay": 32
+   "seenDay": 40
   },
   "500": {
    "name": "NicoleGregory",
@@ -20074,9 +20104,10 @@
    "name": "blueberry9333",
    "author": "UCiSw2ycT6P4Gm3ztRFYjSDQ",
    "day": 10,
-   "job": "knight",
+   "job": "guard",
    "requestDay": 10,
-   "knightDay": 17
+   "knightDay": 17,
+   "guardAgainDay": 40
   },
   "511": {
    "name": "HassanulHusseinDarapa",
@@ -20091,7 +20122,7 @@
    "day": 10,
    "job": "beekeeper",
    "requestDay": 26,
-   "seenDay": 34
+   "seenDay": 40
   },
   "513": {
    "name": "kingAlbertaTheFirst",
@@ -20675,7 +20706,8 @@
    "day": 11,
    "job": "guard",
    "requestDay": 27,
-   "complainDay": 12
+   "complainDay": 12,
+   "seenDay": 40
   },
   "602": {
    "name": "Thunder_Gaming",
@@ -20717,7 +20749,8 @@
    "author": "UCGfi94x0e5UjOj5bJjyichg",
    "day": 11,
    "job": "guard",
-   "requestDay": 19
+   "requestDay": 40,
+   "seenDay": 40
   },
   "608": {
    "name": "RealVaticanCity",
@@ -20745,7 +20778,8 @@
    "author": "UC3S_hFqC6fGu3ViPidlfvUg",
    "day": 11,
    "job": "guard",
-   "requestDay": 12
+   "requestDay": 12,
+   "seenDay": 40
   },
   "612": {
    "name": "thedinoreviewer",
@@ -20907,8 +20941,8 @@
    "day": 12,
    "job": "apprentice",
    "requestDay": 34,
-   "complainDay": 38,
-   "seenDay": 38,
+   "complainDay": 40,
+   "seenDay": 40,
    "wants": "judge"
   },
   "635": {
@@ -20951,8 +20985,8 @@
    "author": "UCtWS_ncHxWWRJsiNyQPxo9w",
    "day": 12,
    "job": "guard",
-   "requestDay": 35,
-   "seenDay": 35
+   "requestDay": 40,
+   "seenDay": 40
   },
   "641": {
    "name": "稀飯AAA",
@@ -21052,10 +21086,11 @@
    "name": "Chimuel0",
    "author": "UCelKaQrfrfSCEdVx_X80L0Q",
    "day": 12,
-   "job": "guard",
+   "job": "knight",
    "requestDay": 31,
    "complainDay": 13,
-   "seenDay": 31
+   "seenDay": 40,
+   "knightDay": 40
   },
   "655": {
    "name": "costmceleoy4531",
@@ -21499,8 +21534,8 @@
    "author": "UCUV9DJGkCHRq8JZztLrJFWg",
    "day": 13,
    "job": "guard",
-   "requestDay": 37,
-   "seenDay": 37
+   "requestDay": 40,
+   "seenDay": 40
   },
   "724": {
    "name": "ZodiumPlayZ",
@@ -21677,9 +21712,9 @@
    "name": "Furina-Nunsa8849",
    "author": "UCT8tsuNp430lZfNwitheX8A",
    "day": 14,
-   "job": "taxcollector",
-   "requestDay": 27,
-   "seenDay": 32
+   "job": "guard",
+   "requestDay": 40,
+   "seenDay": 40
   },
   "751": {
    "name": "spidermoth_shadowstal…",
@@ -21764,7 +21799,8 @@
    "author": "UCsEeXEJIt5u1gMopcDw5wtQ",
    "day": 14,
    "job": "guard",
-   "requestDay": 18
+   "requestDay": 18,
+   "seenDay": 40
   },
   "764": {
    "name": "Astrox_Interstellar",
@@ -21912,10 +21948,10 @@
    "name": "God_of_greed_666",
    "author": "UCyEc_kheCCJWHSSmZpnh6vg",
    "day": 14,
-   "job": "taxcollector",
-   "requestDay": 23,
+   "job": "guard",
+   "requestDay": 40,
    "complainDay": 36,
-   "seenDay": 36
+   "seenDay": 40
   },
   "785": {
    "name": "francisvicalegado439",
@@ -22098,7 +22134,8 @@
    "author": "UCyqDNZfW7VIMQSjMFlDkKWw",
    "day": 15,
    "job": "guard",
-   "requestDay": 27
+   "requestDay": 27,
+   "seenDay": 40
   },
   "811": {
    "name": "mattm9242",
@@ -22158,7 +22195,7 @@
    "day": 15,
    "job": "guard",
    "requestDay": 32,
-   "seenDay": 33
+   "seenDay": 40
   },
   "820": {
    "name": "Floppy_the_rat",
@@ -22754,7 +22791,7 @@
    "name": "KaweeWat",
    "author": "UCi4gxGF3ISBnpmeOLRy-tiQ",
    "day": 18,
-   "seenDay": 38
+   "seenDay": 40
   },
   "917": {
    "name": "stranger5809",
@@ -22811,8 +22848,8 @@
    "author": "UCdIjCZofFEIg20sL_VwbNag",
    "day": 19,
    "job": "guard",
-   "requestDay": 19,
-   "seenDay": 31
+   "requestDay": 40,
+   "seenDay": 40
   },
   "926": {
    "name": "MircyRae",
@@ -22858,7 +22895,8 @@
    "author": "UCD5MU7bbFp1d2VCuHfWw-xw",
    "day": 20,
    "job": "beggar",
-   "requestDay": 26
+   "requestDay": 40,
+   "seenDay": 40
   },
   "933": {
    "name": "Zucke18",
@@ -22885,9 +22923,9 @@
    "author": "UCliB9PmTC2i35qCYiVlRz3Q",
    "day": 20,
    "job": "merchant",
-   "requestDay": 39,
-   "complainDay": 39,
-   "seenDay": 39
+   "requestDay": 40,
+   "complainDay": 40,
+   "seenDay": 40
   },
   "937": {
    "name": "Terra_4",
@@ -23338,7 +23376,8 @@
    "day": 23,
    "job": "apprentice",
    "wants": "bard",
-   "requestDay": 26
+   "requestDay": 26,
+   "seenDay": 40
   },
   "1007": {
    "name": "SOAPEATERSTEFANDIGEŠA…",
@@ -23454,7 +23493,7 @@
    "day": 24,
    "job": "priest",
    "requestDay": 30,
-   "seenDay": 37
+   "seenDay": 40
   },
   "1025": {
    "name": "Shrisankchannel",
@@ -23632,8 +23671,8 @@
    "author": "UC7HAT8nYiJ62_-P1zmdfn0g",
    "day": 25,
    "job": "beekeeper",
-   "requestDay": 34,
-   "seenDay": 34
+   "requestDay": 40,
+   "seenDay": 40
   },
   "1052": {
    "name": "KPP_99546",
@@ -23754,7 +23793,7 @@
    "day": 28,
    "job": "guard",
    "requestDay": 39,
-   "seenDay": 39
+   "seenDay": 40
   },
   "1070": {
    "name": "HappyVictor_15",
@@ -23794,7 +23833,7 @@
    "name": "Evil_LeonardoDaVinciO…",
    "author": "UCUVxcg4GWmuHxqLNYLEZ5vA",
    "day": 28,
-   "seenDay": 31
+   "seenDay": 40
   },
   "1076": {
    "name": "Orjnaii719",
@@ -23880,7 +23919,7 @@
    "job": "guard",
    "requestDay": 29,
    "bow": true,
-   "seenDay": 33
+   "seenDay": 40
   },
   "1090": {
    "name": "gottliebru",
@@ -24206,7 +24245,7 @@
   "1135": {
    "name": "AbdelmoughitAkli",
    "author": "UCFIl2IGDFyeGqvKORLFFL8g",
-   "seenDay": 39,
+   "seenDay": 40,
    "day": 37,
    "job": "guard",
    "requestDay": 39
@@ -24272,10 +24311,10 @@
   "1145": {
    "name": "Nexailus",
    "author": "UChA0_LP48I9P-WHWN3DeBLQ",
-   "seenDay": 39,
+   "seenDay": 40,
    "day": 38,
-   "job": "guard",
-   "requestDay": 39
+   "job": "fisherman",
+   "requestDay": 40
   },
   "1146": {
    "name": "ChaseCar312",
@@ -24356,13 +24395,15 @@
   "1157": {
    "name": "BozoB1L1",
    "author": "UCnVk-OSkX5-XAqtAqVgykDg",
-   "seenDay": 39,
-   "day": 39
+   "seenDay": 40,
+   "day": 39,
+   "job": "guard",
+   "requestDay": 40
   },
   "1158": {
    "name": "CharlieRamsey",
    "author": "UCi9P1SuKD5eet0eLS-6wUGA",
-   "seenDay": 39,
+   "seenDay": 40,
    "day": 39,
    "job": "guard",
    "requestDay": 39
@@ -24372,6 +24413,77 @@
    "author": "UCDEP9yzMYo6DHbziL8ERmlA",
    "seenDay": 39,
    "day": 39
+  },
+  "1160": {
+   "name": "AMARICAKITCAT",
+   "author": "UC_wUjhB3lu_tc-ItbHk9fDg",
+   "seenDay": 40,
+   "day": 40,
+   "job": "blacksmith",
+   "requestDay": 40
+  },
+  "1161": {
+   "name": "Grow_in_faith_with_Ga…",
+   "author": "UCCcV9KOzuQZ9yvEEjmWYvYg",
+   "seenDay": 40,
+   "day": 40
+  },
+  "1162": {
+   "name": "xXtundermosttXx",
+   "author": "UCbr9R0fnpA5nxftop-Eh9Xg",
+   "seenDay": 40,
+   "day": 40
+  },
+  "1163": {
+   "name": "aaronortiz8415",
+   "author": "UC0rFgyT20PJoMVvx87a0yGw",
+   "seenDay": 40,
+   "day": 40,
+   "job": "guard",
+   "requestDay": 40
+  },
+  "1164": {
+   "name": "CogsConsepts",
+   "author": "UCzKYwPjFuLq35V2CxYcgpWg",
+   "seenDay": 40,
+   "day": 40
+  },
+  "1165": {
+   "name": "AurelMaass",
+   "author": "UC7-zqIQb-HQ2LV8AK6oZFqg",
+   "seenDay": 40,
+   "day": 40
+  },
+  "1166": {
+   "name": "David",
+   "author": "UCJaQwjsC_7nV_u4E3Ozu92Q",
+   "seenDay": 40,
+   "day": 40,
+   "job": "blacksmith",
+   "requestDay": 40
+  },
+  "1167": {
+   "name": "js1970nj",
+   "author": "UCseAVBg-sALR0slIIClxtMg",
+   "seenDay": 40,
+   "day": 40,
+   "job": "apprentice",
+   "wants": "prisoner",
+   "requestDay": 40
+  },
+  "1168": {
+   "name": "ItsMangki",
+   "author": "UCdlISjmXOz3frbDNRsGviiw",
+   "seenDay": 40,
+   "day": 40
+  },
+  "1169": {
+   "name": "NAVYGUY",
+   "author": "UCod4BOGxjGY5zbDO3b1_kRQ",
+   "seenDay": 40,
+   "day": 40,
+   "job": "taxcollector",
+   "requestDay": 40
   }
  },
  "nameQueue": [],
@@ -25535,15 +25647,25 @@
   "UCy88J-o1JA7LMdjXHNcdqjw",
   "UCnVk-OSkX5-XAqtAqVgykDg",
   "UCi9P1SuKD5eet0eLS-6wUGA",
-  "UCDEP9yzMYo6DHbziL8ERmlA"
+  "UCDEP9yzMYo6DHbziL8ERmlA",
+  "UC_wUjhB3lu_tc-ItbHk9fDg",
+  "UCCcV9KOzuQZ9yvEEjmWYvYg",
+  "UCbr9R0fnpA5nxftop-Eh9Xg",
+  "UC0rFgyT20PJoMVvx87a0yGw",
+  "UCzKYwPjFuLq35V2CxYcgpWg",
+  "UC7-zqIQb-HQ2LV8AK6oZFqg",
+  "UCJaQwjsC_7nV_u4E3Ozu92Q",
+  "UCseAVBg-sALR0slIIClxtMg",
+  "UCdlISjmXOz3frbDNRsGviiw",
+  "UCod4BOGxjGY5zbDO3b1_kRQ"
  ],
- "commentsSeen": "2026-11-23T11:56:45Z",
+ "commentsSeen": "2026-11-24T13:17:20Z",
  "storyLog": {
   "royal": 12,
   "proclaim": 25,
   "rebel": 35,
   "decree": 14,
-  "joust": 39,
+  "joust": 40,
   "halloween": 16,
   "flood": 20,
   "raid": 24,
@@ -25557,85 +25679,412 @@
  },
  "story": {
   "id": "joust",
-  "step": "announce",
+  "step": "results",
   "game": "joust",
   "day": 39,
-  "crier": {
-   "id": 120,
-   "name": "vogximillius",
-   "job": "crier",
-   "day": 7
-  },
-  "cast": [
+  "riders": [
    {
-    "id": 120,
-    "name": "vogximillius",
-    "job": "crier",
-    "day": 7
-   },
-   {
-    "id": 1111,
-    "name": "randomdude6483",
+    "id": 654,
+    "name": "Chimuel0",
     "job": "guard",
-    "day": 35
+    "day": 12,
+    "joined": true
    },
    {
-    "id": 1134,
-    "name": "MadGamer361",
+    "id": 810,
+    "name": "WilliamBabicki",
     "job": "guard",
-    "day": 37
+    "day": 15,
+    "joined": true
    },
    {
-    "id": 1149,
-    "name": "derp_boy19",
+    "id": 640,
+    "name": "CharlevilleM1777Musket",
+    "job": "guard",
+    "day": 12,
+    "joined": true
+   },
+   {
+    "id": 13,
+    "name": "The_Knight_Of_Dice",
+    "job": "guard",
+    "day": 3,
+    "joined": true
+   },
+   {
+    "id": 213,
+    "name": "LuciusVon",
+    "job": "guard",
+    "day": 8,
+    "joined": true
+   },
+   {
+    "id": 26,
+    "name": "DalonAkira",
+    "job": "guard",
+    "day": 4,
+    "joined": true
+   },
+   {
+    "id": 1135,
+    "name": "AbdelmoughitAkli",
+    "job": "guard",
+    "day": 37,
+    "joined": true
+   },
+   {
+    "id": 601,
+    "name": "ApersonwholikesBritan",
+    "job": "guard",
+    "day": 11,
+    "joined": true
+   },
+   {
+    "id": 763,
+    "name": "FrankieFerreira",
+    "job": "guard",
+    "day": 14,
+    "joined": true
+   },
+   {
+    "id": 1075,
+    "name": "Evil_LeonardoDaVinciO…",
+    "job": "guard",
+    "day": 28,
+    "joined": true
+   },
+   {
+    "id": 433,
+    "name": "kristenlane4531",
+    "job": "guard",
+    "day": 9,
+    "joined": true
+   },
+   {
+    "id": 819,
+    "name": "Moonlight-swordmaster",
+    "job": "guard",
+    "day": 15,
+    "joined": true
+   },
+   {
+    "id": 1089,
+    "name": "sgxmarshal6031",
+    "job": "guard",
+    "day": 29,
+    "joined": true
+   },
+   {
+    "id": 611,
+    "name": "Thehistorybuff1944",
+    "job": "guard",
+    "day": 11,
+    "joined": true
+   },
+   {
+    "id": 607,
+    "name": "Enclave",
+    "job": "guard",
+    "day": 11,
+    "joined": true
+   },
+   {
+    "id": 951,
+    "name": "The_Kubas182",
+    "job": "guard",
+    "day": 21,
+    "joined": true
+   }
+  ],
+  "rounds": [
+   [
+    {
+     "a": 654,
+     "b": 810,
+     "winner": 654
+    },
+    {
+     "a": 640,
+     "b": 13,
+     "winner": 13
+    },
+    {
+     "a": 213,
+     "b": 26,
+     "winner": 26
+    },
+    {
+     "a": 1135,
+     "b": 601,
+     "winner": 1135
+    },
+    {
+     "a": 763,
+     "b": 1075,
+     "winner": 1075
+    },
+    {
+     "a": 433,
+     "b": 819,
+     "winner": 819
+    },
+    {
+     "a": 1089,
+     "b": 611,
+     "winner": 611
+    },
+    {
+     "a": 607,
+     "b": 951,
+     "winner": 607
+    }
+   ],
+   [
+    {
+     "a": 654,
+     "b": 13,
+     "winner": 654
+    },
+    {
+     "a": 26,
+     "b": 1135,
+     "winner": 1135
+    },
+    {
+     "a": 1075,
+     "b": 819,
+     "winner": 819
+    },
+    {
+     "a": 611,
+     "b": 607,
+     "winner": 607
+    }
+   ],
+   [
+    {
+     "a": 654,
+     "b": 1135,
+     "winner": 654
+    },
+    {
+     "a": 819,
+     "b": 607,
+     "winner": 819
+    }
+   ],
+   [
+    {
+     "a": 654,
+     "b": 819,
+     "winner": 654
+    }
+   ]
+  ],
+  "crowd": [
+   {
+    "id": 1166,
+    "name": "David",
+    "job": "blacksmith",
+    "day": 40
+   },
+   {
+    "id": 1140,
+    "name": "Finklefoot",
+    "job": "farmer",
+    "day": 38
+   },
+   {
+    "id": 1159,
+    "name": "lmelchor676",
+    "job": "peasant",
+    "day": 39
+   },
+   {
+    "id": 1153,
+    "name": "PotatoGGod",
+    "job": "shepherd",
+    "day": 38
+   },
+   {
+    "id": 1164,
+    "name": "CogsConsepts",
+    "job": "tailor",
+    "day": 40
+   },
+   {
+    "id": 1144,
+    "name": "JackLinnane",
     "job": "guard",
     "day": 38
    },
    {
-    "id": 1113,
-    "name": "stevewebber8430",
+    "id": 1160,
+    "name": "AMARICAKITCAT",
+    "job": "blacksmith",
+    "day": 40
+   }
+  ],
+  "winner": 654,
+  "joined": 16,
+  "cast": [
+   {
+    "id": 654,
+    "name": "Chimuel0",
     "job": "guard",
-    "day": 35
+    "day": 12,
+    "joined": true
    },
    {
-    "id": 1131,
-    "name": "AhmedAmod",
+    "id": 810,
+    "name": "WilliamBabicki",
     "job": "guard",
-    "day": 37
+    "day": 15,
+    "joined": true
+   },
+   {
+    "id": 640,
+    "name": "CharlevilleM1777Musket",
+    "job": "guard",
+    "day": 12,
+    "joined": true
+   },
+   {
+    "id": 13,
+    "name": "The_Knight_Of_Dice",
+    "job": "guard",
+    "day": 3,
+    "joined": true
+   },
+   {
+    "id": 213,
+    "name": "LuciusVon",
+    "job": "guard",
+    "day": 8,
+    "joined": true
+   },
+   {
+    "id": 26,
+    "name": "DalonAkira",
+    "job": "guard",
+    "day": 4,
+    "joined": true
+   },
+   {
+    "id": 1135,
+    "name": "AbdelmoughitAkli",
+    "job": "guard",
+    "day": 37,
+    "joined": true
+   },
+   {
+    "id": 601,
+    "name": "ApersonwholikesBritan",
+    "job": "guard",
+    "day": 11,
+    "joined": true
+   },
+   {
+    "id": 763,
+    "name": "FrankieFerreira",
+    "job": "guard",
+    "day": 14,
+    "joined": true
+   },
+   {
+    "id": 1075,
+    "name": "Evil_LeonardoDaVinciO…",
+    "job": "guard",
+    "day": 28,
+    "joined": true
+   },
+   {
+    "id": 433,
+    "name": "kristenlane4531",
+    "job": "guard",
+    "day": 9,
+    "joined": true
+   },
+   {
+    "id": 819,
+    "name": "Moonlight-swordmaster",
+    "job": "guard",
+    "day": 15,
+    "joined": true
+   },
+   {
+    "id": 1089,
+    "name": "sgxmarshal6031",
+    "job": "guard",
+    "day": 29,
+    "joined": true
+   },
+   {
+    "id": 611,
+    "name": "Thehistorybuff1944",
+    "job": "guard",
+    "day": 11,
+    "joined": true
+   },
+   {
+    "id": 607,
+    "name": "Enclave",
+    "job": "guard",
+    "day": 11,
+    "joined": true
+   },
+   {
+    "id": 951,
+    "name": "The_Kubas182",
+    "job": "guard",
+    "day": 21,
+    "joined": true
+   },
+   {
+    "id": 1166,
+    "name": "David",
+    "job": "blacksmith",
+    "day": 40
+   },
+   {
+    "id": 1140,
+    "name": "Finklefoot",
+    "job": "farmer",
+    "day": 38
+   },
+   {
+    "id": 1159,
+    "name": "lmelchor676",
+    "job": "peasant",
+    "day": 39
+   },
+   {
+    "id": 1153,
+    "name": "PotatoGGod",
+    "job": "shepherd",
+    "day": 38
+   },
+   {
+    "id": 1164,
+    "name": "CogsConsepts",
+    "job": "tailor",
+    "day": 40
+   },
+   {
+    "id": 1144,
+    "name": "JackLinnane",
+    "job": "guard",
+    "day": 38
+   },
+   {
+    "id": 1160,
+    "name": "AMARICAKITCAT",
+    "job": "blacksmith",
+    "day": 40
    }
   ]
  },
- "featured": [
-  {
-   "id": 936,
-   "name": "Lord",
-   "job": "merchant",
-   "today": false,
-   "with": {
-    "id": 889,
-    "name": "jacksonMckinney",
-    "job": "woodcutter",
-    "today": false
-   },
-   "pair": "visit"
-  },
-  {
-   "id": 634,
-   "name": "premierak56",
-   "job": "apprentice",
-   "today": false,
-   "with": null,
-   "pair": null
-  },
-  {
-   "id": 1158,
-   "name": "CharlieRamsey",
-   "job": "guard",
-   "today": true,
-   "with": null,
-   "pair": null
-  }
- ],
+ "featured": [],
  "lastShown": {
   "13": 22,
   "16": 25,
@@ -25734,59 +26183,7 @@
   "1126": 36,
   "1158": 39
  },
- "storyArc": {
-  "id": "joust",
-  "step": "results",
-  "day": 40,
-  "data": {
-   "game": "joust",
-   "day": 39,
-   "crier": {
-    "id": 120,
-    "name": "vogximillius",
-    "job": "crier",
-    "day": 7
-   },
-   "cast": [
-    {
-     "id": 120,
-     "name": "vogximillius",
-     "job": "crier",
-     "day": 7
-    },
-    {
-     "id": 1111,
-     "name": "randomdude6483",
-     "job": "guard",
-     "day": 35
-    },
-    {
-     "id": 1134,
-     "name": "MadGamer361",
-     "job": "guard",
-     "day": 37
-    },
-    {
-     "id": 1149,
-     "name": "derp_boy19",
-     "job": "guard",
-     "day": 38
-    },
-    {
-     "id": 1113,
-     "name": "stevewebber8430",
-     "job": "guard",
-     "day": 35
-    },
-    {
-     "id": 1131,
-     "name": "AhmedAmod",
-     "job": "guard",
-     "day": 37
-    }
-   ]
-  }
- },
+ "storyArc": null,
  "sceneLog": {
   "tavern": 37,
   "blacksmith:bellows": 19,
@@ -25822,7 +26219,7 @@
   "open:story": 39,
   "open:building": 28,
   "guard:sparring": 31,
-  "open:caravan": 38,
+  "open:caravan": 40,
   "physicist:ramp": 33,
   "physician:herbs": 33,
   "open:villager": 33,
@@ -25833,7 +26230,7 @@
   "merchant:cart": 35,
   "messenger:letter": 36,
   "taxcollector:rounds": 36,
-  "ambient:fields": 36,
+  "ambient:fields": 40,
   "guard:wallnight": 37,
   "merchant": 39,
   "farmer:fields": 38,
@@ -25841,15 +26238,11 @@
  },
  "scenes": {
   "tavern": false,
-  "church": null,
-  "variants": {
-   "634": "study",
-   "936": null,
-   "1158": "wall2change"
-  },
-  "ambient": "laundry",
+  "church": false,
+  "variants": {},
+  "ambient": "fields",
   "pov": null,
-  "opening": "story"
+  "opening": "caravan"
  },
  "wall2": {
   "day": 8,
@@ -25986,14 +26379,12 @@
  },
  "nextPlot": 195,
  "plotsV": 2,
- "nextDense": 612,
+ "nextDense": 613,
  "buildQueue": [],
  "nextFine": 22,
  "guardCaptain": 88,
- "gamesEntrants": [
-  13,
-  951
- ],
+ "gamesEntrants": [],
  "ennoble": [],
- "riddleSolvers": []
+ "riddleSolvers": [],
+ "eventEntrants": []
 }
