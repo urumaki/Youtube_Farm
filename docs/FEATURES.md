@@ -148,6 +148,15 @@ Add new owner decisions here.
   "Thirty-two guards ride for one title. After the first rounds, only eight are left. Lances down!". Test:
   `npm run render -- --real --subs 3200 --story joust:results --entrants 36 --stills 1,2.6,4.4,5.6,28` (`--entrants N`: the
   first N named guards commented "!join"); `the joust grows with those who joined`.
+  Owner 2026-11-24 ("the same shots again get fewer views"): never the same Grand Joust twice running. Each takes the next
+  look (`state.looks.joust`, `story.look`, `JOUST_LOOKS` in `stories.js`; `lookOf` in `grandjoust.js`); days 17 and 40 as
+  first published were look 0. Look 1: the riders parade in a file past a low camera by the rail, pennants on their
+  lances, each dipping his lance to the King's box as he passes; the quarter-final seen from behind the champion's
+  shoulder, the loser turning a whole somersault off the horse's quarters; the semi-final with the camera turning round
+  the blow through the slow motion, the loser spinning round and sliding off the side; the final from high above coming
+  down to a heap of hay by the tilt, the loser landing in it, straw flying; the new Knight's horse rears before the lap
+  of honour while the stands throw their hats. Test: `--look 0|1` (`npm run render -- --day 2026-11-24 --look 1 --stills
+  ...`). Day 40 was replayed in look 1 with Clunkiesttunic0 among the riders (his "!join" lost to the bug fixed that day).
   The day of 2026-11-01 (blueberry9333 knighted, DawleyTownFc in the final) was set as such a bracket in its saved story,
   the other six riders from those who had commented "!join". Test with `npm run render -- --real --subs N --story
   joust:results` or `--day 2026-11-01`.

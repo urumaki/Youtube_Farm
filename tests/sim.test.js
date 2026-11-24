@@ -1039,6 +1039,11 @@ test('the joust grows with those who joined (owner 2026-11-23): 8, 16 or 32 ride
     assert.ok(st.riders.every((r) => r.joined) || want === 8 && n < 8);
     assert.ok(st.rounds.every((r) => r.some((b) => b.winner === st.winner)));
   }
+  // owner 2026-11-24: never the same Grand Joust twice running: each takes the next look
+  const t = structuredClone(s);
+  const looks = [1, 2, 3].map(() => { t.gamesEntrants = [1, 2, 3]; return storyFor(t, 'joust:results').look; });
+  assert.deepEqual(looks, [1, 0, 1]);
+  assert.equal(t.looks.joust, 1);
 });
 
 test('four more big events (owner 2026-11-23): football and the guild take "!join", the treasure and the smugglers run on', async () => {

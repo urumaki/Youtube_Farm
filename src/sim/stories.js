@@ -19,6 +19,7 @@ export const GOODS = ['spices', 'wool', 'salt', 'silk', 'amber', 'wine', 'iron t
 const HEROES = ['knight', 'cavalier', 'warrior', 'guard', 'fletcher'];
 // the guards' tournament: the chance that the guard named first (the older name) wins a bout
 export const TOURNEY_ODDS = 0.85;
+export const JOUST_LOOKS = 2; // the Grand Joust's looks (grandjoust.js), one after another (owner 2026-11-24)
 const BUILDERS = ['carpenter', 'stonemason'];
 const COSTUMES = ['ghost', 'scarecrow', 'pumpkin']; // folk costumes only, nothing magic (owner)
 // owner 2026-11-14: the trial at the Hall of Justice, comic charges and sentences only (nobody is hurt, nobody a villain).
@@ -1033,11 +1034,15 @@ function game(state, r, arc, id) {
   // riders, owner 2026-11-23: three, four or five rounds; the video shows the champion's last three)
   const rounds = GAMES[id].bracket ? knockout(riders, r) : null;
   const winner = rounds ? rounds.at(-1)[0].winner : r.pick(riders).id;
+  // owner 2026-11-24: never the same Grand Joust twice running (the same shots again get fewer views): each one takes the
+  // next look (grandjoust.js `LOOKS`; the jousts of days 17 and 40 were look 0)
+  const look = rounds ? ((state.looks?.[id] ?? 0) + 1) % JOUST_LOOKS : undefined;
+  if (rounds) state.looks = { ...state.looks, [id]: look };
   promote(state, winner, GAMES[id].title);
   // seven named villagers in the stands (with the riders, few enough tags that all show at once)
   const pool = namedVillagers(state).filter((n) => !riders.some((x) => x.id === n.id)).slice(0, 30), crowd = [];
   while (crowd.length < 7 && pool.length) crowd.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
-  return { game: id, day: since, riders, ...(rounds ? { rounds } : {}), crowd, winner, joined: riders.filter((x) => x.joined).length, cast: [...riders, ...crowd] };
+  return { game: id, day: since, riders, ...(rounds ? { rounds, look } : {}), crowd, winner, joined: riders.filter((x) => x.joined).length, cast: [...riders, ...crowd] };
 }
 
 /** A knockout over the riders (as many as a power of two allows, in order): rounds of bouts { a, b, winner }. */

@@ -21086,11 +21086,10 @@
    "name": "Chimuel0",
    "author": "UCelKaQrfrfSCEdVx_X80L0Q",
    "day": 12,
-   "job": "knight",
+   "job": "guard",
    "requestDay": 31,
    "complainDay": 13,
-   "seenDay": 40,
-   "knightDay": 40
+   "seenDay": 40
   },
   "655": {
    "name": "costmceleoy4531",
@@ -21798,9 +21797,10 @@
    "name": "FrankieFerreira",
    "author": "UCsEeXEJIt5u1gMopcDw5wtQ",
    "day": 14,
-   "job": "guard",
+   "job": "knight",
    "requestDay": 18,
-   "seenDay": 40
+   "seenDay": 40,
+   "knightDay": 40
   },
   "764": {
    "name": "Astrox_Interstellar",
@@ -25684,10 +25684,10 @@
   "day": 39,
   "riders": [
    {
-    "id": 654,
-    "name": "Chimuel0",
+    "id": 763,
+    "name": "FrankieFerreira",
     "job": "guard",
-    "day": 12,
+    "day": 14,
     "joined": true
    },
    {
@@ -25698,8 +25698,8 @@
     "joined": true
    },
    {
-    "id": 640,
-    "name": "CharlevilleM1777Musket",
+    "id": 654,
+    "name": "Chimuel0",
     "job": "guard",
     "day": 12,
     "joined": true
@@ -25712,10 +25712,10 @@
     "joined": true
    },
    {
-    "id": 213,
-    "name": "LuciusVon",
+    "id": 433,
+    "name": "kristenlane4531",
     "job": "guard",
-    "day": 8,
+    "day": 9,
     "joined": true
    },
    {
@@ -25740,10 +25740,31 @@
     "joined": true
    },
    {
-    "id": 763,
-    "name": "FrankieFerreira",
+    "id": 640,
+    "name": "CharlevilleM1777Musket",
     "job": "guard",
-    "day": 14,
+    "day": 12,
+    "joined": true
+   },
+   {
+    "id": 951,
+    "name": "The_Kubas182",
+    "job": "guard",
+    "day": 21,
+    "joined": true
+   },
+   {
+    "id": 213,
+    "name": "LuciusVon",
+    "job": "guard",
+    "day": 8,
+    "joined": true
+   },
+   {
+    "id": 925,
+    "name": "Clunkiesttunic0",
+    "job": "guard",
+    "day": 19,
     "joined": true
    },
    {
@@ -25754,31 +25775,10 @@
     "joined": true
    },
    {
-    "id": 433,
-    "name": "kristenlane4531",
-    "job": "guard",
-    "day": 9,
-    "joined": true
-   },
-   {
     "id": 819,
     "name": "Moonlight-swordmaster",
     "job": "guard",
     "day": 15,
-    "joined": true
-   },
-   {
-    "id": 1089,
-    "name": "sgxmarshal6031",
-    "job": "guard",
-    "day": 29,
-    "joined": true
-   },
-   {
-    "id": 611,
-    "name": "Thehistorybuff1944",
-    "job": "guard",
-    "day": 11,
     "joined": true
    },
    {
@@ -25789,27 +25789,27 @@
     "joined": true
    },
    {
-    "id": 951,
-    "name": "The_Kubas182",
+    "id": 611,
+    "name": "Thehistorybuff1944",
     "job": "guard",
-    "day": 21,
+    "day": 11,
     "joined": true
    }
   ],
   "rounds": [
    [
     {
-     "a": 654,
+     "a": 763,
      "b": 810,
-     "winner": 654
+     "winner": 763
     },
     {
-     "a": 640,
+     "a": 654,
      "b": 13,
      "winner": 13
     },
     {
-     "a": 213,
+     "a": 433,
      "b": 26,
      "winner": 26
     },
@@ -25819,36 +25819,14 @@
      "winner": 1135
     },
     {
-     "a": 763,
-     "b": 1075,
-     "winner": 1075
-    },
-    {
-     "a": 433,
-     "b": 819,
-     "winner": 819
-    },
-    {
-     "a": 1089,
-     "b": 611,
-     "winner": 611
-    },
-    {
-     "a": 607,
+     "a": 640,
      "b": 951,
-     "winner": 607
-    }
-   ],
-   [
-    {
-     "a": 654,
-     "b": 13,
-     "winner": 654
+     "winner": 951
     },
     {
-     "a": 26,
-     "b": 1135,
-     "winner": 1135
+     "a": 213,
+     "b": 925,
+     "winner": 925
     },
     {
      "a": 1075,
@@ -25856,31 +25834,54 @@
      "winner": 819
     },
     {
-     "a": 611,
+     "a": 607,
+     "b": 611,
+     "winner": 607
+    }
+   ],
+   [
+    {
+     "a": 763,
+     "b": 13,
+     "winner": 763
+    },
+    {
+     "a": 26,
+     "b": 1135,
+     "winner": 1135
+    },
+    {
+     "a": 951,
+     "b": 925,
+     "winner": 925
+    },
+    {
+     "a": 819,
      "b": 607,
      "winner": 607
     }
    ],
    [
     {
-     "a": 654,
+     "a": 763,
      "b": 1135,
-     "winner": 654
+     "winner": 763
     },
     {
-     "a": 819,
+     "a": 925,
      "b": 607,
-     "winner": 819
+     "winner": 925
     }
    ],
    [
     {
-     "a": 654,
-     "b": 819,
-     "winner": 654
+     "a": 763,
+     "b": 925,
+     "winner": 763
     }
    ]
   ],
+  "look": 1,
   "crowd": [
    {
     "id": 1166,
@@ -25925,14 +25926,14 @@
     "day": 40
    }
   ],
-  "winner": 654,
+  "winner": 763,
   "joined": 16,
   "cast": [
    {
-    "id": 654,
-    "name": "Chimuel0",
+    "id": 763,
+    "name": "FrankieFerreira",
     "job": "guard",
-    "day": 12,
+    "day": 14,
     "joined": true
    },
    {
@@ -25943,8 +25944,8 @@
     "joined": true
    },
    {
-    "id": 640,
-    "name": "CharlevilleM1777Musket",
+    "id": 654,
+    "name": "Chimuel0",
     "job": "guard",
     "day": 12,
     "joined": true
@@ -25957,10 +25958,10 @@
     "joined": true
    },
    {
-    "id": 213,
-    "name": "LuciusVon",
+    "id": 433,
+    "name": "kristenlane4531",
     "job": "guard",
-    "day": 8,
+    "day": 9,
     "joined": true
    },
    {
@@ -25985,10 +25986,31 @@
     "joined": true
    },
    {
-    "id": 763,
-    "name": "FrankieFerreira",
+    "id": 640,
+    "name": "CharlevilleM1777Musket",
     "job": "guard",
-    "day": 14,
+    "day": 12,
+    "joined": true
+   },
+   {
+    "id": 951,
+    "name": "The_Kubas182",
+    "job": "guard",
+    "day": 21,
+    "joined": true
+   },
+   {
+    "id": 213,
+    "name": "LuciusVon",
+    "job": "guard",
+    "day": 8,
+    "joined": true
+   },
+   {
+    "id": 925,
+    "name": "Clunkiesttunic0",
+    "job": "guard",
+    "day": 19,
     "joined": true
    },
    {
@@ -25999,31 +26021,10 @@
     "joined": true
    },
    {
-    "id": 433,
-    "name": "kristenlane4531",
-    "job": "guard",
-    "day": 9,
-    "joined": true
-   },
-   {
     "id": 819,
     "name": "Moonlight-swordmaster",
     "job": "guard",
     "day": 15,
-    "joined": true
-   },
-   {
-    "id": 1089,
-    "name": "sgxmarshal6031",
-    "job": "guard",
-    "day": 29,
-    "joined": true
-   },
-   {
-    "id": 611,
-    "name": "Thehistorybuff1944",
-    "job": "guard",
-    "day": 11,
     "joined": true
    },
    {
@@ -26034,10 +26035,10 @@
     "joined": true
    },
    {
-    "id": 951,
-    "name": "The_Kubas182",
+    "id": 611,
+    "name": "Thehistorybuff1944",
     "job": "guard",
-    "day": 21,
+    "day": 11,
     "joined": true
    },
    {
@@ -26386,5 +26387,8 @@
  "gamesEntrants": [],
  "ennoble": [],
  "riddleSolvers": [],
- "eventEntrants": []
+ "eventEntrants": [],
+ "looks": {
+  "joust": 1
+ }
 }
