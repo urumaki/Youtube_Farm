@@ -913,6 +913,9 @@ test('the games at the Tournament Ground (owner 2026-10-28): announced, guards w
   assert.ok(joinFromText('!join') && joinFromText('!JOIN') && joinFromText('count me in for the race !join please'));
   // owner 2026-11-23: the mark after the word counts too
   for (const t of ['join!', 'JOIN!', 'Join !', 'count me in join!!', 'I want to join!']) assert.ok(joinFromText(t), t);
+  // owner 2026-11-24: the space after the mark counts too, a sentence ending before it does not
+  for (const t of ['! join', '! join I am here', 'Bet ! join']) assert.ok(joinFromText(t), t);
+  for (const t of ['Great video! Join the rebels', 'Wow! join', '! joined']) assert.ok(!joinFromText(t), t);
   for (const t of ['join', 'joined!', 'i want to join the race', 'Can I join the army', 'partecipo', 'joined the kingdom', '!joined']) assert.ok(!joinFromText(t), t);
   // day 1: the crier and named guards in front of him
   const ann = storyFor(kingdom('2026-11-03'), 'race');
