@@ -178,7 +178,13 @@
   "uploadedAt": "2026-11-23T13:36:21.953Z"
  },
  "2026-11-24_en": {
-  "youtube": "OkU7B8ZvPT4",
-  "uploadedAt": "2026-11-24T14:37:48.762Z"
+  "replaced": [
+   {
+    "youtube": "OkU7B8ZvPT4",
+    "uploadedAt": "2026-11-24T14:37:48.762Z"
+   }
+  ],
+  "youtube": "NZQTLeTjjQ8",
+  "uploadedAt": "2026-11-24T20:24:26.849Z"
  }
 }
