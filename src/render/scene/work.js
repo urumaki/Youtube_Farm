@@ -285,7 +285,7 @@ Object.assign(JOB_SCENES, {
   'farmer:sow': { period: 1.3, hit: 0.3, raise: -1.5, down: -0.35, bend: 0.05, fx: 'seeds', sound: 'none', tool: null, props: 'field', smooth: true, left: -0.55, pouch: true },
   'farmer:scythe': { period: 1.6, hit: 0.45, raise: -0.95, down: -0.95, bend: 0.25, fx: 'hay', sound: 'none', tool: 'scythe', props: 'wheat', sweep: true, both: true },
   'peasant:sow': { period: 1.3, hit: 0.3, raise: -1.5, down: -0.35, bend: 0.05, fx: 'seeds', sound: 'none', tool: null, props: 'garden', smooth: true, left: -0.55, pouch: true },
-  'blacksmith:quench': { period: 2.2, hit: 0.55, raise: -1.3, down: -0.5, bend: 0.2, fx: 'steam', sound: 'none', tool: 'tongs', props: 'quench', smooth: true, left: -0.4 },
+  'blacksmith:quench': { period: 2.2, hit: 0.55, raise: -1.3, down: -0.72, bend: 0.2, fx: 'steam', sound: 'none', tool: 'tongs', props: 'quench', smooth: true, left: -0.4 },
   'blacksmith:bellows': { period: 1.4, hit: 0.5, raise: -1.6, down: -0.8, bend: 0.15, fx: 'embers', sound: 'none', tool: null, props: 'bellows', smooth: true, both: true },
   'woodcutter:fell': { period: 1.5, hit: 0.7, raise: -2.7, down: -1.3, bend: 0, fx: 'chips', sound: 'chop', tool: 'axe', props: 'tree', left: -0.1, still: true },
   'stonemason:stack': { period: 2.4, hit: 0.5, raise: -1.45, down: -0.75, bend: 0.45, fx: 'dust', sound: 'none', tool: 'stone', props: 'wall', smooth: true, both: true },
@@ -317,7 +317,7 @@ Object.assign(JOB_SCENES, {
   'taxcollector:rounds': { period: 2.0, raise: -1.1, down: -1.1, bend: 0.1, sound: 'none', tool: null, props: 'doorstep', read: true, smooth: true, turn: 1.1, radius: 6.4 },
   'merchant:cart': { period: 2.3, hit: 0.5, raise: -1.45, down: -0.7, bend: 0.45, fx: null, sound: 'none', tool: 'sack', props: 'goodscart', smooth: true, both: true, carry: true },
   'physician:booth': { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95, queue: 'sick', radius: 8.2 },
-  'executioner:grind': { period: 1.2, raise: -1.2, down: -0.95, bend: 0.25, fx: 'sparks', sound: 'none', tool: 'axe', props: 'grindstone', smooth: true, both: true, hood: true },
+  'executioner:grind': { period: 1.2, wrist: -0.8, flexAmp: 0.03, raise: -1.05, down: -0.95, bend: 0.08, fx: 'sparks', sound: 'none', tool: 'axe', props: 'grindstone', smooth: true, both: true, hood: true },
   'jester:kids': { period: 0.9, raise: -1.2, down: -0.8, bend: 0, sound: 'none', tool: null, props: 'kids', juggle: true, turn: 0.45, radius: 6.2 },
   'crier:proclaim': { period: 2.6, raise: -1.15, down: -1.15, bend: -0.05, sound: 'none', tool: null, props: 'crowd', read: true, smooth: true, turn: 0.45, radius: 6.8 },
   // owner 2026-10-29: the scholar lecturing at the front of a classroom of the University (room.js), pointing and gesturing
@@ -704,7 +704,7 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
         stalks.push(cylGeo(0.012, 0.016, hgt, 3).translate(x, hgt / 2, z)); // the stalk
         stalks.push(new THREE.SphereGeometry(0.035, 4, 3).scale(1, 2.6, 1).translate(x, hgt + 0.06, z)); // the ear
       }
-      add(merged(stalks), M.hay);
+      add(merged(stalks), M.hay).userData.touch = true; // the scythe goes through the wheat it cuts
       add(boxGeo(4.2, 0.05, 3.2).translate(0, 0.025, 1.9), brown);
       return new THREE.Vector3(0.4, 0.35, 1.2);
     }
@@ -715,11 +715,11 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       add(boxGeo(0.5, 0.2, 0.24).translate(-1.1, 0.65, 0.5), M.iron);
       // the trough: four plank sides and a bottom round the water, which lies below its rim (owner 2026-11-07: the water
       // flickered when its top was the trough's top)
-      for (const dz of [-0.25, 0.25]) add(boxGeo(0.9, 0.5, 0.05).translate(0.3, 0.25, 0.78 + dz), M.wood);
-      for (const dx of [-0.425, 0.425]) add(boxGeo(0.05, 0.5, 0.45).translate(0.3 + dx, 0.25, 0.78), M.wood);
-      add(boxGeo(0.8, 0.06, 0.45).translate(0.3, 0.03, 0.78), M.wood);
-      add(boxGeo(0.79, 0.02, 0.44).translate(0.3, 0.41, 0.78), new THREE.MeshStandardMaterial({ color: '#3f5f6b', roughness: 0.2 }));
-      return new THREE.Vector3(0.3, 0.55, 0.75);
+      for (const dz of [-0.25, 0.25]) add(boxGeo(0.9, 0.42, 0.05).translate(0.3, 0.21, 1.1 + dz), M.wood);
+      for (const dx of [-0.425, 0.425]) add(boxGeo(0.05, 0.42, 0.45).translate(0.3 + dx, 0.21, 1.1), M.wood);
+      add(boxGeo(0.8, 0.06, 0.45).translate(0.3, 0.03, 1.1), M.wood);
+      add(boxGeo(0.79, 0.02, 0.44).translate(0.3, 0.34, 1.1), new THREE.MeshStandardMaterial({ color: '#3f5f6b', roughness: 0.2 })).userData.touch = true; // the water: the blade goes in
+      return new THREE.Vector3(0.3, 0.45, 1.1); // owner 2026-11-25: the trough where the tongs reach (the new rig)
     }
     case 'bellows': { // a big leather bellows blowing into the forge; the top board goes up and down
       add(boxGeo(1.1, 0.9, 0.9).translate(0, 0.45, 1.3), M.stoneDark);
@@ -776,8 +776,9 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       const pestle = add(cylGeo(0.03, 0.04, 0.32, 8).translate(0, 0.12, 0).rotateX(-0.4), M.wood);
       pestle.position.set(0, 0.92, 0.55);
       anim.push((t, c) => { pestle.rotation.y = c * Math.PI * 2; }); // round and round in the mortar
-      for (let i = 0; i < 4; i++) add(cylGeo(0.07, 0.08, 0.2 + (i % 2) * 0.08, 8).translate(-0.5 + i * 0.12, 0.94, 0.8 - (i % 2) * 0.1), M.clay);
-      add(new THREE.ConeGeometry(0.1, 0.35, 6).rotateZ(Math.PI / 2).translate(0.45, 0.9, 0.75), M.greens);
+      // the jars on the right, the herbs on the left, where the free hand rests (owner 2026-11-25: the hand went into a jar)
+      for (let i = 0; i < 4; i++) add(cylGeo(0.07, 0.08, 0.2 + (i % 2) * 0.08, 8).translate(0.3 + i * 0.11, 0.94, 0.92 - (i % 2) * 0.05), M.clay);
+      add(new THREE.ConeGeometry(0.1, 0.35, 6).rotateZ(Math.PI / 2).translate(-0.5, 0.9, 0.85), M.greens);
       return new THREE.Vector3(0, 0.95, 0.55);
     }
     case 'desk': { // a sloped writing desk with an open book and a quill moving along the line, ink, books, a candle
@@ -892,11 +893,11 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       return c;
     }
     case 'keg': { // a barrel on a stand with a tap, ale running into the tankard
-      // owner 2026-11-25: 0.15 m further than before, the hand at the tankard clear of the barrel
-      add(cylGeo(0.38, 0.38, 0.9, 12).rotateX(Math.PI / 2).translate(0.3, 1.1, 1.15), M.wood);
-      for (const z of [0.85, 1.45]) add(boxGeo(0.8, 0.72, 0.08).translate(0.3, 0.36, z), M.woodDark);
-      add(cylGeo(0.03, 0.03, 0.18, 6).rotateX(Math.PI / 2).translate(0.3, 0.92, 0.65), M.iron);
-      return new THREE.Vector3(0.3, 0.88, 0.58);
+      // owner 2026-11-25: 0.3 m further than before, the hand at the tankard clear of the barrel
+      add(cylGeo(0.38, 0.38, 0.9, 12).rotateX(Math.PI / 2).translate(0.3, 1.1, 1.3), M.wood);
+      for (const z of [1.0, 1.6]) add(boxGeo(0.8, 0.72, 0.08).translate(0.3, 0.36, z), M.woodDark);
+      add(cylGeo(0.03, 0.03, 0.18, 6).rotateX(Math.PI / 2).translate(0.3, 0.92, 0.8), M.iron);
+      return new THREE.Vector3(0.3, 0.88, 0.72);
     }
     case 'vat': { // a big brewing vat, steaming
       // owner 2026-11-25: centred where the paddle goes round (the new rig's stirring arms)
@@ -1054,7 +1055,7 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
         g.position.set(x, 0.86, 0.6);
         return { g, k };
       });
-      add(cylGeo(0.22, 0.22, 0.03, 20).rotateX(Math.PI / 2).translate(0.35, 1.08, 0.9), M.clothIvory);
+      add(cylGeo(0.22, 0.22, 0.03, 20).rotateX(Math.PI / 2).translate(0.58, 1.08, 0.9), M.clothIvory); // clear of the tongs
       anim.push((t) => { for (const { g, k } of gears) g.rotation.y = t * k; });
       return new THREE.Vector3(0, 0.9, 0.55);
     }
@@ -1160,9 +1161,10 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
     case 'trebuchet': { // a model trebuchet on a trestle; the arm throws a turnip now and then
       add(boxGeo(1.6, 0.08, 0.6).translate(0, 0.55, 0.8), M.wood);
       for (const x of [-0.7, 0.7]) add(boxGeo(0.08, 0.55, 0.5).translate(x, 0.27, 0.8), M.woodDark);
-      for (const z of [-0.2, 0.2]) for (const s of [-1, 1]) add(boxGeo(0.05, 0.75, 0.05).rotateZ(s * 0.3).translate(s * 0.12, 0.92, 0.8 + z), M.woodDark); // the A-frames
+      // owner 2026-11-25: the model at the trestle's left end, the mallet's peg at its right end clear of the frames
+      for (const z of [-0.2, 0.2]) for (const s of [-1, 1]) add(boxGeo(0.05, 0.75, 0.05).rotateZ(s * 0.3).translate(-0.3 + s * 0.12, 0.92, 0.8 + z), M.woodDark); // the A-frames
       const arm = new THREE.Group();
-      arm.position.set(0, 1.25, 0.8);
+      arm.position.set(-0.3, 1.25, 0.8);
       holder.add(arm);
       arm.add(Object.assign(new THREE.Mesh(boxGeo(1.1, 0.04, 0.04).translate(0.25, 0, 0), M.woodDark), { castShadow: true }));
       arm.add(Object.assign(new THREE.Mesh(boxGeo(0.14, 0.14, 0.14).translate(-0.3, -0.08, 0), M.stoneDark), { castShadow: true }));
@@ -1260,24 +1262,24 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
         add(cylGeo(0.06, 0.06, 0.1, 8).rotateZ(Math.PI / 2).translate(0.15 + s * 0.76, 0.44, 1.6), M.iron);
       }
       for (const s of [-1, 1]) add(cylGeo(0.03, 0.03, 1.2, 6).rotateX(Math.PI / 2 - 0.25).translate(0.15 + s * 0.45, 0.45, 0.35), M.woodDark);
-      for (const [x, z, m] of [[-0.15, 1.2, M.wood], [0.4, 1.3, M.woodDark], [-0.1, 1.9, M.wood]]) add(boxGeo(0.45, 0.4, 0.45).translate(x, 0.86, z), m);
+      for (const [x, z, m] of [[-0.25, 1.95, M.wood], [0.45, 1.2, M.woodDark], [0.05, 2.2, M.wood]]) add(boxGeo(0.45, 0.4, 0.45).translate(x, 0.86, z), m);
       add(cylGeo(0.22, 0.22, 0.5, 12).translate(0.45, 0.91, 1.95), M.wood);
       for (const [x, y, z] of [[-1.4, 0.2, -0.6], [-1.4, 0.2, -0.1], [-1.4, 0.55, -0.35], [-1.85, 0.2, -0.35]]) add(new THREE.SphereGeometry(0.26, 10, 8).scale(1, 0.8, 0.9).translate(x, y, z), M.hay);
       add(boxGeo(0.5, 0.45, 0.5).translate(-1.45, 0.22, 0.45), M.wood);
       return new THREE.Vector3(0.15, 0.95, 1.45);
     }
     case 'grindstone': { // a grindstone on a wooden frame, turned by a treadle; a bucket of water beside it
-      for (const s of [-1, 1]) add(boxGeo(0.08, 0.95, 0.08).translate(s * 0.3, 0.47, 0.75), M.woodDark);
-      add(boxGeo(0.7, 0.08, 0.9).translate(0, 0.2, 0.75), M.woodDark);
-      add(cylGeo(0.03, 0.03, 0.7, 6).rotateZ(Math.PI / 2).translate(0, 0.85, 0.75), M.iron);
+      for (const s of [-1, 1]) add(boxGeo(0.08, 0.95, 0.08).translate(s * 0.3, 0.47, 1.52), M.woodDark);
+      add(boxGeo(0.7, 0.08, 0.9).translate(0, 0.2, 1.52), M.woodDark);
+      add(cylGeo(0.03, 0.03, 0.7, 6).rotateZ(Math.PI / 2).translate(0, 0.72, 1.52), M.iron);
       const wheel = new THREE.Mesh(cylGeo(0.38, 0.38, 0.12, 18).rotateZ(Math.PI / 2), M.stone);
-      wheel.position.set(0, 0.85, 0.75);
+      wheel.position.set(0, 0.72, 1.52);
       wheel.castShadow = true;
       holder.add(wheel);
       wheel.add(new THREE.Mesh(boxGeo(0.14, 0.05, 0.6), M.stoneDark)); // a mark, so the turning shows
-      add(cylGeo(0.18, 0.15, 0.3, 10).translate(0.65, 0.15, 0.85), M.wood);
+      add(cylGeo(0.18, 0.15, 0.3, 10).translate(0.65, 0.15, 1.62), M.wood);
       anim.push((t) => { wheel.rotation.x = -t * 7; });
-      return new THREE.Vector3(0, 1.2, 0.42);
+      return new THREE.Vector3(0, 1.1, 1.52); // owner 2026-11-25: under the axe's blade (the new rig)
     }
     case 'kids': // two children watching, one clapping, one jumping
     case 'crowd': { // a few listeners gathered round, nodding (the square, or the priest's flock)
@@ -1358,7 +1360,7 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
     }
     case 'stable': { // a brown horse side on, being brushed; a hay bale and a bucket
       const horse = new THREE.Group();
-      horse.position.set(0.6, 0, 0.2);
+      horse.position.set(0.74, 0, 0.2); // clear of the brushing arm
       holder.add(horse);
       const coat = (horseCoat ??= new THREE.MeshStandardMaterial({ color: '#6b4226', roughness: 0.85 }));
       const part = (geo, m) => { const o = new THREE.Mesh(geo, m); o.castShadow = true; horse.add(o); return o; };
@@ -1456,12 +1458,12 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       return new THREE.Vector3(0, 1.0, 1.05);
     }
     case 'hideout': { // barrels with a crate and a sack on top in front of the spy, a crate beside them: he peeks out to the +x side
-      for (const [x, z] of [[-0.3, 0.75], [0.25, 0.85]]) {
+      for (const [x, z] of [[-0.3, 1.1], [0.25, 1.2]]) {
         add(cylGeo(0.3, 0.3, 0.9, 12).translate(x, 0.45, z), M.wood);
         for (const y of [0.15, 0.75]) add(new THREE.TorusGeometry(0.305, 0.015, 4, 16).rotateX(Math.PI / 2).translate(x, y, z), M.iron);
       }
-      add(boxGeo(0.7, 0.5, 0.6).translate(-0.1, 1.15, 0.8), M.woodDark);
-      add(new THREE.SphereGeometry(0.26, 9, 7).scale(1.1, 0.75, 1).translate(-0.2, 1.55, 0.8), M.clothIvory); // a sack of flour
+      add(boxGeo(0.7, 0.5, 0.6).translate(-0.1, 1.15, 1.15), M.woodDark); // clear of the hands on the book
+      add(new THREE.SphereGeometry(0.26, 9, 7).scale(1.1, 0.75, 1).translate(-0.2, 1.55, 1.15), M.clothIvory); // a sack of flour
       add(boxGeo(0.6, 0.6, 0.6).translate(-0.95, 0.3, 0.75), M.wood);
       return new THREE.Vector3(0.7, 1.4, 0.8);
     }
@@ -1658,18 +1660,18 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
     case 'hearth': // the fireplace is part of the room (room.js): soot falls from the flue above the sweep
       return new THREE.Vector3(0, 2.2, 0.15);
     case 'dishes': { // a pot of stew steaming on a brazier on the stall's counter, a stack of bowls, a loaf, a ladle
-      add(cylGeo(0.22, 0.25, 0.12, 10).translate(-0.45, 1.06, 0.7), M.iron);
-      add(boxGeo(0.3, 0.05, 0.3).translate(-0.45, 1.12, 0.7), M.ember);
-      add(cylGeo(0.24, 0.2, 0.3, 14).translate(-0.45, 1.3, 0.7), M.iron);
-      add(cylGeo(0.22, 0.22, 0.02, 14).translate(-0.45, 1.44, 0.7), M.clay);
-      add(cylGeo(0.012, 0.012, 0.45, 5).rotateZ(0.5).translate(-0.35, 1.6, 0.7), M.woodDark);
-      for (let i = 0; i < 4; i++) add(cylGeo(0.11, 0.07, 0.06, 10).translate(0.35, 1.03 + i * 0.05, 0.75), M.wood);
-      for (const x of [0.05, 0.62]) {
-        add(cylGeo(0.11, 0.07, 0.06, 10).translate(x, 1.03, 0.95), M.wood);
-        add(cylGeo(0.09, 0.09, 0.01, 10).translate(x, 1.06, 0.95), M.clay);
+      add(cylGeo(0.22, 0.25, 0.12, 10).translate(-0.45, 1.06, 0.85), M.iron); // the pot a little further, clear of the hand
+      add(boxGeo(0.3, 0.05, 0.3).translate(-0.45, 1.12, 0.85), M.ember);
+      add(cylGeo(0.24, 0.2, 0.3, 14).translate(-0.45, 1.3, 0.85), M.iron);
+      add(cylGeo(0.22, 0.22, 0.02, 14).translate(-0.45, 1.44, 0.85), M.clay);
+      add(cylGeo(0.012, 0.012, 0.45, 5).rotateZ(0.5).translate(-0.35, 1.6, 0.85), M.woodDark);
+      for (let i = 0; i < 4; i++) add(cylGeo(0.11, 0.07, 0.06, 10).translate(0.62, 1.03 + i * 0.05, 0.72), M.wood); // the stack, clear of the ladle
+      for (const x of [0.05, 0.4]) {
+        add(cylGeo(0.11, 0.07, 0.06, 10).translate(x, 1.03, 1.0), M.wood);
+        add(cylGeo(0.09, 0.09, 0.01, 10).translate(x, 1.06, 1.0), M.clay);
       }
-      add(new THREE.SphereGeometry(0.12, 10, 8).scale(1.5, 0.7, 1).translate(0.7, 1.06, 0.6), M.hay);
-      return new THREE.Vector3(-0.45, 1.5, 0.7);
+      add(new THREE.SphereGeometry(0.12, 10, 8).scale(1.5, 0.7, 1).translate(0.85, 1.06, 0.95), M.hay);
+      return new THREE.Vector3(-0.45, 1.5, 0.85);
     }
     case 'meatstall': { // a block on the stall's counter with a joint on it, hams and strings of sausages hanging from the awning
       add(cylGeo(0.22, 0.24, 0.16, 12).translate(0, 1.08, 0.75), M.wood);
@@ -2071,13 +2073,13 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
       const [f0, f1] = cfg.flex ?? [HITFLEX, HITFLEX + 0.8];
       // a blow: the elbow straightens just as it lands (bent until late: a whip), so the tool's face is where the props were
       // calibrated; after it the elbow draws the tool back out of the work before the arm goes up again
-      let strike = 0;
+      let strike = 0, pull = 0;
       if (STRIKE) {
         const h0 = cfg.hit - 0.12, back = 1 - s01;
-        const pull = u > cfg.hit ? ease(Math.min(1, (u - cfg.hit) / 0.12)) : u < h0 ? 1 - ease(Math.min(1, u / Math.max(0.05, h0))) : 0;
+        pull = u > cfg.hit ? ease(Math.min(1, (u - cfg.hit) / 0.12)) : u < h0 ? 1 - ease(Math.min(1, u / Math.max(0.05, h0))) : 0;
         strike = u >= h0 && u <= cfg.hit ? f0 + (f1 - f0) * Math.sqrt(back) : f0 + (f1 - f0) * back + 0.45 * pull;
       }
-      const flex = STRIKE ? strike : cfg.push ? 0.75 * (1 - push) + 0.1 : cfg.smooth ? 0.35 + 0.2 * Math.sin(c * Math.PI * 2 - 0.7) : cfg.stir ? 0.45 + 0.12 * Math.cos(c * Math.PI * 2) : 0.25;
+      const flex = STRIKE ? strike : cfg.push ? 0.75 * (1 - push) + 0.1 : cfg.smooth ? 0.35 + (cfg.flexAmp ?? 0.2) * Math.sin(c * Math.PI * 2 - 0.7) : cfg.stir ? 0.45 + 0.12 * Math.cos(c * Math.PI * 2) : 0.25;
       P.r.elbow.rotation.x = -flex;
       // a peel slides through the baker's hands into the oven and back (cfg.slide: [from, how far], m along the handle)
       if (cfg.slide && tool?.userData.axis) tool.position.copy(tool.userData.axis).multiplyScalar(cfg.slide[0] + cfg.slide[1] * push);
@@ -2085,7 +2087,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
       P.r.hand.rotation.x = (cfg.push || cfg.stir ? flex : cfg.smooth ? 0.5 * flex : 0) + (cfg.wrist ?? 0);
       P.l.elbow.rotation.x = cfg.both ? -flex : -(0.3 + 0.05 * br);
       if (STRIKE) {
-        P.body.rotation.x -= 0.09 * (1 - s01); // leans back on the backswing, drives through the stroke
+        P.body.rotation.x -= 0.09 * (1 - s01) + 0.1 * pull; // leans back on the backswing and after the blow, drives through the stroke
         const after = (u - cfg.hit) * cfg.period;
         if (after > 0 && after < 0.35) dip = 0.045 * Math.sin((after / 0.35) * Math.PI); // the knees give after the blow
       }
@@ -2297,7 +2299,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
         P.l.g.rotation.set(run ? -1.2 : lerp(-1.0, -1.45, give) * (handed ? 0 : 1) - (handed ? 0.1 : 0), 0, 0.05);
         letterOut.visible = !handed;
         const open = THREE.MathUtils.clamp((s - 1.9) / 0.4, 0, 1);
-        D.door.rotation.y = -1.7 * ease(open);
+        D.door.rotation.y = 1.7 * ease(open); // inward (owner 2026-11-25: it swung into the messenger's bow)
         D.H.root.visible = open > 0.3;
         D.H.r.g.rotation.set(lerp(-0.2, -1.4, THREE.MathUtils.clamp((s - 2.35) / 0.4, 0, 1)) + (handed ? 0.5 * THREE.MathUtils.clamp((s - 2.8) / 0.4, 0, 1) : 0), 0, 0);
         D.letter.visible = handed;
@@ -2326,7 +2328,8 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
         });
         // the two behind the cart, hands on its back
         const zp = zc - 0.95, tipping = s >= TIP[0] - 0.1 && s < HOLD + 0.35;
-        [[P, 0.27], [A.mate, -0.27]].forEach(([R, x], i) => {
+        // owner 2026-11-25: far enough apart that their arms do not go through each other
+        [[P, 0.36], [A.mate, -0.36]].forEach(([R, x], i) => {
           R.root.position.set(x, 0, zp);
           R.root.rotation.set(0, 0, 0);
           R.root.visible = zp > -2.05;
