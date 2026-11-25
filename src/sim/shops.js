@@ -38,10 +38,11 @@ export function shopsOf(state) {
   return out;
 }
 
-/** The shop villager `id` works at in scene `variant` ({ job, k, house }), or null. */
-export function shopOf(state, id, variant = null) {
+/** The shop villager `id` works at in scene `variant` of `job` ({ job, k, house }), or null. `job`: the scene's job, when it
+ * is not the villager's own (an apprentice at the trade they want) the villager has no shop for it. */
+export function shopOf(state, id, variant = null, job = null) {
   const shop = shopsOf(state).find((s) => s.members.includes(id));
-  if (!shop) return null;
+  if (!shop || (job && shop.job !== job)) return null;
   const scenes = SHOP_SCENES[shop.job];
   if (scenes && !scenes.includes(variant ?? null)) return null;
   return { job: shop.job, k: shop.k, house: shop.house };

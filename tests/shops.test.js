@@ -97,3 +97,10 @@ test('the tax queue brings coin sacks to the counter and walks off', async () =>
   assert.ok(onCounter, 'a sack left on the counter');
   assert.ok(gone, 'the taxpayer walks off');
 });
+
+test("an apprentice shown at another trade's work is not sent to their own trade's shop", () => {
+  // a barber who wants to be a carpenter is shown at the carpenter's bench (timeline.js: sceneJob = what they want)
+  const s = kingdom([['barber', 3], ['carpenter', 4]]);
+  assert.equal(shopOf(s, 0, null, 'carpenter'), null);
+  assert.deepEqual(shopOf(s, 0, null, 'barber'), { job: 'barber', k: 0, house: 3 });
+});

@@ -267,7 +267,7 @@ async function setup(data) {
     // owner 2026-11-25: the trades at their shops (src/sim/shops.js): behind the shop front's counter on their group's house,
     // facing the street; the first tax group behind the Counting House's barred counter. A test render (the gallery: no
     // villager id) takes the trade's first shop
-    const shop = shopOf(state, id, variant) ?? (gallery && (!SHOP_SCENES[job] || SHOP_SCENES[job].includes(variant ?? null)) ? shopsOf(state).find((x) => x.job === job) : null);
+    const shop = shopOf(state, id, variant, job) ?? (gallery && (!SHOP_SCENES[job] || SHOP_SCENES[job].includes(variant ?? null)) ? shopsOf(state).find((x) => x.job === job) : null);
     if (shop?.house === COUNTING_HOUSE && done('counting_house')?.counter) {
       const it = done('counting_house'), at = atLot(it, it.counter[0], it.counter[2]);
       return { ...at, face: Math.atan2(at.ax, at.az) };
