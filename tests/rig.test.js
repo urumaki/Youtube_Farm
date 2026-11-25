@@ -94,3 +94,13 @@ test('blows land on the work', () => {
     }
   }
 });
+
+test('the everyday shot in the fields lays no soil patch on the field (owner 2026-11-25)', async () => {
+  const { buildFields } = await import('../src/render/scene/ambient.js');
+  const { world } = await import('../src/sim/world.js');
+  const { fakeMaterials } = await import('./helpers/scene.js');
+  const st = buildFields({ w: world(7), M: fakeMaterials(), seed: 7, hero: null });
+  let patches = 0;
+  st.group.traverse((m) => { if (m.name === 'soil') patches++; });
+  assert.equal(patches, 0);
+});

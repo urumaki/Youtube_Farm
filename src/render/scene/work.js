@@ -563,7 +563,8 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       return new THREE.Vector3(0, 0.08, 0.85);
     }
     case 'garden': {
-      add(boxGeo(3.2, 0.06, 2.6).translate(0, 0.03, 1.0), brown);
+      if (onField) return new THREE.Vector3(0, 0.02, 0.9); // owner 2026-11-25: the field's own soil
+      add(boxGeo(3.2, 0.06, 2.6).translate(0, 0.03, 1.0), brown).name = 'soil';
       add(boxGeo(0.5, 0.35, 0.5).translate(-1.2, 0.18, 0.0), M.hay);
       return new THREE.Vector3(0, 0.08, 0.9);
     }

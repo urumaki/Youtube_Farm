@@ -148,15 +148,16 @@ export function buildWheat({ w, M, seed, hero, month }) {
 export function buildFields({ w, M, seed, hero }) {
   const f = [...w.fields].sort((p, q) => Math.hypot(p.x, p.z) - Math.hypot(q.x, q.z))[0];
   if (!f) return null;
-  const y = (x, z) => heightAt(w, x, z) + 0.03;
+  const y = (x, z) => heightAt(w, x, z) + 0.12; // on the crop's surface (main.js atField)
   const anchor = new THREE.Vector3(f.x, 0, f.z);
   anchor.y = y(anchor.x, anchor.z);
   const face = -f.rot;
-  const farmer = buildWorkScene({ job: hero?.job === 'peasant' ? 'peasant' : 'farmer', anchor, face, M, seed, id: 9001 });
+  // owner 2026-11-25: on the field itself, no patch of soil laid over it (onField)
+  const farmer = buildWorkScene({ job: hero?.job === 'peasant' ? 'peasant' : 'farmer', anchor, face, M, seed, id: 9001, onField: true });
   const side = new THREE.Vector3(Math.cos(f.rot), 0, Math.sin(f.rot));
   const a2 = anchor.clone().addScaledVector(side, 3.2);
   a2.y = y(a2.x, a2.z);
-  const helper = buildWorkScene({ job: 'peasant', anchor: a2, face: face + 0.4, M, seed, id: 9002 });
+  const helper = buildWorkScene({ job: 'peasant', anchor: a2, face: face + 0.4, M, seed, id: 9002, onField: true });
   const group = new THREE.Group();
   group.add(farmer.group, helper.group);
   group.visible = false;
