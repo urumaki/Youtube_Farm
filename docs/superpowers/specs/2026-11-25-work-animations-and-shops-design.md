@@ -173,11 +173,15 @@ No place:
 
 ### Shop fronts
 
-- **What it is:** a lean-to roof, a counter and a hanging sign on the street side of the villager's own house (`houses.js`
-  shape of the house the scene uses). The work is done at the counter, seen from the street. The camera is on the
-  street, a visitor at the counter.
-- **Where it exists:** only in that villager's shot, like the croft's props today, not on the map. *Builder's call
-  (minor): keeps the map and the state unchanged.*
+- **What it is:** a lean-to roof, a counter and a hanging sign on the street side of a house. The work is done at the
+  counter, seen from the street. The camera is on the street, a visitor at the counter.
+- **On the map (owner 2026-11-25):** each shop-front job has one shop, always there, in every shot of the town.
+  - **Which house:** the house of the job's earliest named villager who still lives in the kingdom, worked out from the
+    state at render time. No new state field.
+  - **Who works there:** every villager of the job is shown at that shop.
+  - **When that villager leaves:** the shop moves to the next one's house.
+  - **Drawing:** `houses.js` adds the shop front to that house; `workPlace` puts the job's scenes at its counter.
+  - **No named villager of the job yet:** no shop, and the croft scene as now.
 
 ### The Counting House counter
 
@@ -197,10 +201,12 @@ The `counting` scene moves behind the counter. The `rounds` scene (the collector
   in the daily videos while they are away, and the new narration and voice (from 2026-11-26) are measured alone for a
   few days.
 - **Commits:** the branch is committed and pushed as work goes (the owner's rule for every change), but not merged.
-- **For the owner's return:**
-  - one full test render of a real day with the new animations and places;
-  - the before/after gallery clips of the most-shown jobs;
-  - stills of each new building and shop front.
+- **For the owner's return (owner 2026-11-25: stills only, no full renders, no "before" clips):**
+  - gallery stills of every job with the new rig, one of them in a pause;
+  - stills of each new building, each shop front and the Counting House counter;
+  - `--stills` of a real day with the new places on the map.
+- **Renders while building:** stills only (`--gallery` with a few times, `--stills`), never a full video. So the work
+  is not held up by renders of an hour or more.
 
 ## Left to the builder
 
