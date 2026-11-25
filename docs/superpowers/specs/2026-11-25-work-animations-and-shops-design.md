@@ -140,21 +140,27 @@ allowed. The feet are tested against the ground: no float, no sink.
 **Rule:** a job whose scenes all happen in the croft, and that has a place where such work is really done, gets one. A
 job gets none when that place will come with a goal (the goal will bring it), or when the job has no workplace.
 
-| Job (named villagers today) | Place | Kind |
-| --- | --- | --- |
-| Carpenter (21) | Carpenter's Workshop: an open-fronted shed with a bench and planks | new building |
-| Stablehand (5) | Stables: a row of stalls with horses, hay | new building |
-| Teacher (3) | Schoolhouse: a small hall with benches, children | new building |
-| Astronomer (2) | Observatory: a round stone tower with an open top | new building |
-| Tanner (1) | Tannery: vats and hides on frames, on the river bank | new building |
-| Barber (2) | Barber's shop: a striped pole, a chair, a basin | shop front |
-| Weaver | a loom under an awning | shop front |
-| Cook (8), the pot scene | a cookshop counter with the stew pot | shop front |
-| Brewer (2), the stirring scene | a brewing vat under an awning | shop front |
-| Physicist (1) | a workshop front for the ramp and bells | shop front |
-| Philosopher (3) | the University's lawn, as the scholar and the librarian | existing building |
-| Adviser (2), Diplomat (1) | the steps of the Town Hall | existing building |
-| Tax collector (22), the counting scene | the Counting House's barred counter | existing building, rebuilt front |
+Owner 2026-11-25: more than one shop for a big trade, each with a number of workers that fits the trade. Counts are
+of all villagers of the job (1 subscriber = 1 villager; only those who commented have a name), from the state of 2026-11-25.
+Shops = villagers ÷ workers per shop, rounded up.
+
+| Job | Villagers (named) | Workers per place | Places today | Place | Kind |
+| --- | --- | --- | --- | --- | --- |
+| Carpenter | 110 (33) | 5 | 22 | a carpenter's shed: bench, planks, sawhorse | shop front |
+| Tax collector | 23 (23) | 4 | 6 | the Counting House's barred counter, and 5 barred counters on houses; 2 guards at each | existing building + shop fronts |
+| Cook, the pot scene | 8 (8) | 3 | 3 | a cookshop counter with the stew pot | shop front |
+| Barber | 2 (2) | 1 | 2 | a striped pole, a chair, a basin | shop front |
+| Brewer, the stirring scene | 2 (2) | 2 | 1 | a brewing vat under an awning | shop front |
+| Weaver | 0 | 2 | 0 | a loom under an awning (when one arrives) | shop front |
+| Stablehand | 5 (5) | 5 | 1 | Stables: a row of stalls with horses, hay | new building |
+| Teacher | 3 (3) | 3 | 1 | Schoolhouse: a small hall with benches, children | new building |
+| Astronomer | 2 (2) | 2 | 1 | Observatory: a round stone tower with an open top | new building |
+| Tanner | 1 (1) | 2 | 1 | Tannery: vats and hides on frames, on the river bank | new building |
+| Philosopher, Physicist | 3, 1 | — | — | the University's lawn, as the scholar and the librarian (the physicist's ramp and bells there) | existing building |
+| Adviser, Diplomat | 2, 1 | — | — | the steps of the Town Hall | existing building |
+
+A new building takes all the job's villagers. If a job outgrows its building's number, a second one is the owner's
+call, not automatic.
 
 No place:
 - beggar, spy, jester, weirdo, sweeper, apprentice (works with their master's job), messenger (at a villager's door),
@@ -164,8 +170,8 @@ No place:
 ### New buildings
 
 - **Commissioned:** they go in `COMMISSIONS` (`tiers.js`), so each is begun on a day the kingdom runs and is built with
-  the usual construction shots. At most 2 buildings begin a day (owner's rule), so the five take three days, which gives
-  the videos three days of "a new building begins". A goal's buildings go before the commissions in the queue (the Dungeon's goal is 20 subscribers away). *Builder's call (minor).*
+  the usual construction shots. At most 2 buildings begin a day (owner's rule), so the four take two days, which gives
+  the videos two days of "a new building begins". A goal's buildings go before the commissions in the queue (the Dungeon's goal is 20 subscribers away). *Builder's call (minor).*
 - **Laid out:** on street lots after the existing plots (`placeStreetLot` in `world.js`, as the Fletcher's and the
   Engineers' Workshops). The Tannery on a lot by the river, below the town.
 - **Used:** each job's scenes move there once it stands (`PLACES` in `main.js`), with the croft scene before. Once
@@ -175,13 +181,18 @@ No place:
 
 - **What it is:** a lean-to roof, a counter and a hanging sign on the street side of a house. The work is done at the
   counter, seen from the street. The camera is on the street, a visitor at the counter.
-- **On the map (owner 2026-11-25):** each shop-front job has one shop, always there, in every shot of the town.
-  - **Which house:** the house of the job's earliest named villager who still lives in the kingdom, worked out from the
-    state at render time. No new state field.
-  - **Who works there:** every villager of the job is shown at that shop.
-  - **When that villager leaves:** the shop moves to the next one's house.
-  - **Drawing:** `houses.js` adds the shop front to that house; `workPlace` puts the job's scenes at its counter.
-  - **No named villager of the job yet:** no shop, and the croft scene as now.
+- **On the map (owner 2026-11-25):** the shops are always there, in every shot of the town.
+  - **How many:** a job with N villagers and W workers per shop has ceil(N / W) shops (table above).
+  - **Which houses:** the job's villagers in order of index, in groups of W. Each group's shop is on the house of its
+    first villager. Worked out from the state at render time, with no new state field, so a new shop opens when the job
+    grows past a multiple of W.
+  - **Who works where:** a villager's scenes are at their group's shop.
+  - **When a villager leaves:** the groups are worked out again. A shop can move, which is rare (the owner accepts it as
+    the town changing).
+  - **Drawing:** `houses.js` adds the shop front to each of those houses; `workPlace` puts the scene at the counter of
+    the villager's shop.
+  - **A house with two shops** (two villagers of different trades): the second goes on the other street side if there
+    is one, else on the next house of its group. *Builder's call (minor).*
 
 ### The Counting House counter
 
@@ -189,7 +200,7 @@ The front of the Counting House gets:
 - a counter window with iron bars;
 - the tax collector inside behind it, counting and writing;
 - a queue of villagers, each carrying a sack of coins, who puts it on the counter and walks off;
-- two guards in tabards, standing one at each side of the counter, in every shot of it (the counting scene, the
+- two guards in tabards, standing one at each side of the counter (the same at each of the 5 barred counters on houses), in every shot of it (the counting scene, the
   building's own shots, the wide shots that pass it).
 
 The `counting` scene moves behind the counter. The `rounds` scene (the collector going door to door) stays.
