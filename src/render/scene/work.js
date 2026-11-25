@@ -178,7 +178,7 @@ export const JOB_SCENES = {
   // the baker works inside the bakehouse (bakery.js), which builds the oven around the mouth; the peel is
   // highest when pushed into the oven and carries a loaf in
   baker: { period: 1.8, hit: 0.55, raise: -1.12, down: -1.05, slide: [-0.45, 0.55], bend: 0.1, fx: 'embers', sound: 'none', tool: 'peel', props: 'ovenmouth', both: true, push: true, loaf: true },
-  fisherman: { period: 2.6, hit: 0.5, raise: -2.2, down: -1.25, bend: 0.05, fx: 'splash', sound: 'none', tool: 'rod', props: 'pond', both: true },
+  fisherman: { period: 2.6, hit: 0.5, raise: -2.2, down: -1.12, bend: 0.05, fx: 'splash', sound: 'none', tool: 'rod', props: 'pond', both: true },
   miller: { period: 1.5, hit: 0.6, raise: -1.6, down: -1.0, bend: 0.25, fx: 'dust', sound: 'none', tool: 'sack', props: 'sacks', both: true },
   guard: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'spear', props: 'post', left: -0.6, look: true },
   knight: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'sword', props: 'post', left: -0.6, look: true },
@@ -317,7 +317,7 @@ Object.assign(JOB_SCENES, {
   'taxcollector:rounds': { period: 2.0, raise: -1.1, down: -1.1, bend: 0.1, sound: 'none', tool: null, props: 'doorstep', read: true, smooth: true, turn: 1.1, radius: 6.4 },
   'merchant:cart': { period: 2.3, hit: 0.5, raise: -1.45, down: -0.7, bend: 0.45, fx: null, sound: 'none', tool: 'sack', props: 'goodscart', smooth: true, both: true, carry: true },
   'physician:booth': { period: 1.3, raise: -1.15, down: -1.15, bend: 0.2, fx: 'dust', sound: 'none', tool: null, props: 'remedies', stir: true, left: -0.95, queue: 'sick', radius: 8.2 },
-  'executioner:grind': { period: 1.2, wrist: -0.8, flexAmp: 0.03, raise: -1.05, down: -0.95, bend: 0.08, fx: 'sparks', sound: 'none', tool: 'axe', props: 'grindstone', smooth: true, both: true, hood: true },
+  'executioner:grind': { period: 1.2, wrist: -0.8, flexAmp: 0.03, raise: -0.99, down: -0.95, bend: 0.03, fx: 'sparks', sound: 'none', tool: 'axe', props: 'grindstone', smooth: true, both: true, hood: true },
   'jester:kids': { period: 0.9, raise: -1.2, down: -0.8, bend: 0, sound: 'none', tool: null, props: 'kids', juggle: true, turn: 0.45, radius: 6.2 },
   'crier:proclaim': { period: 2.6, raise: -1.15, down: -1.15, bend: -0.05, sound: 'none', tool: null, props: 'crowd', read: true, smooth: true, turn: 0.45, radius: 6.8 },
   // owner 2026-10-29: the scholar lecturing at the front of a classroom of the University (room.js), pointing and gesturing
@@ -1270,17 +1270,17 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       return new THREE.Vector3(0.15, 0.95, 1.45);
     }
     case 'grindstone': { // a grindstone on a wooden frame, turned by a treadle; a bucket of water beside it
-      for (const s of [-1, 1]) add(boxGeo(0.08, 0.95, 0.08).translate(s * 0.3, 0.47, 1.52), M.woodDark);
-      add(boxGeo(0.7, 0.08, 0.9).translate(0, 0.2, 1.52), M.woodDark);
-      add(cylGeo(0.03, 0.03, 0.7, 6).rotateZ(Math.PI / 2).translate(0, 0.72, 1.52), M.iron);
+      for (const s of [-1, 1]) add(boxGeo(0.08, 1.3, 0.08).translate(s * 0.3, 0.65, 1.4), M.woodDark);
+      add(boxGeo(0.7, 0.08, 0.9).translate(0, 0.2, 1.4), M.woodDark);
+      add(cylGeo(0.03, 0.03, 0.7, 6).rotateZ(Math.PI / 2).translate(0, 1.04, 1.4), M.iron);
       const wheel = new THREE.Mesh(cylGeo(0.38, 0.38, 0.12, 18).rotateZ(Math.PI / 2), M.stone);
-      wheel.position.set(0, 0.72, 1.52);
+      wheel.position.set(0, 0.72, 1.4);
       wheel.castShadow = true;
       holder.add(wheel);
       wheel.add(new THREE.Mesh(boxGeo(0.14, 0.05, 0.6), M.stoneDark)); // a mark, so the turning shows
-      add(cylGeo(0.18, 0.15, 0.3, 10).translate(0.65, 0.15, 1.62), M.wood);
+      add(cylGeo(0.18, 0.15, 0.3, 10).translate(0.65, 0.15, 1.5), M.wood);
       anim.push((t) => { wheel.rotation.x = -t * 7; });
-      return new THREE.Vector3(0, 1.1, 1.52); // owner 2026-11-25: under the axe's blade (the new rig)
+      return new THREE.Vector3(0, 1.1, 1.4); // owner 2026-11-25: under the axe's blade (the new rig)
     }
     case 'kids': // two children watching, one clapping, one jumping
     case 'crowd': { // a few listeners gathered round, nodding (the square, or the priest's flock)
