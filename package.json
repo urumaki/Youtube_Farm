@@ -16,6 +16,7 @@
     "setup:piper": "node scripts/setup-piper.js",
     "setup:kokoro": "node scripts/setup-kokoro.js",
     "setup:tts": "node scripts/setup-kokoro.js && node scripts/setup-piper.js",
+    "setup:chatterbox": "node scripts/setup-chatterbox.js",
     "auth:youtube": "node scripts/auth-youtube.js"
   },
   "dependencies": {

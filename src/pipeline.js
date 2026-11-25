@@ -85,7 +85,8 @@ export async function produceVideo(state, diff, { out, quality, tts, log = conso
     log.log(`[audio] script (${script.words} words): ${script.text}`);
     const anchors = sentenceAnchors(script.sentences, cues);
     const sentences = script.sentences.map((s, i) => ({ ...s, at: anchors[i] === null ? null : anchors[i] - VOICE_DELAY }));
-    const voice = await synthesize(sentences, { outDir: dir, provider: tts, log });
+    // the date picks the voice (Chatterbox from 2026-11-30, VOICE_FROM) and seeds its takes, so a day made again sounds the same
+    const voice = await synthesize(sentences, { outDir: dir, provider: tts, log, date: diff.date || state.date, seed: Number(String(diff.date || state.date).replace(/-/g, '')) % 2147483647 });
     log.log(`[audio] ${voice.provider} narration ${voice.duration.toFixed(2)} s`);
     // owner 2026-10-29: a saved day made again always has the narrator (no silent video when the voice could not run)
     if (needVoice && voice.provider === 'none') throw new Error('no narrator voice (is PYTHON set in .env for Kokoro?); pass --tts none for a silent test');

@@ -20,6 +20,8 @@ jobs:
   daily:
     runs-on: ubuntu-24.04 # pinned (2026-10-27): ubuntu-latest moved to Ubuntu 26, where Playwright 1.56 cannot install its browser deps
     timeout-minutes: 340 # software rendering on a 4-core runner takes ~2-2.5 h
+    env:
+      HF_HOME: ${{ github.workspace }}/tools/hf # the Chatterbox model (~3 GB) lives in tools/, cached with the other voices
     steps:
       - uses: actions/checkout@v4
 
@@ -42,10 +44,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: tools
-          key: tts-kokoro-v1.0-piper-2023.11.14-2
+          key: tts-kokoro-v1.0-piper-2023.11.14-chatterbox-0.1.7-1
 
       - name: Set up TTS (Kokoro + Piper fallback)
         run: npm run setup:tts
+
+      # owner 2026-11-25: the narrator from 2026-11-30 (src/audio/tts/index.js, VOICE_FROM); if it cannot be set up the
+      # video keeps Kokoro's voice
+      - name: Set up Chatterbox (narrator voice)
+        continue-on-error: true
+        run: npm run setup:chatterbox
 
       - name: Tests
         run: npm test

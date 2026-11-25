@@ -64,6 +64,44 @@ function kokoro(sentences, { outDir, speed, limit }) {
 }
 
 /**
+ * Owner 2026-11-25: from the video of 2026-11-30 the narrator is Chatterbox (Resemble AI, MIT) with am_adam's timbre (a
+ * Kokoro recording as the reference voice), read as a storyteller (exaggeration 0.7, cfg 0.35), sped up x1.085 (sample 16
+ * of the comparison, 17.0 s like Kokoro's). Kokoro stays as the fallback, and is still the voice of the days before.
+ */
+export const VOICE_FROM = '2026-11-30';
+export function chatterboxConfig(env = process.env) {
+  const venv = path.join(ROOT, 'tools', 'chatterbox-venv');
+  return {
+    python: env.CHATTERBOX_PYTHON || path.join(venv, process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'),
+    ref: env.CHATTERBOX_REF || path.join(ROOT, 'assets', 'audio', 'voice', 'narrator_ref.wav'),
+    exaggeration: Number(env.CHATTERBOX_EXAGGERATION || 0.7),
+    cfg: Number(env.CHATTERBOX_CFG || 0.35),
+    tempo: Number(env.CHATTERBOX_TEMPO || 1.085),
+  };
+}
+
+/** Generate each sentence once (raw_<i>.wav, the model's pace); the tempo is applied by ffmpeg, so a retry is cheap. */
+function chatterboxRaw(sentences, { outDir, seed }) {
+  const cfg = chatterboxConfig();
+  if (!fs.existsSync(cfg.python)) throw new Error(`chatterbox python not found at ${cfg.python} (run npm run setup:chatterbox)`);
+  const script = path.join(ROOT, 'scripts', 'py', 'chatterbox_tts.py');
+  const r = spawnSync(cfg.python, [script, cfg.ref, String(cfg.exaggeration), String(cfg.cfg), String(seed), path.resolve(outDir)], {
+    input: sentences.map((s) => s.text.replace(/\s+/g, ' ')).join('\n'), encoding: 'utf8', maxBuffer: 1 << 24, timeout: 40 * 60 * 1000,
+  });
+  if (r.status !== 0) throw new Error(`chatterbox failed: ${(r.stderr || r.error?.message || '').slice(-400)}`);
+}
+
+function chatterboxAt(sentences, { outDir, tempo, limit }) {
+  const parts = sentences.map((_, i) => {
+    const out = path.resolve(outDir, `tts_${i}.wav`);
+    const r = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', path.resolve(outDir, `raw_${i}.wav`), '-af', `atempo=${tempo.toFixed(4)}`, '-c:a', 'pcm_s16le', out]);
+    if (r.status !== 0) throw new Error(`ffmpeg atempo failed: ${String(r.stderr).slice(-200)}`);
+    return readWav(out);
+  });
+  return assemble(sentences, parts, outDir, 'chatterbox', limit);
+}
+
+/**
  * When each sentence starts: right after the previous one, or later at its anchor (`at`, seconds on the
  * narration track) so it lines up with its shot; never so late that the rest no longer fits in `limit`.
  */
@@ -161,16 +199,36 @@ function silent(sentences, { outDir, limit }) {
 }
 
 /**
+ * The voices to try, in order. 'kokoro' (the default, TTS_PROVIDER in .env and the daily workflow) means the day's voice:
+ * Chatterbox from VOICE_FROM, then Kokoro; 'chatterbox' forces it on any day.
+ */
+export function voiceChain(provider, date) {
+  const p = provider === 'kokoro' && date && date >= VOICE_FROM ? 'chatterbox' : provider;
+  return { elevenlabs: ['elevenlabs', 'kokoro', 'piper', 'none'], chatterbox: ['chatterbox', 'kokoro', 'piper', 'none'], kokoro: ['kokoro', 'piper', 'none'], piper: ['piper', 'none'], none: ['none'] }[p] || ['kokoro', 'piper', 'none'];
+}
+
+/**
  * Synthesize the script. maxDuration: if the voice runs long, retry faster before giving up.
  * A sentence with `at` (seconds on the narration track) waits until then, to line up with its shot.
  */
-export async function synthesize(sentences, { outDir, provider = process.env.TTS_PROVIDER || 'kokoro', maxDuration = 28.3, log = console } = {}) {
+export async function synthesize(sentences, { outDir, provider = process.env.TTS_PROVIDER || 'kokoro', maxDuration = 28.3, log = console, date = null, seed = 1 } = {}) {
   fs.mkdirSync(outDir, { recursive: true });
-  const chain = { elevenlabs: ['elevenlabs', 'kokoro', 'piper', 'none'], kokoro: ['kokoro', 'piper', 'none'], piper: ['piper', 'none'], none: ['none'] }[provider] || ['kokoro', 'piper', 'none'];
+  const chain = voiceChain(provider, date);
   for (const p of chain) {
     try {
       if (p === 'elevenlabs') return await elevenlabs(sentences, { outDir });
       const limit = maxDuration;
+      if (p === 'chatterbox') {
+        chatterboxRaw(sentences, { outDir, seed });
+        let tempo = chatterboxConfig().tempo;
+        let out = chatterboxAt(sentences, { outDir, tempo, limit });
+        // too long for the video: faster, like Kokoro (at most x1.3, where atempo still sounds natural)
+        for (let k = 0; k < 2 && out.speech > maxDuration; k++) {
+          tempo = Math.min(1.3, tempo * (out.speech / maxDuration) * 1.03);
+          out = chatterboxAt(sentences, { outDir, tempo, limit });
+        }
+        return out;
+      }
       if (p === 'kokoro') {
         let speed = kokoroConfig().speed;
         let out = kokoro(sentences, { outDir, speed, limit });

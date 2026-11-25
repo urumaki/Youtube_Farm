@@ -1129,10 +1129,22 @@ Add new owner decisions here.
   that fronts a street (`placeFletcherWorkshop` in `world.js`, after the plots, so nothing moves).
   Once it stands, Fletchers work in its yard instead of their croft (`workPlace` in `main.js`: fletching at
   a bench, shooting at a target, visits), with the street and the camera in front.
-- `src/audio/` narration templates (names are never read aloud), Kokoro TTS (`am_adam`), procedural
+- `src/audio/` narration templates (names are never read aloud), Chatterbox TTS from 2026-11-30 (Kokoro `am_adam` before and as fallback), procedural
   music, camera-driven sound effects with strikes synced to the work animations (`sfx.js`).
   Owner 2026-11-24: Kokoro read "Long live" as "laiv"; `sayForKokoro` in `tts/index.js` spells it "liv" for the voice
   only (the subtitles keep "live"). Other words it gets wrong go in the same place.
+  The narrator from the video of 2026-11-30 (owner 2026-11-25, after a comparison of 12 Kokoro voices and 5 Chatterbox
+  takes, sample 16 picked, "slightly faster"): Chatterbox TTS (Resemble AI, MIT, `chatterbox-tts` 0.1.7, CPU) with am_adam's
+  timbre (the reference `assets/audio/voice/narrator_ref.wav` is a Kokoro am_adam recording), read as a storyteller
+  (exaggeration 0.7, cfg 0.35), then sped up x1.085 by ffmpeg `atempo` (17.0 s, like Kokoro's take of the same line).
+  `VOICE_FROM` and `voiceChain` in `tts/index.js`: with `TTS_PROVIDER=kokoro` (the default) a day from 2026-11-30 tries
+  Chatterbox first, then Kokoro, Piper, silence; days before keep Kokoro (a saved day made again sounds as published).
+  `scripts/py/chatterbox_tts.py` writes one `raw_<i>.wav` per sentence, seeded by the date (the same take when a day is
+  made again), and draws again (up to 3 takes, the shortest kept) when a line runs far past its length; the speed is set
+  afterwards, so a script too long for the video only takes a faster `atempo` (at most x1.3). Install: `npm run
+  setup:chatterbox` (venv `tools/chatterbox-venv`, ~3 GB model; the daily workflow caches it in `tools/hf`, and if the
+  setup fails the video keeps Kokoro). `CHATTERBOX_PYTHON` points elsewhere (a worktree: the main checkout's venv).
+  `--tts chatterbox` forces it on any day. About 2 min of CPU per 15 s of speech on the owner's PC.
   The voice follows the shots: `produceVideo` first sets the scene up once to get the shot plan
   (`sceneCues`), `sentenceAnchors` gives each sentence the start of the shot it talks about (goal at
   23.7 s, call to action at 27.1 s), and `schedule` in `tts/index.js` waits for those times but never
@@ -1206,7 +1218,7 @@ Add new owner decisions here.
   own villager, ranks and units for the guards, a tannery, a court, trade with other cities, iron for the blacksmith.
 
 ## Open ideas the owner mentioned
-- Choose a less robotic free voice (Chatterbox or Edge voices; samples via the Voice samples action).
+- Done 2026-11-25: a less robotic free voice (Chatterbox with am_adam's timbre from 2026-11-30, see `src/audio/`).
 - Done: comment text picks a job and a name (`src/sim/requests.js`), end credits roll in the wide shot
   (`overlay.js`). Owner does not want royal family or noble titles (prince, princess) as jobs for now. Done: tavern interior with named patrons.
   Ideas not done: narrator jokes for refused requests ("clone me", "landlord").
@@ -1217,7 +1229,7 @@ Add new owner decisions here.
   commenters a day.
 - More story events the owner may pick: wedding, villager leaving with a bundle on unsubscribe, carnival, May Day, harvest
   festival, a fair, a cooking contest, pilgrims, a visiting ambassador (done: the tournament and the events of 2026-10-25).
-- Voice still `am_adam`; owner may switch after listening to the Voice samples action.
+- Voice: Kokoro `am_adam` until 2026-11-29, Chatterbox (am_adam's timbre, storyteller, x1.085) from 2026-11-30.
 - Owner pinned (or will pin) a comment: "call me <name>" + a job, "watch the end credits".
 - Clean-up of 2026-10-25: the old Blender pipeline and Python uploaders (`legacy/`) are gone (in git history), unused exports
   removed, `state/kingdom.json` no longer stores the villagers (derived again on load, like the history snapshots),
