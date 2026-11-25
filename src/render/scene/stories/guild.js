@@ -334,7 +334,17 @@ function medalShot(args) {
       if (award === 2 && after > 0) { hold.set(-0.2, 1.1, 0.42); wr = V(0.3, 1.75 + 0.1 * Math.sin(t * 5), 0.2); }
       work.group.position.copy(W.root.position).add(hold);
       work.group.rotation.set(0, award === 0 ? 0.3 * Math.sin(t * 2) * after : 0.2, oneHand && win.c.job === 'fletcher' ? Math.PI / 2 : 0); // a bow carried upright
-      if (oneHand) { reach(W, 'l', hold.clone().add(V(0.02, 0.1, 0))); W.r.g.rotation.set(0.05, 0, 0.08); }
+      // the sword by its grip (0.1 m from the piece's middle): point down at the side, then (award 0) raised high in one
+      // hand, blade up; a sword held flat over the head hardly shows in the narrow frame
+      const sword = win.c.job === 'blacksmith', swordUp = sword && award === 0 && after > 0;
+      if (sword) {
+        const grip = swordUp ? V(0.28, lerp(1.0, 2.0, ease(after)), lerp(0.3, 0.18, ease(after))) : oneHand ? V(-0.34, 0.95, 0.12) : hold.clone();
+        if (swordUp) wr = grip;
+        work.group.position.copy(W.root.position).add(grip).add(V(0, swordUp ? 0.1 : -0.1, 0));
+        work.group.rotation.set(0, 0, swordUp ? Math.PI / 2 : -Math.PI / 2);
+      }
+      if (swordUp) { reach(W, 'r', wr); W.l.g.rotation.set(0.05, 0, -0.08); }
+      else if (oneHand) { reach(W, 'l', sword ? V(-0.34, 0.95, 0.12) : hold.clone().add(V(0.02, 0.1, 0))); W.r.g.rotation.set(0.05, 0, 0.08); }
       else if (wr) { reach(W, 'r', wr); reach(W, 'l', hold.clone().add(V(-0.05, 0, 0))); }
       else { reach(W, 'r', hold.clone().add(V(wide, 0, 0))); reach(W, 'l', hold.clone().add(V(-wide, 0, 0))); }
       flag.visible = award === 2 && after > 0;

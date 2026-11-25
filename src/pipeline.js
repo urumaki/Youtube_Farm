@@ -212,6 +212,8 @@ export async function testRender(args, log = console) {
   if (args.story === 'vote:result' && diff.story && !(diff.story.tally.a + diff.story.tally.b)) Object.assign(diff.story, { tally: { a: 12, b: 31 }, winner: 'b' });
   if (args.story === 'riddle:answer') beginWorkshop(state, diff); // the Engineers' Workshop, as the daily simulation does
   if (args.crafters && diff.story?.crafters) diff.story.crafters = diff.story.crafters.map((c, i) => ({ ...c, job: args.crafters[i] || c.job }));
+  // (and the first of them wins, as one who joined would: owner 2026-11-25)
+  if (args.crafters && diff.story?.crafters) { const w = diff.story.crafters[0].id; diff.story.winner = w; if (!diff.story.finalists.includes(w)) diff.story.finalists = [w, diff.story.finalists[0]]; }
   if (args.show) { diff.buildingsCompleted = [...args.show]; diff.buildingsStarted = []; }
   if (args.pov && diff.scenes) {
     const f = (diff.featured || []).find((x) => (args.pov === 'work' ? !AWAY_VARIANTS.has(diff.scenes.variants?.[x.id]) : !x.with));
