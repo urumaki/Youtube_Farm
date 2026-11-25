@@ -150,6 +150,11 @@ const NOT_ASKED = new RegExp([
   // owner 2026-11-17, from the comments of 2026-11-16: cheering others is no request ("glory to our military might, hail thy brave
   // warriors" made a hunter a guard)
   /\b(hail|glory\s+(to|for)|cheers?\s+(to|for)|long\s+live|praise\s+(to|for|be\s+to)?|salute)\s+(\w+\s+){0,3}$/.source,
+  // owner 2026-11-25, from the comments of 2026-11-24/25: the people one goes with ("sneak into the camp with some guards" asked
+  // for a guard), and congratulating someone ("congratulations on being knight", with an "I am proud" after it)
+  // (only a group: "with my sword" still asks for a guard, "problems with rats" for a rat catcher)
+  /\bwith\s+(some|a\s+few|several|other|the\s+other|my\s+fellow|our\s+fellow|two|three|four|five|\d+)\s+(\w+\s+)?$/.source,
+  /\b(on|for)\s+(being|becoming)\s+(made\s+)?(a\s+|an\s+|the\s+)?(new\s+)?$/.source,
 ].join('|'));
 // owner 2026-11-17: nor are the people one leads ("I will lead the peasants' militia" made a merchant a peasant: the militia is
 // the request); leading guards still asks for a guard
@@ -195,7 +200,8 @@ export function asksFromText(text) {
 const JOB_AFTER = /^[\w-]*\s+(job|role|position|apprenticeship|work)\b/;
 // "Ordinary citizen, will take a job of hunter": the job named after "a job of", "work as"... is the request, whatever came first
 // (2026-11-05: "as the first priest i request to be archbishop": the job after "want / request to be" comes first)
-const JOB_OF = /\b(job|work|career|role|position|post)\s+(of|as)\s+(a\s+|an\s+|the\s+)?$|\b(want|wish|request|ask|like|love|hope)\s+to\s+(be|become)\s+(a\s+|an\s+|the\s+)?$|\b(i|we)\s+(now\s+)?(want|choose|pick|take)\s+(a\s+|an\s+|the\s+)?$/;
+// (owner 2026-11-25: "my job (scribe), so I want to change to become a librarian": the job after "change to" comes first)
+const JOB_OF = /\b(change|switch|move)\s+(to|into)\s+((be|become)\s+)?(a\s+|an\s+|the\s+)?$|\b(job|work|career|role|position|post)\s+(of|as)\s+(a\s+|an\s+|the\s+)?$|\b(want|wish|request|ask|like|love|hope)\s+to\s+(be|become)\s+(a\s+|an\s+|the\s+)?$|\b(i|we)\s+(now\s+)?(want|choose|pick|take)\s+(a\s+|an\s+|the\s+)?$/;
 
 // Comment text is untrusted input. It is never run, never passed to a shell, a template or a language model:
 // only the fixed regexes in this file read it, and then it is dropped. plainText() makes it safe to scan: a

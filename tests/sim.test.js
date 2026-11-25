@@ -2098,3 +2098,13 @@ test('comments read wrong on the day 35 video: rebels, the dungeon as a place, h
   assert.equal(nameFromText('Wren is my villagers name'), 'Wren');
   assert.equal(nameFromText('my villager\'s name is Oswin'), 'Oswin');
 });
+
+test('requests: companions, congratulations and "change to become" (owner 2026-11-25, comments of 11-24/25 paraphrased)', async () => {
+  const { wantsFromText } = await import('../src/sim/requests.js');
+  assert.deepEqual(wantsFromText('we slip into their camp with some guards, and i request a bigger part in the story'), []);
+  assert.deepEqual(wantsFromText('Well fought! Congratulations on being knight, I am proud to have ridden against you'), []);
+  assert.deepEqual(wantsFromText('I cannot find my job (scribe), so I want to change to become a librarian'), ['librarian', 'scholar']);
+  // still requests
+  assert.deepEqual(wantsFromText('I humbly request to join the guard'), ['guard']);
+  assert.deepEqual(wantsFromText('can I become a militia man?'), ['guard']);
+});
