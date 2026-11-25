@@ -58,6 +58,15 @@ export function clipCheck(ws, { from = 0, to = 8, step = 0.1, env = [] } = {}) {
   const take = (o) => o?.traverse((m) => { if (m.isMesh && !m.userData.touch && !m.userData.floor && !under(m, P.root)) targets.push(m); });
   take(ws.props);
   env.forEach(take);
+  // props that move during the check are held or handled things (the bowl being filled, a seal, a sack laid on the load):
+  // they count against the arms, the body and the head, not against the hands and the tool
+  const first = new Map(), moving = new Set();
+  for (let t = from; t <= to + 1e-9; t += step) { // first pass: which props move
+    ws.update(t, true);
+    ws.group.updateMatrixWorld(true);
+    for (const o of env) o.updateMatrixWorld(true);
+    for (const m of targets) { const e = m.matrixWorld.elements; if (!first.has(m)) first.set(m, [...e]); else if (first.get(m).some((x, i) => Math.abs(x - e[i]) > 1e-4)) moving.add(m); }
+  }
   const found = new Map();
   for (let t = from; t <= to + 1e-9; t += step) {
     ws.update(t, true);
@@ -70,12 +79,13 @@ export function clipCheck(ws, { from = 0, to = 8, step = 0.1, env = [] } = {}) {
       for (const [p, q] of [[a, b], [b, a]]) {
         ray.set(p, q.clone().sub(p).normalize());
         ray.near = 0; ray.far = len;
-        const hit = ray.intersectObjects(targets, false).find((h) => !(impact && h.point.distanceTo(impact) < IMPACT_OK));
+        const held = part === 'tool' || part === 'handR' || part === 'handL';
+        const hit = ray.intersectObjects(targets, false).find((h) => !(impact && h.point.distanceTo(impact) < IMPACT_OK) && !(held && moving.has(h.object)));
         if (!hit) continue;
         const key = `${part}|${hit.object.uuid}`;
         if (!found.has(key)) {
           const at = ws.group.worldToLocal(hit.point.clone()).toArray().map((v) => Math.round(v * 100) / 100);
-          found.set(key, { part, t: Math.round(t * 100) / 100, mesh: hit.object.name || hit.object.geometry.type, at });
+          found.set(key, Object.defineProperty({ part, t: Math.round(t * 100) / 100, mesh: hit.object.name || hit.object.geometry.type, at }, 'object', { value: hit.object }));
         }
         break;
       }

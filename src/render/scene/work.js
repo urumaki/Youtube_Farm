@@ -178,7 +178,7 @@ export const JOB_SCENES = {
   // the baker works inside the bakehouse (bakery.js), which builds the oven around the mouth; the peel is
   // highest when pushed into the oven and carries a loaf in
   baker: { period: 1.8, hit: 0.55, raise: -1.12, down: -1.05, slide: [-0.45, 0.55], bend: 0.1, fx: 'embers', sound: 'none', tool: 'peel', props: 'ovenmouth', both: true, push: true, loaf: true },
-  fisherman: { period: 2.6, hit: 0.5, raise: -2.2, down: -1.0, bend: 0.05, fx: 'splash', sound: 'none', tool: 'rod', props: 'pond', both: true },
+  fisherman: { period: 2.6, hit: 0.5, raise: -2.2, down: -1.25, bend: 0.05, fx: 'splash', sound: 'none', tool: 'rod', props: 'pond', both: true },
   miller: { period: 1.5, hit: 0.6, raise: -1.6, down: -1.0, bend: 0.25, fx: 'dust', sound: 'none', tool: 'sack', props: 'sacks', both: true },
   guard: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'spear', props: 'post', left: -0.6, look: true },
   knight: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'sword', props: 'post', left: -0.6, look: true },
@@ -240,7 +240,7 @@ export const JOB_SCENES = {
   falconer: { period: 4.0, raise: -0.15, down: -0.15, bend: 0, sound: 'none', tool: null, props: 'falcon', smooth: true, left: -1.45, still: true },
   // owner 2026-10-23: in a meadow outside the walls, a wider shot, one flight of the falcon from the shot's start
   'falconer:meadow': { period: 3.4, hit: 0.5, raise: -0.15, down: -0.15, bend: 0, sound: 'none', tool: null, props: 'falcon', smooth: true, left: -1.45, still: true, once: true, focusH: 1.8, radius: 8.5 },
-  cook: { period: 2.0, hit: 0.5, raise: -1.2, down: -1.2, bend: 0.15, fx: 'steam', sound: 'none', tool: 'paddle', props: 'cauldron', stir: true, both: true },
+  cook: { period: 2.0, wrist: 0.3, stirA: 0.08, stirZ: 0.14, hit: 0.5, raise: -1.4, down: -1.4, bend: 0.15, fx: 'steam', sound: 'none', tool: 'paddle', props: 'cauldron', stir: true, both: true },
   executioner: { period: 1.6, hit: 0.72, raise: -2.8, down: -0.9, bend: 0.25, fx: 'leaves', sound: 'chop', tool: 'axe', props: 'chopblock', both: true, hood: true },
   // asked for in the comments of 2026-10-22 (owner 2026-10-23): the hunter practises with the bow on a straw
   // deer (no animal is hurt), the butcher chops a ham under a rack of sausages, the engineer hammers at a
@@ -301,7 +301,7 @@ Object.assign(JOB_SCENES, {
   'beggar:collapsed': { period: 3.8, raise: 0, down: 0, bend: 0, sound: 'none', tool: null, props: 'asleep', sleep: true, home: 2.4, homeTurn: Math.PI / 2, focusH: 0.45, labelH: 1.15, radius: 5 },
   'beggar:hat': { period: 3.4, raise: -1.5, down: -0.35, bend: 0.28, sound: 'none', tool: 'tankard', props: 'begging', smooth: true, left: -0.15, sway: true },
   'innkeeper:barrel': { period: 2.6, hit: 0.4, raise: -1.15, down: -0.95, bend: 0.1, fx: 'ale', sound: 'none', tool: 'tankard', props: 'keg', smooth: true, left: -0.7 },
-  'brewer:stir': { period: 2.0, hit: 0.5, raise: -1.2, down: -1.2, bend: 0.2, fx: 'steam', sound: 'none', tool: 'paddle', props: 'vat', stir: true, both: true },
+  'brewer:stir': { period: 2.0, wrist: 0.3, stirA: 0.08, stirZ: 0.14, hit: 0.5, raise: -1.4, down: -1.4, bend: 0.2, fx: 'steam', sound: 'none', tool: 'paddle', props: 'vat', stir: true, both: true },
   // owner 2026-10-23: at their own place, with people queueing in front of them (queue.js; `queue`): the tax collector at
   // the door of the Counting House with taxpayers holding their purses, the apothecary at the Apothecary's Shop with the
   // sick and the lame, the merchant behind a market stall weighing goods for a haggling customer
@@ -823,9 +823,9 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       for (const x of [-0.6, 0.6]) add(boxGeo(0.08, 0.8, 0.6).translate(x, 0.4, 0.62), M.woodDark);
       add(boxGeo(0.5, 0.04, 0.36).translate(-0.35, 0.86, 0.6), M.clothIvory); // the open book
       add(boxGeo(0.02, 0.05, 0.36).translate(-0.35, 0.87, 0.6), M.woodDark);
-      add(boxGeo(0.45, 0.3, 0.3).translate(0.45, 0.99, 0.75), M.woodDark); // the chest, lid open
-      add(boxGeo(0.45, 0.04, 0.3).rotateX(-1.1).translate(0.45, 1.25, 0.95), M.woodDark);
-      add(boxGeo(0.4, 0.05, 0.25).translate(0.45, 1.1, 0.75), M.gold);
+      add(boxGeo(0.4, 0.3, 0.3).translate(0.55, 0.99, 0.75), M.woodDark); // the chest, lid open (clear of the counting hand)
+      add(boxGeo(0.4, 0.04, 0.3).rotateX(-1.1).translate(0.55, 1.25, 0.95), M.woodDark);
+      add(boxGeo(0.35, 0.05, 0.25).translate(0.55, 1.1, 0.75), M.gold);
       for (const [x, n] of [[0.0, 5], [0.12, 3], [0.2, 7]]) add(cylGeo(0.04, 0.04, n * 0.012, 10).translate(x, 0.84 + n * 0.006, 0.45), M.gold);
       return new THREE.Vector3(0.05, 0.9, 0.5);
     }
@@ -892,16 +892,18 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       return c;
     }
     case 'keg': { // a barrel on a stand with a tap, ale running into the tankard
-      add(cylGeo(0.38, 0.38, 0.9, 12).rotateX(Math.PI / 2).translate(0.3, 1.1, 1.0), M.wood);
-      for (const z of [0.7, 1.3]) add(boxGeo(0.8, 0.72, 0.08).translate(0.3, 0.36, z), M.woodDark);
-      add(cylGeo(0.03, 0.03, 0.18, 6).rotateX(Math.PI / 2).translate(0.3, 0.92, 0.5), M.iron);
-      return new THREE.Vector3(0.3, 0.88, 0.45);
+      // owner 2026-11-25: 0.15 m further than before, the hand at the tankard clear of the barrel
+      add(cylGeo(0.38, 0.38, 0.9, 12).rotateX(Math.PI / 2).translate(0.3, 1.1, 1.15), M.wood);
+      for (const z of [0.85, 1.45]) add(boxGeo(0.8, 0.72, 0.08).translate(0.3, 0.36, z), M.woodDark);
+      add(cylGeo(0.03, 0.03, 0.18, 6).rotateX(Math.PI / 2).translate(0.3, 0.92, 0.65), M.iron);
+      return new THREE.Vector3(0.3, 0.88, 0.58);
     }
     case 'vat': { // a big brewing vat, steaming
-      add(cylGeo(0.72, 0.62, 0.95, 16).translate(0, 0.47, 1.05), M.wood);
-      add(cylGeo(0.66, 0.66, 0.02, 16).translate(0, 0.9, 1.05), new THREE.MeshStandardMaterial({ color: '#8a5a1f', roughness: 0.3 }));
-      for (let i = 0; i < 2; i++) add(new THREE.TorusGeometry(0.7 - i * 0.05, 0.02, 4, 18).rotateX(Math.PI / 2).translate(0, 0.25 + i * 0.5, 1.05), M.iron);
-      return new THREE.Vector3(0, 0.92, 1.05);
+      // owner 2026-11-25: centred where the paddle goes round (the new rig's stirring arms)
+      add(cylGeo(0.72, 0.62, 0.8, 16, 4, true).translate(-0.43, 0.4, 1.79), M.wood); // open at the top: the paddle goes in
+      add(cylGeo(0.66, 0.66, 0.02, 16).translate(-0.43, 0.74, 1.79), new THREE.MeshStandardMaterial({ color: '#8a5a1f', roughness: 0.3 })).userData.touch = true; // the brew: the paddle goes in
+      for (let i = 0; i < 2; i++) add(new THREE.TorusGeometry(0.7 - i * 0.05, 0.02, 4, 18).rotateX(Math.PI / 2).translate(-0.43, 0.25 + i * 0.5, 1.79), M.iron);
+      return new THREE.Vector3(-0.43, 0.76, 1.79);
     }
     case 'wheel': { // a potter's wheel turning; the pot on it grows taller through the shot
       add(boxGeo(0.7, 0.62, 0.7).translate(0, 0.31, 0.62), M.woodDark);
@@ -1115,15 +1117,16 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       return new THREE.Vector3(-0.3, 1.5, 0.66);
     }
     case 'cauldron': { // a pot on a tripod over a fire, the stew steaming
+      // owner 2026-11-25: centred where the paddle goes round (the new rig's stirring arms)
       for (let k = 0; k < 3; k++) {
         const a = (k / 3) * Math.PI * 2;
-        add(cylGeo(0.025, 0.025, 1.1, 5).translate(0, 0.55, 0).rotateZ(Math.cos(a) * 0.3).rotateX(Math.sin(a) * 0.3).translate(Math.cos(a) * 0.45, 0, 1.05 + Math.sin(a) * 0.45), M.iron);
+        add(cylGeo(0.025, 0.025, 1.1, 5).translate(0, 0.55, 0).rotateZ(Math.cos(a) * 0.3).rotateX(Math.sin(a) * 0.3).translate(-0.43 + Math.cos(a) * 0.62, 0, 1.79 + Math.sin(a) * 0.62), M.iron);
       }
-      add(cylGeo(0.5, 0.38, 0.5, 16).translate(0, 0.62, 1.05), M.iron);
-      add(cylGeo(0.47, 0.47, 0.02, 16).translate(0, 0.85, 1.05), M.clay);
-      for (let i = 0; i < 4; i++) add(cylGeo(0.05, 0.06, 0.6, 6).rotateZ(Math.PI / 2).rotateY(i * 0.8).translate(0, 0.08, 1.05), M.woodDark);
-      add(new THREE.ConeGeometry(0.25, 0.35, 8).translate(0, 0.25, 1.05), new THREE.MeshBasicMaterial({ color: '#ff9a3c' }));
-      return new THREE.Vector3(0, 0.88, 1.05);
+      add(cylGeo(0.5, 0.38, 0.4, 16, 4, true).translate(-0.43, 0.57, 1.79), M.iron); // open at the top: the paddle goes in
+      add(cylGeo(0.47, 0.47, 0.02, 16).translate(-0.43, 0.74, 1.79), M.clay).userData.touch = true; // the stew: the paddle goes in
+      for (let i = 0; i < 4; i++) add(cylGeo(0.05, 0.06, 0.6, 6).rotateZ(Math.PI / 2).rotateY(i * 0.8).translate(-0.43, 0.08, 1.79), M.woodDark);
+      add(new THREE.ConeGeometry(0.25, 0.35, 8).translate(-0.43, 0.25, 1.79), new THREE.MeshBasicMaterial({ color: '#ff9a3c' }));
+      return new THREE.Vector3(-0.43, 0.77, 1.79);
     }
     case 'deer': { // a straw deer for practice, side on a few metres away, a red mark on its flank
       const d = new THREE.Vector3(-Math.cos(1.3), 0, Math.sin(1.3));
@@ -2012,7 +2015,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     // wind up slowly, strike fast, recover
     let a;
     if (cfg.sweep || cfg.archer) a = cfg.raise;
-    else if (cfg.stir) a = cfg.raise + 0.25 * Math.sin(c * Math.PI * 2);
+    else if (cfg.stir) a = cfg.raise + (cfg.stirA ?? 0.25) * Math.sin(c * Math.PI * 2);
     else if (cfg.wave) a = cfg.raise + 0.35 * Math.sin(t * 7);
     else if (cfg.smooth) a = THREE.MathUtils.lerp(down, R, Math.max(0, Math.sin(c * Math.PI * 2)) ** 1.5);
     else if (cfg.dance) a = THREE.MathUtils.lerp(cfg.down, cfg.raise, 0.5 + 0.5 * Math.sin(c * Math.PI * 2));
@@ -2071,15 +2074,15 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
       let strike = 0;
       if (STRIKE) {
         const h0 = cfg.hit - 0.12, back = 1 - s01;
-        const pull = u > cfg.hit ? ease(Math.min(1, (u - cfg.hit) / 0.2)) : u < h0 ? 1 - ease(Math.min(1, u / Math.max(0.05, h0))) : 0;
-        strike = u >= h0 && u <= cfg.hit ? f0 + (f1 - f0) * Math.sqrt(back) : f0 + (f1 - f0) * back + 0.3 * pull;
+        const pull = u > cfg.hit ? ease(Math.min(1, (u - cfg.hit) / 0.12)) : u < h0 ? 1 - ease(Math.min(1, u / Math.max(0.05, h0))) : 0;
+        strike = u >= h0 && u <= cfg.hit ? f0 + (f1 - f0) * Math.sqrt(back) : f0 + (f1 - f0) * back + 0.45 * pull;
       }
       const flex = STRIKE ? strike : cfg.push ? 0.75 * (1 - push) + 0.1 : cfg.smooth ? 0.35 + 0.2 * Math.sin(c * Math.PI * 2 - 0.7) : cfg.stir ? 0.45 + 0.12 * Math.cos(c * Math.PI * 2) : 0.25;
       P.r.elbow.rotation.x = -flex;
       // a peel slides through the baker's hands into the oven and back (cfg.slide: [from, how far], m along the handle)
       if (cfg.slide && tool?.userData.axis) tool.position.copy(tool.userData.axis).multiplyScalar(cfg.slide[0] + cfg.slide[1] * push);
       // the wrist keeps a long tool (a peel, a paddle) at the angle the shoulder gives it, so the elbow moves it, not tips it
-      P.r.hand.rotation.x = cfg.push || cfg.stir ? flex : cfg.smooth ? 0.5 * flex : 0;
+      P.r.hand.rotation.x = (cfg.push || cfg.stir ? flex : cfg.smooth ? 0.5 * flex : 0) + (cfg.wrist ?? 0);
       P.l.elbow.rotation.x = cfg.both ? -flex : -(0.3 + 0.05 * br);
       if (STRIKE) {
         P.body.rotation.x -= 0.09 * (1 - s01); // leans back on the backswing, drives through the stroke
@@ -2095,9 +2098,9 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
         // the pause: stand up straight, then a hand to the brow, a stretch of the back, or a look round
         const k = ck.q.kind, w = restS * 7;
         P.body.rotation.x = THREE.MathUtils.lerp(P.body.rotation.x, k === 1 ? -0.22 : -0.04, g);
-        P.l.g.rotation.x = THREE.MathUtils.lerp(P.l.g.rotation.x, k === 0 ? -2.1 : k === 1 ? 0.55 : 0.3, g);
-        P.l.g.rotation.z = THREE.MathUtils.lerp(P.l.g.rotation.z, k === 0 ? 0.55 + 0.18 * Math.sin(w) : k === 1 ? -0.25 : -0.05, g);
-        P.l.elbow.rotation.x = THREE.MathUtils.lerp(P.l.elbow.rotation.x, k === 0 ? -2.0 : k === 1 ? -1.7 : -0.2, g);
+        if (k !== 2) P.l.g.rotation.x = THREE.MathUtils.lerp(P.l.g.rotation.x, k === 0 ? -2.1 : 0.55, g); // a look round: the hand stays where it was
+        if (k !== 2) P.l.g.rotation.z = THREE.MathUtils.lerp(P.l.g.rotation.z, k === 0 ? 0.55 + 0.18 * Math.sin(w) : -0.25, g);
+        if (k !== 2) P.l.elbow.rotation.x = THREE.MathUtils.lerp(P.l.elbow.rotation.x, k === 0 ? -2.0 : -1.7, g);
         if (cfg.both) { P.r.g.rotation.z = THREE.MathUtils.lerp(P.r.g.rotation.z, 0, g); }
         const look = k === 2 ? 0.75 * Math.sin(restS * 1.9) : k === 1 ? 0 : 0.1;
         nod(P, THREE.MathUtils.lerp(P.head.rotation.x, k === 1 ? -0.25 : k === 0 ? 0.12 : 0, g));
@@ -2147,7 +2150,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
       if (cfg.sweep || cfg.stir) P.body.rotation.x = cfg.bend;
       if (cfg.sweep) P.body.rotation.y = twist(cycleU);
       if (cfg.stir) {
-        const z = 0.3 * Math.cos(c * Math.PI * 2);
+        const z = (cfg.stirZ ?? 0.3) * Math.cos(c * Math.PI * 2);
         P.r.g.rotation.z = z - (cfg.both ? 0.28 : 0);
         if (cfg.both) { P.l.g.rotation.x = a; P.l.g.rotation.z = z + 0.28; }
       }
