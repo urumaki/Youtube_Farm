@@ -1336,8 +1336,9 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       add(cylGeo(0.24, 0.3, 0.28, 12, 1, true).translate(0, 0.9, 0.85), M.clothIvory); // the cloth
       add(cylGeo(0.05, 0.05, 0.85, 6).translate(0.85, 0.42, 0.6), M.woodDark);
       add(cylGeo(0.25, 0.18, 0.12, 12).translate(0.85, 0.9, 0.6), M.iron); // the basin
-      add(boxGeo(0.45, 0.6, 0.04).translate(0, 1.25, 1.5), M.iron); // the mirror, on a post
-      add(boxGeo(0.06, 1.0, 0.06).translate(0, 0.5, 1.52), M.woodDark);
+      // the mirror on a post, off to the customer's side and turned to him: in front of him it hid the shave from the camera
+      add(boxGeo(0.45, 0.6, 0.04).rotateY(0.9).translate(-0.8, 1.25, 1.35), M.iron);
+      add(boxGeo(0.06, 1.0, 0.06).translate(-0.82, 0.5, 1.37), M.woodDark);
       anim.push((t) => { C.head.rotation.y = 0.15 * Math.sin(t * 0.7); });
       return new THREE.Vector3(0, 1.35, 0.75);
     }
