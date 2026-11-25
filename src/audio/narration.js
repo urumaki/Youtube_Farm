@@ -174,6 +174,10 @@ const L = {
   },
 };
 
+// owner 2026-11-25: every story cue has its payoff (src/audio/lines.js PAYOFF); the pools that take turns from 2026-11-26
+export const STORY_CUES = Object.keys(L.story);
+export const BASE_POOLS = { open: L.open, comment: L.comment, cta: L.cta, goal: L.goal, tavern: L.tavern, church: L.church, weather: L.weather };
+
 const OVER_EN = { chicken: 'a runaway chicken', goat: 'a stubborn goat', cabbage: 'the last cabbage' };
 function plural(j) { return j.endsWith('man') ? j.slice(0, -3) + 'men' : j + 's'; }
 function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
