@@ -63,3 +63,18 @@ test('the real kingdom: one shop for every SHOP_SIZE villagers of a trade', () =
   const houses = shops.map((x) => x.house).filter((h) => typeof h === 'number');
   assert.equal(new Set(houses).size, houses.length, 'one shop a house');
 });
+
+test('every kind of shop front builds with a counter', async () => {
+  const { shopFront, SHOP_KINDS } = await import('../src/render/scene/shopfronts.js');
+  const { fakeMaterials } = await import('./helpers/scene.js');
+  const M = fakeMaterials();
+  for (const kind of [...SHOP_KINDS, 'nothing']) {
+    const g = shopFront(kind, M);
+    assert.ok(g.userData.counter?.isVector3, `${kind}: a counter`);
+    assert.equal(g.userData.kind, kind);
+  }
+  assert.ok(SHOP_KINDS.includes('weaver') && SHOP_KINDS.length === 6);
+  const tax = shopFront('taxcollector', M);
+  assert.equal(tax.userData.guards.length, 2);
+  assert.equal(tax.children.filter((c) => c.type === 'Group').length, 2, 'two guards stand at the counter');
+});

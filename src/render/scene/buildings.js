@@ -7,6 +7,7 @@ import { rand01 } from '../../sim/prng.js';
 import { planWall2, wallLayout } from '../../sim/wall.js';
 import { awningTexture, plaqueTexture, ROYAL } from './textures.js';
 import { nobles } from '../../sim/stories.js';
+import { shopFront } from './shopfronts.js';
 
 const STALL_COLORS = [['#9b1b30', '#f3ead2'], ['#1d2f6f', '#f3ead2'], ['#2f6b3a', '#efe2b8'], ['#c27a1d', '#f6ecd0'], ['#5b2a86', '#efe6d2'], ['#9b1b30', '#e3b23c']];
 
@@ -513,7 +514,7 @@ export const BUILD = { // (exported for the overlap check, scripts/zfight.js)
     out.lights.push([-4.4, 2.3, 3.0]);
     out.focusH = 2.6;
   },
-  counting_house(b, lot, out) {
+  counting_house(b, lot, out, ctx) {
     // owner 2026-10-23: the tax collector's house. A stone ground floor with barred windows and an arched door,
     // a timber upper storey jutting over the street, the royal banners, a sign with a gold coin; the front (+z)
     // stays clear for the queue of taxpayers along it
@@ -525,10 +526,11 @@ export const BUILD = { // (exported for the overlap check, scripts/zfight.js)
     b.add('woodDark', boxGeo(1.4, 2.3, 0.15), 1.6, 1.15, 0.58); // the door under a round arch
     b.add('stoneDark', new THREE.TorusGeometry(0.75, 0.14, 6, 12, Math.PI), 1.6, 2.3, 0.6);
     b.add('woodDark', new THREE.CircleGeometry(0.7, 12, 0, Math.PI), 1.6, 2.3, 0.58);
-    for (const x of [-3.2, -1.2]) { // barred windows
-      b.add('window', boxGeo(1.0, 1.1, 0.12), x, 1.8, 0.56);
-      for (let i = -1; i <= 1; i++) b.add('iron', boxGeo(0.05, 1.1, 0.05), x + i * 0.3, 1.8, 0.66);
-    }
+    // owner 2026-11-25: the tax booth out in front of the left-hand windows (shopfronts.js): the collector behind its barred
+    // counter, two guards with spears beside it, the taxpayers' queue in front; out.counter: where the collector stands
+    const booth = shopFront('taxcollector', ctx.M);
+    out.extras.push({ obj: booth, at: [-2.2, 0, 0.56 + 1.6] });
+    out.counter = [-2.2 + booth.userData.counter.x, 0, 0.56 + 1.6 + booth.userData.counter.z];
     windowsRow(b, -3.4, 3.4, 4.6, 0.86, 3, 'windowWarm');
     // the sign: a gold coin on an iron arm by the door
     b.add('iron', boxGeo(0.06, 0.06, 1.0), 2.8, 2.9, 1.05);
@@ -1033,7 +1035,7 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
   STALL_COLORS.forEach(([a, c], i) => { extraMats['awning' + i] = new THREE.MeshStandardMaterial({ map: awningTexture(a, c), roughness: 0.85, side: THREE.DoubleSide }); });
   const mats = { ...M, ...extraMats };
   const built = new Set(state.buildings.map((b) => b.id));
-  const ctx = { built, boats: [], sails: [], lamps: [], lampsWorld: [] };
+  const ctx = { built, boats: [], sails: [], lamps: [], lampsWorld: [], M };
   const items = {};
   const smoke = [], lights = [], flags = [], banners = [], sails = [], boats = [];
 
@@ -1057,7 +1059,7 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     const parent = lot.onPlaza && w.lots[lot.onPlaza];
     const frame = parent ? plazaFrame(w, parent, lot) : lotFrame(w, lot);
     const b = new Builder();
-    const out = { smoke: [], lights: [], flags: [], banners: [], focusH: 6 };
+    const out = { smoke: [], lights: [], flags: [], banners: [], focusH: 6, extras: [] };
     ctx.boats = []; ctx.sails = []; ctx.lamps = []; ctx.w = w; ctx.frame = frame;
     fn(b, lot, out, ctx);
     // a leveled foundation pad (skip on water)
@@ -1082,6 +1084,7 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     root.matrix.copy(frame.m);
     const body = new THREE.Group();
     body.add(inner);
+    for (const { obj, at } of out.extras) { obj.position.set(...at); body.add(obj); } // whole objects (the tax booth and its guards)
     root.add(body);
     if (!lot.onWater && !parent && bd.id !== 'quarry') root.add(foundation); // squares too: stalls and crosses need a level floor
     // construction site extras, standing on the ground (or the river bed) below the lot level
@@ -1100,7 +1103,7 @@ export function buildBuildings(w, state, M, { season, progressOverride = {} } = 
     for (const s of ctx.sails) sails.push({ pos: s.at.clone().applyMatrix4(frame.m), len: s.len, rot: lot.rot });
     for (const bt of ctx.boats) boats.push({ pos: toWorld([bt.x, 0, bt.z]), rot: lot.rot + bt.r, len: bt.len, sail: bt.sail });
     const item = {
-      group: root, body, site: siteGroup, focus: toWorld([0, out.focusH, 0]), lot, base: frame.base, toWorld, pier: out.pier,
+      group: root, body, site: siteGroup, focus: toWorld([0, out.focusH, 0]), lot, base: frame.base, toWorld, pier: out.pier, counter: out.counter,
       // the paved foundation under the lot (its top 0.05 m over `base`, 0.5 m wider than the lot, `padH` deep; a square's
       // sides slope out `flare` metres at the bottom); stalls on a square stand on the square's
       pad: !lot.onWater && !parent && bd.id !== 'quarry', padH, flare: lot.plaza ? padH * 1.8 : 0,

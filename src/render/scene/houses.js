@@ -9,6 +9,8 @@ import { insideWall2 } from '../../sim/wall.js';
 import { hash, rand01 } from '../../sim/prng.js';
 import { gableGeo, boxGeo, cylGeo } from './kit.js';
 import { buildHouseVariant, propGeos } from './houseKit.js';
+import { shopsOf } from '../../sim/shops.js';
+import { shopFront } from './shopfronts.js';
 
 const ROOF_COLORS = ['#a24b31', '#8a3f2b', '#6e6f78', '#9a5c3c', '#7a4a3a', '#b0603c', '#c46a3c', '#5d4a40', '#8c5a48'].map((c) => new THREE.Color(c));
 // limewash in several earth pigments: cream, ochre, rose, pale grey-blue, buff, white
@@ -218,6 +220,24 @@ export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 300 
   }
 
   const group = new THREE.Group();
+  // owner 2026-11-25: the shop fronts on the street side of the shops' houses (src/sim/shops.js, shopfronts.js): on a footing
+  // down to the street, the worker's spot behind the counter, facing the street
+  const shops = new Map();
+  for (const shop of shopsOf(state)) {
+    const sh = typeof shop.house === 'number' ? shapes.get(shop.house) : null;
+    if (!sh || animatedIds.has(shop.house)) continue;
+    const g = shopFront(shop.job, M);
+    g.matrixAutoUpdate = false;
+    g.matrix.copy(local(sh, 0, 0, -sh.D / 2 - 1.6, 1, 1, 1, Math.PI));
+    const foot = new THREE.Mesh(boxGeo(3.5, sh.base - sh.hmin + 0.3, 1.8).translate(0, -(sh.base - sh.hmin + 0.3) / 2 + 0.02, -0.75), M.stoneDark);
+    foot.receiveShadow = true;
+    g.add(foot);
+    g.updateMatrixWorld(true);
+    group.add(g);
+    const counter = g.userData.counter.clone().applyMatrix4(g.matrix);
+    const out = new THREE.Vector3(0, 0, 1).transformDirection(g.matrix).setY(0).normalize();
+    shops.set(shop.house, { group: g, counter, ax: out.x, az: out.z, face: Math.atan2(out.x, out.z), base: sh.base, kind: shop.job });
+  }
   const chunkList = [];
   for (const ch of chunks.values()) {
     const near = new THREE.Group(), far = new THREE.Group();
@@ -227,7 +247,7 @@ export function buildHouses(state, w, M, { animatedIds = new Set(), chunk = 300 
     chunkList.push({ near, far, cx: ch.cx, cz: ch.cz });
   }
   return {
-    group, chimneys, shapes, unit, props, HM,
+    group, chimneys, shapes, unit, props, HM, shops,
     updateLod(camera, nearDist = 480) {
       for (const c of chunkList) {
         const d = Math.hypot(camera.position.x - c.cx, camera.position.z - c.cz);
