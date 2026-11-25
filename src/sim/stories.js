@@ -653,12 +653,16 @@ const BUILD = {
     state.eventEntrants = []; // the match is played: the next event takes new entries
     // the draw alternates the sides, so those who joined are on both
     const reds = players.filter((_, i) => i % 2 === 0), blues = players.filter((_, i) => i % 2 === 1);
-    const winner = r.chance(0.5) ? 'red' : 'blue';
+    // (owner 2026-11-25: who commented "!join" wins: the side with more of them, a draw between the sides decided by chance)
+    const nj = (side) => side.filter((p) => p.joined).length;
+    const winner = nj(reds) > nj(blues) ? 'red' : nj(blues) > nj(reds) ? 'blue' : r.chance(0.5) ? 'red' : 'blue';
     const won = r.int(2, 3), lost = r.int(0, won - 1);
     // the goals in order: the losers' (if any) first, the winners' last one the winning goal (the video shows the last)
     const side = (s) => (s === 'red' ? reds : blues);
     const order = [...Array(lost).fill(winner === 'red' ? 'blue' : 'red'), ...Array(won).fill(winner)];
-    const goals = order.map((s) => ({ side: s, by: r.pick(side(s)).id }));
+    // the winners' goals by those of them who joined, when there are (the last one is the winning goal)
+    const scorers = (s) => (s === winner && side(s).some((p) => p.joined) ? side(s).filter((p) => p.joined) : side(s));
+    const goals = order.map((s) => ({ side: s, by: r.pick(scorers(s)).id }));
     const taken = new Set(players.map((p) => p.id));
     const crowd = namedVillagers(state).filter((n) => !taken.has(n.id)).slice(0, 8).map(strip);
     return { reds, blues, winner, score: { red: winner === 'red' ? won : lost, blue: winner === 'blue' ? won : lost }, goals,
@@ -684,9 +688,14 @@ const BUILD = {
     if (out.length < 3) return null;
     state.eventEntrants = [];
     // two tasks decide the final pair, the King's choice decides the winner
+    // (owner 2026-11-25: who commented "!join" goes to the final first and wins over who did not)
     const ids = out.map((c) => c.id);
-    const pool = [...ids], finalists = [pool.splice(r.int(0, pool.length - 1), 1)[0], pool.splice(r.int(0, pool.length - 1), 1)[0]];
-    const winner = r.pick(finalists);
+    const joinedIds = out.filter((c) => c.joined).map((c) => c.id);
+    const finalists = [];
+    for (const pool of [joinedIds.filter(() => true), ids.filter((id) => !joinedIds.includes(id))]) {
+      while (finalists.length < 2 && pool.length) finalists.push(pool.splice(r.int(0, pool.length - 1), 1)[0]);
+    }
+    const winner = r.pick(finalists.filter((id) => joinedIds.includes(id)).length ? finalists.filter((id) => joinedIds.includes(id)) : finalists);
     const task = r.pick(['something useful for the kingdom', 'something fit for the King', 'something for the winter']);
     const taken = new Set(ids);
     const crowd = namedVillagers(state).filter((n) => !taken.has(n.id)).slice(0, 8).map(strip);
@@ -1032,8 +1041,11 @@ function game(state, r, arc, id) {
   state.gamesEntrants = []; // the game is run: the next games take new entries
   // the Grand Joust (owner 2026-11-01): a knockout in the order drawn, each bout 50/50, the rounds decided now (8, 16 or 32
   // riders, owner 2026-11-23: three, four or five rounds; the video shows the champion's last three)
-  const rounds = GAMES[id].bracket ? knockout(riders, r) : null;
-  const winner = rounds ? rounds.at(-1)[0].winner : r.pick(riders).id;
+  // (owner 2026-11-25: a guard who commented "!join" wins over one who did not: every bout between the two, the race)
+  const joinedIds = new Set(riders.filter((x) => x.joined).map((x) => x.id));
+  const rounds = GAMES[id].bracket ? knockout(riders, r, joinedIds) : null;
+  const fast = riders.filter((x) => joinedIds.has(x.id));
+  const winner = rounds ? rounds.at(-1)[0].winner : r.pick(fast.length ? fast : riders).id;
   // owner 2026-11-24: never the same Grand Joust twice running (the same shots again get fewer views): each one takes the
   // next look (grandjoust.js `LOOKS`; the jousts of days 17 and 40 were look 0)
   const look = rounds ? ((state.looks?.[id] ?? 0) + 1) % JOUST_LOOKS : undefined;
@@ -1046,12 +1058,15 @@ function game(state, r, arc, id) {
 }
 
 /** A knockout over the riders (as many as a power of two allows, in order): rounds of bouts { a, b, winner }. */
-function knockout(riders, r) {
+function knockout(riders, r, joined = new Set()) {
   let field = riders.slice(0, 2 ** Math.floor(Math.log2(riders.length))).map((x) => x.id);
   const rounds = [];
   while (field.length > 1) {
     const bouts = [];
-    for (let i = 0; i < field.length; i += 2) bouts.push({ a: field[i], b: field[i + 1], winner: r.chance(0.5) ? field[i] : field[i + 1] });
+    for (let i = 0; i < field.length; i += 2) {
+      const a = field[i], b = field[i + 1], ja = joined.has(a), jb = joined.has(b);
+      bouts.push({ a, b, winner: ja !== jb ? (ja ? a : b) : r.chance(0.5) ? a : b });
+    }
     rounds.push(bouts);
     field = bouts.map((bt) => bt.winner);
   }

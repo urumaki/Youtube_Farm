@@ -395,7 +395,7 @@ test('comments can choose a name; real comments map to the right jobs; wishes ar
     'Hello sir I am chezzkahn and I would like to be a librarian': 'librarian', 'could I be a army engineer': 'engineer',
     'may I be an academic so I may study engineering': 'scholar', 'can I be kight plssss': 'guard', 'to be the king’s night': 'guard',
     'Can i be a men at arms': 'guard', 'May I serve as a defender of the city?': 'guard', 'can I be a crossbowman': 'archer',
-    'a metalsmith named xc': 'blacksmith', 'Can i be a goldsmith?': 'blacksmith', 'a craftman': 'carpenter', 'a woodworker?': 'carpenter',
+    'a metalsmith named xc': 'blacksmith', 'Can i be a goldsmith?': 'blacksmith', 'a craftman': 'craftsman', 'a woodworker?': 'carpenter',
     'an shipwright': 'carpenter', 'the vows of monastic life': 'priest', 'Can I be the Deacon': 'priest', 'the pediatrician': 'physician',
     'Day 3 for sawbonee?': 'barber', 'the local winery boss': 'brewer', 'a stable worker': 'stablehand', 'the town speaker': 'crier',
     'a simple laborer': 'peasant', 'wanna be the hobo': 'beggar', 'the mechanical expert': 'engineer', 'the Justiciar': 'judge',
@@ -1212,7 +1212,7 @@ test('comment words of 2026-10-25: typos and synonyms reach the jobs, six new jo
   const cases = {
     'I want to be a solider': 'guard', 'make me a soilder': 'guard', 'can I be a crusader': 'guard', 'reserve calvary': 'guard',
     'apocethary please': 'apothecary', 'homeless guy': 'beggar', 'vegetable seller': 'merchant', 'university professor': 'scholar',
-    'newspaper seller': 'crier', 'announcer for the king': 'crier', 'craftsman': 'carpenter', 'a citizen': 'peasant', 'nitwit': 'jester',
+    'newspaper seller': 'crier', 'announcer for the king': 'crier', 'craftsman': 'craftsman', 'a citizen': 'peasant', 'nitwit': 'jester',
     'teacher': 'teacher', 'philosopher': 'philosopher', 'barber': 'barber', 'astrologer': 'astronomer', 'stable keeper': 'stablehand', 'royal adviser': 'adviser',
   };
   for (const [text, job] of Object.entries(cases)) assert.deepEqual(wantsFromText(text), [job], text);
@@ -2139,4 +2139,47 @@ test("commissions wait behind a goal's buildings (owner 2026-11-25: the Dungeon 
   const shot = diff.buildingsStarted.filter((b) => b !== 'fields' && b !== 'guardposts' && b !== 'charter_stone' && b !== 'wall2');
   assert.ok(shot.length <= 2, `${shot}`);
   assert.ok(diff.buildingsStarted.includes('dungeon') || state.buildQueue[0]?.id === 'dungeon', `the Dungeon first: ${diff.buildingsStarted} / ${state.buildQueue.map((q) => q.id)}`);
+});
+
+test('"craftsman" (owner 2026-11-25): a carpenter for anyone else, no change for one who is a craftsman already', async () => {
+  const { wantsFromText } = await import('../src/sim/requests.js');
+  assert.deepEqual(wantsFromText('I shall claim victory in this tournament of craftsmen! !join'), ['craftsman']);
+  assert.deepEqual(wantsFromText('make me a carpenter'), ['carpenter']);
+  const { state } = run([600]);
+  const named = (id, job) => { state.names[id] = { name: `V${id}`, author: `a${id}`, day: 1, job }; state.namedAuthors.push(`a${id}`); state.villagers[id].job = job; };
+  named(15, 'blacksmith'); named(16, 'farmer');
+  const c = (id) => ({ author: `a${id}`, name: `V${id}`, at: `${dateOf(2)}T10:00:00Z`, wants: ['craftsman'] });
+  const next = advance(structuredClone(state), { subscribers: 600, date: dateOf(2), commenters: [c(15), c(16)] }).state;
+  assert.equal(next.names[15].job, 'blacksmith', 'the blacksmith keeps the forge');
+  assert.ok(['carpenter', 'apprentice'].includes(next.names[16].job), `the farmer asks for the carpenter's bench: ${next.names[16].job}`);
+});
+
+test('"!join" wins (owner 2026-11-25): in every competition one who joined wins over one who did not', async () => {
+  const { storyFor } = await import('../src/sim/stories.js');
+  const jobs = ['farmer', 'blacksmith', 'carpenter', 'potter', 'tailor', 'baker', 'fletcher', 'scholar', 'guard', 'guard', 'guard', 'guard', 'fisherman'];
+  const k = (day, extra) => ({
+    seed: SEED, date: dateOf(day), day, subscriberCount: 3000, weather: 'clear', storyLog: {}, storyArc: null, houses: [], unlockedTiers: [],
+    buildings: ['tournament', 'market', 'mine', 'harbor'].map((id) => ({ id, status: 'done' })),
+    villagers: Array.from({ length: 60 }, (_, id) => ({ id, job: jobs[id % jobs.length] })),
+    names: Object.fromEntries(Array.from({ length: 60 }, (_, id) => [id, { name: `V${id}`, day: 1 + id, job: jobs[id % jobs.length] }])),
+    ...extra,
+  });
+  for (let day = 30; day < 50; day++) {
+    // the guild: the one craftsman who joined (a potter, id 16) is the Master; two who joined are the final
+    const g = storyFor(k(day, { eventEntrants: [16] }), 'guild:contest');
+    assert.equal(g.winner, 16, `day ${day}: guild won by ${g.winner}`);
+    const g2 = storyFor(k(day, { eventEntrants: [16, 18] }), 'guild:contest');
+    assert.deepEqual([...g2.finalists].sort(), [16, 18], `day ${day}: final ${g2.finalists}`);
+    // the match: the side with more who joined wins, and one who joined scores the winning goal
+    const m = storyFor(k(day, { eventEntrants: [3, 5, 7] }), 'football:match');
+    const side = (s) => (s === 'red' ? m.reds : m.blues), joined = (s) => side(s).filter((p) => p.joined).length;
+    const other = m.winner === 'red' ? 'blue' : 'red';
+    assert.ok(joined(m.winner) >= joined(other), `day ${day}: ${m.winner} won with fewer who joined`);
+    assert.ok(side(m.winner).find((p) => p.id === m.goals.at(-1).by).joined, `day ${day}: the winning goal by one who did not join`);
+    // the race and the joust: a guard who joined
+    for (const id of ['race', 'joust']) {
+      const s = storyFor(k(day, { gamesEntrants: [8], storyArc: { id, step: 'results', day, data: { day: day - 1 } } }), `${id}:results`);
+      assert.equal(s.winner, 8, `day ${day}: ${id} won by ${s.winner}`);
+    }
+  }
 });

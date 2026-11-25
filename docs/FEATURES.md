@@ -207,7 +207,9 @@ Add new owner decisions here.
     keeper dives the wrong way, the scorer turns to the camera), the scorer carried on the winners' shoulders, the score.
   - The guild contest (`guild`, needs the market and 4 named craftsmen): announced, then four craftsmen of four trades at
     their benches in the Guild Hall (under the castle like the throne room), the King inspects, two go on to the final at
-    double speed, the King gives the guild's rosette. Only craftsmen may join (`CRAFTS`).
+    double speed, the King gives the guild's rosette. Only craftsmen may join (`CRAFTS`). A comment's "craftsman" /
+    "craftsmen" / "artisan" asks for the carpenter only from one who is not a craftsman yet: a blacksmith who writes
+    "this tournament of craftsmen! !join" stays a blacksmith (owner 2026-11-25; requests.js token `craftsman`).
     Owner 2026-11-25 ("animazioni diverse rispetto alle solite"; "non mi piace come il re da la coccarda"): the craftsmen
     do not do their everyday work (work.js) but make a masterpiece for the King at a contest bench
     (`stories/masterpiece.js`), growing from the first work shot to the end of the final: the blacksmith's sword (hot,
@@ -225,6 +227,11 @@ Add new owner decisions here.
   - The smugglers (`smugglers`, urgent, two nights, needs the harbour and named guards): the guards hide behind barrels, a
     dark boat unloads, a guard sneezes (cliffhanger); the chase, the smugglers off the jetty into the water, fished out in a
     net, the goods seized. A deep moonlit night, not the purple of dusk (`deep` on the shot, `env.set`).
+  Owner 2026-11-25: in every competition entered by "!join" (the guild contest, the match, the race, the joust) one who
+  joined wins over one who did not: the guild's final takes those who joined first and one of them is the Master; the
+  side with more who joined wins the match and one of them scores the winning goal; the race goes to a guard who joined;
+  in the joust's knockout a guard who joined beats one who did not (two who joined, or two who did not: 50/50).
+  Test: `"!join" wins (owner 2026-11-25)`.
   Owner 2026-11-23, checked on every one of them: people never pass through one another (`apart` in `stories/common.js`
   pushes the rigs at least a body apart after each frame's placing), and the King's prize-giving is not always the same
   (`awardOf` in `stories/common.js`, from the day): in the throne room (race and joust) (0) the sword on each shoulder,

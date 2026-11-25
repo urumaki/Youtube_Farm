@@ -32,7 +32,10 @@ const KEYWORDS = [
   // owner 2026-11-04: a church named as a place ("nailing a paper on the church doors") asks for nothing
   [/(?<!\b(on|at|to|into|near|outside|inside|of|for)\s+(the\s+|a\s+|our\s+|my\s+|your\s+)?)(chapel|church|cathedral|cappella|chiesa)/, 'stonemason'],
   [/stone\s*mason|\bmason|\bstone|scalpellin|muratore|architect|architett|city\s*planner/, 'stonemason'],
-  [/carpenter|\bbuilder|falegname|carpentiere|craftsman|craftsmen|craftm[ae]n|artisan|artigian|wood\s*worker|\bcarvers?\b|shipwright|ship\s*builder|furniture\s*maker|\bjoiner|cabinet\s*maker/, 'carpenter'],
+  // owner 2026-11-25: "craftsman" ("this tournament of craftsmen!") is the token 'craftsman': the carpenter for anyone who is
+  // not a craftsman yet, no change for one who is (a blacksmith keeps the forge; simulate.js)
+  [/craftsman|craftsmen|craftm[ae]n|artisan|artigian/, 'craftsman'],
+  [/carpenter|\bbuilder|falegname|carpentiere|wood\s*worker|\bcarvers?\b|shipwright|ship\s*builder|furniture\s*maker|\bjoiner|cabinet\s*maker/, 'carpenter'],
   [/\b(arch)?bishop|vescovo/, 'bishop'],
   [/\bpriest|\bpreist|\bmonk|\bfriar|monaster|monastic|\bdeacon|\bnun\b|religious figure|prete|frate|monaco/, 'priest'],
   [/\bbaker|\bbakler|\bbread|\bbake|fornaio|\bpane\b/, 'baker'],

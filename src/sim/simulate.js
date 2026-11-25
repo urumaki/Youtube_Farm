@@ -6,7 +6,7 @@ import { payComment } from './coins.js';
 import { TIERS, BUILDINGS, JOBS, COMMISSIONS, jobFor, houseCapacity, tiersReached, mergedJob } from './tiers.js';
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
-import { pickStory, takesOver, GAMES, openEvent, canEnter } from './stories.js';
+import { pickStory, takesOver, GAMES, openEvent, canEnter, CRAFTS } from './stories.js';
 import { pickFeatured, shownJobs, markShown, timelapseDay } from './featured.js';
 import { planScenes, tavernToday, churchToday, staleJob, introVariant, jobLastShown, novelJob } from './scenes.js';
 import { planWall2, wallBlockers, insideWall2, crossesFields } from './wall.js';
@@ -19,6 +19,7 @@ export const DEFAULT_SEED = hash('Subscriber Kingdom');
 const SHOWN_STARTS = 2;
 const NO_SHOT = new Set(['fields', 'guardposts', 'charter_stone']);
 const ARCHER = 'archer'; // requests.js: a guard with a bow (owner 2026-11-15)
+const CRAFTSMAN = 'craftsman'; // requests.js: the carpenter, unless a craftsman already (owner 2026-11-25)
 
 export function genesis({ seed = DEFAULT_SEED, date = '1970-01-01' } = {}) {
   return {
@@ -349,7 +350,10 @@ function assignNames(s, commenters, blocked, diff) {
       for (const k of ['accused', 'accuser']) if (parties[k] && c.author === parties[k]) s.trialLikes[k] = Math.max(s.trialLikes[k] ?? 0, likes);
     }
     // owner 2026-11-13: a job only some commenters may have (the Diplomat, tiers.js `only`) is no request from anyone else
-    const wants = (Array.isArray(c.wants) ? c.wants : []).filter((j) => typeof j === 'string' && (j === ARCHER || Object.hasOwn(JOBS, j)) && (j === ARCHER || !JOBS[j].only || JOBS[j].only.includes(c.author)));
+    const said = (Array.isArray(c.wants) ? c.wants : []).filter((j) => typeof j === 'string' && (j === ARCHER || j === CRAFTSMAN || Object.hasOwn(JOBS, j)) && (j === ARCHER || j === CRAFTSMAN || !JOBS[j].only || JOBS[j].only.includes(c.author)));
+    // "craftsman": the carpenter, but nothing for a villager who is a craftsman already (owner 2026-11-25)
+    const craftsman = () => { const v = villagerOf(c.author); return v !== undefined && CRAFTS.includes(jobBefore[v]); };
+    const wants = [...new Set(said.flatMap((j) => (j === CRAFTSMAN ? (craftsman() ? [] : ['carpenter']) : [j])))];
     const call = c.call ? valid(c.call) : null; // "call me Violet"
     if (known.has(c.author)) {
       // owner 2026-11-25: a gold coin for each new video a villager's commenter comes back to (src/sim/coins.js)
