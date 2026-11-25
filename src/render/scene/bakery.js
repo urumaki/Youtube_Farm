@@ -47,7 +47,7 @@ export function buildBakehouse({ variant, anchor, away, M, seed, id, heightAt })
     return inside ? room.position.y : heightAt(x, z) + 0.03;
   };
 
-  const mats = { ...M, daylight: new THREE.MeshBasicMaterial({ color: '#dfe8ef' }), brick: M.stone };
+  const mats = { ...M, daylight: new THREE.MeshBasicMaterial({ color: '#dfe8ef' }), brick: M.stone, soot: new THREE.MeshStandardMaterial({ color: '#1a1210', roughness: 1, side: THREE.BackSide }) };
   const b = new Builder();
   const W = X1 - X0, D = Z1 - Z0, cx = (X0 + X1) / 2, cz = (Z0 + Z1) / 2;
   // floor on a stone footing down to the lowest ground, plank floor on top
@@ -79,9 +79,18 @@ export function buildBakehouse({ variant, anchor, away, M, seed, id, heightAt })
   // the oven: a brick hearth with a domed top, the mouth glowing; a chimney through the roof
   const { x0, x1, hd, hearth } = OVEN, ox = (x0 + x1) / 2, ow = x1 - x0;
   b.add('brick', boxGeo(ow, hearth, 2 * hd, 2), ox, hearth / 2, OVEN.z);
-  b.add('brick', new THREE.SphereGeometry(1, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2).scale(ow / 2, 0.75, hd), ox, hearth, OVEN.z);
-  b.add('stoneDark', boxGeo(0.12, 0.62, 0.9), x0 - 0.02, hearth + 0.31, OVEN.z); // the arch around the mouth
-  b.add('ember', boxGeo(0.05, 0.46, 0.6), x0 - 0.03, hearth + 0.23, OVEN.z); // the fire seen through the mouth
+  // owner 2026-11-25: the mouth is a real opening the peel goes through (it went through the brick): the dome is open in a
+  // wedge toward the baker (-x), a brick face above the mouth closes the wedge's top, dark inside, the fire at the back
+  const MOUTH = { h: 0.44, hw: 0.32 }, WEDGE = 0.5;
+  b.add('brick', new THREE.SphereGeometry(1, 18, 10, WEDGE, Math.PI * 2 - 2 * WEDGE, 0, Math.PI / 2).scale(ow / 2, 0.75, hd), ox, hearth, OVEN.z);
+  b.add('soot', new THREE.SphereGeometry(0.97, 18, 10, WEDGE, Math.PI * 2 - 2 * WEDGE, 0, Math.PI / 2).scale(ow / 2, 0.75, hd), ox, hearth + 0.005, OVEN.z);
+  b.add('brick', boxGeo(0.3, 0.8 - MOUTH.h, 2 * hd * Math.sin(WEDGE) + 0.2), x0 + 0.12, hearth + (0.8 + MOUTH.h) / 2, OVEN.z);
+  // the arch round the mouth: two jambs and a lintel, in front of the opening
+  for (const sz of [-1, 1]) b.add('stoneDark', boxGeo(0.12, MOUTH.h + 0.08, 0.14), x0 - 0.04, hearth + (MOUTH.h + 0.08) / 2, OVEN.z + sz * (MOUTH.hw + 0.07));
+  b.add('stoneDark', boxGeo(0.12, 0.12, 2 * MOUTH.hw + 0.28), x0 - 0.04, hearth + MOUTH.h + 0.06, OVEN.z);
+  b.add('ember', boxGeo(0.3, 0.1, 0.7), x1 - 0.3, hearth + 0.05, OVEN.z); // the fire at the back of the oven
+  // the mouth's opening and the chamber behind it, world frame (the peel's test, tests/clip.test.js)
+  room.userData.mouth = new THREE.Box3().setFromPoints([toWorld(x0 - 0.1, hearth, OVEN.z - MOUTH.hw), toWorld(x1 - 0.1, hearth + MOUTH.h, OVEN.z + MOUTH.hw)]);
   b.add('stoneDark', boxGeo(0.4, 0.08, 1.0), x0 - 0.18, hearth - 0.04, OVEN.z); // the ledge in front of the mouth
   b.add('brick', boxGeo(0.55, CEIL + 2.2 - hearth - 0.6, 0.55), x1 - 0.35, (hearth + 0.6 + CEIL + 2.2) / 2, OVEN.z);
   // firewood under the ledge and stacked by the oven
@@ -123,7 +132,8 @@ export function buildBakehouse({ variant, anchor, away, M, seed, id, heightAt })
 
   // the baker: facing the oven mouth with the peel, or facing the camera at the kneading table
   const face = variant === 'oven' ? yaw + Math.PI / 2 : yaw;
-  const ws = buildWorkScene({ job: 'baker', variant, anchor: toWorld(0, 0, 0), face, M, seed, id });
+  // at the oven the baker stands a little to the side, so the peel in the right hand goes into the middle of the mouth
+  const ws = buildWorkScene({ job: 'baker', variant, anchor: toWorld(0, 0, variant === 'oven' ? -0.2 : 0), face, M, seed, id });
 
   // camera: from the front wall, wide (fov), the baker and the oven side by side, slowly in; with a guest,
   // it turns toward the door as they come in

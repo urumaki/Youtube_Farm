@@ -74,3 +74,9 @@ test('strokes vary', () => {
   }
   assert.ok(gaps.size >= 3, `gaps ${[...gaps]}`);
 });
+
+test('a farmer on the fields has no soil patch', () => {
+  const soil = (ws) => { let n = 0; ws.props.traverse((m) => { if (m.name === 'soil') n++; }); return n; };
+  assert.equal(soil(workScene('farmer', 'hoe', { onField: true })), 0);
+  assert.ok(soil(workScene('farmer', 'hoe')) > 0);
+});

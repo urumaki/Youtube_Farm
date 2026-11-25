@@ -177,7 +177,7 @@ export const JOB_SCENES = {
   carpenter: { period: 0.6, hit: 0.75, raise: -1.9, down: -1.0, bend: 0.2, fx: 'chips', sound: 'chop', tool: 'hammer', props: 'bench', left: -0.9 },
   // the baker works inside the bakehouse (bakery.js), which builds the oven around the mouth; the peel is
   // highest when pushed into the oven and carries a loaf in
-  baker: { period: 1.8, hit: 0.55, raise: -1.0, down: -0.88, bend: 0.1, fx: 'embers', sound: 'none', tool: 'peel', props: 'ovenmouth', both: true, push: true, loaf: true },
+  baker: { period: 1.8, hit: 0.55, raise: -1.12, down: -1.05, slide: [-0.45, 0.55], bend: 0.1, fx: 'embers', sound: 'none', tool: 'peel', props: 'ovenmouth', both: true, push: true, loaf: true },
   fisherman: { period: 2.6, hit: 0.5, raise: -2.2, down: -1.0, bend: 0.05, fx: 'splash', sound: 'none', tool: 'rod', props: 'pond', both: true },
   miller: { period: 1.5, hit: 0.6, raise: -1.6, down: -1.0, bend: 0.25, fx: 'dust', sound: 'none', tool: 'sack', props: 'sacks', both: true },
   guard: { period: 3.2, hit: 0.5, raise: -0.25, down: -0.25, bend: 0, fx: null, sound: 'none', tool: 'spear', props: 'post', left: -0.6, look: true },
@@ -436,6 +436,8 @@ export function toolGeo(kind, M) {
     const put = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; p.add(m); return m; };
     put(cylGeo(0.02, 0.02, 1.5, 6).translate(0, -0.6, 0), wood);
     put(boxGeo(0.34, 0.4, 0.02).translate(0, -1.5, 0), M.wood);
+    g.userData.axis = new THREE.Vector3(0, -Math.cos(0.6), Math.sin(0.6)); // along the handle, toward the blade
+    const end = new THREE.Object3D(); end.position.set(0, -1.7, 0); p.add(end); g.userData.end = end; // the blade's far edge (clipcheck.js)
     g.userData.loaf = put(new THREE.SphereGeometry(0.12, 10, 8).scale(1.4, 1.1, 0.6).translate(0, -1.5, 0.08), M.hay);
   } else if (kind === 'rod') {
     add(cylGeo(0.012, 0.025, 2.6, 6).translate(0, -1.2, 0), wood);
@@ -548,12 +550,14 @@ export function toolGeo(kind, M) {
 const emptyBottle = () => merged([cylGeo(0.06, 0.065, 0.24, 10), cylGeo(0.022, 0.05, 0.15, 8).translate(0, 0.19, 0)]).rotateZ(Math.PI / 2);
 
 /** Props around the worker, in the worker's frame (worker at origin facing +z). Returns impact point. */
-function buildProps(kind, M, add, anim = [], holder = null) {
+function buildProps(kind, M, add, anim = [], holder = null, { onField = false } = {}) {
   const brown = M.soil;
   switch (kind) {
     case 'field': {
-      add(boxGeo(5, 0.06, 4).translate(0, 0.03, 1.4), brown);
-      for (let i = -2; i <= 2; i++) add(boxGeo(0.35, 0.12, 3.6).translate(i * 0.95, 0.09, 1.6), brown);
+      // owner 2026-11-25: on one of the kingdom's fields the farmer works its own crop, no patch of soil laid on top of it
+      if (onField) return new THREE.Vector3(0, 0.02, 0.85);
+      add(boxGeo(5, 0.06, 4).translate(0, 0.03, 1.4), brown).name = 'soil';
+      for (let i = -2; i <= 2; i++) add(boxGeo(0.35, 0.12, 3.6).translate(i * 0.95, 0.09, 1.6), brown).name = 'soil';
       for (let i = -2; i <= 2; i += 2) for (let k = 0; k < 6; k++) add(new THREE.ConeGeometry(0.12, 0.35, 5).translate(i * 0.95, 0.3, 0.2 + k * 0.55), M.greens);
       add(cylGeo(0.28, 0.22, 0.32, 10).translate(-1.4, 0.16, -0.4), M.wood);
       return new THREE.Vector3(0, 0.08, 0.85);
@@ -691,6 +695,7 @@ function buildProps(kind, M, add, anim = [], holder = null) {
       return new THREE.Vector3(0, 0.82, 0.75);
     }
     case 'wheat': { // ripe wheat in rows, the cut part short
+      if (onField) return new THREE.Vector3(0, 0.3, 1.2); // the field's own wheat (owner 2026-11-25)
       const stalks = [];
       for (let i = -8; i <= 8; i++) for (let k = 0; k < 12; k++) {
         const cut = k < 3 && i > -3, x = i * 0.24 + (k % 2) * 0.12, z = 0.7 + k * 0.22;
@@ -1831,7 +1836,7 @@ function arrowGroup(M) {
  * @param face    yaw the worker faces (radians, world)
  */
 // bare: no props of its own (a scene that builds the place itself, like the wheat fields in ambient.js)
-export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id, color = null, bare = false, t0 = 0 }) {
+export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id, color = null, bare = false, t0 = 0, onField = false }) {
   const cfg = sceneOf(job, variant);
   const group = new THREE.Group();
   group.position.copy(anchor);
@@ -1843,7 +1848,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
   group.add(propsG);
   const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = true; m.receiveShadow = true; propsG.add(m); return m; };
   const anim = [];
-  const impact = buildProps(cfg.props, M, add, anim, propsG);
+  const impact = buildProps(cfg.props, M, add, anim, propsG, { onField });
   propsG.visible = !bare;
   const tool = cfg.tool ? toolGeo(cfg.tool, M) : null;
   if (tool) P.r.hand.add(tool);
@@ -2063,6 +2068,10 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
       const push = 0.5 + 0.5 * Math.sin(c * Math.PI * 2);
       const flex = STRIKE ? HITFLEX + 0.8 * (1 - l01) : cfg.push ? 0.75 * (1 - push) + 0.1 : cfg.smooth ? 0.35 + 0.2 * Math.sin(c * Math.PI * 2 - 0.7) : cfg.stir ? 0.45 + 0.12 * Math.cos(c * Math.PI * 2) : 0.25;
       P.r.elbow.rotation.x = -flex;
+      // a peel slides through the baker's hands into the oven and back (cfg.slide: [from, how far], m along the handle)
+      if (cfg.slide && tool?.userData.axis) tool.position.copy(tool.userData.axis).multiplyScalar(cfg.slide[0] + cfg.slide[1] * push);
+      // the wrist keeps a long tool (a peel, a paddle) at the angle the shoulder gives it, so the elbow moves it, not tips it
+      P.r.hand.rotation.x = cfg.push || cfg.stir ? flex : cfg.smooth ? 0.5 * flex : 0;
       P.l.elbow.rotation.x = cfg.both ? -flex : -(0.3 + 0.05 * br);
       if (STRIKE) {
         P.body.rotation.x -= 0.09 * (1 - s01); // leans back on the backswing, drives through the stroke

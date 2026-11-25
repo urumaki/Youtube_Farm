@@ -14,9 +14,10 @@ const IMPACT_OK = 0.25; // metres round the strike point
 const under = (o, root) => { for (let p = o; p; p = p.parent) if (p === root) return true; return false; };
 const wpos = (o, x = 0, y = 0, z = 0) => o.localToWorld(new THREE.Vector3(x, y, z));
 
-/** Where the tool ends: its marked tip, else the corner of its box farthest from the hand. */
+/** Where the tool ends: its marked tip or end, else the corner of its box farthest from the hand. */
 function toolEnd(tool) {
   if (tool.userData.tip) return wpos(tool.userData.tip);
+  if (tool.userData.end) return wpos(tool.userData.end);
   const box = new THREE.Box3();
   tool.traverse((m) => { if (m.isMesh) { m.geometry.computeBoundingBox(); box.union(m.geometry.boundingBox.clone().applyMatrix4(m.matrix)); } });
   if (box.isEmpty()) return null;

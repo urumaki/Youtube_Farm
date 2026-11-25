@@ -212,7 +212,7 @@ async function setup(data) {
     const lx = f.hw * (id % 2 ? 0.35 : -0.35), lz = f.hd * 0.5;
     const anchor = new THREE.Vector3(f.x + lx * c - lz * s, 0, f.z + lx * s + lz * c);
     anchor.y = heightAt(w, anchor.x, anchor.z) + 0.12;
-    return { anchor, ax: -s, az: c, floorAt: (x, z) => yFn(x, z) + (pointInObb(f, x, z) ? 0.09 : 0) };
+    return { anchor, ax: -s, az: c, floorAt: (x, z) => yFn(x, z) + (pointInObb(f, x, z) ? 0.09 : 0), onField: true };
   };
   // market stalls: two stall scenes in one video never share a stall
   const stalls = new Map();
@@ -395,7 +395,7 @@ async function setup(data) {
     ws.update = (t, ...a) => { update(t, ...a); queue.update(t); };
     return ws;
   };
-  const workSceneOnly = ({ job, variant, anchor, ax, az, away, id, face, t0 = 0, t1 = t0 + 3, floorAt = null }) => {
+  const workSceneOnly = ({ job, variant, anchor, ax, az, away, id, face, t0 = 0, t1 = t0 + 3, floorAt = null, onField = false }) => {
     // the Dungeon (owner 2026-11-04): the other named prisoners in the cells, the latest to ask first
     if (dungeonScene(variant)) {
       const cellmates = Object.entries(state.names || {}).filter(([k, n]) => n.job === 'prisoner' && Number(k) !== id)
@@ -423,7 +423,7 @@ async function setup(data) {
       return make({ job, variant, anchor: at, face: Math.atan2(ax, az) + homeTurn, M, seed: state.seed, id });
     }
     // turned 1.1 rad from the camera side (a profile view of the work), or as the scene asks
-    return make({ job, variant, anchor, face: face ?? Math.atan2(ax, az) + (sceneOf(job, variant).turn ?? 1.1), M, seed: state.seed, id, t0 });
+    return make({ job, variant, anchor, face: face ?? Math.atan2(ax, az) + (sceneOf(job, variant).turn ?? 1.1), M, seed: state.seed, id, t0, onField });
   };
   if (plan) for (const tg of plan.targets) {
     if (tg.kind === 'villager' && tg.pov === 'stroll') {
@@ -461,9 +461,9 @@ async function setup(data) {
       stories.push({ st, tg });
     } else if (tg.kind === 'villager') {
       const v = state.villagers[tg.id];
-      const { anchor, ax, az, floorAt, face, cam, as } = workPlace(tg.sceneJob || v.job, houses.shapes.get(v.house), tg.variant, tg.id);
+      const { anchor, ax, az, floorAt, face, cam, as, onField } = workPlace(tg.sceneJob || v.job, houses.shapes.get(v.house), tg.variant, tg.id);
       tg.away = Math.atan2(az, ax);
-      const ws = workScene({ job: tg.sceneJob || v.job, variant: as ?? tg.variant, anchor, ax, az, away: tg.away, id: tg.id, face, t0: tg.t0, t1: tg.t1, floorAt });
+      const ws = workScene({ job: tg.sceneJob || v.job, variant: as ?? tg.variant, anchor, ax, az, away: tg.away, id: tg.id, face, t0: tg.t0, t1: tg.t1, floorAt, onField });
       scene.add(ws.group);
       if (ws.room) { scene.add(ws.room); interiors.push({ ws, tg }); tg.cam = (u) => ws.cam(u, !!tg.guest); } else { ws.shot = tg; ws.at = anchor.clone(); works.push(ws); }
       if (cam) tg.cam = cam; // a place with its own camera (down an alley)
@@ -598,7 +598,7 @@ async function setup(data) {
         return { ws: { group: bar.group, room: bar.group, update: bar.update, cam: bar.cam }, focus: bar.focus };
       }
       const at = workPlace(g.job, sh, g.variant, i), gAway = Math.atan2(at.az, at.ax);
-      const ws = workScene({ job: g.job, variant: at.as ?? g.variant, anchor: at.anchor, ax: at.ax, az: at.az, away: gAway, id: 9100 + i, face: at.face, floorAt: at.floorAt });
+      const ws = workScene({ job: g.job, variant: at.as ?? g.variant, anchor: at.anchor, ax: at.ax, az: at.az, away: gAway, id: 9100 + i, face: at.face, floorAt: at.floorAt, onField: at.onField });
       scene.add(ws.group);
       if (ws.room) scene.add(ws.room);
       const visit = g.guest ? buildVisit({ host: ws, hostJob: g.job, guest: { job: g.guest }, pair: g.pair, away: gAway, M, yFn: ws.floorAt || at.floorAt || yFn, t0: 0, t1: 3 }) : null;
