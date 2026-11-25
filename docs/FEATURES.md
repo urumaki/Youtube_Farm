@@ -207,7 +207,17 @@ Add new owner decisions here.
     keeper dives the wrong way, the scorer turns to the camera), the scorer carried on the winners' shoulders, the score.
   - The guild contest (`guild`, needs the market and 4 named craftsmen): announced, then four craftsmen of four trades at
     their benches in the Guild Hall (under the castle like the throne room), the King inspects, two go on to the final at
-    double speed, the King gives the medal. Only craftsmen may join (`CRAFTS`).
+    double speed, the King gives the guild's rosette. Only craftsmen may join (`CRAFTS`).
+    Owner 2026-11-25 ("animazioni diverse rispetto alle solite"; "non mi piace come il re da la coccarda"): the craftsmen
+    do not do their everyday work (work.js) but make a masterpiece for the King at a contest bench
+    (`stories/masterpiece.js`), growing from the first work shot to the end of the final: the blacksmith's sword (hot,
+    hammered with tongs and sparks, quenched, guard and grip), the carpenter's casket (planed board, walls, lid, gold
+    corners), the fletcher's bow (shaved, bent, strung, arrows; every few seconds drawn to test it), the baker's crown
+    loaf (kneaded, braided, baked golden by a little oven); any other trade's piece grows from small to full. Every few
+    seconds each stops to look the piece over in their hands. Arms reach for points on the work (`reach`, two-bone arm).
+    The prize: a page holds the rosette on a red cushion, the King takes it, steps up to the winner, who bows, pins it on
+    the chest with both hands and pats the shoulder; the winner straightens and the award follows. Test renders:
+    `--crafters carpenter,fletcher,baker,blacksmith` sets the four trades. Tests: `tests/guild.test.js`.
   - The treasure of the Mine (`treasure`, urgent, three days, needs the Mine and 2 named miners): the breach into an old
     tunnel (cliffhanger), the expedition and the rockfall behind them (cliffhanger, nobody hurt), the draught, the chest of
     old coins, daylight and the chest carried through the market. The crew is of the Mine only: four miners (the fourth
@@ -219,7 +229,7 @@ Add new owner decisions here.
   pushes the rigs at least a body apart after each frame's placing), and the King's prize-giving is not always the same
   (`awardOf` in `stories/common.js`, from the day): in the throne room (race and joust) (0) the sword on each shoulder,
   (1) a red cloak laid on the kneeling winner and the arm raised under petals, (2) a golden cup lifted to the hall (a Noble
-  always gets the sword); in the Guild Hall the medal, then (0) the work held up, (1) the arm raised by the King under
+  always gets the sword); in the Guild Hall the rosette, then (0) the work held up, (1) the arm raised by the King under
   petals, (2) the guild's banner waved, the other three holding up their work. Tests: `four more big events (owner
   2026-11-23)`; renders `npm run render -- --real --subs 3200 --story football:match|guild:contest|treasure:breach|
   smugglers:watch --stills ...`, and `--award 0|1|2` with `--story joust:results` or `guild:contest` (which prize-giving).

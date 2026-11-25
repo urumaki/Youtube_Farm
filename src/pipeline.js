@@ -48,6 +48,7 @@ export function parseArgs(argv) {
     else if (k === '--real') a.real = true; // test renders: start from the real state/ (read only)
     else if (k === '--pov') a.pov = v(); // test renders: the first villager shot ('work') or the first alone ('stroll') seen through their eyes
     else if (k === '--church') a.church = true; // test renders: the church interior closes the video (not the tavern)
+    else if (k === '--crafters') a.crafters = v().split(',').map((s) => s.trim()); // test renders: the guild contest's four trades
     else if (k === '--built') a.built = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: these buildings stand finished
     else if (k === '--show') a.show = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: ...and get their "Completed!" shot
     else if (k === '--names') a.names = v().split(',').map((s) => s.trim()).filter(Boolean); // test renders: fake commenters
@@ -210,6 +211,7 @@ export async function testRender(args, log = console) {
   if (args.look !== undefined && diff.story) diff.story.look = args.look;
   if (args.story === 'vote:result' && diff.story && !(diff.story.tally.a + diff.story.tally.b)) Object.assign(diff.story, { tally: { a: 12, b: 31 }, winner: 'b' });
   if (args.story === 'riddle:answer') beginWorkshop(state, diff); // the Engineers' Workshop, as the daily simulation does
+  if (args.crafters && diff.story?.crafters) diff.story.crafters = diff.story.crafters.map((c, i) => ({ ...c, job: args.crafters[i] || c.job }));
   if (args.show) { diff.buildingsCompleted = [...args.show]; diff.buildingsStarted = []; }
   if (args.pov && diff.scenes) {
     const f = (diff.featured || []).find((x) => (args.pov === 'work' ? !AWAY_VARIANTS.has(diff.scenes.variants?.[x.id]) : !x.with));

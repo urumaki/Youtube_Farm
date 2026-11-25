@@ -544,7 +544,7 @@ const EVENT_LINES = {
       ['The King looks over every piece...', 9.3],
       ['Two go on to the final!', 12.0],
       ['The final! Twice as fast now!', 13.8],
-      ['And the medal goes to...', 18.8],
+      ['And the rosette goes to...', 18.8],
       ['the new Master of the Guild!', 20.6],
     ],
   },

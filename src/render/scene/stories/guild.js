@@ -3,15 +3,16 @@
 // under the castle mound like the throne room, so any weather), four craftsmen of four trades at their benches, each at
 // their own work (work.js, the same scene as in town), the crowd behind a rope, the King on a dais: the hall and the task,
 // the work, the King walks along the benches and two go on to the final (the other two bow out with a shrug), the final at
-// double speed, and the King hangs the medal on the winner. Names on all four (story.crafters).
-// Owner 2026-11-23: not always the same prize-giving (awardOf, common.js): (0) the medal, the winner holds up the work; (1) the
-// medal, then the King raises the winner's arm under a shower of petals; (2) the medal and the guild's banner, which the
+// double speed, and the King pins the guild's rosette on the winner (owner 2026-11-25, the medal before). Names on all four (story.crafters).
+// Owner 2026-11-23: not always the same prize-giving (awardOf, common.js): (0) the rosette, the winner holds up the work; (1) the
+// rosette, then the King raises the winner's arm under a shower of petals; (2) the rosette and the guild's banner, which the
 // winner waves while the other three lift their work.
 import * as THREE from 'three';
 import { JOBS } from '../../../sim/tiers.js';
 import { CASTLE } from '../../../sim/world.js';
 import { Builder, boxGeo, cylGeo } from '../kit.js';
-import { buildWorkScene, rig } from '../work.js';
+import { legIK, nod } from '../work.js';
+import { contestBench, rosette, reach } from './masterpiece.js';
 import { king } from './royal.js';
 import { person, stride, castTag, flameMaterial, flicker, ease, clamp01, petals, awardOf } from './common.js';
 
@@ -97,15 +98,6 @@ function banner(M) {
   return g;
 }
 
-/** The medal: a gold disc on a red ribbon. */
-function medal(M) {
-  const g = new THREE.Group();
-  const add = (geo, mat) => { const o = new THREE.Mesh(geo, mat); g.add(o); return o; };
-  add(new THREE.TorusGeometry(0.22, 0.015, 4, 18, Math.PI).rotateZ(Math.PI), M.clothRed).position.y = 0.0;
-  add(cylGeo(0.09, 0.09, 0.025, 14).rotateX(Math.PI / 2), M.gold).position.y = -0.24;
-  return g;
-}
-
 /** The hall with its people for one shot: the four benches (work.js scenes), the King, the crowd. */
 function setUp(args) {
   const { story, M, seed } = args;
@@ -113,7 +105,8 @@ function setUp(args) {
   const { group } = Hl;
   const cr = (story.crafters || []).slice(0, 4);
   const benches = cr.map((c, i) => {
-    const ws = buildWorkScene({ job: c.job, anchor: new THREE.Vector3(BX[i], 0, BZ), face: 0, M, seed, id: `guild${i}`, t0: i * 0.37 });
+    // owner 2026-11-25: each makes a masterpiece for the King at a contest bench, not the everyday work (masterpiece.js)
+    const ws = contestBench({ job: c.job, M, x: BX[i], z: BZ, i, makePiece: piece });
     group.add(ws.group);
     return { c, ws, i };
   });
@@ -216,6 +209,7 @@ function judgeShot(args) {
       for (const b of S.benches) {
         const P = b.ws.rig;
         if (!decided) continue;
+        b.ws.rest();
         const k = ease(span(u, 0.7, 0.8));
         if (fin.has(b.c.id)) { P.root.position.z = 0.6 * k; P.r.g.rotation.set(-2.8, 0, 0.2); } // on to the final
         else { P.r.g.rotation.set(-0.6, 0, 0.6 * k); P.l.g.rotation.set(-0.6, 0, -0.6 * k); nodBody(P, 0.25 * k); } // a shrug
@@ -244,83 +238,151 @@ function finalShot(args) {
     cam(u) { const a = -0.35 + 0.7 * u, r = 5.2; return { pos: S.toWorld(mid + Math.sin(a) * r, 2.0, BZ + Math.cos(a) * r), look: S.toWorld(mid, 1.1, BZ), fov: 62 }; },
     update(t, t0, t1) {
       if (!tick(S, t, t0, t1, { working: (b) => fin.has(b.c.id), speed: 2 })) return;
-      for (const b of S.benches) if (!fin.has(b.c.id)) { b.ws.rig.r.g.rotation.set(-0.2, 0, 0); b.ws.rig.l.g.rotation.set(-0.2, 0, 0); }
+      for (const b of S.benches) if (!fin.has(b.c.id)) { b.ws.rest(); b.ws.rig.r.g.rotation.set(-0.2, 0, 0); b.ws.rig.l.g.rotation.set(-0.2, 0, 0); }
       S.cheer(t, 0.6);
       S.placeTags(labels);
     },
   };
 }
 
-// --- 18.5-23.5 s: the King hangs the medal on the winner, who holds up the work; the hall cheers ---
+// --- 18.5-23.5 s: the prize-giving (owner 2026-11-25: not the medal sliding through the air). A page holds a cushion with the
+// guild's rosette; the King takes it, steps up to the winner, who bows; he pins it on the winner's chest with both hands and
+// pats the shoulder; the winner straightens and (0) lifts the masterpiece over their head, (1) has their arm raised by the
+// King under a shower of petals, or (2) waves the guild's banner while the other three lift their own work. The hall cheers.
+const angTo = (a, b, k) => { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return a + d * k; };
+
 function medalShot(args) {
   const S = setUp(args);
   const win = S.benches.find((b) => b.c.id === args.story.winner) || S.benches[0];
   const W = win.ws.rig;
-  const m = medal(args.M);
-  const work = piece(args.M, win.c.job);
-  args.M && S.group.add(m);
-  W.r.hand.add(work);
-  work.position.set(0, -0.15, 0.1);
+  const work = win.ws.finish();
+  for (const tl of Object.values(win.ws.tool || {})) tl.visible = false; // the tools put down for the prize
   const tag = S.tags.find((l) => l.b === win);
   const labels = [tag];
   const award = awardOf(args);
   const flag = banner(args.M);
   flag.visible = false;
   S.group.add(flag);
-  if (award === 2) { work.visible = false; for (const b of S.benches) if (b !== win) { const pc = piece(args.M, b.c.job); b.ws.rig.r.hand.add(pc); pc.position.set(0, -0.15, 0.1); } }
   const shower = petals(Number(args.seed || 1) + 3);
   S.group.add(shower.group);
   const X = BX[win.i];
+  // the rosette, and the page with it on a red cushion
+  const ros = rosette(args.M);
+  S.group.add(ros);
+  const page = person(args.M, '#2f4f8f');
+  S.group.add(page.root);
+  const cushion = new THREE.Group();
+  cushion.add(new THREE.Mesh(boxGeo(0.42, 0.07, 0.32), args.M.clothRed));
+  for (const [x, z] of [[-0.21, -0.16], [0.21, -0.16], [-0.21, 0.16], [0.21, 0.16]]) { const tc = new THREE.Mesh(new THREE.SphereGeometry(0.025, 6, 5), args.M.gold); tc.position.set(x, -0.04, z); cushion.add(tc); }
+  cushion.position.set(0, 1.02, 0.36);
+  page.root.add(cushion);
+  const PAGE = new THREE.Vector3(X + 1.55, 0, BZ + 0.75), KING = new THREE.Vector3(X + 1.0, 0, BZ + 1.45), CLOSE = new THREE.Vector3(X + 0.62, 0, BZ + 1.3);
+  const WIN = new THREE.Vector3(X, 0, BZ + 1.0); // the winner, stepped out in front of the bench
+  const faceWin = (p) => Math.atan2(WIN.x - p.x, WIN.z - p.z);
+  const facePage = (p) => Math.atan2(PAGE.x - p.x, PAGE.z - p.z);
   const cams = [
-    (u) => ({ pos: S.toWorld(X - 1.4 + 0.6 * u, 1.9, BZ + 4.6 - 1.0 * u), look: S.toWorld(X + 0.3, 1.5, BZ + 0.9), fov: 60 }),
-    // (1) from the winner's other side, lower, the two arms up together against the banners of the hall
-    (u) => ({ pos: S.toWorld(X - 2.4 + 0.4 * u, 1.4, BZ + 4.6 - 0.6 * u), look: S.toWorld(X + 0.5, 1.8, BZ + 1.1), fov: 60 }),
-    // (2) low in front on the winner's side, looking up at the banner waving over the winner
-    (u) => ({ pos: S.toWorld(X - 1.7 + 0.3 * u, 1.2, BZ + 5.4 - 0.6 * u), look: S.toWorld(X + 0.3, 2.1, BZ + 1.0), fov: 64 }),
+    (u) => ({ pos: S.toWorld(X - 1.4 + 0.6 * u, 1.9, BZ + 4.6 - 1.0 * u), look: S.toWorld(X + 0.4, 1.45, BZ + 1.0), fov: 60 }),
+    (u) => ({ pos: S.toWorld(X - 2.2 + 0.4 * u, 1.45, BZ + 4.6 - 0.6 * u), look: S.toWorld(X + 0.5, 1.7, BZ + 1.1), fov: 60 }),
+    (u) => ({ pos: S.toWorld(X - 1.7 + 0.3 * u, 1.25, BZ + 5.4 - 0.6 * u), look: S.toWorld(X + 0.3, 2.0, BZ + 1.0), fov: 64 }),
   ];
+  const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  const q = new THREE.Quaternion(), flip = new THREE.Quaternion().setFromAxisAngle(V(0, 1, 0), Math.PI);
+  const flat = new THREE.Quaternion().setFromAxisAngle(V(1, 0, 0), -Math.PI / 2);
+  const local = (P, worldPt) => P.root.worldToLocal(worldPt.clone()); // a world point in a rig's root frame
+  const toGroup = (v) => S.group.worldToLocal(v);
+  const CHEST = V(0.1, 0.63, 0.23); // where the rosette is pinned, on the winner's body
+  const wide = win.c.job === 'fletcher' ? 0.3 : 0.18;
   return {
     group: S.group, labels, interior: true, banner: 'Master of the Guild!',
-    focus: S.toWorld(BX[win.i], 1.5, BZ + 1),
+    focus: S.toWorld(X, 1.5, BZ + 1),
     cam: (u) => cams[award](u),
     update(t, t0, t1) {
       if (!tick(S, t, t0, t1, { working: () => false })) return;
       const u = clamp01((t - t0) / (t1 - t0));
-      const hung = u > 0.42;
+      for (const b of S.benches) b.ws.rest();
+      work.stage(1);
+      // where everyone stands: the King turns to the page, steps up to the winner, then back
+      const step = ease(span(u, 0.3, 0.4)), away = ease(span(u, 0.64, 0.74));
+      const kp = KING.clone().lerp(CLOSE, step * (1 - away));
+      S.K.root.position.copy(kp);
+      const toPage = ease(span(u, 0.06, 0.14)) * (1 - ease(span(u, 0.24, 0.32)));
+      S.K.root.rotation.y = angTo(faceWin(kp), facePage(kp), toPage);
+      for (const l of S.K.legs || []) l.rotation.x = 0;
+      if ((u > 0.3 && u < 0.4) || (u > 0.64 && u < 0.74)) stride(S.K, t * 7, 0.3, { arms: false });
+      page.root.position.copy(PAGE);
+      page.root.rotation.y = Math.atan2(X + 0.5 - PAGE.x, BZ + 1.2 - PAGE.z); // turned to the King and the winner
+      for (const l of page.legs || []) l.rotation.x = 0;
+      nod(page, 0.15);
       W.root.position.set(0, 0, 1.0);
-      W.body.rotation.x = 0;
-      W.r.g.rotation.set(hung ? -2.8 + 0.15 * Math.sin(t * 7) : -0.4, 0, 0.1);
-      W.l.g.rotation.set(hung ? -2.4 : -0.2, 0, -0.1);
-      if (award === 1 && hung) { W.r.g.rotation.set(-0.5, 0, 0.1); W.l.g.rotation.set(u > 0.55 ? -2.9 : -0.3, 0, -0.25); } // the King lifts this arm
-      if (award === 2) {
-        flag.visible = u > 0.5;
-        if (flag.visible && flag.parent !== W.r.hand) W.r.hand.add(flag);
-        flag.position.set(0, -0.1, 0.05);
-        if (hung) W.r.g.rotation.set(u > 0.5 ? -2.6 + 0.35 * Math.sin(t * 5) : -1.2, 0, 0.15); // waving it
-        flag.rotation.set(-W.r.g.rotation.x, 0, 0.3 * Math.sin(t * 5)); // the pole upright
+      // the winner bows as the King comes, straightens after the pat
+      const bowK = ease(span(u, 0.32, 0.42)) * (1 - ease(span(u, 0.58, 0.66)));
+      W.body.rotation.set(0.42 * bowK, 0, 0);
+      W.body.position.set(0, 0.62 - 0.04 * bowK, -0.03 * bowK);
+      legIK(W, [[-0.11, 0.0], [0.12, -0.08]]);
+      nod(W, 0.3 * bowK);
+      S.group.updateMatrixWorld(true);
+      // the page holds the cushion out in both hands
+      reach(page, 'r', V(0.2, 1.0, 0.36));
+      reach(page, 'l', V(-0.2, 1.0, 0.36));
+      // the winner: the finished work held in front, low while bowing; then the award
+      const after = span(u, 0.66, 0.76);
+      // until the rosette is on, the work hangs at the winner's left side, out of its way
+      const hold = V(-0.36, 0.8, 0.12);
+      let wr = null, oneHand = after <= 0;
+      if (award === 0 && after > 0) hold.set(0, 2.25 + 0.04 * Math.sin(t * 7), 0.3).lerp(V(-0.36, 0.8, 0.12), 1 - ease(after));
+      if (award === 1 && after > 0) { hold.set(-0.22, 1.12, 0.4); wr = V(0.34, lerp(1.2, 2.02, ease(span(u, 0.7, 0.8))), 0.12); }
+      if (award === 2 && after > 0) { hold.set(-0.2, 1.1, 0.42); wr = V(0.3, 1.75 + 0.1 * Math.sin(t * 5), 0.2); }
+      work.group.position.copy(W.root.position).add(hold);
+      work.group.rotation.set(0, award === 0 ? 0.3 * Math.sin(t * 2) * after : 0.2, oneHand && win.c.job === 'fletcher' ? Math.PI / 2 : 0); // a bow carried upright
+      if (oneHand) { reach(W, 'l', hold.clone().add(V(0.02, 0.1, 0))); W.r.g.rotation.set(0.05, 0, 0.08); }
+      else if (wr) { reach(W, 'r', wr); reach(W, 'l', hold.clone().add(V(-0.05, 0, 0))); }
+      else { reach(W, 'r', hold.clone().add(V(wide, 0, 0))); reach(W, 'l', hold.clone().add(V(-wide, 0, 0))); }
+      flag.visible = award === 2 && after > 0;
+      if (flag.visible) { if (flag.parent !== W.r.hand) W.r.hand.add(flag); flag.position.set(0, -0.1, 0.05); flag.rotation.set(-W.r.g.rotation.x - W.r.elbow.rotation.x, 0, 0.3 * Math.sin(t * 5)); }
+      tag.sub = u > 0.56 ? `Master ${JOBS[win.c.job]?.label || ''}`.trim() : tag.sub;
+      S.group.updateMatrixWorld(true);
+      // the King's hands: by his sides, to the cushion, carrying the rosette at the chest, to the winner's chest, then a pat
+      const chest = W.body.localToWorld(CHEST.clone());
+      const cushionW = cushion.localToWorld(V(0, 0.06, 0));
+      const side = [V(0.32, 0.8, 0.12), V(-0.32, 0.8, 0.12)];
+      let rT, lT;
+      if (u < 0.1) [rT, lT] = side;
+      else if (u < 0.26) { const c = local(S.K, cushionW), k = ease(span(u, 0.12, 0.2)); rT = side[0].clone().lerp(c.clone().add(V(0.05, 0.02, 0)), k); lT = side[1].clone().lerp(c.clone().add(V(-0.05, 0.02, 0)), k); }
+      else if (u < 0.4) { rT = V(0.06, 1.2, 0.38); lT = V(-0.06, 1.2, 0.38); }
+      else if (u < 0.56) { const c = local(S.K, chest), k = ease(span(u, 0.4, 0.5)); rT = V(0.06, 1.2, 0.38).lerp(c.clone().add(V(0.05, 0, -0.03)), k); lT = V(-0.06, 1.2, 0.38).lerp(c.clone().add(V(-0.05, 0, -0.03)), k); }
+      else if (u < 0.66) {
+        // two pats on the winner's shoulder with one hand, the other down
+        const sh = local(S.K, W.body.localToWorld(V(0.3, 0.86, 0)));
+        const pat = Math.abs(Math.sin(span(u, 0.57, 0.66) * Math.PI * 2)) * 0.06;
+        rT = sh.add(V(0, 0.05 + pat, 0)); lT = side[1];
+      } else [rT, lT] = side;
+      if (award === 1 && u >= 0.7) rT = local(S.K, W.r.hand.getWorldPosition(V(0, 0, 0))).add(V(0, 0.05, 0)); // lifts the winner's arm
+      if (award === 2 && u >= 0.74) { rT = V(0.08, 1.25 + 0.06 * Math.sin(t * 10), 0.35); lT = V(-0.08, 1.25 - 0.06 * Math.sin(t * 10), 0.35); } // claps
+      reach(S.K, 'r', rT);
+      reach(S.K, 'l', lT);
+      S.group.updateMatrixWorld(true);
+      // the rosette: on the cushion, then in the King's hands, then pinned on the winner's chest
+      if (u > 0.53) {
+        ros.position.copy(toGroup(W.body.localToWorld(CHEST.clone())));
+        ros.quaternion.copy(W.body.getWorldQuaternion(q));
+      } else if (u > 0.2) {
+        const mid = S.K.r.hand.getWorldPosition(V(0, 0, 0)).add(S.K.l.hand.getWorldPosition(V(0, 0, 0))).multiplyScalar(0.5);
+        ros.position.copy(toGroup(mid));
+        ros.quaternion.copy(S.K.root.getWorldQuaternion(q)).multiply(flip);
+      } else {
+        ros.position.copy(toGroup(cushionW.clone()));
+        ros.quaternion.copy(page.root.getWorldQuaternion(q)).multiply(flat);
       }
-      tag.sub = hung ? `Master ${JOBS[win.c.job]?.label || ''}`.trim() : tag.sub;
-      // the King beside the winner (so the camera sees both), the medal from his hands to the winner's neck
-      S.K.root.position.set(BX[win.i] + 1.0, 0, BZ + 1.4);
-      S.K.root.rotation.y = -Math.PI / 2 - 0.4;
-      const k = ease(span(u, 0.15, 0.42));
-      S.K.r.g.rotation.set(-1.4 - 0.4 * k * (1 - k) * 4, 0, 0);
-      S.K.l.g.rotation.set(-1.4 - 0.4 * k * (1 - k) * 4, 0, 0);
-      const from = new THREE.Vector3(BX[win.i] + 0.6, 1.5, BZ + 1.3), to = new THREE.Vector3(BX[win.i], 1.52, BZ + 1.27);
-      m.position.copy(from.lerp(to, k));
-      if (award === 1 && u > 0.5) { // the King steps closer and lifts the winner's arm with his own
-        const c = ease(span(u, 0.5, 0.6));
-        S.K.root.position.x = X + lerp(1.0, 0.75, c);
-        S.K.root.rotation.y = lerp(-Math.PI / 2 - 0.4, 0, c);
-        S.K.r.g.rotation.set(lerp(-1.4, -2.9, ease(span(u, 0.55, 0.65))), 0, 0.3);
-        S.K.l.g.rotation.set(-0.3, 0, 0);
-      }
-      if (award === 2 && u > 0.5) { S.K.r.g.rotation.set(-1.7 + 0.25 * Math.sin(t * 10), 0, 0.3); S.K.l.g.rotation.set(-1.7 - 0.25 * Math.sin(t * 10), 0, -0.3); } // the King claps
+      // the other three clap, or (2) lift their own work
       for (const b of S.benches) if (b !== win) {
-        if (award === 2 && u > 0.5) { b.ws.rig.r.g.rotation.set(-2.6 + 0.2 * Math.sin(t * 7 + b.i), 0, 0); b.ws.rig.l.g.rotation.set(-0.3, 0, 0); continue; } // their work up too
-        b.ws.rig.r.g.rotation.set(-1.9 + 0.3 * Math.sin(t * 9 + b.i), 0, 0); b.ws.rig.l.g.rotation.set(-1.9 + 0.3 * Math.cos(t * 9 + b.i), 0, 0); // clapping
+        const P = b.ws.rig;
+        if (award === 2 && u > 0.74) { b.ws.piece.group.position.set(0, 1.95 + 0.05 * Math.sin(t * 7 + b.i), 0.25); reach(P, 'r', V(0.15, 1.92, 0.25)); reach(P, 'l', V(-0.15, 1.92, 0.25)); continue; }
+        const c = 0.07 * Math.sin(t * 11 + b.i * 1.3);
+        reach(P, 'r', V(0.06 + c, 1.18, 0.35));
+        reach(P, 'l', V(-0.06 - c, 1.18, 0.35));
       }
-      shower.at(t, award === 1 ? span(u, 0.55, 0.65) : 0, X + 0.4, 0, BZ + 1.2, 2.2);
-      S.cheer(t, hung ? 1 : 0.4);
+      shower.at(t, award === 1 ? span(u, 0.72, 0.82) : 0, X + 0.4, 0, BZ + 1.2, 2.2);
+      S.cheer(t, u > 0.56 ? 1 : 0.4);
       S.placeTags(labels);
     },
   };
