@@ -64,3 +64,12 @@ test('commenters: author ids and times of the wrong shape are skipped, display n
   assert.equal(r[0].name.length, 100);
   assert.deepEqual(r[0].wants, ['blacksmith']);
 });
+
+test('commenters: the video id is kept only when it has the shape of one (owner 2026-11-25, gold coins)', async () => {
+  const { fetchCommenters } = await import('../src/fetch/comments.js');
+  const th = (author, at, videoId) => ({ snippet: { videoId, topLevelComment: { snippet: { authorChannelId: { value: author }, authorDisplayName: '@A', publishedAt: at, textOriginal: 'hi' } } } });
+  const items = [th('UCa', '2026-10-17T10:00:00Z', 'NZQTLeTjjQ8'), th('UCb', '2026-10-17T11:00:00Z', '../../etc'), th('UCc', '2026-10-17T12:00:00Z', undefined)];
+  const fetchImpl = async (url) => new Response(JSON.stringify(String(url).includes('/channels') ? { items: [{ id: 'UCown' }] } : { items }));
+  const r = await fetchCommenters({ apiKey: 'k', fetchImpl, log: { log() {} } });
+  assert.deepEqual(r.map((c) => c.video ?? null), ['NZQTLeTjjQ8', null, null]);
+});

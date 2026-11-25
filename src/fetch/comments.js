@@ -1,6 +1,7 @@
 // Commenters for villager names: public comment threads on the channel's videos (YouTube Data API v3,
 // commentThreads.list with the same API key as the subscriber count). Never throws.
 import { DEFAULT_HANDLE } from './youtube.js';
+import { VIDEO_RE } from '../sim/coins.js';
 import { asksFromText, voteFromText, wantsFromText, nameFromText, complainsFromText, rebelFromText, brawlFromText, joinFromText, answerFromText, plainText } from '../sim/requests.js';
 
 const API = 'https://www.googleapis.com/youtube/v3';
@@ -52,7 +53,9 @@ export async function fetchCommenters({ apiKey, handle = DEFAULT_HANDLE, channel
         const complains = complainsFromText(text), rebel = rebelFromText(text), brawl = brawlFromText(text), join = joinFromText(text), vote = voteFromText(text);
         // owner 2026-11-14: the comment's likes (a number YouTube gives with it), for the trial's verdict (stories.js `trial`)
         const likes = Number.isSafeInteger(c.likeCount) && c.likeCount >= 0 ? c.likeCount : 0;
-        out.push({ author, name: String(c.authorDisplayName ?? '').slice(0, 100), at, likes, wants: wantsFromText(text), asks: asksFromText(text), ...(call ? { call } : {}), ...(complains ? { complains } : {}), ...(rebel ? { rebel } : {}), ...(brawl ? { brawl } : {}), ...(join ? { join } : {}), ...(vote ? { vote } : {}), ...(answers.length ? { answers } : {}) });
+        // owner 2026-11-25: the video the comment is on (its id only), for the gold coins (src/sim/coins.js)
+        const video = typeof th.snippet?.videoId === 'string' && VIDEO_RE.test(th.snippet.videoId) ? th.snippet.videoId : null;
+        out.push({ author, name: String(c.authorDisplayName ?? '').slice(0, 100), at, likes, ...(video ? { video } : {}), wants: wantsFromText(text), asks: asksFromText(text), ...(call ? { call } : {}), ...(complains ? { complains } : {}), ...(rebel ? { rebel } : {}), ...(brawl ? { brawl } : {}), ...(join ? { join } : {}), ...(vote ? { vote } : {}), ...(answers.length ? { answers } : {}) });
       }
       pageToken = body.nextPageToken;
       if (older || !pageToken) break;

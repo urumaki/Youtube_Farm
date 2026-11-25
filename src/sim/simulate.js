@@ -2,6 +2,7 @@
 import { hash, rng } from './prng.js';
 import { cleanName, isOffensive, looksLikeCode } from './names.js';
 import { availableJobs } from './requests.js';
+import { payComment } from './coins.js';
 import { TIERS, BUILDINGS, JOBS, COMMISSIONS, jobFor, houseCapacity, tiersReached, mergedJob } from './tiers.js';
 import { world } from './world.js';
 import { dailyEvents } from './events.js';
@@ -40,6 +41,7 @@ export function genesis({ seed = DEFAULT_SEED, date = '1970-01-01' } = {}) {
     nameQueue: [],    // commenters waiting for an unnamed villager
     namedAuthors: [], // every commenter who ever received a name (one villager per person)
     commentsSeen: null, // publishedAt of the newest comment already processed
+    coins: {},        // owner 2026-11-25: author -> { gold, videos } (src/sim/coins.js)
     storyLog: {},     // story event id -> last day it happened (cooldowns)
     story: null,      // today's story event
     storyArc: null,   // a story to continue on a later day: { id, day, step?, data? }
@@ -54,6 +56,7 @@ export function withNameFields(s) {
   s.nameQueue ??= [];
   s.namedAuthors ??= [];
   if (!('commentsSeen' in s)) s.commentsSeen = null;
+  s.coins ??= {};
   for (const n of [...Object.values(s.names), ...s.nameQueue]) n.name = cleanName(n.name) || n.name; // re-clean old saves
   if (Array.isArray(s.villagers)) for (const v of s.villagers) if (v && s.names[v.id]) v.name = s.names[v.id].name;
   return s;
@@ -302,6 +305,7 @@ function assignNames(s, commenters, blocked, diff) {
   const trialData = s.storyArc?.id === 'trial' && s.storyArc.step === 'verdict' ? s.storyArc.data : null;
   const parties = trialData ? { accused: s.names[trialData.accused?.id]?.author, accuser: s.names[trialData.accuser?.id]?.author } : null;
   if (parties) s.trialLikes ??= { accused: null, accuser: null };
+  diff.coins = 0; // owner 2026-11-25: coins paid today (src/sim/coins.js)
   diff.newCommenters = 0; // people commenting for the first time (no story on busy days, stories.js)
   // names are untrusted: cleaned to letters, digits and . _ -, never one that reads like code or an instruction
   const valid = (raw) => { const n = cleanName(raw); return n && !isOffensive(n) && !looksLikeCode(raw) && !looksLikeCode(n) && !blockedNames.has(n.toLowerCase()) ? n : null; };
@@ -346,6 +350,8 @@ function assignNames(s, commenters, blocked, diff) {
     const wants = (Array.isArray(c.wants) ? c.wants : []).filter((j) => typeof j === 'string' && (j === ARCHER || Object.hasOwn(JOBS, j)) && (j === ARCHER || !JOBS[j].only || JOBS[j].only.includes(c.author)));
     const call = c.call ? valid(c.call) : null; // "call me Violet"
     if (known.has(c.author)) {
+      // owner 2026-11-25: a gold coin for each new video a villager's commenter comes back to (src/sim/coins.js)
+      if (payComment(s, c.author, c.video)) diff.coins += 1;
       // someone who already has a villager asks for a (new) job or a new name
       const id = villagerOf(c.author);
       const q = id === undefined ? s.nameQueue.find((n) => n.author === c.author) : null;
@@ -402,6 +408,7 @@ function assignNames(s, commenters, blocked, diff) {
     if (!name) continue;
     known.add(c.author);
     s.namedAuthors.push(c.author);
+    payComment(s, c.author, c.video, { first: true }); // 100 gold to start
     diff.newCommenters += 1;
     s.nameQueue.push({ name, author: c.author, seenDay: s.day, ...(wants.length ? { wants } : {}), ...(c.rebel ? { rebel: true } : {}), ...(c.brawl ? { brawl: true } : {}), ...(c.join && event ? { join: true } : {}) });
   }

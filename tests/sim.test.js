@@ -2108,3 +2108,25 @@ test('requests: companions, congratulations and "change to become" (owner 2026-1
   assert.deepEqual(wantsFromText('I humbly request to join the guard'), ['guard']);
   assert.deepEqual(wantsFromText('can I become a militia man?'), ['guard']);
 });
+
+test('gold coins: 100 to start, +1 for each later video a villager comments on, once per video (owner 2026-11-25)', async () => {
+  const { goldOf, START_GOLD } = await import('../src/sim/coins.js');
+  let s = genesis({ seed: 3, date: '2026-01-01' });
+  s = advance(s, { subscribers: 40, date: '2026-01-02' }).state;
+  const C = (author, name, at, video) => ({ author, name, at, video, wants: [] });
+  let r = advance(s, { subscribers: 40, date: '2026-01-03', commenters: [C('UCa', 'Anna', '2026-01-02T10:00:00Z', 'aaaaaaaaaaa'), C('UCa', 'Anna', '2026-01-02T11:00:00Z', 'aaaaaaaaaaa')] });
+  assert.equal(goldOf(r.state, 'UCa'), START_GOLD, 'the comment that names a villager earns no coin, nor a second one on that video');
+  r = advance(r.state, { subscribers: 40, date: '2026-01-04', commenters: [
+    C('UCa', 'Anna', '2026-01-03T10:00:00Z', 'bbbbbbbbbbb'), C('UCa', 'Anna', '2026-01-03T10:05:00Z', 'bbbbbbbbbbb'), C('UCa', 'Anna', '2026-01-03T10:06:00Z', 'aaaaaaaaaaa'),
+    C('UCb', 'Bruno', '2026-01-03T11:00:00Z', 'bbbbbbbbbbb'), C('UCc', 'Carla', '2026-01-03T12:00:00Z', 'not a video id!'),
+  ] });
+  assert.equal(goldOf(r.state, 'UCa'), 101, 'one coin for the new video, none for the old one or the second comment');
+  assert.equal(r.diff.coins, 1);
+  assert.equal(goldOf(r.state, 'UCb'), 100);
+  r = advance(r.state, { subscribers: 40, date: '2026-01-05', commenters: [C('UCa', 'Anna', '2026-01-04T10:00:00Z', 'ccccccccccc'), C('UCc', 'Carla', '2026-01-04T10:00:00Z', 'ccccccccccc')] });
+  assert.equal(goldOf(r.state, 'UCa'), 102);
+  assert.equal(goldOf(r.state, 'UCc'), 101, 'a villager named before the coins existed counts from their first coin');
+  // an old save without coins: everyone has 100
+  const old = migrate(JSON.parse(JSON.stringify({ ...r.state, coins: undefined })));
+  assert.equal(goldOf(old, 'UCa'), 100);
+});
