@@ -722,8 +722,8 @@ Add new owner decisions here.
   - Test: `node --test --test-name-pattern="rotate through every job|granted request keeps" tests/sim.test.js`.
 - `npm run render -- --subs 80 --gallery "farmer:sow,blacksmith:anvil+guard:sword"` renders test views
   of work scenes and visits (`output/gallery/`), in the croft of the first named villager.
-- The new rig at work (owner 2026-11-25: "less robotic"; built on the branch `claude/work-animations-shops`, merged when the
-  owner approves it after 2026-12-01):
+- The new rig at work (owner 2026-11-25: "less robotic"; built on the branch `claude/work-animations-shops`; the owner had it merged on 2026-11-25, before their
+  return, so the guild contest's second day has the new rig):
   - Every villager has an elbow halfway down each arm and, standing, hips, knees and ankles: the feet stay planted where
     they stand while the hips move (`legIK` in `work.js`). At rest every joint is straight, so story scenes look as before.
   - The life layer (`life()` in `buildWorkScene`): breathing; the weight going from foot to foot; the elbow bent on the
