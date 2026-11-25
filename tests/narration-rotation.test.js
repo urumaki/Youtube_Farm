@@ -15,3 +15,18 @@ test('old days read the same (owner 2026-11-25: the change starts 2026-11-26)', 
     assert.equal(buildScript(migrate(state), diff, { shots: [] }).text, text, date);
   }
 });
+
+test('routine lines take turns by day', async () => {
+  const { routineRoles, turn, NARRATION_FROM } = await import('../src/audio/rotation.js');
+  assert.equal(NARRATION_FROM, '2026-11-26');
+  const roles = (d) => [...routineRoles(d)].sort();
+  const next = { remaining: 90 };
+  assert.deepEqual(roles({ day: 40, next }), ['newcomers', 'open']);
+  assert.deepEqual(roles({ day: 41, next }), ['comment', 'newcomers']);
+  assert.deepEqual(roles({ day: 42, next }), ['comment', 'goal']);
+  assert.deepEqual(roles({ day: 43, next }), ['goal', 'open']);
+  assert.deepEqual(roles({ day: 42, next: null }), ['comment', 'open']); // no goal left: the next two
+  assert.deepEqual(roles({ day: 40, next: { remaining: 20 } }), ['goal', 'newcomers', 'open']); // about to be reached: news
+  assert.equal(turn(['a', 'b', 'c'], 7), 'b');
+  for (let d = 0; d < 6; d++) assert.notEqual(turn(['a', 'b', 'c'], d), turn(['a', 'b', 'c'], d + 1));
+});
