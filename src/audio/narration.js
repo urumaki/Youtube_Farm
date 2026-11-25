@@ -1,10 +1,12 @@
 // Narration script from the day's diff: template-based with seeded variation, ~60-75 words for 30 s.
 import { rng } from '../sim/prng.js';
-import { JOBS, BUILDINGS, tavernScene } from '../sim/tiers.js';
+import { JOBS, BUILDINGS, tavernScene, mergedJob } from '../sim/tiers.js';
 import { storyCue, TRIAL_SENTENCES, trialCharge } from '../sim/stories.js';
 import { RIDDLE } from '../sim/riddles.js';
 import { VOTE, voteWinner } from '../sim/votes.js';
 import { featuredPeople, visitItem } from '../sim/featured.js';
+import { NARRATION_FROM, routineRoles, turn } from './rotation.js';
+import { MORE, CARAVAN_QUIET, WISH, WORK, PAYOFF } from './lines.js';
 
 const L = {
   open: [
@@ -210,7 +212,7 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   const said = new Set();
   const fresh = (a) => { const free = a.filter((f) => !said.has(f)), x = r.pick(free.length ? free : a); said.add(x); return x; };
   const bname = (id) => BUILDINGS[id].label;
-  const job = (j) => JOBS[j].label.toLowerCase();
+  const job = (j) => (JOBS[j]?.label ?? j).toLowerCase();
   const S = []; // {text, role, priority} lower priority dropped first when too long
   // about: the job it names; building: the building it names (it waits for that building's shot)
   // alts: the other lines that say the same; a shorter one is taken when the line would not fit its shot (fitShots)
@@ -218,12 +220,25 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   const line = (f, args) => (typeof f === 'function' ? f(...args) : f);
   // a line picked from a list of templates, with the others as alts
   const addT = (list, args, role, priority, about = null, building = null, choose = pick) => add(line(choose(list), args), role, priority, about, building, list.map((f) => line(f, args)));
+  // owner 2026-11-25 (src/audio/rotation.js): from NARRATION_FROM at most 2 routine lines a day, in turn, each wording from
+  // its pool in turn by day, and the freed words go to what is on screen
+  const v2 = diff.date >= NARRATION_FROM;
+  const say = v2 ? routineRoles(diff) : null;
+  const payoff = v2 && diff.story ? PAYOFF[storyCue(diff.story)] : null;
+  // with no payoff to say over the wide shot, the goal takes the place of the second routine line (never silence there)
+  if (v2 && !payoff && diff.next && !say.has('goal')) { say.delete([...say].at(-1)); say.add('goal'); }
+  const addR = (pool, args, role, priority, k, about = null) => {
+    // no other wording as an alt: a shorter one taken to fit a shot came back the next day ("90 to go" two days running)
+    add(line(turn(pool, diff.day, k), args), role, priority, about, null, null);
+  };
 
-  addT(L.open, [diff], 'open', 9);
+  if (!v2) addT(L.open, [diff], 'open', 9);
+  else if (say.has('open')) addR([...L.open, ...MORE.open], [diff], 'open', 9, 0);
   const d = diff.delta;
   // on caravan days the counter already shows "+N villagers" and the caravan sentence says it: the
   // opening stays short enough to end with the caravan shot (4.5 s)
   if ((diff.named || []).length && d >= 0) { /* no delta sentence */ }
+  else if (v2 && d >= 0 && !say.has('newcomers')) { /* routine: not today */ }
   else if (d === 1) add(pick(L.up1), 'delta', 10);
   else if (d > 1) add(pick(L.up)(d.toLocaleString('en-US')), 'delta', 10);
   else if (d === -1) add(pick(L.down1), 'delta', 10);
@@ -231,15 +246,22 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   else add(pick(L.same), 'delta', 10);
 
   // villagers named by commenters today are welcomed by job; otherwise up to two newcomers (special jobs first)
-  if ((diff.named || []).length) addT(L.caravan, [diff.named.length], 'caravan', 9);
+  if ((diff.named || []).length && !v2) addT(L.caravan, [diff.named.length], 'caravan', 9);
+  else if ((diff.named || []).length) addR(say.has('newcomers') ? L.caravan : CARAVAN_QUIET, [diff.named.length], 'caravan', 9, 4);
   const granted = (diff.requests || []).filter((q) => q.granted), waiting = (diff.requests || []).filter((q) => !q.granted);
   // the villagers the video shows at work (src/sim/featured.js): the narrator only names jobs on screen
   // (hosts and the guests who visit them)
   const featured = diff.featured ? featuredPeople(diff.featured) : null;
   const onScreen = new Set((featured || []).map((f) => f.job));
   const g0 = granted.find((q) => onScreen.has(q.job)) || granted[0];
-  if (granted.length) add(pick(L.granted)(granted.length, job(g0.job)), 'requests', 9, g0.job);
-  if (waiting.length) add(pick(L.apprentice)(waiting.length), 'requests', 6);
+  // from NARRATION_FROM the request is said over the villager who got it, only when that villager is on screen
+  const people = (diff.featured || []).flatMap((f) => [f, f.with].filter(Boolean));
+  const grantedIds = new Set(granted.map((q) => q.id));
+  const wished = v2 && people.find((p) => grantedIds.has(p.id));
+  if (!v2 && granted.length) add(pick(L.granted)(granted.length, job(g0.job)), 'requests', 9, g0.job);
+  if (wished) addR(WISH, [job(wished.job)], 'requests', 9, 5, wished.job);
+  if (!v2 && waiting.length) add(pick(L.apprentice)(waiting.length), 'requests', 6);
+  if (v2 && waiting.length && people.some((p) => p.job === 'apprentice')) add(pick(L.apprentice)(waiting.length), 'requests', 6, 'apprentice');
   if ((diff.promoted || []).length) add(pick(L.promoted)(job(diff.promoted[0].job)), 'requests', 8, diff.promoted[0].job);
   const welcomed = featured ? (diff.named || []).filter((v) => featured.some((f) => f.today && f.job === v.job)) : (diff.named || []).slice(0, 3);
   // one welcome per shot: the host named today, else the guest (two welcomes over one shot ran into the next shots)
@@ -255,6 +277,14 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
     const key = f.pair === 'visit' ? ({ fish: 'fishbuy' })[visitItem(f.job)] || visitItem(f.job) || 'chat' : f.pair;
     if (L.pair[key]) add(L.pair[key](job(f.job), job(f.with.job)), 'pair', 7, f.job);
   }
+  // what each villager on screen is doing (src/audio/lines.js WORK), over their shot
+  if (v2) for (const f of diff.featured || []) {
+    const v = diff.scenes?.variants?.[f.id];
+    const pool = (v && WORK[`${f.job}:${v}`]) || WORK[f.job] || WORK[mergedJob(f.job)];
+    if (pool) addR(pool, [], 'work', 6, f.id, f.job);
+    // a second line over a long shot (fitShots drops it when the shot has no time left for it)
+    if (pool?.length > 1) addR(pool, [], 'work', 3, f.id + 1, f.job);
+  }
   if (!(diff.named || []).length) {
     const special = diff.added.filter((v) => !['farmer', 'peasant'].includes(v.job));
     const shown = [...special, ...diff.added.filter((v) => !special.includes(v))].slice(0, special.length ? 2 : 1);
@@ -267,8 +297,11 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   // shots: the renderer's shot plan, when known (an everyday shot gets a short line)
   const amb = shots.find((c) => c.kind === 'ambient');
   if (amb && L.ambient[amb.id]) addT(L.ambient[amb.id], [], 'ambient', 4); // the other line as an alt (a shorter one fits)
-  if (diff.scenes ? diff.scenes.tavern : tavernScene(state)) add(pick(L.tavern), 'tavern', 6);
-  if (diff.scenes?.church) add(pick(L.church[diff.scenes.church]), 'church', 6);
+  const tavernToday = diff.scenes ? diff.scenes.tavern : tavernScene(state);
+  if (tavernToday && !v2) add(pick(L.tavern), 'tavern', 6);
+  else if (tavernToday) addR([...L.tavern, ...MORE.tavern], [], 'tavern', 6, 6);
+  if (diff.scenes?.church && !v2) add(pick(L.church[diff.scenes.church]), 'church', 6);
+  else if (diff.scenes?.church) addR([...L.church[diff.scenes.church], ...MORE.church[diff.scenes.church]], [], 'church', 6, 7);
   const nb = diff.housesBuilt.length;
   if (nb === 1) addT(L.houses1, [], 'houses', 5);
   else if (nb > 1) addT(L.houses, [nb.toLocaleString('en-US')], 'houses', 5);
@@ -291,13 +324,19 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   if (story) add(L.events[story.type](story), 'event', 4);
   const prog = diff.events.find((e) => e.type === 'construction' && !diff.buildingsStarted.includes(e.building));
   if (prog) addT(L.progress, [bname(prog.building), Math.round(prog.progress * 100)], 'progress', 3);
-  add(L.weather[diff.weather], 'weather', 2);
-  if (diff.next) {
+  if (!v2) add(L.weather[diff.weather], 'weather', 2);
+  else if (L.weather[diff.weather]) addR([L.weather[diff.weather], ...MORE.weather[diff.weather]], [], 'weather', 2, 8);
+  if (diff.next && !v2) {
     addT(L.goal, [diff.next.remaining.toLocaleString('en-US'), diff.next.goal], 'goal', 8); // (the other way as an alt: startsEarly)
   }
-  addT(L.cta, [], 'cta', 10);
-  addT(L.comment, [], 'comment', 7);
-  if (S.reduce((n, x) => n + words(x.text), 0) < 60) {
+  if (v2 && diff.next && say.has('goal')) addR([...L.goal, ...MORE.goal], [diff.next.remaining.toLocaleString('en-US'), diff.next.goal], 'goal', 8, 3);
+  else if (v2 && payoff) addR(payoff, [], 'payoff', 8, 10); // how the day's story ended, over the wide shot
+  if (!v2) addT(L.cta, [], 'cta', 10);
+  else addR([...L.cta, ...MORE.cta], [], 'cta', 10, 2);
+  if (!v2) addT(L.comment, [], 'comment', 7);
+  // (no shot of its own: it fills a silence; anchored to the tavern it was moved into an earlier gap, then waited there)
+  else if (say.has('comment')) { addR([...L.comment, ...MORE.comment], [], 'comment', 7, 1); S.at(-1).free = true; }
+  if (!v2 && S.reduce((n, x) => n + words(x.text), 0) < 60) {
     const pop = state.subscriberCount.toLocaleString('en-US');
     add(`The kingdom now counts ${pop} souls.`, 'weather', 2);
   }
@@ -305,7 +344,8 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
   // fit to ~60-75 words: drop the lowest-priority sentences until short enough
   // same order as the shots: caravan, new buildings, villagers at work, then the rest
   // the comment invitation comes with the named villagers (tavern), so the goal and the call to action keep the end
-  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'raised', 'requests', 'count', 'person', 'pair', 'ambient', 'tavern', 'church', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'goal', 'cta'];
+  const order = ['open', 'delta', 'caravan', 'story', 'completed', 'unlocked', 'raised', 'requests', 'count', 'person', 'work', 'pair', 'ambient', 'tavern', 'church', 'comment', 'houses', 'rebuilt', 'abandoned', 'ruined', 'milestone', 'event', 'progress', 'weather', 'payoff', 'goal', 'cta'];
+  const must = v2 ? MUST_V2 : MUST;
   S.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role));
   // between equals, a sentence about a shot of its own stays (it fills that shot)
   const own = new Set(shots.length ? S.filter((s, i) => sentenceAnchors(S, shots)[i] !== null && !(s.role in FIXED_AT)) : []);
@@ -320,7 +360,7 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
     const keyed = S.map((s, i) => ({ s, i, k: (key = at[i] ?? key) }));
     keyed.sort((a, b) => a.k - b.k || a.i - b.i);
     S.splice(0, S.length, ...keyed.map((x) => x.s));
-    fitShots(S, shots, r);
+    fitShots(S, shots, r, must);
   }
   // owner 2026-11-13: day 29 lost the shepherd's line over the pasture shot to the word count (76 words) and the narrator was
   // silent for 5 s. With the shot plan known, fitShots has already made every line fit its time, so the count goes to 85,
@@ -344,13 +384,13 @@ export function buildScript(state, diff, { seed = state.seed, shots = [] } = {})
     while (startsEarly(S, shots)) {
       const at = sentenceAnchors(S, shots);
       const anchored = new Set(S.filter((_, i) => at[i] !== null));
-      const victim = S.filter((s) => !MUST.has(s.role) && s.priority < 9).sort((a, b) => anchored.has(a) - anchored.has(b) || a.priority - b.priority)[0];
+      const victim = S.filter((s) => !must.has(s.role) && s.priority < 9).sort((a, b) => anchored.has(a) - anchored.has(b) || a.priority - b.priority)[0];
       if (!victim) break;
       S.splice(S.indexOf(victim), 1);
     }
   }
   const text = S.map((s) => s.text).join(' ');
-  return { sentences: S.map(({ text, role, job: about, building }) => ({ text, role, ...(about ? { job: about } : {}), ...(building ? { building } : {}) })), text, words: words(text) };
+  return { sentences: S.map(({ text, role, job: about, building, free }) => ({ text, role, ...(about ? { job: about } : {}), ...(building ? { building } : {}), ...(free ? { free } : {}) })), text, words: words(text) };
 }
 
 /**
@@ -611,6 +651,8 @@ export const spokenLength = (t) => 0.055 * (t.match(/\p{L}/gu) || []).length + 0
 const GAP = 0.28, FIRST = 0.38; // the pause between sentences and the first word (src/audio/tts/index.js)
 // never dropped for time: the opening, the story event, the goal and the call to action
 const MUST = new Set(['open', 'delta', 'caravan', 'story', 'goal', 'cta']);
+// from NARRATION_FROM the day line and the newcomers are routine lines (owner 2026-11-25); the story's payoff is kept
+const MUST_V2 = new Set(['caravan', 'story', 'goal', 'payoff', 'cta']);
 // the last moment the voice may end, video time (synthesize's maxDuration 28.3 s on the narration track, which starts
 // VOICE_DELAY 0.35 s into the video), and how early a line may start before its shot: 0.7 s, while the camera still flies
 // into it (the comment line of day 29 needs that much to stay; day 38 heard lines 1.3 and 1.8 s early)
@@ -645,7 +687,7 @@ export function startsEarly(S, shots) {
  * next sentence's shot) is dropped, unless it is a must (MUST), and so is a line about a villager or a building that got no
  * shot (another line took it). Runs before the word budget, on all the sentences.
  */
-function fitShots(S, shots, r) {
+function fitShots(S, shots, r, must = MUST) {
   const cues = sentenceCues(S, shots);
   const out = [], kept = []; // kept: when each kept line is said ({ s, start, end, anchored })
   let t = FIRST;
@@ -659,9 +701,9 @@ function fitShots(S, shots, r) {
     }
     // past its own shot, or (with no shot of its own) into the time of the next sentence that waits for a shot
     const over = c ? (c.end ?? Infinity) + 0.6 : (next?.at ?? Infinity) + 0.3;
-    if (start + spokenLength(s.text) > over && !MUST.has(s.role)) return;
+    if (start + spokenLength(s.text) > over && !must.has(s.role)) return;
     // a line about a villager or a building whose shot another line took would be heard over some other shot
-    if (!c && (s.job || s.building) && !MUST.has(s.role)) return;
+    if (!c && (s.job || s.building) && !must.has(s.role)) return;
     out.push(s);
     kept.push({ s, start, end: start + spokenLength(s.text), anchored: !!c });
     t = start + spokenLength(s.text) + GAP;
@@ -692,11 +734,11 @@ const coldOpen = (shots) => shots[0]?.t0 === 0 && shots[0].kind !== 'caravan';
 const SHOT_OF = {
   caravan: (c) => c.kind === 'caravan' && c.t0 > 0,
   story: (c) => c.kind === 'event', completed: (c) => c.kind === 'building', unlocked: (c) => c.kind === 'building',
-  requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', pair: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', church: (c) => c.kind === 'church', comment: (c) => c.kind === 'tavern', ambient: (c) => c.kind === 'ambient',
+  requests: (c) => c.kind === 'villager', person: (c) => c.kind === 'villager', work: (c) => c.kind === 'villager', pair: (c) => c.kind === 'villager', tavern: (c) => c.kind === 'tavern', church: (c) => c.kind === 'church', comment: (c) => c.kind === 'tavern', ambient: (c) => c.kind === 'ambient',
   houses: (c) => c.kind === 'house' && !c.raised, rebuilt: (c) => c.kind === 'house' && !c.raised, raised: (c) => c.kind === 'house' && c.raised, abandoned: (c) => c.kind === 'loss', ruined: (c) => c.kind === 'loss',
 };
 // fixed parts of the video: the wide shot with the goal (23.5 s) and the call to action (27 s)
-const FIXED_AT = { goal: 23.7, cta: 27.1 };
+const FIXED_AT = { goal: 23.7, payoff: 23.7, cta: 27.1 };
 
 /**
  * Video time at which each sentence should start, so the narrator talks about what is on screen:
@@ -719,11 +761,12 @@ function sentenceCues(sentences, cues = []) {
   function cueOf(s) {
     if (s.at !== undefined) return { at: s.at }; // a line with a time of its own (the raid)
     if (FIXED_AT[s.role] !== undefined) return { at: FIXED_AT[s.role] };
+    if (s.free) return null;
     const match = SHOT_OF[s.role];
     // a sentence naming a job waits for that villager's shot (and for no other; a visiting villager is in
     // the host's shot); otherwise the next shot of its kind
     // a sentence naming a building waits for that building's shot, or for none
-    const aboutJob = s.job && (s.role === 'person' || s.role === 'requests' || s.role === 'pair');
+    const aboutJob = s.job && (s.role === 'person' || s.role === 'requests' || s.role === 'pair' || s.role === 'work');
     const cue = match && (s.building ? cues.find((c) => match(c) && c.id === s.building && !used.has(c))
       : aboutJob ? cues.find((c) => match(c) && (c.job === s.job || c.job2 === s.job) && !used.has(c))
         : cues.find((c) => match(c) && !used.has(c)));

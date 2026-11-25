@@ -26,14 +26,14 @@ export const MORE = {
 // the caravan's shot on a day the number of newcomers is not said
 export const CARAVAN_QUIET = [
   'Carts creak through the gate, loaded with whole lives.',
-  'New faces roll in, with bundles and a goat.',
-  'The gate opens for another caravan.',
-  'Wagons, mules and hopeful faces arrive.',
-  'A dog trots behind the newcomers’ cart.',
-  'Here they come, all their things on a cart.',
-  'Dusty boots and big dreams roll into town.',
-  'The road brings us more neighbours.',
-];
+  'New faces roll in, with bundles, baskets and a goat.',
+  'The gate swings open for another caravan of newcomers.',
+  'Wagons, mules and hopeful faces arrive at the gate.',
+  'A dog trots behind the newcomers’ cart, tail wagging.',
+  'Here they come, everything they own piled on a cart.',
+  'Dusty boots and big dreams roll into town today.',
+  'The road brings us more neighbours, and their chickens.',
+]
 
 // over the shot of a villager who got the job they asked for today
 export const WISH = [
