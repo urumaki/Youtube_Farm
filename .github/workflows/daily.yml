@@ -49,7 +49,7 @@ jobs:
       - name: Set up TTS (Kokoro + Piper fallback)
         run: npm run setup:tts
 
-      # owner 2026-11-25: the narrator from 2026-11-30 (src/audio/tts/index.js, VOICE_FROM); if it cannot be set up the
+      # owner 2026-11-25: the narrator from 2026-11-26 (src/audio/tts/index.js, VOICE_FROM); if it cannot be set up the
       # video keeps Kokoro's voice
       - name: Set up Chatterbox (narrator voice)
         continue-on-error: true

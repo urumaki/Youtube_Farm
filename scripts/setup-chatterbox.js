@@ -1,4 +1,4 @@
-// Installs the narrator's voice from 2026-11-30 (owner 2026-11-25): Chatterbox TTS (Resemble AI, MIT) in its own Python
+// Installs the narrator's voice from 2026-11-26 (owner 2026-11-25): Chatterbox TTS (Resemble AI, MIT) in its own Python
 // venv, tools/chatterbox-venv (git-ignored, apart from Kokoro's packages), CPU torch, and downloads the model (~3 GB, into
 // HF_HOME or ~/.cache/huggingface). Needs Python 3.10-3.12: CHATTERBOX_BASE_PYTHON, else PYTHON, else python3.
 import fs from 'node:fs';

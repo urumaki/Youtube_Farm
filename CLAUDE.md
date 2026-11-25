@@ -63,7 +63,7 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - ffmpeg 9.0.2 in `C:\ffmpeg\bin` (first on PATH; the 2020 build is kept in `C:\ffmpeg\bin_old_2020`).
   The code also works with ffmpeg older than 4.4 (`mix.js` does not use `amix normalize`).
 - Kokoro needs Python < 3.14: a Python 3.12 venv in `tools/venv`, set as `PYTHON` in `.env`. Chatterbox (the narrator
-  from 2026-11-30): Python 3.11 venv in `tools/chatterbox-venv` (`npm run setup:chatterbox`).
+  from 2026-11-26): Python 3.11 venv in `tools/chatterbox-venv` (`npm run setup:chatterbox`).
 - Playwright needs its headless shell: `npx playwright install chromium-headless-shell`.
 
 ## How it works (map)
@@ -79,7 +79,7 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
   (`JOB_SCENES`); `overlay.js` name tags and credits; `stories/` one file per story event; `tavern.js`,
   `church.js`, `bakery.js`, `caravan.js`, `ambient.js`, `away.js`, `houses.js`, `houseKit.js`, `buildings.js`.
   `src/render/timelapse.js` — the time-lapse (every 30th day's video).
-- `src/audio/` — narration templates (names never read aloud), TTS: Chatterbox from 2026-11-30 (am_adam's timbre), Kokoro
+- `src/audio/` — narration templates (names never read aloud), TTS: Chatterbox from 2026-11-26 (am_adam's timbre), Kokoro
   `am_adam` before and as fallback; procedural music, synced sfx.
 - `src/publish/` — YouTube upload; `state/published.json` prevents double uploads.
 - `.github/workflows/daily.yml` — runs at 03:17 UTC on `ubuntu-24.04` (GitHub often starts it hours late).

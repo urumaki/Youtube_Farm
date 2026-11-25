@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** From 2026-11-30 the daily narration says at most 2 routine lines plus the call to action, in turn from day to day, and spends the freed words on what is on screen (work lines, the granted request over its villager, the story's payoff).
+**Goal:** From 2026-11-26 the daily narration says at most 2 routine lines plus the call to action, in turn from day to day, and spends the freed words on what is on screen (work lines, the granted request over its villager, the story's payoff).
 
 **Architecture:** `buildScript` in `src/audio/narration.js` gets one switch, `v2 = diff.date >= NARRATION_FROM`; every change sits behind it, so days before it draw the same seeded `rng` values and read the same. The rotation (which routine roles, which wording) is a pure function of the day number in a new `src/audio/rotation.js`; the new hand-written lines live in a new `src/audio/lines.js`.
 
@@ -11,7 +11,7 @@
 **Spec:** `docs/superpowers/specs/2026-11-25-narration-rotation-design.md`
 
 ## Global Constraints
-- `NARRATION_FROM = '2026-11-30'`; a diff dated before it gives exactly today's script.
+- `NARRATION_FROM = '2026-11-26'`; a diff dated before it gives exactly today's script.
 - Deterministic: no `Math.random()`; wordings by `pool[(day + k) % pool.length]`, the rest by the existing seeded `r`.
 - Routine roles: `open`, `newcomers` (the `up`/`up1`/`same` delta lines and the caravan's count line), `comment`, `goal`. At most 2 a day + `cta` every day. Forced on top: `goal` when `diff.next.remaining <= 20`; `down`/`down1`, milestone, `promoted` stay as today.
 - Pool sizes at least: `cta` 6, `comment` 6, `goal` 4, `open` 4, caravan without count 8, wish 3; `tavern`, church (each kind), weather (each kind) at least 4.
@@ -38,7 +38,7 @@
 - Produces: the fixture `{ "<date>": "<script text>" }` for every file in `state/history/`, built with `buildScript(migrate(state), diff, { shots: [] })` on the code as it is now.
 
 - [ ] **Step 1:** Write the fixture with a one-off node command (current code, before any change): for each `state/history/*.json`, `buildScript(migrate(h.state), h.diff, { shots: [] }).text`, keyed by file date, `JSON.stringify(out, null, 1)`.
-- [ ] **Step 2: Write the test** `old days read the same (owner 2026-11-25: the change starts 2026-11-30)`: for every key of the fixture, the same build equals the fixture text.
+- [ ] **Step 2: Write the test** `old days read the same (owner 2026-11-25: the change starts 2026-11-26)`: for every key of the fixture, the same build equals the fixture text.
 - [ ] **Step 3:** Run `node --test tests/narration-rotation.test.js`. Expected: PASS.
 - [ ] **Step 4:** Commit `Narration: snapshot of the saved days' scripts before the rotation`.
 
@@ -50,7 +50,7 @@
 
 **Interfaces:**
 - Produces:
-  - `export const NARRATION_FROM = '2026-11-30'`
+  - `export const NARRATION_FROM = '2026-11-26'`
   - `export const ROUTINE = ['open', 'newcomers', 'comment', 'goal']`
   - `export function routineRoles(diff) -> Set<string>`: `ROUTINE` rotated left by `diff.day % 4`, keep those that apply (`goal` only with `diff.next`), take the first 2; add `goal` when `diff.next?.remaining <= 20`.
   - `export function turn(pool, day, k = 0) -> item`: `pool[((day + k) % pool.length + pool.length) % pool.length]`.
@@ -112,7 +112,7 @@ Changes, all behind `const v2 = diff.date >= NARRATION_FROM` (old path untouched
 - `MUST` for v2: `{caravan, story, goal, payoff, cta}`; pass it to `fitShots` and to the `startsEarly` drop loop. `FIXED_AT.payoff = 23.7`. `order`: `work` after `person`, `payoff` before `goal`. `SHOT_OF.work = SHOT_OF.person`; `aboutJob` includes `work`.
 
 - [ ] **Step 1: Write the failing tests** (helper: load a saved day, set `diff.date = '2026-12-0X'`, `diff.day = 46 + i`, cues as in `tests/audio.test.js` "no long silences"):
-  - `from 2026-11-30 at most 2 routine lines a day, the call to action always`: 28 days from day 2026-11-21's diff: count of roles in `{open, comment, goal}` plus `newcomers` (delta up/same, and the caravan line only when it carries the count) `<= 2`, + 1 when `remaining <= 20`; `cta` present; no sentence text of roles `open|comment|cta|caravan|goal` equal to the day before's.
+  - `from 2026-11-26 at most 2 routine lines a day, the call to action always`: 28 days from day 2026-11-21's diff: count of roles in `{open, comment, goal}` plus `newcomers` (delta up/same, and the caravan line only when it carries the count) `<= 2`, + 1 when `remaining <= 20`; `cta` present; no sentence text of roles `open|comment|cta|caravan|goal` equal to the day before's.
   - `the granted request is said over its villager`: day 2026-11-21 moved to v2, cues with `{ kind: 'villager', job: 'merchant', job2: 'stonemason', t0: 9, t1: 13 }`: a `requests` sentence with `job: 'merchant'` anchored at 9.25; no sentence contains "job requests". Same day with `diff.requests` granted ids not featured: no `requests` sentence.
   - `work lines over the villager shots, payoff at the end`: a `work` sentence for the guard (variant `wallnight`, falls back to `WORK.guard` if no key) and for the merchant (variant `null`); on a day `goal` is not chosen, a `payoff` sentence equal to one of `PAYOFF.pig`, anchored at 23.7. A story cue missing from `PAYOFF` (set `diff.story.id = 'nosuch'`) gives `goal` instead.
   - `a caravan day without the count still talks over the caravan`: a day where `say` lacks `newcomers` and `diff.named.length > 0`: a `caravan` sentence from `CARAVAN_QUIET`.
@@ -122,7 +122,7 @@ Changes, all behind `const v2 = diff.date >= NARRATION_FROM` (old path untouched
 - [ ] **Step 3:** Implement the changes above.
 - [ ] **Step 4:** Run `npm test`. Expected: all PASS, including Task 1's snapshot and the existing narration tests.
 - [ ] **Step 5:** `npm run daily -- --dry-run --subs 3300` prints a script without errors (read only).
-- [ ] **Step 6:** Commit `Narration from 2026-11-30: routine lines in turn, the granted request over its villager, work lines, the story's payoff (owner 2026-11-25)`.
+- [ ] **Step 6:** Commit `Narration from 2026-11-26: routine lines in turn, the granted request over its villager, work lines, the story's payoff (owner 2026-11-25)`.
 
 ### Task 5: Record the decision, push
 

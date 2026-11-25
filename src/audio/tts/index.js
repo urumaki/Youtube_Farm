@@ -64,11 +64,11 @@ function kokoro(sentences, { outDir, speed, limit }) {
 }
 
 /**
- * Owner 2026-11-25: from the video of 2026-11-30 the narrator is Chatterbox (Resemble AI, MIT) with am_adam's timbre (a
+ * Owner 2026-11-25: from the video of 2026-11-26 the narrator is Chatterbox (Resemble AI, MIT) with am_adam's timbre (a
  * Kokoro recording as the reference voice), read as a storyteller (exaggeration 0.7, cfg 0.35), sped up x1.085 (sample 16
  * of the comparison, 17.0 s like Kokoro's). Kokoro stays as the fallback, and is still the voice of the days before.
  */
-export const VOICE_FROM = '2026-11-30';
+export const VOICE_FROM = '2026-11-26';
 export function chatterboxConfig(env = process.env) {
   const venv = path.join(ROOT, 'tools', 'chatterbox-venv');
   return {

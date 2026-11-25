@@ -215,11 +215,11 @@ test('Kokoro says "Long live" as liv, not laiv (owner 2026-11-24); the subtitles
   assert.equal(sayForKokoro('where they live, a live show'), 'where they live, a live show');
 });
 
-test('the narrator is Chatterbox from 2026-11-30, Kokoro before and as its fallback (owner 2026-11-25)', async () => {
+test('the narrator is Chatterbox from 2026-11-26, Kokoro before and as its fallback (owner 2026-11-25)', async () => {
   const { voiceChain, VOICE_FROM, chatterboxConfig } = await import('../src/audio/tts/index.js');
-  assert.equal(VOICE_FROM, '2026-11-30');
-  assert.deepEqual(voiceChain('kokoro', '2026-11-29'), ['kokoro', 'piper', 'none']);
-  assert.deepEqual(voiceChain('kokoro', '2026-11-30'), ['chatterbox', 'kokoro', 'piper', 'none']);
+  assert.equal(VOICE_FROM, '2026-11-26');
+  assert.deepEqual(voiceChain('kokoro', '2026-11-25'), ['kokoro', 'piper', 'none']);
+  assert.deepEqual(voiceChain('kokoro', '2026-11-26'), ['chatterbox', 'kokoro', 'piper', 'none']);
   assert.deepEqual(voiceChain('kokoro', null), ['kokoro', 'piper', 'none']); // no date (old callers): as before
   assert.deepEqual(voiceChain('none', '2026-12-01'), ['none']); // --tts none stays silent
   assert.deepEqual(voiceChain('piper', '2026-12-01'), ['piper', 'none']);
