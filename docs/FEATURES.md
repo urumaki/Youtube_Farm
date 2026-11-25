@@ -31,6 +31,14 @@ Add new owner decisions here.
   (`looksLikeCode`) or is offensive. Bad words: `src/sim/badwords.js`, generated from the LDNOOBW lists
   (CC BY 4.0, six languages) minus real names and harmless words; whole words, phrases and long roots.
   Nothing from a comment is ever run, given to a shell, or sent to a language model.
+  Gold coins (owner 2026-11-25, so commenters come back): every commenter with a villager has gold, 100 to start; each later
+  video they comment on gives +1, once per video however many comments (`src/sim/coins.js` `payComment`, called in
+  `assignNames`; the comment that gives the name counts its video, no coin). Kept by author id in `state.coins`
+  (`{ gold, videos }`, the last 40 video ids; `comments.js` keeps a comment's `video` id when it has the shape of one).
+  Only top-level comments count, like the names. Backfilled from day 1 on 2026-11-25 (`node scripts/backfill-coins.js
+  [--save]`: all 3,089 comments up to `commentsSeen`, 1,165 wallets, the most 136). Every name tag shows it after the job:
+  a gold coin and the number (`overlay.js` `.gold`, looked up by name; a name two villagers share shows none). `diff.coins`:
+  coins paid that day. Test: "gold coins" in `tests/sim.test.js`; stills `npm run render -- --real --subs N --stills 6`.
 - `src/render/scene/` Three.js scene rendered frame by frame in headless Chromium (`capture.js`).
   Shot plan in `timeline.js`. Days with named villagers (owner's choice, 2026-10-19): the video opens on the
   caravan of today's named villagers with name tags (`caravan.js`, no castle hook; the counter shows over it

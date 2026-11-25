@@ -2,6 +2,7 @@
 // no key text in the top 220 px, the bottom 380 px or the right 160 px of the 1080x1920 frame.
 import * as THREE from 'three';
 import { JOBS } from '../../sim/tiers.js';
+import { START_GOLD } from '../../sim/coins.js';
 import { UPDATE_END, WIDE_END } from './timeline.js';
 
 export const SAFE = { top: 220, bottom: 380, right: 160, left: 60 };
@@ -28,6 +29,9 @@ const CSS = `
 #ov .tag .t{font-family:'Cinzel',serif;font-weight:700;font-size:22px;color:#fff4d6}
 #ov .tag .s{font-weight:700;font-size:14px;color:#e3b23c;letter-spacing:1px;text-transform:uppercase}
 #ov .tag.small{padding:3px 7px 4px;border-radius:10px}#ov .tag.small .t{font-size:18px}#ov .tag.small .s{font-size:11px}
+/* owner 2026-11-25: the villager's gold coins (src/sim/coins.js) after the job: a coin and the number */
+#ov .gold{display:inline-flex;align-items:center;gap:.25em;margin-left:.55em;color:#ffe08a;letter-spacing:0;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+#ov .gold i{display:inline-block;width:1.05em;height:1.05em;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6c2 0 14%,#ffd24a 30%,#d79a16 68%,#8a5a07 100%);box-shadow:inset 0 0 0 .09em #9a6a0c,inset 0 0 0 .2em #ffd65e,0 1px 2px rgba(0,0,0,.6)}
 #ov .banner{position:absolute;left:0;right:0;top:46px;text-align:center;font-family:'Cinzel',serif;font-weight:700;font-size:48px;color:#fff4d6;text-shadow:0 4px 0 #6b4a12,0 6px 20px rgba(0,0,0,.8)}
 #ov .pin{position:absolute;width:4px;background:#e3b23c;transform:translateX(-50%)}
 #ov .goal{position:absolute;left:20px;right:20px;top:330px;text-align:center;font-weight:800;font-size:48px;line-height:1.2;text-shadow:0 3px 14px rgba(0,0,0,.9)}
@@ -113,6 +117,13 @@ export function createOverlay(root, data) {
     const j = data.state.villagers?.[id]?.job ?? n.job;
     return j === 'apprentice' && n.wants ? `Apprentice ${JOBS[n.wants]?.label || n.wants}` : JOBS[j]?.label || j || '';
   };
+  // owner 2026-11-25: each name tag shows the villager's gold (by name; a name two villagers share shows none)
+  const goldBy = new Map(), twice = new Set();
+  for (const n of Object.values(data.state.names || {})) {
+    if (goldBy.has(n.name)) twice.add(n.name);
+    goldBy.set(n.name, data.state.coins?.[n.author]?.gold ?? START_GOLD);
+  }
+  const gold = (title) => (goldBy.has(title) && !twice.has(title) ? `<span class="gold"><i></i>${goldBy.get(title)}</span>` : '');
   const people = Object.entries(data.state.names || {}).map(([id, n]) => ({ id: Number(id), n }))
     .filter((p) => !data.state.villagers || p.id < data.state.villagers.length)
     .sort((a, b) => (b.n.day ?? 0) - (a.n.day ?? 0) || a.id - b.id);
@@ -167,7 +178,7 @@ export function createOverlay(root, data) {
         if (!el) {
           el = document.createElement('div');
           el.className = 'label' + (tg.kind === 'loss' ? ' loss' : '');
-          el.innerHTML = `<div class="t">${esc(label.title)}</div>${label.sub ? `<div class="s">${esc(label.sub)}</div>` : ''}${key === tg && tg.extra ? `<div class="more">${s.more(tg.extra)}</div>` : ''}`;
+          el.innerHTML = `<div class="t">${esc(label.title)}</div>${label.sub || gold(label.title) ? `<div class="s">${esc(label.sub || '')}${gold(label.title)}</div>` : ''}${key === tg && tg.extra ? `<div class="more">${s.more(tg.extra)}</div>` : ''}`;
           if (key === tg && site && (el.span = buildSpan(tg.id))) el.insertAdjacentHTML('beforeend', '<div class="prog"><i></i><b></b></div>');
           ov.querySelector('.safe').appendChild(el);
           labelEls.set(key, el);
@@ -237,7 +248,7 @@ export function createOverlay(root, data) {
           let el = tagEls[i];
           if (!el) { el = document.createElement('div'); ov.querySelector('.safe').appendChild(el); tagEls[i] = el; }
           el.className = caravan ? 'tag small' : 'tag';
-          el.innerHTML = `<div class="t">${esc(it.lb.title)}</div><div class="s">${esc(it.lb.sub || '')}</div>`;
+          el.innerHTML = `<div class="t">${esc(it.lb.title)}</div><div class="s">${esc(it.lb.sub || '')}${gold(it.lb.title)}</div>`;
           el.style.display = 'block';
           const wEl = el.offsetWidth, hEl = el.offsetHeight;
           const cx = Math.min(sw - wEl / 2, Math.max(wEl / 2, it.x));
