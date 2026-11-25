@@ -468,6 +468,64 @@ export const BUILD = { // (exported for the overlap check, scripts/zfight.js)
     out.smoke.push([0, 4.2, 0]);
     out.focusH = 3;
   },
+  // owner 2026-11-25: places for the trades that worked in their crofts (commissions)
+  stables(b, lot, out) {
+    // a long timber stable with a thatched roof, half doors along the front, a horse's head over one of them, hay and a trough
+    b.add('timber', boxGeo(12, 2.8, 6), 0, 1.4, -1.5);
+    b.add('thatch', gableGeo(13, 7.2, 2.2), 0, 2.8, -1.5);
+    for (let i = 0; i < 4; i++) {
+      const x = -4.5 + i * 3;
+      b.add('woodDark', boxGeo(1.4, 1.2, 0.12), x, 0.6, 1.56); // the half door
+      b.add('stoneDark', boxGeo(1.6, 1.4, 0.06), x, 1.9, 1.52); // the dark stall above it
+      for (const s of [-1, 1]) b.add('woodDark', boxGeo(0.16, 2.8, 0.16), x + s * 0.8, 1.4, 1.58);
+    }
+    b.add('woodDark', boxGeo(0.4, 0.5, 0.6), -1.5, 1.55, 1.75); // a horse looks out over its door
+    b.add('woodDark', boxGeo(0.26, 0.28, 0.5), -1.5, 1.6, 2.15);
+    for (const [x, z] of [[4.2, 3.2], [5.2, 3.0]]) b.add('hay', boxGeo(0.9, 0.6, 0.6), x, 0.3, z);
+    b.add('wood', boxGeo(1.6, 0.45, 0.5), -4.2, 0.23, 3.0); // the water trough
+    b.add('water', boxGeo(1.45, 0.02, 0.36), -4.2, 0.4, 3.0);
+    out.focusH = 2.5;
+  },
+  schoolhouse(b, lot, out) {
+    // a small stone hall with a bell on the gable, the door open on benches inside, a slate by the door
+    b.add('stone', boxGeo(10, 3.6, 7), 0, 1.8, -1);
+    b.add('slate', gableGeo(10.6, 7.6, 2.6), 0, 3.6, -1);
+    windowsRow(b, -4, 4, 2.0, 2.52, 4);
+    door(b, 0, 2.52, 1.6, 2.4);
+    b.add('stoneDark', boxGeo(1.3, 2.1, 0.05), 0, 1.05, 2.5); // the dark room behind the door
+    for (const z of [0.6, -0.4]) b.add('wood', boxGeo(1.0, 0.45, 0.3), 0, 0.23, z + 1.6);
+    b.add('woodDark', boxGeo(0.9, 0.7, 0.06), 1.6, 1.4, 2.6); // the slate
+    b.add('stone', boxGeo(0.9, 1.0, 0.5), 0, 6.6, 2.4); // the bell-cote
+    b.add('iron', cylGeo(0.12, 0.25, 0.35, 10), 0, 6.45, 2.4);
+    out.focusH = 3;
+  },
+  observatory(b, lot, out) {
+    // a round stone tower with an open top behind battlements, a brass armillary on it, a door and a stair window
+    b.add('stone', cylGeo(2.6, 2.9, 9, 18), 0, 4.5, -0.5);
+    b.add('stoneDark', cylGeo(3.0, 3.0, 0.4, 18), 0, 9.1, -0.5);
+    for (let i = 0; i < 12; i++) { const a = (i / 12) * Math.PI * 2; b.add('stone', boxGeo(0.8, 0.8, 0.5), Math.cos(a) * 2.75, 9.7, -0.5 + Math.sin(a) * 2.75, -a); }
+    for (const r of [0.9, 0.75]) b.add('gold', new THREE.TorusGeometry(r, 0.05, 6, 20), 0, 10.4, -0.5);
+    b.add('gold', new THREE.TorusGeometry(0.85, 0.05, 6, 20).rotateY(Math.PI / 2), 0, 10.4, -0.5);
+    b.add('iron', cylGeo(0.06, 0.06, 1.0, 6), 0, 9.8, -0.5);
+    door(b, 0, 2.35, 1.4, 2.3);
+    b.add('window', boxGeo(0.5, 1.0, 0.2), 0, 5.5, 2.38);
+    out.focusH = 6;
+  },
+  tannery(b, lot, out) {
+    // an open shed by the river, vats sunk in the ground, hides stretched on frames, a jetty out to the water
+    for (const [x, z] of [[-4, -2.5], [4, -2.5], [-4, 0.5], [4, 0.5]]) b.add('woodDark', boxGeo(0.25, 2.8, 0.25), x, 1.4, z);
+    b.add('roofRed', gableGeo(9, 4.2, 1.4), 0, 2.8, -1);
+    for (let i = 0; i < 3; i++) {
+      b.add('wood', cylGeo(0.7, 0.7, 0.5, 14, 4, true), -3 + i * 2.2, 0.25, 2.4);
+      b.add(i === 1 ? 'clay' : 'soil', cylGeo(0.66, 0.66, 0.02, 14), -3 + i * 2.2, 0.4, 2.4);
+    }
+    for (const x of [-2.5, 0, 2.5]) {
+      for (const s of [-1, 1]) b.add('woodDark', boxGeo(0.1, 2.0, 0.1), x + s * 0.8, 1.0, -2.0);
+      b.add('clay', boxGeo(1.4, 1.3, 0.04), x, 1.2, -2.0); // a hide on its frame
+    }
+    b.add('wood', boxGeo(1.4, 0.12, 4.5), 3.6, 0.3, -5.5); // the jetty
+    out.focusH = 2.5;
+  },
   fletcher_workshop(b, lot, out) {
     // owner 2026-10-23: a timber workshop with a thatched roof, bows hanging on its front wall, and a lean-to
     // over the bench where arrows are fletched; a barrel of arrows, staves drying in a rack, a straw butt

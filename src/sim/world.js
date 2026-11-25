@@ -155,6 +155,14 @@ function buildWorld(seed) {
   const th = w.lots.townhall;
   placeStreetLot(w, 'court', 8, 7, all, th ? { x: th.x, z: th.z } : MARKET);
   if (w.lots.court) Object.assign(w.lots.court, { virtual: true, clearTrees: true });
+  // owner 2026-11-25: the Stables, the Schoolhouse and the Observatory on free ground along the streets, the Tannery on the
+  // river bank below the town; after everything else, so nothing moves (virtual, as above)
+  for (const [id, hw, hd] of [['stables', 7, 5], ['schoolhouse', 6, 5], ['observatory', 4, 4]]) {
+    placeStreetLot(w, id, hw, hd, all);
+    if (w.lots[id]) Object.assign(w.lots[id], { virtual: true, clearTrees: true });
+  }
+  placeRiverLot(w, 'tannery', 5, 4, all);
+  if (w.lots.tannery) Object.assign(w.lots.tannery, { virtual: true, clearTrees: true });
   return w;
 }
 
@@ -210,7 +218,7 @@ const NOBLE_CENTER = { x: 90, z: 140 };
  * A workshop lot `id` (2hw x 2hd) on the free ground nearest the market (or `center`) that fronts a street, its front (+z)
  * to the street.
  */
-function placeStreetLot(w, id, hw, hd, plots, center = MARKET) {
+function placeStreetLot(w, id, hw, hd, plots, center = MARKET, { river: bank = null } = {}) {
   const taken = new SpatialHash(40);
   const take = (b) => taken.insert(obbAabb(b), b);
   for (const p of plots) take(grow(p, 1));
@@ -235,12 +243,20 @@ function placeStreetLot(w, id, hw, hd, plots, center = MARKET) {
     if (-Math.sin(rot) * mx + Math.cos(rot) * mz < 0) rot += Math.PI;
     let river = Infinity;
     for (let i = 1; i < w.riverPts.length; i++) river = Math.min(river, distToSegment(x, z, ...w.riverPts[i - 1], ...w.riverPts[i]));
-    if (river < RIVER_HALF_WIDTH + 15) continue;
+    if (bank ? river < RIVER_HALF_WIDTH + bank[0] || river > RIVER_HALF_WIDTH + bank[1] : river < RIVER_HALF_WIDTH + 15) continue;
     const lot = { id, x, z, hw, hd, rot };
     if (hits(lot)) continue;
     w.lots[id] = lot;
     return;
   }
+}
+
+/** A workshop lot on the river bank (owner 2026-11-25: the Tannery): its middle 4 to 14 m from the water, fronting a street. */
+function placeRiverLot(w, id, hw, hd, plots) {
+  // searched round the point of the river nearest the market square (the river runs ~240 m west of it)
+  let near = null, d = Infinity;
+  for (const [x, z] of w.riverPts) { const dx = Math.hypot(x - MARKET.x, z - MARKET.z); if (dx < d) { d = dx; near = { x, z }; } }
+  placeStreetLot(w, id, hw, hd, plots, near, { river: [4, 14] });
 }
 
 // The University and the Noble Quarter (owner 2026-10-22): the open ground between the castle and the river

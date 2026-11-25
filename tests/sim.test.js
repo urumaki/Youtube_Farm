@@ -2130,3 +2130,13 @@ test('gold coins: 100 to start, +1 for each later video a villager comments on, 
   const old = migrate(JSON.parse(JSON.stringify({ ...r.state, coins: undefined })));
   assert.equal(goldOf(old, 'UCa'), 100);
 });
+
+test("commissions wait behind a goal's buildings (owner 2026-11-25: the Dungeon before the new workshops)", async () => {
+  const { migrate } = await import('../src/sim/state.js');
+  const s = migrate(JSON.parse(fs.readFileSync('state/kingdom.json', 'utf8')));
+  s.buildQueue = ['stables', 'schoolhouse', 'observatory', 'tannery'].map((id) => ({ id, tier: 'commission' }));
+  const { state, diff } = advance(s, { subscribers: 3250, date: '2026-11-26' });
+  const shot = diff.buildingsStarted.filter((b) => b !== 'fields' && b !== 'guardposts' && b !== 'charter_stone' && b !== 'wall2');
+  assert.ok(shot.length <= 2, `${shot}`);
+  assert.ok(diff.buildingsStarted.includes('dungeon') || state.buildQueue[0]?.id === 'dungeon', `the Dungeon first: ${diff.buildingsStarted} / ${state.buildQueue.map((q) => q.id)}`);
+});

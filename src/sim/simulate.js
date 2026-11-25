@@ -187,6 +187,8 @@ export function advance(prev, { subscribers, date, source = 'api', commenters = 
   }
   // buildings the owner commissions with no goal (COMMISSIONS in tiers.js)
   for (const b of COMMISSIONS) if (!queued(b)) s.buildQueue.push({ id: b, tier: 'commission' });
+  // owner 2026-11-25: a goal's buildings begin before the commissions waiting in the queue (the order kept otherwise)
+  s.buildQueue = [...s.buildQueue.filter((q) => q.tier !== 'commission'), ...s.buildQueue.filter((q) => q.tier === 'commission')];
   let room = Object.keys(s.names || {}).length > 0 ? SHOWN_STARTS : SHOWN_STARTS + 1;
   // a day whose story takes the whole video (the day after the raid, the Grand Joust; owner 2026-10-30): nothing begins
   if (takesOver(s.storyArc) && s.storyArc.day <= day) room = 0;

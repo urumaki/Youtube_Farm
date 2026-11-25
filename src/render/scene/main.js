@@ -208,6 +208,9 @@ async function setup(data) {
     // Town Hall's steps in front of its arcade
     philosopher: ['university', 6, 5, { y: 0.12 }], physicist: ['university', -6, 5, { y: 0.12 }],
     adviser: ['townhall', -5, 9.6], diplomat: ['townhall', 5, 9.6],
+    // owner 2026-11-25: in front of the new Stables (brushing a horse; the lunge stays on the far grass), the Schoolhouse, the
+    // Observatory and the Tannery
+    stablehand: ['stables', -1.5, 6.4, { only: ['stable', null] }], teacher: ['schoolhouse', 3, 6.2], astronomer: ['observatory', 2.5, 5.6], tanner: ['tannery', 0, 5.4],
   };
   // farmers work in one of the fields (owner 2026-10-23), on the crop (its surface is 0.12 m above the ground); the
   // odd ones, which have no hay bales in summer and autumn (buildFields in buildings.js)
@@ -325,7 +328,7 @@ async function setup(data) {
       return { ...atLot(it, 0, 2.0), ax: cam.x, az: cam.z, face: Math.atan2(ez.x, ez.z) };
     }
     if (variant === 'trebuchet' && done('engineer_workshop')) return { ...atLot(done('engineer_workshop'), 0.4, 5.6), face: undefined };
-    const place = PLACES[job] && done(PLACES[job][0]);
+    const place = PLACES[job] && (!PLACES[job][3]?.only || PLACES[job][3].only.includes(variant ?? null)) && done(PLACES[job][0]);
     if (place) return { ...atLot(place, ...PLACES[job].slice(1)), face: undefined };
     if (job === 'farmer' && fieldCount > 1 && state.buildings.some((b) => b.id === 'fields')) return atField(id);
     if (variant === 'stall' && buildings.items.market) {

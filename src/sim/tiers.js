@@ -140,6 +140,9 @@ export const BUILDINGS = {
   clock_tower: { label: 'the Clock Tower', days: 10 },
   stone_bridge: { label: 'the Great Bridge', days: 30 },
   fletcher_workshop: { label: "the Fletcher's Workshop", days: 1 },
+  // owner 2026-11-25: a place for the trades that worked in their crofts (commissions)
+  stables: { label: 'the Stables', days: 2 }, schoolhouse: { label: 'the Schoolhouse', days: 2 },
+  observatory: { label: 'the Observatory', days: 3 }, tannery: { label: 'the Tannery', days: 2 },
   counting_house: { label: 'the Counting House', days: 2 }, // owner 2026-10-23: the tax collector's, a queue of taxpayers at its door
   apothecary_shop: { label: "the Apothecary's Shop", days: 2 }, // owner 2026-10-23: a queue of the sick and the lame at its door
   district_east: { label: 'the East Ward', days: 3 },
@@ -201,6 +204,8 @@ export const TIERS = [
 // (saved with tier 'commission'). No tier changes, so no villager changes job.
 export const COMMISSIONS = [
   'fletcher_workshop', // owner 2026-10-23: the bows and arrows of the town (the Fletcher's job is still by request only)
+  // owner 2026-11-25: the stablehands' Stables, the teachers' Schoolhouse, the astronomers' Observatory, the tanners' Tannery
+  'stables', 'schoolhouse', 'observatory', 'tannery',
 ];
 
 // villager index -> unique job, built once.

@@ -1,4 +1,5 @@
 import test from 'node:test';
+import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { world, obstacles, heightAt, CASTLE, RIVER_HALF_WIDTH, WATER_LEVEL, MARKET } from '../src/sim/world.js';
 import { obbOverlap, obbAabb, obbCorners, SpatialHash } from '../src/sim/geometry.js';
@@ -87,4 +88,30 @@ test('builders at a building site each get a role, their own trade first', async
   const crew = crewRoles([{ id: 1, trade: 'scholar' }, { id: 2, trade: 'stonemason' }, { id: 3, trade: 'engineer' }, { id: 4, trade: 'stonemason' }]);
   assert.deepEqual(crew.map((b) => [b.id, b.role]), [[3, 'engineer:site'], [1, 'carpenter:bench'], [2, 'stonemason:block'], [4, 'carpenter:saw']]);
   assert.deepEqual(crewRoles([{ id: 5, trade: 'carpenter' }, { id: 6, trade: 'farmer' }, { id: 7 }]).map((b) => b.role), ['engineer:site', 'carpenter:bench', 'stonemason:block']);
+});
+
+test('the new lots of 2026-11-25 move nothing', () => {
+  const before = JSON.parse(fs.readFileSync('tests/fixtures/world-lots-before.json', 'utf8'));
+  const w = world(before.seed);
+  const r = (v) => Math.round((v || 0) * 1000) / 1000;
+  for (const k of ['plots', 'finePlots', 'densePlots']) assert.deepEqual(w[k].map((p) => [p.id, r(p.x), r(p.z)]), before[k], k);
+  for (const [id, l] of Object.entries(before.lots)) assert.deepEqual([w.lots[id].x, w.lots[id].z, w.lots[id].hw, w.lots[id].hd, w.lots[id].rot].map(r), l, id);
+  for (const id of ['stables', 'schoolhouse', 'observatory', 'tannery']) {
+    const lot = w.lots[id];
+    assert.ok(lot, `no lot for ${id}`);
+    for (const p of [...w.plots, ...w.finePlots, ...w.densePlots, ...w.fields]) assert.equal(obbOverlap(lot, p), false, `${id} on ${p.id ?? 'a field'}`);
+    for (const l of Object.values(w.lots)) if (l !== lot && (!l.virtual || l.hw > 0)) assert.equal(obbOverlap(lot, l), false, `${id} on ${l.id}`);
+  }
+});
+
+test('the tannery is by the river', () => {
+  const w = world(JSON.parse(fs.readFileSync('tests/fixtures/world-lots-before.json', 'utf8')).seed);
+  const { x, z } = w.lots.tannery;
+  let d = Infinity;
+  for (let i = 1; i < w.riverPts.length; i++) {
+    const [ax, az] = w.riverPts[i - 1], [bx, bz] = w.riverPts[i];
+    const t = Math.max(0, Math.min(1, ((x - ax) * (bx - ax) + (z - az) * (bz - az)) / ((bx - ax) ** 2 + (bz - az) ** 2)));
+    d = Math.min(d, Math.hypot(x - ax - t * (bx - ax), z - az - t * (bz - az)));
+  }
+  assert.ok(d >= RIVER_HALF_WIDTH + 4 && d <= RIVER_HALF_WIDTH + 14, `${d.toFixed(1)} m from the river`);
 });
