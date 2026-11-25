@@ -722,6 +722,40 @@ Add new owner decisions here.
   - Test: `node --test --test-name-pattern="rotate through every job|granted request keeps" tests/sim.test.js`.
 - `npm run render -- --subs 80 --gallery "farmer:sow,blacksmith:anvil+guard:sword"` renders test views
   of work scenes and visits (`output/gallery/`), in the croft of the first named villager.
+- The new rig at work (owner 2026-11-25: "less robotic"; built on the branch `claude/work-animations-shops`, merged when the
+  owner approves it after 2026-12-01):
+  - Every villager has an elbow halfway down each arm and, standing, hips, knees and ankles: the feet stay planted where
+    they stand while the hips move (`legIK` in `work.js`). At rest every joint is straight, so story scenes look as before.
+  - The life layer (`life()` in `buildWorkScene`): breathing; the weight going from foot to foot; the elbow bent on the
+    backswing and straight at the blow (a whip), then drawing the tool back out of the work; a lean back on the backswing;
+    the knees giving after a heavy blow; the head on the work with a glance now and then.
+  - The work's clock: each stroke a little longer or shorter (±9%) and higher or lower (±8%); about one stroke in six is
+    followed by a pause of 1.4-2.2 s (a hand to the brow, a stretch of the back, a look round). Strokes, props,
+    particles and sounds all follow it (`strikeTimes`, `clock`); scripted scenes (the archer, the messenger, the cart out
+    of the adit, the musicians, the sleeper...) keep the plain clock.
+  - Pushing jobs no longer slide on their feet: the baker's peel slides through the hands into the oven's open mouth
+    (`slide`), the hips go forward over staggered feet. Long tools keep their angle with the wrist (`wrist`); stirring
+    is a small circle in the middle of the vat or pot (`stirA`, `stirZ`). Farmers on the kingdom's fields work the
+    field itself: no patch of soil over it (`onField`, the croft keeps it), the everyday shot in the fields too.
+  - The clip check (`src/render/scene/clipcheck.js`): every work scene (137) is sampled over 8 s and no tool, hand, arm,
+    head or body may cross a prop (or the bakehouse round the baker) outside the strike point; held props that move
+    (a bowl being filled) only count against arms, body and head. `node tests/helpers/worklist.js [filter]` lists any.
+  - Tests: `tests/rig.test.js` (feet planted, blows land within 0.12 m, no blow or spark in a pause, strokes vary),
+    `tests/clip.test.js` (no scene clips).
+- Shops (owner 2026-11-25): the trades with no workplace of their own work at shop fronts on the street side of houses,
+  several per trade, each with a number of workers that fits it (`src/sim/shops.js`, `SHOP_SIZE`): carpenter 5 (22 shops
+  at 3,210 subscribers), tax collector 4 (6: the first group at the Counting House), cook 3 (3), barber 1 (2), brewer 2
+  (1), weaver 2. A trade's villagers in index order make groups; a group's shop is on its first member's house that stands
+  occupied and has no other shop; a new shop opens as a trade grows. Worked out at render time, nothing saved.
+  - The fronts (`shopfronts.js`, drawn by `buildHouses`, on the map and in every shot): a lean-to on two posts, a sign
+    out over the street, each trade's own things (planks and tools, a shelf of bowls, the barber's pole, barrels, a
+    loom). The tax counters are timber booths with iron bars over the counter, the collector inside, two guards with
+    spears beside every one; the Counting House has one in front of its left windows (`out.extras` in `buildings.js`).
+  - The scenes at the shop (`SHOP_SCENES`): the carpenter's bench and saw (not the cart), the tax collector's counting,
+    the cook's pot, the brewer's vat, every barber scene. The taxpayers bring sacks of coins: the first puts it on the
+    counter and walks off along the front, the others step up (`queue.js`).
+  - Philosopher and physicist on the University's lawn, adviser and Diplomat on the Town Hall's steps (`PLACES`).
+  - Tests: `tests/shops.test.js`.
 - Hashtags (owner 2026-10-20): at most 5 per video, title and description together, none repeated
   (`#shorts` in the title, four niche tags in the description; tested).
   Owner 2026-11-16, a week's trial (the videos of 2026-11-16 to 2026-11-22): no hashtags at all, in the title or the
@@ -1143,7 +1177,11 @@ Add new owner decisions here.
   river bed (the lot itself does not move: plots and roads depend on it); the fisherman stands at its end (`pier` on the
   item, `dockPier` in `main.js`). The harbor's quay is one stone block from under the warehouses down into the water.
 - Commissions (owner 2026-10-23): buildings with no goal, begun on the next day the kingdom runs, whatever its
-  size (`COMMISSIONS` in `tiers.js`, saved with tier `commission`). The first is the Fletcher's Workshop: a
+  size (`COMMISSIONS` in `tiers.js`, saved with tier `commission`). Owner 2026-11-25: the Stables (stablehands brushing a horse in front;
+  the lunge stays on the far grass), the Schoolhouse (teachers), the Observatory (astronomers) and the Tannery on the river bank
+  (tanners), on lots laid out after everything else (`placeStreetLot`, `placeRiverLot` in `world.js`); a goal's buildings
+  begin before the commissions waiting in the queue. Tests: "the new lots of 2026-11-25 move nothing", "the tannery is by the
+  river" (`tests/world.test.js`), "commissions wait behind a goal's buildings" (`tests/sim.test.js`). The first is the Fletcher's Workshop: a
   thatched timber workshop with bows on the wall, a fletching bench under a lean-to, a barrel of arrows, staves
   drying and a straw target (`fletcher_workshop` in `buildings.js`, one day to build), on the free ground nearest the market
   that fronts a street (`placeFletcherWorkshop` in `world.js`, after the plots, so nothing moves).

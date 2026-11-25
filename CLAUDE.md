@@ -77,7 +77,9 @@ often uses the `/caveman` skill (very short answers, Italian, until "stop cavema
 - `src/render/scene/` — Three.js scene, captured frame by frame in headless Chromium (`capture.js`).
   `timeline.js` plans the shots; `main.js` places scenes (`PLACES`, `workPlace`); `work.js` job scenes
   (`JOB_SCENES`); `overlay.js` name tags and credits; `stories/` one file per story event; `tavern.js`,
-  `church.js`, `bakery.js`, `caravan.js`, `ambient.js`, `away.js`, `houses.js`, `houseKit.js`, `buildings.js`.
+  `church.js`, `bakery.js`, `caravan.js`, `ambient.js`, `away.js`, `houses.js`, `houseKit.js`, `buildings.js`,
+  `shopfronts.js` (shop fronts on houses; who works where: `src/sim/shops.js`), `clipcheck.js` (no tool or hand through a prop:
+  `tests/clip.test.js`, `node tests/helpers/worklist.js`).
   `src/render/timelapse.js` — the time-lapse (every 30th day's video).
 - `src/audio/` — narration templates (names never read aloud), TTS: Chatterbox from 2026-11-26 (am_adam's timbre), Kokoro
   `am_adam` before and as fallback; procedural music, synced sfx.
