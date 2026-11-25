@@ -78,3 +78,22 @@ test('every kind of shop front builds with a counter', async () => {
   assert.equal(tax.userData.guards.length, 2);
   assert.equal(tax.children.filter((c) => c.type === 'Group').length, 2, 'two guards stand at the counter');
 });
+
+test('the tax queue brings coin sacks to the counter and walks off', async () => {
+  const { buildQueue } = await import('../src/render/scene/queue.js');
+  const { fakeMaterials } = await import('./helpers/scene.js');
+  const q = buildQueue('tax', { M: fakeMaterials(), seed: 7, id: 1 });
+  const sacks = [];
+  q.group.traverse((o) => { if (o.name === 'coinSack') sacks.push(o); });
+  assert.ok(sacks.length >= 4, `${sacks.length} coin sacks`);
+  // over a few seconds a sack comes to rest on the counter, and the first in line walks away along the front
+  let onCounter = false, gone = false;
+  const first = q.people[0].P.root;
+  for (let t = 0; t < 8; t += 0.05) {
+    q.update(t);
+    if (q.counterSack.visible) onCounter = true;
+    if (Math.abs(first.position.x) > 1.5) gone = true;
+  }
+  assert.ok(onCounter, 'a sack left on the counter');
+  assert.ok(gone, 'the taxpayer walks off');
+});

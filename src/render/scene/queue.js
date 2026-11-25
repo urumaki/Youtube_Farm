@@ -10,6 +10,7 @@ import { rig, toolGeo } from './work.js';
 const COLORS = ['#7b3b2a', '#3f5a7a', '#5d6b35', '#8a6a3a', '#6a4a6e', '#9a8a6a', '#4a6a64', '#a0522d', '#56606e', '#7a5a4a'];
 const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 const SICK = ['crutches', 'bandage', 'sling', 'cough'];
+const TAX = 4.2; // seconds a taxpayer takes at the counter
 
 /**
  * @param kind  'tax' | 'sick' | 'customer'
@@ -20,6 +21,12 @@ export function buildQueue(kind, { M, seed, id }) {
   const n = kind === 'customer' ? 1 : 4;
   const people = [];
   const white = M.clothIvory;
+  // the sack the first taxpayer leaves on the counter (worker frame: the counter's ledge, 1 m in front of the collector)
+  const counterSack = toolGeo('sack', M);
+  counterSack.scale.setScalar(0.55);
+  counterSack.position.set(0.12, 1.08, 1.0);
+  counterSack.visible = false;
+  if (kind === 'tax') group.add(counterSack);
   for (let i = 0; i < n; i++) {
     const r = (k) => rand01(seed, 'queue', id, i, k);
     const P = rig(M, COLORS[Math.floor(r(0) * COLORS.length)]);
@@ -30,8 +37,11 @@ export function buildQueue(kind, { M, seed, id }) {
     const p = { P, i, z, off: r(2) * 6, ail: kind === 'sick' ? SICK[i] : null };
     if (kind === 'tax' || kind === 'customer') {
       const purse = toolGeo('sack', M);
-      purse.scale.setScalar(0.42);
+      purse.scale.setScalar(kind === 'tax' ? 0.55 : 0.42);
+      if (kind === 'tax') purse.name = 'coinSack'; // owner 2026-11-25: a sack of coins for the tax counter
       P.r.hand.add(purse);
+      p.purse = purse;
+      p.base = P.root.position.clone();
     }
     if (p.ail === 'crutches') {
       // a crutch under each arm down to the ground, a bandaged foot held up
@@ -67,6 +77,8 @@ export function buildQueue(kind, { M, seed, id }) {
   const lerp = THREE.MathUtils.lerp;
   return {
     group,
+    people,
+    counterSack,
     mid: new THREE.Vector3(0, 1.1, kind === 'customer' ? 1.2 : 1.7),
     update(t) {
       for (const p of people) {
@@ -76,13 +88,25 @@ export function buildQueue(kind, { M, seed, id }) {
         P.l.g.rotation.set(-0.12, 0, -0.08);
         P.r.g.rotation.set(-0.25, 0, 0.08);
         if (kind === 'tax') {
-          // the first in line hands the purse over the table, then takes the hand back; the others wait, purse in hand
+          // owner 2026-11-25: the first in line puts the sack of coins on the counter and walks off along the front; the others
+          // step up one place, and a newcomer joins the end (a cycle of TAX seconds; the coats go round with the places)
+          const c = t / TAX, k = Math.floor(c), u = c - k;
+          const reach = u < 0.2 ? ease(u / 0.2) : u < 0.35 ? 1 : u < 0.45 ? 1 - ease((u - 0.35) / 0.1) : 0;
+          const leave = ease((u - 0.45) / 0.35), step = ease((u - 0.7) / 0.3);
+          P.tunic.color.set(COLORS[(Math.floor(rand01(seed, 'queue', id, 0, 0) * COLORS.length) + p.i + k) % COLORS.length]);
           if (p.i === 0) {
-            const c = (t + p.off) / 3.6, u = c - Math.floor(c);
-            const reach = u < 0.25 ? ease(u / 0.25) : u < 0.55 ? 1 : u < 0.75 ? 1 - ease((u - 0.55) / 0.2) : 0;
             P.r.g.rotation.set(lerp(-0.25, -1.35, reach), 0, 0);
             P.body.rotation.x = 0.12 * reach;
-          } else P.r.g.rotation.set(-0.45 - 0.1 * Math.sin(t * 0.7 + p.off), 0, -0.1); // weighing the purse in the hand
+            p.purse.visible = u < 0.3;
+            P.root.position.set(p.base.x + 2.6 * leave, 0, p.base.z + 0.4 * leave);
+            P.root.rotation.y = lerp(Math.atan2(-p.base.x, -p.base.z), Math.PI / 2, ease((u - 0.45) / 0.1));
+            P.root.visible = leave < 0.98;
+          } else {
+            P.r.g.rotation.set(-0.45 - 0.1 * Math.sin(t * 0.7 + p.off), 0, -0.1); // weighing the sack in the hand
+            const ahead = people[p.i - 1].base;
+            P.root.position.set(lerp(p.base.x, ahead.x, step), 0, lerp(p.base.z, ahead.z, step));
+          }
+          if (p.i === 0) counterSack.visible = u >= 0.3 && u < 0.92; // taken in by the collector before the next one comes
         } else if (kind === 'customer') {
           // haggling: points at the goods, then throws up the free hand
           const c = (t + p.off) / 2.8, u = c - Math.floor(c);

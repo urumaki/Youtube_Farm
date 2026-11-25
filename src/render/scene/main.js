@@ -36,6 +36,7 @@ import { buildQueue } from './queue.js';
 import { heightAt, WATER_LEVEL } from '../../sim/world.js';
 import { JOBS } from '../../sim/tiers.js';
 import { pointInObb, grow } from '../../sim/geometry.js';
+import { shopsOf, shopOf, SHOP_SCENES, COUNTING_HOUSE } from '../../sim/shops.js';
 
 const FPS = 30;
 
@@ -203,6 +204,10 @@ async function setup(data) {
     miner: ['mine', 4.5, 2.6, { back: true }],
     // owner 2026-10-30: the librarian on the University's lawn, the other side of its gate from the scholar
     librarian: ['university', -6, -3, { y: 0.12 }],
+    // owner 2026-11-25: the philosopher and the physicist on the University's lawn too, the adviser and the Diplomat on the
+    // Town Hall's steps in front of its arcade
+    philosopher: ['university', 6, 5, { y: 0.12 }], physicist: ['university', -6, 5, { y: 0.12 }],
+    adviser: ['townhall', -5, 9.6], diplomat: ['townhall', 5, 9.6],
   };
   // farmers work in one of the fields (owner 2026-10-23), on the crop (its surface is 0.12 m above the ground); the
   // odd ones, which have no hay bales in summer and autumn (buildFields in buildings.js)
@@ -255,7 +260,17 @@ async function setup(data) {
   const farField = [...w.fields].sort((a, b) => b.z * -1 - a.z * -1 || b.x - a.x).slice(0, 6).sort((a, b) => b.x - a.x)[0];
   // the hunter: in a clearing in the woods outside the Second Wall, shooting outward toward the trees
   const hunt = huntSpot(w, state);
-  const workPlace = (job, sh, variant = null, id = 0) => {
+  const workPlace = (job, sh, variant = null, id = 0, gallery = false) => {
+    // owner 2026-11-25: the trades at their shops (src/sim/shops.js): behind the shop front's counter on their group's house,
+    // facing the street; the first tax group behind the Counting House's barred counter. A test render (the gallery: no
+    // villager id) takes the trade's first shop
+    const shop = shopOf(state, id, variant) ?? (gallery && (!SHOP_SCENES[job] || SHOP_SCENES[job].includes(variant ?? null)) ? shopsOf(state).find((x) => x.job === job) : null);
+    if (shop?.house === COUNTING_HOUSE && done('counting_house')?.counter) {
+      const it = done('counting_house'), at = atLot(it, it.counter[0], it.counter[2]);
+      return { ...at, face: Math.atan2(at.ax, at.az) };
+    }
+    const front = shop && houses.shops.get(shop.house);
+    if (front) return { anchor: front.counter.clone(), ax: front.ax, az: front.az, floorAt: () => front.base, face: front.face };
     if (variant === 'counting' && buildings.items.counting_house) return atLot(buildings.items.counting_house, -2.3, 2.1);
     if (variant === 'shop' && buildings.items.apothecary_shop) return atLot(buildings.items.apothecary_shop, -1.6, 2.4);
     if (variant === 'booth' && buildings.items.physician_booth) return atLot(buildings.items.physician_booth, -1.6, 2.6);
@@ -597,7 +612,7 @@ async function setup(data) {
           : buildTavernInterior({ item: buildings.items.tavern, M, seed: state.seed, keepers: [{ name: 'Test', job: g.job }], bar: true, guest: g.guest ? { name: 'Guest', job: g.guest } : null });
         return { ws: { group: bar.group, room: bar.group, update: bar.update, cam: bar.cam }, focus: bar.focus };
       }
-      const at = workPlace(g.job, sh, g.variant, i), gAway = Math.atan2(at.az, at.ax);
+      const at = workPlace(g.job, sh, g.variant, i, true), gAway = Math.atan2(at.az, at.ax);
       const ws = workScene({ job: g.job, variant: at.as ?? g.variant, anchor: at.anchor, ax: at.ax, az: at.az, away: gAway, id: 9100 + i, face: at.face, floorAt: at.floorAt, onField: at.onField });
       scene.add(ws.group);
       if (ws.room) scene.add(ws.room);
