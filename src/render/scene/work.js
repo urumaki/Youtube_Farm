@@ -167,7 +167,7 @@ export function particles(count, color, size, additive) {
 // ------------------------------------------------------------------ jobs
 // period: seconds per stroke; hit: stroke fraction at the impact; raise/down: arm angles (rad, negative
 // = forward/up); fx: particles at the impact; sound: sound effect per impact.
-const JOB_SCENES = {
+export const JOB_SCENES = {
   farmer: { period: 1.35, hit: 0.7, raise: -2.5, down: -0.75, bend: 0.32, fx: 'dirt', sound: 'hoe', tool: 'hoe', props: 'field', both: true },
   peasant: { period: 1.5, hit: 0.7, raise: -2.2, down: -0.8, bend: 0.3, fx: 'dirt', sound: 'hoe', tool: 'spade', props: 'garden', both: true },
   blacksmith: { period: 0.8, hit: 0.72, raise: -2.6, down: -1.05, bend: 0.12, fx: 'sparks', sound: 'anvil', tool: 'hammer', props: 'anvil', left: -1.0 },

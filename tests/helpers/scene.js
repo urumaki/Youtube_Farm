@@ -19,3 +19,13 @@ const M = fakeMaterials();
 export function workScene(job, variant = null, opts = {}) {
   return buildWorkScene({ job, variant, anchor: new THREE.Vector3(0, 0, 0), face: 0, M, seed: 7, id: 1, ...opts });
 }
+
+/** A work scene with what surrounds it when that is built apart (the bakehouse round the baker): { ws, env: [Object3D] }. */
+export async function checkScene(job, variant = null, opts = {}) {
+  const { buildBakehouse, BAKEHOUSE_VARIANTS } = await import('../../src/render/scene/bakery.js');
+  if (job === 'baker' && BAKEHOUSE_VARIANTS.has(variant)) {
+    const bh = buildBakehouse({ variant, anchor: new THREE.Vector3(0, 0, 0), away: Math.PI / 2, M, seed: 7, id: opts.id ?? 1, heightAt: () => 0 });
+    return { ws: bh, env: [bh.room] };
+  }
+  return { ws: workScene(job, variant, opts), env: [] };
+}
