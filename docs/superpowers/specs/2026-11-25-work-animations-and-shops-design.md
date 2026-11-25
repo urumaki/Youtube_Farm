@@ -1,6 +1,6 @@
 # Work animations with the new rig, and a place for every job — design
 
-Owner, 2026-11-25. Status: draft for the owner's approval. Third part (a new running order for the videos) comes after
+Owner, 2026-11-25. Status: approved by the owner on 2026-11-25. Third part (a new running order for the videos) comes after
 these two, in a design of its own.
 
 ## Why
