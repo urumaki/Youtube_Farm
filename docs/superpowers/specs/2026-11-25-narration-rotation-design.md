@@ -1,7 +1,7 @@
 # Narration: routine lines in rotation, words for what is on screen — design
 
 Owner decision 2026-11-25 (session on the video "Why Your Claude AI Videos Get 0 Views", 7_AZati5b0M): approach C.
-Status: approved by the owner 2026-11-25. Start moved by the owner to 2026-11-26 (away 11-27..30, wants to see the first video): the hook trial gets only 11-23..25 alone.
+Status: approved by the owner 2026-11-25, implemented the same day (see `docs/FEATURES.md`, "Routine lines in turn"). Start moved by the owner to 2026-11-26 (away 11-27..30, wants to see the first video): the hook trial gets only 11-23..25 alone.
 
 ## Why
 

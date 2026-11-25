@@ -69,6 +69,18 @@ Add new owner decisions here.
   invitation, the goal and the call to action have one too), then lines are dropped, those with no shot of their own
   first (the weather, the new houses...). The goal and the call to action keep their own times. Tested in "no long
   silences" (days 2026-11-10, 11-12 and 11-21 had lines that early).
+  Routine lines in turn (owner 2026-11-25, after a video on why AI Shorts stall: YouTube holds back a Short that copies
+  others, and ours copied themselves: of ~9 lines a day, 6-7 were the same bookkeeping; spec and plan in
+  `docs/superpowers/`). From `NARRATION_FROM` (2026-11-26, `src/audio/rotation.js`) a day says at most 2 of the routine lines
+  (the day, the newcomers, the comment invitation, the goal: `routineRoles`, the list turned by `day % 4`), plus the call to
+  action always; the goal also when 20 or fewer villagers are missing, villagers leaving and milestones always. Every wording
+  comes from its pool in turn by day (`turn`), never the same two days running, and has no alts. "The Lord granted N job
+  requests" is gone: the request is said over the shot of a villager on screen who got their job today (`WISH`), else not at
+  all. The freed words: `WORK` (`src/audio/lines.js`), what each villager on screen is doing (by job, or `job:variant`), one or
+  two lines over their shot; `PAYOFF`, how the day's story ended, over the wide shot at 23.7 s on days the goal is not said
+  (with no payoff, the goal takes the place of the second routine line). On a caravan day without the count, a line from
+  `CARAVAN_QUIET`. The comment invitation has no shot of its own (`free`) and fills a silence. Days before 2026-11-26 read as
+  published (`tests/fixtures/narration-before.json`). Tests: `tests/narration-rotation.test.js`.
 - English only (owner 2026-10-28: the project will never be in Italian): narration, on-screen titles and tags, the video's
   title and description, the voices. The Italian templates, word tables and the `--lang` option are gone; file names and
   `state/published.json` keys keep `_en` (the days already published use them), and the narration's draws still use
