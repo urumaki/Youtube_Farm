@@ -192,7 +192,12 @@ export function dress(P, color, M, { seated = false, ground = false } = {}) {
     for (const c of [...P.hat.children]) c.visible = false;
     for (const part of head) mesh(part, P.hat);
   }
-  for (const part of body) mesh(part, part[2] === 'l' ? P.l.g : part[2] === 'r' ? P.r.g : P.body);
+  for (const part of body) {
+    const side = part[2] === 'l' ? P.l : part[2] === 'r' ? P.r : null;
+    // owner 2026-11-25: a glove or a cuff below the elbow goes with the forearm
+    if (side?.elbow) { part[0].computeBoundingBox(); const y = (part[0].boundingBox.min.y + part[0].boundingBox.max.y) / 2; if (y < -0.33) { mesh([part[0].clone().translate(0, 0.32, 0), part[1]], side.elbow); continue; } }
+    mesh(part, side ? side.g : P.body);
+  }
   if (robeMat && !seated && !ground) for (const part of robe(robeMat)) mesh(part, P.body);
 }
 

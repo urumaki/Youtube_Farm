@@ -24,7 +24,7 @@ export function rig(M, color, { seated = false, walk = false, ground = false } =
   root.add(body);
   const tunic = M.people.clone();
   tunic.color.set(color);
-  let walkLegs = null;
+  let walkLegs = null, legs2 = null;
   const add = (parent, geo, mat, cast = true) => { const m = new THREE.Mesh(geo, mat); m.castShadow = cast; m.receiveShadow = true; parent.add(m); return m; };
   if (ground) {
     // sitting on the ground, legs stretched out in front, feet up
@@ -51,8 +51,24 @@ export function rig(M, color, { seated = false, walk = false, ground = false } =
       add(g, merged([cylGeo(0.075, 0.085, 0.6, 6).translate(0, -0.3, 0), boxGeo(0.13, 0.08, 0.24).translate(0, -0.56, 0.04)]), M.gear);
       return g;
     });
-  } else add(root, merged([cylGeo(0.075, 0.085, 0.6, 6).translate(-0.09, 0.3, 0), cylGeo(0.075, 0.085, 0.6, 6).translate(0.09, 0.3, 0),
-    boxGeo(0.13, 0.08, 0.24).translate(-0.09, 0.04, 0.04), boxGeo(0.13, 0.08, 0.24).translate(0.09, 0.04, 0.04)]), M.gear);
+  } else {
+    // owner 2026-11-25: hip, knee and ankle joints, so the feet stay planted while the hips move (legIK)
+    legs2 = [-0.09, 0.09].map((x) => {
+      const hip = new THREE.Group();
+      hip.position.set(x, 0.6, 0);
+      root.add(hip);
+      add(hip, merged([cylGeo(0.085, 0.08, 0.29, 6).translate(0, -0.135, 0)]), M.gear);
+      const knee = new THREE.Group();
+      knee.position.y = -0.27;
+      hip.add(knee);
+      add(knee, merged([new THREE.SphereGeometry(0.078, 8, 6), cylGeo(0.08, 0.075, 0.28, 6).translate(0, -0.135, 0)]), M.gear);
+      const foot = new THREE.Group();
+      foot.position.y = -0.27;
+      knee.add(foot);
+      add(foot, boxGeo(0.13, 0.08, 0.24).translate(0, -0.02, 0.04), M.gear);
+      return { hip, knee, foot, x };
+    });
+  }
   add(body, merged([cylGeo(0.19, 0.33, 0.9, 12).translate(0, 0.36, 0),
     new THREE.SphereGeometry(0.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2).scale(1.25, 0.5, 0.85).translate(0, 0.8, 0)]), tunic);
   add(body, cylGeo(0.235, 0.24, 0.07, 12).translate(0, 0.46, 0), M.gear); // the belt
@@ -65,14 +81,22 @@ export function rig(M, color, { seated = false, walk = false, ground = false } =
     const g = new THREE.Group();
     g.position.set(side * 0.3, 0.8, 0);
     body.add(g);
-    add(g, cylGeo(0.075, 0.095, 0.62, 8).translate(0, -0.31, 0), tunic);
-    add(g, new THREE.SphereGeometry(0.06, 8, 6).translate(0, -0.66, 0), M.skin);
-    const hand = new THREE.Group();
-    hand.position.y = -0.66;
-    g.add(hand);
-    return { g, hand };
+    {
+      // owner 2026-11-25: an elbow halfway down the arm; the hand hangs from the forearm
+      add(g, cylGeo(0.075, 0.085, 0.34, 8).translate(0, -0.16, 0), tunic);
+      const elbow = new THREE.Group();
+      elbow.position.y = -0.32;
+      g.add(elbow);
+      add(elbow, new THREE.SphereGeometry(0.083, 8, 6), tunic);
+      add(elbow, cylGeo(0.085, 0.095, 0.32, 8).translate(0, -0.16, 0), tunic);
+      add(elbow, new THREE.SphereGeometry(0.06, 8, 6).translate(0, -0.34, 0), M.skin);
+      const hand = new THREE.Group();
+      hand.position.y = -0.34;
+      elbow.add(hand);
+      return { g, hand, elbow };
+    }
   };
-  const P = { root, body, r: arm(1), l: arm(-1), legs: walkLegs, tunic, hat, head };
+  const P = { root, body, r: arm(1), l: arm(-1), legs: walkLegs, tunic, hat, head, legs2 };
   dress(P, color, M, { seated, ground });
   return P;
 }
@@ -82,6 +106,34 @@ export function nod(P, a) {
   for (const m of [P.head, P.hat]) { m.rotation.x = a; m.position.set(0, 1.04 * (1 - Math.cos(a)), -1.04 * Math.sin(a)); }
 }
 
+
+/**
+ * Puts the legs of a standing rig (P.legs2) under its hips with the feet planted at `feet` ([[x, z], [x, z]], root frame):
+ * the hip aims the leg at the ankle, the knee bends forward as much as the hips are lower than a straight leg, the foot stays flat.
+ */
+export function legIK(P, feet) {
+  const A = 0.27, B = 0.27, bp = P.body.position, ry = P.body.rotation.y;
+  // a foot out of reach (a long stride under hips pushed forward): the hips come down until both legs reach the ground
+  let top = Infinity;
+  P.legs2.forEach((L, i) => {
+    const dx = feet[i][0] - (bp.x + L.x * Math.cos(ry)), dz = feet[i][1] - (bp.z - L.x * Math.sin(ry));
+    top = Math.min(top, 0.06 + Math.sqrt(Math.max(0, (A + B - 2e-4) ** 2 - dx * dx - dz * dz)) + 0.02);
+  });
+  if (bp.y > top) bp.y = top;
+  P.legs2.forEach((L, i) => {
+    const hx = bp.x + L.x * Math.cos(ry), hy = bp.y - 0.02, hz = bp.z - L.x * Math.sin(ry);
+    L.hip.position.set(hx, hy, hz);
+    const dx = feet[i][0] - hx, dy = 0.06 - hy, dz = feet[i][1] - hz;
+    // the leg bends in its own plane (hip pitch, knee), and that plane rolls sideways about the hip (order ZXY)
+    const len = Math.hypot(dx, dy, dz), lc = Math.min(len, A + B - 1e-4), r = Math.hypot(dx, dy);
+    const th = Math.atan2(-dz, r), phi = Math.atan2(dx, -dy);
+    const al = Math.acos(THREE.MathUtils.clamp((A * A + lc * lc - B * B) / (2 * A * lc), -1, 1));
+    const kn = Math.PI - Math.acos(THREE.MathUtils.clamp((A * A + B * B - lc * lc) / (2 * A * B), -1, 1));
+    L.hip.rotation.set(th - al, 0, phi, 'ZXY');
+    L.knee.rotation.x = kn;
+    L.foot.rotation.set(-(th - al + kn), 0, -phi, 'XZY'); // flat on the ground again
+  });
+}
 
 // a soft round dot, so particles are not drawn as squares (made once, in the browser only)
 let dotTexture = null;
@@ -1808,8 +1860,10 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
   const tipObj = tool?.userData.tip;
   let down = cfg.down;
   const at = new THREE.Vector3();
+  const HITFLEX = 0.08;
   const tipAt = (a) => {
     P.r.g.rotation.set(a, 0, cfg.both ? -0.28 : 0);
+    if (P.r.elbow) P.r.elbow.rotation.x = -HITFLEX; // the elbow almost straight at the hit
     P.body.rotation.x = cfg.bend;
     group.updateMatrixWorld(true);
     return group.worldToLocal(tipObj.getWorldPosition(at.set(0, 0, 0)));
@@ -1918,30 +1972,56 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
   }
   // a scene that happens once (the hunter's one shot) starts its cycle as the shot starts
   const offset = cfg.once ? cfg.period * 0.05 - t0 : rand01(seed, 'work', id) * cfg.period;
+  // Owner 2026-11-25: a clock with some life in it. Every stroke a little longer or shorter and a little higher or lower, and now and
+  // then a pause after a stroke (a hand to the brow, a stretch of the back, a look round). Strokes, particles and sounds follow it.
+  const LIVE = !cfg.once && !cfg.archer && !cfg.errand && !cfg.adit && !cfg.sleep && !cfg.carry && !cfg.dance && !cfg.juggle && !cfg.net
+    && !cfg.lute && !cfg.flute && !cfg.read && !cfg.drink && !cfg.peek && !cfg.wave && !cfg.haul && !cfg.look;
+  const STRIKE = LIVE && !cfg.push && !cfg.smooth && !cfg.stir && !cfg.sweep;
+  let cyc = null;
+  if (LIVE) {
+    cyc = [];
+    let s0 = -offset - 3 * cfg.period;
+    for (let k = -3; s0 < 45; k++) {
+      const d = cfg.period * (1 + 0.18 * (rand01(seed, 'cyc', id, k) - 0.5));
+      const pause = !cfg.stir && !cfg.sweep && k > 0 && rand01(seed, 'rest', id, k) < 0.16 ? 1.4 + 0.8 * rand01(seed, 'restd', id, k) : 0;
+      cyc.push({ k, s: s0, d, pause, kind: Math.floor(rand01(seed, 'restk', id, k) * 3), amp: 1 + 0.16 * (rand01(seed, 'amp', id, k) - 0.5) });
+      s0 += d + pause;
+    }
+  }
+  const clock = (t) => {
+    let lo = 0, hi = cyc.length - 1;
+    while (lo < hi) { const m = (lo + hi + 1) >> 1; if (cyc[m].s <= t) lo = m; else hi = m - 1; }
+    const q = cyc[lo], e = t - q.s;
+    return e < q.d ? { i: lo, q, u: e / q.d, restS: -1 } : { i: lo, q, u: 0.9999, restS: e - q.d };
+  };
   const lerp = THREE.MathUtils.lerp;
   // sideways swings: wind the body back, sweep through the work at the hit, follow through
   const twist = (u) => (u < cfg.hit - 0.2 ? lerp(-0.1, 0.9, ease(u / (cfg.hit - 0.2)))
     : u < cfg.hit + 0.05 ? lerp(0.9, -0.5, ((u - cfg.hit + 0.2) / 0.25) ** 2)
       : lerp(-0.5, -0.1, ease((u - cfg.hit - 0.05) / (0.95 - cfg.hit))));
   const pose = (t) => {
-    const c = (t + offset) / cfg.period, k = Math.floor(c), u = c - k;
+    let c = (t + offset) / cfg.period, amp = 1;
+    if (cyc) { const ck = clock(t); c = ck.q.k + ck.u; amp = ck.q.amp; }
+    const k = Math.floor(c), u = c - k;
+    const cfgRaise = cfg.raise, R = down + (cfgRaise - down) * amp;
     // wind up slowly, strike fast, recover
     let a;
     if (cfg.sweep || cfg.archer) a = cfg.raise;
     else if (cfg.stir) a = cfg.raise + 0.25 * Math.sin(c * Math.PI * 2);
     else if (cfg.wave) a = cfg.raise + 0.35 * Math.sin(t * 7);
-    else if (cfg.smooth) a = THREE.MathUtils.lerp(down, cfg.raise, Math.max(0, Math.sin(c * Math.PI * 2)) ** 1.5);
+    else if (cfg.smooth) a = THREE.MathUtils.lerp(down, R, Math.max(0, Math.sin(c * Math.PI * 2)) ** 1.5);
     else if (cfg.dance) a = THREE.MathUtils.lerp(cfg.down, cfg.raise, 0.5 + 0.5 * Math.sin(c * Math.PI * 2));
     else if (cfg.juggle) a = THREE.MathUtils.lerp(cfg.down, cfg.raise, 0.5 + 0.5 * Math.sin(c * Math.PI * 2));
-    else if (cfg.push) a = THREE.MathUtils.lerp(down, cfg.raise, 0.5 + 0.5 * Math.sin(c * Math.PI * 2));
-    else if (u < cfg.hit - 0.12) a = THREE.MathUtils.lerp(down, cfg.raise, ease(u / (cfg.hit - 0.12)));
-    else if (u < cfg.hit) a = THREE.MathUtils.lerp(cfg.raise, down, ((u - cfg.hit + 0.12) / 0.12) ** 2);
+    else if (cfg.push) a = THREE.MathUtils.lerp(down, R, 0.5 + 0.5 * Math.sin(c * Math.PI * 2));
+    else if (u < cfg.hit - 0.12) a = THREE.MathUtils.lerp(down, R, ease(u / (cfg.hit - 0.12)));
+    else if (u < cfg.hit) a = THREE.MathUtils.lerp(R, down, ((u - cfg.hit + 0.12) / 0.12) ** 2);
     else a = down - 0.12 * Math.sin(Math.min(1, (u - cfg.hit) / 0.15) * Math.PI); // small rebound
     return { a, k, u };
   };
   const strikeTimes = (t0, t1) => {
     if (!cfg.sound || cfg.sound === 'none') return [];
     const out = [];
+    if (cyc) { for (const q of cyc) { const h = q.s + cfg.hit * q.d; if (h >= t0 && h <= t1) out.push(h); } return out; }
     for (let k = Math.floor((t0 + offset) / cfg.period) - 1; ; k++) {
       const t = (k + cfg.hit) * cfg.period - offset;
       if (t > t1) break;
@@ -1963,6 +2043,58 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     : loopAt(s, out).sub(JNEAR).multiplyScalar(Math.min(1, (s - RUN) / 0.35)).add(JNEAR));
   // the archer's target is a few metres away: frame the archer and the target together
   group.updateMatrixWorld(true);
+  // Owner 2026-11-25: what makes the worker look alive, added on top of the job's pose: elbows that bend on the backswing and
+  // straighten into the stroke, breathing, the weight going from one foot to the other with the feet planted (legIK), the
+  // knees giving a little after a heavy stroke, the head on the work with a glance now and then, and the pauses of the clock
+  const ph = rand01(seed, 'life', id) * 10;
+  const FEET = cfg.push ? [[-0.11, 0.17], [0.11, -0.15]] : STRIKE && cfg.both ? [[-0.12, 0.1], [0.12, -0.08]] : [[-0.11, 0.03], [0.11, -0.03]];
+  const life = (t, a, c, u) => {
+    const br = Math.sin((t + ph) * Math.PI * 2 / 3.6);
+    if (!cfg.sleep) P.body.scale.set(1 + 0.012 * br, 1 + 0.006 * br, 1 + 0.018 * br);
+    for (const s of [P.r, P.l]) s.g.position.y = 0.8 + 0.008 * br;
+    if (!P.legs2 && !LIVE) return;
+    const ck = cyc ? clock(t) : null, restS = ck ? ck.restS : -1;
+    const g = restS < 0 ? 0 : Math.min(ease(Math.min(1, restS / 0.4)), ease(Math.min(1, (ck.q.pause - restS) / 0.4)));
+    const s01 = THREE.MathUtils.clamp((a - cfg.raise) / ((down - cfg.raise) || 1), 0, 1); // 0 raised .. 1 down
+    let dip = 0, pz = 0;
+    if (LIVE) {
+      // elbows: a lagging forearm, bent on the backswing, almost straight at the hit (as calibrated)
+      const lag = pose(t - 0.06 * cfg.period).a, l01 = THREE.MathUtils.clamp((lag - cfg.raise) / ((down - cfg.raise) || 1), 0, 1);
+      const push = 0.5 + 0.5 * Math.sin(c * Math.PI * 2);
+      const flex = STRIKE ? HITFLEX + 0.8 * (1 - l01) : cfg.push ? 0.75 * (1 - push) + 0.1 : cfg.smooth ? 0.35 + 0.2 * Math.sin(c * Math.PI * 2 - 0.7) : cfg.stir ? 0.45 + 0.12 * Math.cos(c * Math.PI * 2) : 0.25;
+      P.r.elbow.rotation.x = -flex;
+      P.l.elbow.rotation.x = cfg.both ? -flex : -(0.3 + 0.05 * br);
+      if (STRIKE) {
+        P.body.rotation.x -= 0.09 * (1 - s01); // leans back on the backswing, drives through the stroke
+        const after = (u - cfg.hit) * cfg.period;
+        if (after > 0 && after < 0.35) dip = 0.045 * Math.sin((after / 0.35) * Math.PI); // the knees give after the blow
+      }
+      if (cfg.push) { pz = 0.13 * Math.sin(c * Math.PI * 2); P.body.rotation.x += 0.12 * push; dip = 0.03 * push; }
+      // the head on the work, a glance aside now and then
+      const glance = 0.5 * Math.max(0, Math.sin((t + ph) * 0.55)) ** 6 * Math.sign(Math.sin((t + ph) * 0.21) + 0.3);
+      nod(P, 0.18 + 0.1 * s01 - 0.12 * Math.abs(glance));
+      P.head.rotation.y = P.hat.rotation.y = 0.08 * Math.sin((t + ph) * 0.9) + glance;
+      if (g > 0) {
+        // the pause: stand up straight, then a hand to the brow, a stretch of the back, or a look round
+        const k = ck.q.kind, w = restS * 7;
+        P.body.rotation.x = THREE.MathUtils.lerp(P.body.rotation.x, k === 1 ? -0.22 : -0.04, g);
+        P.l.g.rotation.x = THREE.MathUtils.lerp(P.l.g.rotation.x, k === 0 ? -2.1 : k === 1 ? 0.55 : 0.1, g);
+        P.l.g.rotation.z = THREE.MathUtils.lerp(P.l.g.rotation.z, k === 0 ? 0.55 + 0.18 * Math.sin(w) : k === 1 ? -0.25 : -0.05, g);
+        P.l.elbow.rotation.x = THREE.MathUtils.lerp(P.l.elbow.rotation.x, k === 0 ? -2.0 : k === 1 ? -1.7 : -0.2, g);
+        if (cfg.both) { P.r.g.rotation.z = THREE.MathUtils.lerp(P.r.g.rotation.z, 0, g); }
+        const look = k === 2 ? 0.75 * Math.sin(restS * 1.9) : k === 1 ? 0 : 0.1;
+        nod(P, THREE.MathUtils.lerp(P.head.rotation.x, k === 1 ? -0.25 : k === 0 ? 0.12 : 0, g));
+        P.head.rotation.y = P.hat.rotation.y = THREE.MathUtils.lerp(P.head.rotation.y, look, g);
+        dip *= 1 - g; pz *= 1 - g;
+      }
+    }
+    if (!P.legs2) return;
+    // the weight from one foot to the other, the spine tilting against it
+    const sway = 0.028 * Math.sin((t + ph) * Math.PI * 2 / 4.7);
+    P.body.position.set(sway, 0.62 - dip, pz);
+    P.body.rotation.z += -0.7 * sway;
+    legIK(P, FEET);
+  };
   const focus = cfg.archer ? group.localToWorld(new THREE.Vector3(0, 1.1, 0).lerp(impact, 0.4)) : anchor.clone().add(new THREE.Vector3(0, cfg.focusH ?? 1.1, 0));
   return {
     group,
@@ -1975,11 +2107,17 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     strikeTimes,
     rig: P,
     tool,
+    props: propsG, // the scene's props (clipcheck.js)
+    impact, // where the tool strikes, scene frame
+    cfg,
+    /** The work's clock at t: { k (stroke), u (0..1 through it), restS (seconds into a pause, -1 outside one) }. */
+    clock: (t) => { if (!cyc) { const c = (t + offset) / cfg.period; return { k: Math.floor(c), u: c - Math.floor(c), restS: -1 }; } const q = clock(t); return { k: q.q.k, u: q.u, restS: q.restS }; },
     // where the eyes rest while working (pov.js): the spot the tool strikes, the work on the bench
     workPoint: (out) => { group.updateMatrixWorld(true); return group.localToWorld(out.copy(impact)); },
     update(t) {
+      P.l.g.rotation.set(0, 0, 0); P.body.rotation.set(0, 0, 0); if (P.legs2) P.body.position.set(0, 0.62, 0); // life() adds to a fresh pose
       const { a, k: cycleK, u: cycleU } = pose(t);
-      const c = (t + offset) / cfg.period;
+      const c = cyc ? cycleK + cycleU : (t + offset) / cfg.period;
       // facing the work again (a visitor turns the worker round, visit.js)
       P.root.rotation.y = 0;
       P.r.g.position.x = 0.3;
@@ -2116,7 +2254,6 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
         P.body.rotation.set(cfg.bend, 0, 0);
         P.root.position.y = 0.04 * Math.abs(Math.cos(d * 3.6));
       }
-      if (cfg.push) P.root.position.z = 0.25 * Math.sin(((t + offset) / cfg.period) * Math.PI * 2);
       if (cfg.peek) {
         // hidden behind the barrels writing in the book, then leaning out to the side to look this way and that, and back
         const u = cycleU, out = u < 0.4 ? 0 : u < 0.5 ? ease((u - 0.4) / 0.1) : u < 0.76 ? 1 : u < 0.86 ? 1 - ease((u - 0.76) / 0.1) : 0;
@@ -2274,9 +2411,12 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
       if (pts) {
         const arr = pts.geometry.attributes.position.array;
         const c = (t + offset) / cfg.period;
+        // the impacts of the clock's strokes (none during a pause)
+        const hits = [];
+        if (cyc) for (let i = clock(t).i; i >= 0 && hits.length < 2; i--) { const h = cyc[i].s + cfg.hit * cyc[i].d; if (h <= t) hits.push([cyc[i].k, t - h]); }
         for (let slot = 0; slot < 2; slot++) {
-          const k = Math.floor(c - cfg.hit) - slot;
-          const age = (c - k - cfg.hit) * cfg.period;
+          const k = cyc ? hits[slot]?.[0] ?? -99 : Math.floor(c - cfg.hit) - slot;
+          const age = cyc ? hits[slot]?.[1] ?? -1 : (c - k - cfg.hit) * cfg.period;
           for (let i = 0; i < fx.n; i++) {
             const j = (slot * fx.n + i) * 3;
             if (age < 0 || age > fx.life) { arr[j] = arr[j + 1] = arr[j + 2] = 1e4; continue; }
@@ -2291,6 +2431,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
         pts.geometry.attributes.position.needsUpdate = true;
         pts.material.opacity = (fx.add ? 1 : 0.85);
       }
+      life(t, a, c, cycleU);
     },
   };
 }
