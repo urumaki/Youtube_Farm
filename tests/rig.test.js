@@ -80,3 +80,17 @@ test('a farmer on the fields has no soil patch', () => {
   assert.equal(soil(workScene('farmer', 'hoe', { onField: true })), 0);
   assert.ok(soil(workScene('farmer', 'hoe')) > 0);
 });
+
+test('blows land on the work', () => {
+  // the elbow is straight again at the blow: the tool's face is where the props were calibrated (owner 2026-11-25)
+  for (const [job, v] of [['blacksmith', null], ['woodcutter', null], ['woodcutter', 'fell'], ['miner', null], ['farmer', 'hoe'], ['stonemason', 'block']]) {
+    const ws = workScene(job, v);
+    const tip = ws.tool.userData.tip;
+    for (const t of ws.strikeTimes(0, 12)) {
+      ws.update(t);
+      ws.group.updateMatrixWorld(true);
+      const d = ws.group.worldToLocal(tip.getWorldPosition(new THREE.Vector3())).distanceTo(ws.impact);
+      assert.ok(d < 0.12, `${job}:${v} blow at ${t.toFixed(2)} lands ${d.toFixed(2)} m off`);
+    }
+  }
+});

@@ -10,7 +10,7 @@ for (const key of allScenes()) {
   try {
     const { ws, env } = await checkScene(job, variant);
     const hits = clipCheck(ws, { env });
-    if (hits.length) { bad++; console.log(key.padEnd(24), hits.map((h) => `${h.part}@${h.t}:${h.mesh}`).join(' ')); }
+    if (hits.length) { bad++; console.log(key.padEnd(24), hits.map((h) => `${h.part}@${h.t}:${h.mesh}[${h.at}]`).join(' ')); }
   } catch (e) { bad++; console.log(key.padEnd(24), 'ERROR', e.message.split('\n')[0]); }
 }
 console.log(`${bad} of ${n} scenes to fix`);

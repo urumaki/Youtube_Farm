@@ -29,3 +29,14 @@ test('the check passes a clean scene', async () => {
 test('every scene builds under Node', () => {
   assert.ok(allScenes().length >= 100, `${allScenes().length} scenes`);
 });
+
+test('no work scene clips', async () => {
+  const bad = [];
+  for (const key of allScenes()) {
+    const [job, variant = null] = key.split(':');
+    const { ws, env } = await checkScene(job, variant);
+    const hits = clipCheck(ws, { env });
+    if (hits.length) bad.push(`${key}: ${hits.map((h) => `${h.part}@${h.t}`).join(' ')}`);
+  }
+  assert.deepEqual(bad, []);
+});

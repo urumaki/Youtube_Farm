@@ -14,19 +14,23 @@ const IMPACT_OK = 0.25; // metres round the strike point
 const under = (o, root) => { for (let p = o; p; p = p.parent) if (p === root) return true; return false; };
 const wpos = (o, x = 0, y = 0, z = 0) => o.localToWorld(new THREE.Vector3(x, y, z));
 
-/** Where the tool ends: its marked tip or end, else the corner of its box farthest from the hand. */
+/** Where the tool ends: its marked tip or end, else the point of its geometry farthest from the hand. */
 function toolEnd(tool) {
   if (tool.userData.tip) return wpos(tool.userData.tip);
   if (tool.userData.end) return wpos(tool.userData.end);
-  const box = new THREE.Box3();
-  tool.traverse((m) => { if (m.isMesh) { m.geometry.computeBoundingBox(); box.union(m.geometry.boundingBox.clone().applyMatrix4(m.matrix)); } });
-  if (box.isEmpty()) return null;
+  tool.updateMatrixWorld(true);
+  const inv = tool.matrixWorld.clone().invert(), v = new THREE.Vector3();
   let far = null, d = -1;
-  for (const x of [box.min.x, box.max.x]) for (const y of [box.min.y, box.max.y]) for (const z of [box.min.z, box.max.z]) {
-    const q = new THREE.Vector3(x, y, z), dq = q.length();
-    if (dq > d) { d = dq; far = q; }
-  }
-  return tool.localToWorld(far);
+  tool.traverse((m) => {
+    if (!m.isMesh || !m.visible) return;
+    const pos = m.geometry.attributes.position, toTool = inv.clone().multiply(m.matrixWorld);
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(toTool);
+      const dv = v.length();
+      if (dv > d) { d = dv; far = v.clone(); }
+    }
+  });
+  return far && tool.localToWorld(far);
 }
 
 function segments(ws) {
@@ -69,7 +73,10 @@ export function clipCheck(ws, { from = 0, to = 8, step = 0.1, env = [] } = {}) {
         const hit = ray.intersectObjects(targets, false).find((h) => !(impact && h.point.distanceTo(impact) < IMPACT_OK));
         if (!hit) continue;
         const key = `${part}|${hit.object.uuid}`;
-        if (!found.has(key)) found.set(key, { part, t: Math.round(t * 100) / 100, mesh: hit.object.name || hit.object.geometry.type });
+        if (!found.has(key)) {
+          const at = ws.group.worldToLocal(hit.point.clone()).toArray().map((v) => Math.round(v * 100) / 100);
+          found.set(key, { part, t: Math.round(t * 100) / 100, mesh: hit.object.name || hit.object.geometry.type, at });
+        }
         break;
       }
     }

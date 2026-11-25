@@ -558,7 +558,7 @@ function buildProps(kind, M, add, anim = [], holder = null, { onField = false } 
       if (onField) return new THREE.Vector3(0, 0.02, 0.85);
       add(boxGeo(5, 0.06, 4).translate(0, 0.03, 1.4), brown).name = 'soil';
       for (let i = -2; i <= 2; i++) add(boxGeo(0.35, 0.12, 3.6).translate(i * 0.95, 0.09, 1.6), brown).name = 'soil';
-      for (let i = -2; i <= 2; i += 2) for (let k = 0; k < 6; k++) add(new THREE.ConeGeometry(0.12, 0.35, 5).translate(i * 0.95, 0.3, 0.2 + k * 0.55), M.greens);
+      for (const i of [-2, 2]) for (let k = 0; k < 6; k++) add(new THREE.ConeGeometry(0.12, 0.35, 5).translate(i * 0.95, 0.3, 0.2 + k * 0.55), M.greens); // not in the hoe's row
       add(cylGeo(0.28, 0.22, 0.32, 10).translate(-1.4, 0.16, -0.4), M.wood);
       return new THREE.Vector3(0, 0.08, 0.85);
     }
@@ -1865,7 +1865,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
   const tipObj = tool?.userData.tip;
   let down = cfg.down;
   const at = new THREE.Vector3();
-  const HITFLEX = 0.08;
+  const HITFLEX = cfg.flex?.[0] ?? 0.08;
   const tipAt = (a) => {
     P.r.g.rotation.set(a, 0, cfg.both ? -0.28 : 0);
     if (P.r.elbow) P.r.elbow.rotation.x = -HITFLEX; // the elbow almost straight at the hit
@@ -1988,7 +1988,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     let s0 = -offset - 3 * cfg.period;
     for (let k = -3; s0 < 45; k++) {
       const d = cfg.period * (1 + 0.18 * (rand01(seed, 'cyc', id, k) - 0.5));
-      const pause = !cfg.stir && !cfg.sweep && k > 0 && rand01(seed, 'rest', id, k) < 0.16 ? 1.4 + 0.8 * rand01(seed, 'restd', id, k) : 0;
+      const pause = cfg.rest !== false && !cfg.stir && !cfg.sweep && k > 0 && rand01(seed, 'rest', id, k) < 0.16 ? 1.4 + 0.8 * rand01(seed, 'restd', id, k) : 0;
       cyc.push({ k, s: s0, d, pause, kind: Math.floor(rand01(seed, 'restk', id, k) * 3), amp: 1 + 0.16 * (rand01(seed, 'amp', id, k) - 0.5) });
       s0 += d + pause;
     }
@@ -2052,7 +2052,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
   // straighten into the stroke, breathing, the weight going from one foot to the other with the feet planted (legIK), the
   // knees giving a little after a heavy stroke, the head on the work with a glance now and then, and the pauses of the clock
   const ph = rand01(seed, 'life', id) * 10;
-  const FEET = cfg.push ? [[-0.11, 0.17], [0.11, -0.15]] : STRIKE && cfg.both ? [[-0.12, 0.1], [0.12, -0.08]] : [[-0.11, 0.03], [0.11, -0.03]];
+  const FEET = cfg.feet ?? (cfg.push ? [[-0.11, 0.17], [0.11, -0.15]] : STRIKE && cfg.both ? [[-0.12, 0.1], [0.12, -0.08]] : [[-0.11, 0.03], [0.11, -0.03]]);
   const life = (t, a, c, u) => {
     const br = Math.sin((t + ph) * Math.PI * 2 / 3.6);
     if (!cfg.sleep) P.body.scale.set(1 + 0.012 * br, 1 + 0.006 * br, 1 + 0.018 * br);
@@ -2064,9 +2064,17 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     let dip = 0, pz = 0;
     if (LIVE) {
       // elbows: a lagging forearm, bent on the backswing, almost straight at the hit (as calibrated)
-      const lag = pose(t - 0.06 * cfg.period).a, l01 = THREE.MathUtils.clamp((lag - cfg.raise) / ((down - cfg.raise) || 1), 0, 1);
       const push = 0.5 + 0.5 * Math.sin(c * Math.PI * 2);
-      const flex = STRIKE ? HITFLEX + 0.8 * (1 - l01) : cfg.push ? 0.75 * (1 - push) + 0.1 : cfg.smooth ? 0.35 + 0.2 * Math.sin(c * Math.PI * 2 - 0.7) : cfg.stir ? 0.45 + 0.12 * Math.cos(c * Math.PI * 2) : 0.25;
+      const [f0, f1] = cfg.flex ?? [HITFLEX, HITFLEX + 0.8];
+      // a blow: the elbow straightens just as it lands (bent until late: a whip), so the tool's face is where the props were
+      // calibrated; after it the elbow draws the tool back out of the work before the arm goes up again
+      let strike = 0;
+      if (STRIKE) {
+        const h0 = cfg.hit - 0.12, back = 1 - s01;
+        const pull = u > cfg.hit ? ease(Math.min(1, (u - cfg.hit) / 0.2)) : u < h0 ? 1 - ease(Math.min(1, u / Math.max(0.05, h0))) : 0;
+        strike = u >= h0 && u <= cfg.hit ? f0 + (f1 - f0) * Math.sqrt(back) : f0 + (f1 - f0) * back + 0.3 * pull;
+      }
+      const flex = STRIKE ? strike : cfg.push ? 0.75 * (1 - push) + 0.1 : cfg.smooth ? 0.35 + 0.2 * Math.sin(c * Math.PI * 2 - 0.7) : cfg.stir ? 0.45 + 0.12 * Math.cos(c * Math.PI * 2) : 0.25;
       P.r.elbow.rotation.x = -flex;
       // a peel slides through the baker's hands into the oven and back (cfg.slide: [from, how far], m along the handle)
       if (cfg.slide && tool?.userData.axis) tool.position.copy(tool.userData.axis).multiplyScalar(cfg.slide[0] + cfg.slide[1] * push);
@@ -2087,7 +2095,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
         // the pause: stand up straight, then a hand to the brow, a stretch of the back, or a look round
         const k = ck.q.kind, w = restS * 7;
         P.body.rotation.x = THREE.MathUtils.lerp(P.body.rotation.x, k === 1 ? -0.22 : -0.04, g);
-        P.l.g.rotation.x = THREE.MathUtils.lerp(P.l.g.rotation.x, k === 0 ? -2.1 : k === 1 ? 0.55 : 0.1, g);
+        P.l.g.rotation.x = THREE.MathUtils.lerp(P.l.g.rotation.x, k === 0 ? -2.1 : k === 1 ? 0.55 : 0.3, g);
         P.l.g.rotation.z = THREE.MathUtils.lerp(P.l.g.rotation.z, k === 0 ? 0.55 + 0.18 * Math.sin(w) : k === 1 ? -0.25 : -0.05, g);
         P.l.elbow.rotation.x = THREE.MathUtils.lerp(P.l.elbow.rotation.x, k === 0 ? -2.0 : k === 1 ? -1.7 : -0.2, g);
         if (cfg.both) { P.r.g.rotation.z = THREE.MathUtils.lerp(P.r.g.rotation.z, 0, g); }
@@ -2099,7 +2107,7 @@ export function buildWorkScene({ job, variant = null, anchor, face, M, seed, id,
     }
     if (!P.legs2) return;
     // the weight from one foot to the other, the spine tilting against it
-    const sway = 0.028 * Math.sin((t + ph) * Math.PI * 2 / 4.7);
+    const sway = (cfg.sway ?? 0.028) * Math.sin((t + ph) * Math.PI * 2 / 4.7);
     P.body.position.set(sway, 0.62 - dip, pz);
     P.body.rotation.z += -0.7 * sway;
     legIK(P, FEET);
