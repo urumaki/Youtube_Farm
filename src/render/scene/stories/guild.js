@@ -142,7 +142,9 @@ function setUp(args) {
 
 /** The common part of every shot's update: lights, the work at the benches (fast = the final's double speed). */
 function tick(S, t, t0, t1, { working = () => true, speed = 1 } = {}) {
-  const on = t >= t0 - 0.2 && t <= t1 + 0.2;
+  // exactly its own time: every shot builds its hall in the same place, and the old margin of 0.2 s round each shot
+  // showed two halls (and two sets of craftsmen) one inside the other at each cut (owner 2026-11-26)
+  const on = t >= t0 && t < t1;
   S.group.visible = on;
   S.lamps(t, on);
   if (!on) return false;
@@ -211,7 +213,8 @@ function judgeShot(args) {
         if (!decided) continue;
         b.ws.rest();
         const k = ease(span(u, 0.7, 0.8));
-        if (fin.has(b.c.id)) { P.root.position.z = 0.6 * k; P.r.g.rotation.set(-2.8, 0, 0.2); } // on to the final
+        // on to the final: an arm up and a little hop behind the bench (a step forward went through it, owner 2026-11-26)
+        if (fin.has(b.c.id)) { P.root.position.y = 0.07 * k * Math.abs(Math.sin(t * 9)); P.r.g.rotation.set(-2.8, 0, 0.2); }
         else { P.r.g.rotation.set(-0.6, 0, 0.6 * k); P.l.g.rotation.set(-0.6, 0, -0.6 * k); nodBody(P, 0.25 * k); } // a shrug
       }
       S.cheer(t, decided ? 0.8 : 0.2);
@@ -249,6 +252,21 @@ function finalShot(args) {
 // guild's rosette; the King takes it, steps up to the winner, who bows; he pins it on the winner's chest with both hands and
 // pats the shoulder; the winner straightens and (0) lifts the masterpiece over their head, (1) has their arm raised by the
 // King under a shower of petals, or (2) waves the guild's banner while the other three lift their own work. The hall cheers.
+/** Puts the sword (blade along its +x, the grip 0.1 m behind its middle) in the fist of arm `side`, the blade along `d`. */
+function gripSword(g, P, side, d) {
+  const hand = P[side].hand;
+  if (g.parent !== hand) hand.add(g);
+  P.root.updateWorldMatrix(true, true);
+  const x = d.clone().normalize();
+  const z = new THREE.Vector3().crossVectors(x, new THREE.Vector3(0, 0, 1));
+  if (z.lengthSq() < 1e-6) z.set(1, 0, 0);
+  z.normalize();
+  const y = new THREE.Vector3().crossVectors(z, x);
+  const qw = P.root.getWorldQuaternion(new THREE.Quaternion()).multiply(new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z)));
+  g.quaternion.copy(hand.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(qw));
+  g.position.set(0.1, 0, 0).applyQuaternion(g.quaternion);
+}
+
 const angTo = (a, b, k) => { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return a + d * k; };
 
 function medalShot(args) {
@@ -334,19 +352,15 @@ function medalShot(args) {
       if (award === 2 && after > 0) { hold.set(-0.2, 1.1, 0.42); wr = V(0.3, 1.75 + 0.1 * Math.sin(t * 5), 0.2); }
       work.group.position.copy(W.root.position).add(hold);
       work.group.rotation.set(0, award === 0 ? 0.3 * Math.sin(t * 2) * after : 0.2, oneHand && win.c.job === 'fletcher' ? Math.PI / 2 : 0); // a bow carried upright
-      // the sword by its grip (0.1 m from the piece's middle): point down at the side, then (award 0) raised high in one
-      // hand, blade up; a sword held flat over the head hardly shows in the narrow frame
+      // the sword in the fist by its grip (owner 2026-11-26: it floated beside the hand): point down in the left hand at the
+      // side, then (award 0) raised high in the right, blade up; with the arm raised by the King or the banner it stays down
       const sword = win.c.job === 'blacksmith', swordUp = sword && award === 0 && after > 0;
-      if (sword) {
-        const grip = swordUp ? V(0.28, lerp(1.0, 2.0, ease(after)), lerp(0.3, 0.18, ease(after))) : oneHand ? V(-0.34, 0.95, 0.12) : hold.clone();
-        if (swordUp) wr = grip;
-        work.group.position.copy(W.root.position).add(grip).add(V(0, swordUp ? 0.1 : -0.1, 0));
-        work.group.rotation.set(0, 0, swordUp ? Math.PI / 2 : -Math.PI / 2);
-      }
-      if (swordUp) { reach(W, 'r', wr); W.l.g.rotation.set(0.05, 0, -0.08); }
-      else if (oneHand) { reach(W, 'l', sword ? V(-0.34, 0.95, 0.12) : hold.clone().add(V(0.02, 0.1, 0))); W.r.g.rotation.set(0.05, 0, 0.08); }
+      if (swordUp) { reach(W, 'r', V(0.28, lerp(1.0, 1.95, ease(after)), lerp(0.3, 0.18, ease(after)))); W.l.g.rotation.set(0.05, 0, -0.08); }
+      else if (sword) { reach(W, 'l', V(-0.3, 0.86, 0.14)); if (wr) reach(W, 'r', wr); else W.r.g.rotation.set(0.05, 0, 0.08); }
+      else if (oneHand) { reach(W, 'l', hold.clone().add(V(0.02, 0.1, 0))); W.r.g.rotation.set(0.05, 0, 0.08); }
       else if (wr) { reach(W, 'r', wr); reach(W, 'l', hold.clone().add(V(-0.05, 0, 0))); }
       else { reach(W, 'r', hold.clone().add(V(wide, 0, 0))); reach(W, 'l', hold.clone().add(V(-wide, 0, 0))); }
+      if (sword) gripSword(work.group, W, swordUp ? 'r' : 'l', swordUp ? V(0, 1, 0) : V(0, -1, 0.15));
       flag.visible = award === 2 && after > 0;
       if (flag.visible) { if (flag.parent !== W.r.hand) W.r.hand.add(flag); flag.position.set(0, -0.1, 0.05); flag.rotation.set(-W.r.g.rotation.x - W.r.elbow.rotation.x, 0, 0.3 * Math.sin(t * 5)); }
       tag.sub = u > 0.56 ? `Master ${JOBS[win.c.job]?.label || ''}`.trim() : tag.sub;

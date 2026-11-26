@@ -43,3 +43,52 @@ test('the prize-giving: the rosette ends pinned on the winner, every award', () 
     assert.ok(Math.abs(p.x - 1.8) < 0.35, `award ${award}: rosette at x ${p.x.toFixed(2)} (winner's bench at 1.8)`);
   }
 });
+
+test('owner 2026-11-26: one hall at a time at each cut, the finalists stay behind their bench, the sword in the fist', () => {
+  // each shot's hall is shown only in its own time: at the cut the old one is gone
+  for (const [name, , t1] of GUILD_SHOTS) {
+    const { sc, t0 } = shot(name);
+    sc.update(t0 + 0.1, t0, t1); assert.ok(sc.group.visible, `${name} shown in its time`);
+    sc.update(t1, t0, t1); assert.ok(!sc.group.visible, `${name} still shown at the cut ${t1}`);
+    sc.update(t0 - 0.1, t0, t1); assert.ok(!sc.group.visible, `${name} shown before its time`);
+  }
+  // the judging: who goes on raises an arm, nobody walks through the bench in front of them
+  const { sc, t0, t1 } = shot('judge');
+  // the craftsmen's rigs: in a bench's group, with a body group 0.62 m up
+  const rigs = [];
+  sc.group.traverse((o) => { if (o.isGroup && o.parent?.parent === sc.group && o.children.some((c) => c.isGroup && Math.abs(c.position.y - 0.62) < 0.1 && c.children.length > 5)) rigs.push(o); });
+  assert.equal(rigs.length, 4);
+  for (let t = t0; t < t1; t += 0.1) {
+    sc.update(t, t0, t1);
+    for (const r of rigs) assert.ok(Math.abs(r.position.z) < 0.01, `a craftsman moved toward the bench at ${t.toFixed(1)}`);
+  }
+  // the prize: the blacksmith's sword is held by its grip in a fist
+  const cr = crafters.map((c) => (c.id === 3 ? { ...c, job: 'blacksmith' } : c.job === 'blacksmith' ? { ...c, job: 'potter' } : c));
+  const m = shot('medal', 0, cr);
+  for (const u of [0.3, 0.9]) {
+    m.sc.update(m.t0 + u * (m.t1 - m.t0), m.t0, m.t1);
+    m.sc.group.updateMatrixWorld(true);
+    let blade = null;
+    m.sc.group.traverse((o) => { if (!blade && o.isMesh && o.geometry.type === 'BoxGeometry' && o.geometry.parameters?.width === 0.8) blade = o; });
+    assert.ok(blade, 'a sword');
+    const g = blade.parent, hand = g.parent;
+    const grip = g.localToWorld(new THREE.Vector3(-0.1, 0, 0)), fist = hand.getWorldPosition(new THREE.Vector3());
+    assert.ok(grip.distanceTo(fist) < 0.02, `u ${u}: the grip ${grip.distanceTo(fist).toFixed(2)} m from the fist`);
+  }
+});
+
+test('owner 2026-11-26: the hammer face lands on the work at each blow', async () => {
+  const { contestBench } = await import('../src/render/scene/stories/masterpiece.js');
+  for (const job of ['blacksmith', 'potter']) {
+    const b = contestBench({ job, M: fakeMaterials(), x: 0, z: 0, i: 0, makePiece: () => new THREE.Group() });
+    const head = b.tool.r.children[1];
+    let low = Infinity;
+    for (let t = 5; t < 5.6; t += 0.01) {
+      b.update(t);
+      b.group.updateMatrixWorld(true);
+      const p = head.localToWorld(new THREE.Vector3(0, -0.08, 0.29)); // the face: the head's geometry sits 0.29 m out
+      if (p.y < low) low = p.y;
+    }
+    assert.ok(Math.abs(low - 1.0) < 0.06, `${job}: the hammer face at its lowest ${low.toFixed(2)} m (the work at ~1.0 m)`);
+  }
+});

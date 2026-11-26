@@ -22,28 +22,34 @@ const span = (u, a, b) => clamp01((u - a) / (b - a));
 const v3 = (x, y, z) => new THREE.Vector3(x, y, z);
 
 /**
- * Puts the hand of arm `side` ('r' | 'l') of rig P at `target` (root frame): the arm swings out to the side as much as the
- * target is off the shoulder's line, then the upper arm and forearm bend in the arm's plane (the elbow down and back, as a
- * real arm). Call after the body is posed (it reads the body's matrices).
+ * Puts the hand of arm `side` ('r' | 'l') of rig P at `target` (root frame), exactly when it is within reach: a two-bone
+ * arm, the elbow out to the side, down and back (as a real arm), the forearm folding forward about the elbow's own axis
+ * (the only way the rig's elbow bends). Call after the body is posed (it reads the body's matrices).
+ * (owner 2026-11-26: the first version swung the arm out and bent it in two steps; off to the side or above the shoulder
+ * the hand missed by 10 to 60 cm, so the hammers struck the air)
  */
 export function reach(P, side, target) {
   const S = P[side], sx = side === 'r' ? 1 : -1;
   P.root.updateWorldMatrix(true, true);
-  const t = P.body.worldToLocal(P.root.localToWorld(target.clone()));
-  const d = t.sub(v3(sx * 0.3, 0.8, 0));
-  const L = Math.min(d.length(), A + B - 1e-3);
-  const out = THREE.MathUtils.clamp(Math.asin(THREE.MathUtils.clamp(d.x / Math.max(L, 1e-6), -1, 1)), -0.9, 0.9);
-  const dy = d.y, dz = d.z;
-  const r = Math.hypot(dy, dz);
-  const th = Math.atan2(dz, -dy); // the target's angle forward from straight down, in the arm's plane
-  const Lp = Math.min(Math.max(r, 0.05), A + B - 1e-3);
-  const al = Math.acos(THREE.MathUtils.clamp((A * A + Lp * Lp - B * B) / (2 * A * Lp), -1, 1));
-  const ph1 = th - al; // the upper arm, the elbow below the line to the hand
-  const ez = A * Math.sin(ph1), ey = -A * Math.cos(ph1);
-  const ph2 = Math.atan2(Lp * Math.sin(th) - ez, -(-Lp * Math.cos(th) - ey));
-  S.g.rotation.set(-ph1, 0, out, 'XYZ');
-  S.elbow.rotation.x = -Math.max(0, ph2 - ph1);
-  void L;
+  const d = P.body.worldToLocal(P.root.localToWorld(target.clone())).sub(v3(sx * 0.3, 0.8, 0)); // shoulder to hand, body frame
+  const L = THREE.MathUtils.clamp(d.length(), 0.06, A + B - 1e-3);
+  const dh = d.lengthSq() > 1e-8 ? d.clone().normalize() : v3(0, -1, 0);
+  // the elbow's side: out, down and back, square to the line from the shoulder to the hand
+  const pole = v3(sx * 0.45, -1, -0.35);
+  const p = pole.sub(dh.clone().multiplyScalar(pole.dot(dh)));
+  if (p.lengthSq() < 1e-6) p.set(0, 0, -1);
+  p.normalize();
+  const al = Math.acos(THREE.MathUtils.clamp((A * A + L * L - B * B) / (2 * A * L), -1, 1));
+  const u = dh.clone().multiplyScalar(Math.cos(al)).addScaledVector(p, Math.sin(al)); // the upper arm
+  const f = dh.clone().multiplyScalar(L).addScaledVector(u, -A).normalize(); // the forearm
+  // the shoulder's frame: -y down the upper arm, z where the forearm folds to, x across
+  const y = u.clone().negate();
+  const z = f.clone().sub(u.clone().multiplyScalar(f.dot(u)));
+  if (z.lengthSq() < 1e-8) z.copy(dh.clone().cross(v3(1, 0, 0)).lengthSq() > 1e-6 ? v3(0, 0, 1).sub(u.clone().multiplyScalar(u.z)) : v3(0, 1, 0));
+  z.normalize();
+  const x = new THREE.Vector3().crossVectors(y, z);
+  S.g.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(x, y, z));
+  S.elbow.rotation.set(-Math.acos(THREE.MathUtils.clamp(u.dot(f), -1, 1)), 0, 0);
 }
 
 /** All joints straight, standing up, feet planted. */
@@ -55,6 +61,30 @@ export function restPose(P) {
   if (P.legs2) legIK(P, FEET);
 }
 const FEET = [[-0.11, 0.0], [0.12, -0.08]];
+
+const UP = v3(0, 1, 0);
+/** A tool's frame pointing along `d` (root frame): z along d, x level, y the side facing up. */
+export function toolFrame(d) {
+  const z = d.clone().normalize();
+  const x = new THREE.Vector3().crossVectors(UP, z);
+  if (x.lengthSq() < 1e-6) x.set(1, 0, 0);
+  x.normalize();
+  return { x, y: new THREE.Vector3().crossVectors(z, x), z };
+}
+/** Turns `tool` (held in the hand of arm `side`) so its axes are the frame `f` (root frame). Call after the arm is posed. */
+export function aim(P, side, tool, f) {
+  P.root.updateWorldMatrix(true, true);
+  const q = P.root.getWorldQuaternion(new THREE.Quaternion()).multiply(new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(f.x, f.y, f.z)));
+  tool.quaternion.copy(P[side].hand.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(q));
+}
+/** The hammer's head at `head` (root frame), its handle along `d` from the fist: the hand goes where that puts it. */
+function hammerAt(P, tool, head, d) {
+  const f = toolFrame(d);
+  reach(P, 'r', head.clone().addScaledVector(f.z, -0.29).addScaledVector(f.y, 0.08));
+  aim(P, 'r', tool, f);
+}
+const STRIKE_DIR = v3(0, -0.3, 1).normalize(), RAISED_DIR = v3(0.1, 0.75, -0.65).normalize();
+const swingDir = (up) => STRIKE_DIR.clone().lerp(RAISED_DIR, up).normalize();
 
 function lean(P, a, sway = 0) {
   P.body.rotation.set(a, 0, sway * 0.05);
@@ -213,8 +243,8 @@ function bench(M, group) {
 function handTool(kind, M) {
   const g = new THREE.Group();
   if (kind === 'hammer') {
-    mesh(cylGeo(0.018, 0.02, 0.34, 6).translate(0, -0.02, 0).rotateX(Math.PI / 2).translate(0, 0, 0.12), M.woodDark, g);
-    mesh(boxGeo(0.07, 0.07, 0.15).rotateY(Math.PI / 2).translate(0, 0, 0.28), M.iron, g);
+    mesh(cylGeo(0.018, 0.02, 0.34, 6).rotateX(Math.PI / 2).translate(0, 0, 0.13), M.woodDark, g);
+    mesh(boxGeo(0.07, 0.16, 0.07).translate(0, 0, 0.29), M.iron, g);
   } else if (kind === 'plane') {
     mesh(boxGeo(0.09, 0.07, 0.24).translate(0, -0.05, 0.02), M.wood, g);
     mesh(boxGeo(0.03, 0.06, 0.05).translate(0, 0.0, 0.0), M.woodDark, g);
@@ -230,7 +260,7 @@ function handTool(kind, M) {
 /** The trades' work at the bench: `work(P, k, tl)` poses the craftsman (k: time in the work, tl: the bench's things). */
 const TRADES = {
   blacksmith: {
-    make: (M) => sword(M), at: v3(-0.2, TOP + 0.03, BENCH_Z), rot: 0,
+    make: (M) => sword(M), at: v3(-0.2, TOP + 0.115, BENCH_Z), rot: 0,
     tools: { r: 'hammer', l: 'tongs' }, period: 0.62, sparks: true,
     extras(M, g) {
       // a small anvil on the bench and a brazier glowing at the side
@@ -241,12 +271,12 @@ const TRADES = {
     work(P, k, w) {
       // the hammer up behind the head, then down on the hot steel on the anvil; the tongs hold the blade's tang
       const ph = (k / w.period) % 1, up = ph < 0.62 ? ease(ph / 0.62) : 1 - ease((ph - 0.62) / 0.38);
-      const strikeAt = v3(0.12, TOP + 0.2, BENCH_Z), raised = v3(0.22, 1.62, 0.18);
+      // (owner 2026-11-26: the hammer's face comes down on the steel, the tongs reach the blade)
       lean(P, 0.18 + 0.1 * (1 - up), 0.3 * Math.sin(k * 0.7));
-      reach(P, 'r', strikeAt.clone().lerp(raised, up));
-      P.r.hand.rotation.set(-0.5 + 1.4 * up, 0, 0);
-      reach(P, 'l', v3(-0.38, TOP + 0.12, BENCH_Z - 0.06));
-      P.l.hand.rotation.set(0.2, 0.9, 0);
+      hammerAt(P, w.tool.r, v3(0.12, TOP + 0.13, BENCH_Z).lerp(v3(0.26, 1.75, 0.1), up), swingDir(up));
+      const lh = v3(-0.5, TOP + 0.26, BENCH_Z - 0.14), jaw = v3(-0.14, TOP + 0.12, BENCH_Z);
+      reach(P, 'l', lh);
+      aim(P, 'l', w.tool.l, toolFrame(jaw.sub(lh)));
       nod(P, 0.35);
       return { strike: ph > 0.98 || ph < 0.02 };
     },
@@ -352,8 +382,7 @@ const GENERIC = {
   work(P, k, w) {
     const ph = (k / w.period) % 1, up = ph < 0.65 ? ease(ph / 0.65) : 1 - ease((ph - 0.65) / 0.35);
     lean(P, 0.22, 0.3 * Math.sin(k * 0.8));
-    reach(P, 'r', v3(0.1, TOP + 0.22, BENCH_Z).lerp(v3(0.2, 1.35, 0.25), up));
-    P.r.hand.rotation.set(-0.4 + 1.0 * up, 0, 0);
+    hammerAt(P, w.tool.r, v3(0.14, TOP + 0.12, BENCH_Z).lerp(v3(0.24, 1.6, 0.15), up), swingDir(up));
     reach(P, 'l', v3(-0.2, TOP + 0.1, BENCH_Z));
     nod(P, 0.4);
     return {};
