@@ -1,8 +1,8 @@
 {
  "schemaVersion": 1,
  "seed": 3999547794,
- "day": 42,
- "date": "2026-11-26",
+ "day": 43,
+ "date": "2026-11-27",
  "subscriberCount": 3210,
  "peakPopulation": 3210,
  "countSource": "public",
@@ -16681,6 +16681,22 @@
    "startedDay": 25,
    "doneDay": 26,
    "daysTotal": 1
+  },
+  {
+   "id": "stables",
+   "tier": "commission",
+   "status": "construction",
+   "startedDay": 43,
+   "doneDay": null,
+   "daysTotal": 2
+  },
+  {
+   "id": "schoolhouse",
+   "tier": "commission",
+   "status": "construction",
+   "startedDay": 43,
+   "doneDay": null,
+   "daysTotal": 2
   }
  ],
  "unlockedTiers": [
@@ -16704,20 +16720,39 @@
   "mine",
   "honey"
  ],
- "pendingConstruction": [],
- "weather": "cloudy",
+ "pendingConstruction": [
+  {
+   "building": "stables",
+   "daysLeft": 2,
+   "daysTotal": 2
+  },
+  {
+   "building": "schoolhouse",
+   "daysLeft": 2,
+   "daysTotal": 2
+  }
+ ],
+ "weather": "fog",
  "events": [
   {
    "type": "weather",
-   "weather": "cloudy",
+   "weather": "fog",
    "season": "autumn"
   },
   {
-   "type": "spotlight",
-   "villager": 377,
-   "name": "mintyfrags",
-   "job": "beggar",
-   "activity": "raises a mug to every passer-by"
+   "type": "construction",
+   "building": "stables",
+   "label": "the Stables",
+   "progress": 0
+  },
+  {
+   "type": "construction",
+   "building": "schoolhouse",
+   "label": "the Schoolhouse",
+   "progress": 0
+  },
+  {
+   "type": "harvest"
   }
  ],
  "names": {
@@ -16806,7 +16841,7 @@
    "requestDay": 39,
    "complainDay": 22,
    "joinDay": 13,
-   "seenDay": 42
+   "seenDay": 43
   },
   "14": {
    "name": "MeepDoesVR",
@@ -18098,7 +18133,7 @@
    "day": 8,
    "job": "guard",
    "requestDay": 41,
-   "seenDay": 41
+   "seenDay": 43
   },
   "214": {
    "name": "Jonnymad1245",
@@ -20127,7 +20162,7 @@
    "day": 10,
    "job": "beekeeper",
    "requestDay": 26,
-   "seenDay": 40
+   "seenDay": 43
   },
   "513": {
    "name": "kingAlbertaTheFirst",
@@ -20911,7 +20946,7 @@
    "job": "fletcher",
    "requestDay": 22,
    "complainDay": 22,
-   "seenDay": 31
+   "seenDay": 43
   },
   "630": {
    "name": "LaAsianBagel",
@@ -20947,7 +20982,7 @@
    "job": "apprentice",
    "requestDay": 34,
    "complainDay": 42,
-   "seenDay": 42,
+   "seenDay": 43,
    "wants": "judge"
   },
   "635": {
@@ -21267,8 +21302,9 @@
    "name": "ClockTowerInteractive",
    "author": "UCeRC9nHVUVkVicYcECn95pg",
    "day": 12,
-   "job": "peasant",
-   "requestDay": 12
+   "job": "stonemason",
+   "requestDay": 43,
+   "seenDay": 43
   },
   "682": {
    "name": "JakeHasell",
@@ -21539,8 +21575,8 @@
    "author": "UCUV9DJGkCHRq8JZztLrJFWg",
    "day": 13,
    "job": "guard",
-   "requestDay": 41,
-   "seenDay": 41
+   "requestDay": 43,
+   "seenDay": 43
   },
   "724": {
    "name": "ZodiumPlayZ",
@@ -21861,7 +21897,7 @@
    "job": "beekeeper",
    "requestDay": 42,
    "complainDay": 32,
-   "seenDay": 42
+   "seenDay": 43
   },
   "772": {
    "name": "ItovBlackheart",
@@ -21920,7 +21956,7 @@
    "day": 14,
    "job": "blacksmith",
    "requestDay": 25,
-   "seenDay": 42
+   "seenDay": 43
   },
   "780": {
    "name": "AggressivePigeon",
@@ -21957,7 +21993,7 @@
    "job": "guard",
    "requestDay": 40,
    "complainDay": 36,
-   "seenDay": 42
+   "seenDay": 43
   },
   "785": {
    "name": "francisvicalegado439",
@@ -22545,7 +22581,7 @@
    "day": 17,
    "job": "hunter",
    "requestDay": 34,
-   "seenDay": 36
+   "seenDay": 43
   },
   "877": {
    "name": "nertano2518",
@@ -22735,7 +22771,7 @@
    "author": "UCU7Jwk9xQ5v5rl9uzNyPW6Q",
    "day": 17,
    "complainDay": 21,
-   "seenDay": 42
+   "seenDay": 43
   },
   "907": {
    "name": "arghyasreeroychowdhur…",
@@ -22799,7 +22835,7 @@
    "name": "KaweeWat",
    "author": "UCi4gxGF3ISBnpmeOLRy-tiQ",
    "day": 18,
-   "seenDay": 40
+   "seenDay": 43
   },
   "917": {
    "name": "stranger5809",
@@ -22931,9 +22967,9 @@
    "author": "UCliB9PmTC2i35qCYiVlRz3Q",
    "day": 20,
    "job": "merchant",
-   "requestDay": 42,
-   "complainDay": 42,
-   "seenDay": 42
+   "requestDay": 43,
+   "complainDay": 43,
+   "seenDay": 43
   },
   "937": {
    "name": "Terra_4",
@@ -23569,7 +23605,7 @@
    "day": 25,
    "job": "guard",
    "requestDay": 36,
-   "seenDay": 42
+   "seenDay": 43
   },
   "1035": {
    "name": "lucianmihai7040",
@@ -23802,7 +23838,7 @@
    "day": 28,
    "job": "guard",
    "requestDay": 39,
-   "seenDay": 42
+   "seenDay": 43
   },
   "1070": {
    "name": "HappyVictor_15",
@@ -25720,7 +25756,7 @@
   "UCA8jAvEhLo3dAcCdB4HL8-Q",
   "UCbW7zyECWsr5_4XyOf5ft4g"
  ],
- "commentsSeen": "2026-11-26T11:45:20Z",
+ "commentsSeen": "2026-11-27T11:12:11Z",
  "storyLog": {
   "royal": 12,
   "proclaim": 25,
@@ -25737,170 +25773,65 @@
   "brawl": 36,
   "pig": 37,
   "wolves": 38,
-  "guild": 42
+  "guild": 42,
+  "smugglers": 43
  },
  "story": {
-  "id": "guild",
-  "step": "contest",
-  "crafters": [
+  "id": "smugglers",
+  "step": "watch",
+  "guards": [
    {
-    "id": 779,
-    "name": "BaconGames.",
-    "job": "blacksmith",
-    "day": 14,
-    "joined": true
-   },
-   {
-    "id": 677,
-    "name": "happyboi3470",
-    "job": "baker",
-    "day": 12,
-    "joined": false
-   },
-   {
-    "id": 221,
-    "name": "ZippingZing",
-    "job": "tanner",
-    "day": 8,
-    "joined": false
-   },
-   {
-    "id": 387,
-    "name": "trevstrevs",
-    "job": "cobbler",
-    "day": 9,
-    "joined": false
-   }
-  ],
-  "finalists": [
-   779,
-   221
-  ],
-  "winner": 779,
-  "task": "something fit for the King",
-  "joined": 1,
-  "crowd": [
-   {
-    "id": 1174,
-    "name": "irateurcontentevenifu…",
-    "job": "blacksmith",
-    "day": 42
-   },
-   {
-    "id": 1175,
-    "name": "Josiiah",
-    "job": "tailor",
-    "day": 42
-   },
-   {
-    "id": 1170,
-    "name": "Dustbowl_fan",
-    "job": "baker",
-    "day": 41
-   },
-   {
-    "id": 1171,
-    "name": "BunklyS",
+    "id": 1163,
+    "name": "aaronortiz8415",
     "job": "guard",
-    "day": 41
-   },
-   {
-    "id": 1172,
-    "name": "creaturermv",
-    "job": "peasant",
-    "day": 41
-   },
-   {
-    "id": 1173,
-    "name": "judecruz2002",
-    "job": "guard",
-    "day": 41
-   },
-   {
-    "id": 1160,
-    "name": "AMARICAKITCAT",
-    "job": "blacksmith",
     "day": 40
    },
    {
-    "id": 1161,
-    "name": "Grow_in_faith_with_Ga…",
-    "job": "farmer",
-    "day": 40
+    "id": 1156,
+    "name": "Hello",
+    "job": "guard",
+    "day": 39
+   },
+   {
+    "id": 1157,
+    "name": "BozoB1L1",
+    "job": "guard",
+    "day": 39
+   },
+   {
+    "id": 1158,
+    "name": "CharlieRamsey",
+    "job": "guard",
+    "day": 39
    }
   ],
+  "sneezer": 2,
+  "cargo": "wheels of cheese nobody paid the tax on",
+  "smugglers": 4,
   "cast": [
    {
-    "id": 779,
-    "name": "BaconGames.",
-    "job": "blacksmith",
-    "day": 14
-   },
-   {
-    "id": 677,
-    "name": "happyboi3470",
-    "job": "baker",
-    "day": 12
-   },
-   {
-    "id": 221,
-    "name": "ZippingZing",
-    "job": "tanner",
-    "day": 8
-   },
-   {
-    "id": 387,
-    "name": "trevstrevs",
-    "job": "cobbler",
-    "day": 9
-   },
-   {
-    "id": 1174,
-    "name": "irateurcontentevenifu…",
-    "job": "blacksmith",
-    "day": 42
-   },
-   {
-    "id": 1175,
-    "name": "Josiiah",
-    "job": "tailor",
-    "day": 42
-   },
-   {
-    "id": 1170,
-    "name": "Dustbowl_fan",
-    "job": "baker",
-    "day": 41
-   },
-   {
-    "id": 1171,
-    "name": "BunklyS",
+    "id": 1163,
+    "name": "aaronortiz8415",
     "job": "guard",
-    "day": 41
-   },
-   {
-    "id": 1172,
-    "name": "creaturermv",
-    "job": "peasant",
-    "day": 41
-   },
-   {
-    "id": 1173,
-    "name": "judecruz2002",
-    "job": "guard",
-    "day": 41
-   },
-   {
-    "id": 1160,
-    "name": "AMARICAKITCAT",
-    "job": "blacksmith",
     "day": 40
    },
    {
-    "id": 1161,
-    "name": "Grow_in_faith_with_Ga…",
-    "job": "farmer",
-    "day": 40
+    "id": 1156,
+    "name": "Hello",
+    "job": "guard",
+    "day": 39
+   },
+   {
+    "id": 1157,
+    "name": "BozoB1L1",
+    "job": "guard",
+    "day": 39
+   },
+   {
+    "id": 1158,
+    "name": "CharlieRamsey",
+    "job": "guard",
+    "day": 39
    }
   ]
  },
@@ -26005,7 +25936,68 @@
   "1126": 36,
   "1158": 39
  },
- "storyArc": null,
+ "storyArc": {
+  "id": "smugglers",
+  "step": "chase",
+  "day": 44,
+  "data": {
+   "guards": [
+    {
+     "id": 1163,
+     "name": "aaronortiz8415",
+     "job": "guard",
+     "day": 40
+    },
+    {
+     "id": 1156,
+     "name": "Hello",
+     "job": "guard",
+     "day": 39
+    },
+    {
+     "id": 1157,
+     "name": "BozoB1L1",
+     "job": "guard",
+     "day": 39
+    },
+    {
+     "id": 1158,
+     "name": "CharlieRamsey",
+     "job": "guard",
+     "day": 39
+    }
+   ],
+   "sneezer": 2,
+   "cargo": "wheels of cheese nobody paid the tax on",
+   "smugglers": 4,
+   "cast": [
+    {
+     "id": 1163,
+     "name": "aaronortiz8415",
+     "job": "guard",
+     "day": 40
+    },
+    {
+     "id": 1156,
+     "name": "Hello",
+     "job": "guard",
+     "day": 39
+    },
+    {
+     "id": 1157,
+     "name": "BozoB1L1",
+     "job": "guard",
+     "day": 39
+    },
+    {
+     "id": 1158,
+     "name": "CharlieRamsey",
+     "job": "guard",
+     "day": 39
+    }
+   ]
+  }
+ },
  "sceneLog": {
   "tavern": 41,
   "blacksmith:bellows": 19,
@@ -26034,12 +26026,12 @@
   "innkeeper:inside": 16,
   "ambient:laundry": 42,
   "crier": 20,
-  "guard:walls": 33,
+  "guard:walls": 43,
   "farmer:hoe": 22,
   "stonemason:block": 25,
   "ambient:wheat": 37,
   "open:story": 41,
-  "open:building": 28,
+  "open:building": 43,
   "guard:sparring": 31,
   "open:caravan": 42,
   "physicist:ramp": 33,
@@ -26063,9 +26055,9 @@
   "tavern": false,
   "church": false,
   "variants": {},
-  "ambient": "laundry",
+  "ambient": "patrol",
   "pov": null,
-  "opening": "caravan"
+  "opening": "building"
  },
  "wall2": {
   "day": 8,
@@ -26205,14 +26197,6 @@
  "nextDense": 613,
  "buildQueue": [
   {
-   "id": "stables",
-   "tier": "commission"
-  },
-  {
-   "id": "schoolhouse",
-   "tier": "commission"
-  },
-  {
    "id": "observatory",
    "tier": "commission"
   },
@@ -26337,7 +26321,7 @@
    ]
   },
   "UCRn79g9kHNpn1avTlvMH2vA": {
-   "gold": 137,
+   "gold": 138,
    "videos": [
     "YQjmBQNZlo4",
     "2mydn7mgvjU",
@@ -26376,7 +26360,8 @@
     "TMV-kBRujPU",
     "-U-hJr5zqBw",
     "NZQTLeTjjQ8",
-    "LK-yAAoi0hE"
+    "LK-yAAoi0hE",
+    "WbF_eqDHJAc"
    ]
   },
   "UCuiY1WK3FRyH4hYZjGLXPWw": {
@@ -27833,7 +27818,7 @@
    ]
   },
   "UColA4TmDCm9N0HFy3vjmyTQ": {
-   "gold": 129,
+   "gold": 130,
    "videos": [
     "9M-MCnG8hzM",
     "bb3qhk45GRw",
@@ -27864,7 +27849,8 @@
     "cIb4pJJ6Sws",
     "aRTlvNsAvxE",
     "IIILdr8bp_Q",
-    "NZQTLeTjjQ8"
+    "NZQTLeTjjQ8",
+    "WbF_eqDHJAc"
    ]
   },
   "UCg3D1xGOcC-lRKGhi1dOzig": {
@@ -30176,7 +30162,7 @@
    ]
   },
   "UCmyKSIvqeOXTJGJ6EHFgEnw": {
-   "gold": 114,
+   "gold": 115,
    "videos": [
     "bb3qhk45GRw",
     "aUC-A_Qbiyg",
@@ -30192,7 +30178,8 @@
     "_6nFFJG87z8",
     "WMM2OtQCeRg",
     "XrDggcy9l3g",
-    "9pCiWhSU8IY"
+    "9pCiWhSU8IY",
+    "WbF_eqDHJAc"
    ]
   },
   "UCTw6SVPdK0r1GsMdT2a1WFQ": {
@@ -31054,7 +31041,7 @@
    ]
   },
   "UCB21LNZTJRL6mr_5tV72pDQ": {
-   "gold": 107,
+   "gold": 108,
    "videos": [
     "ZgXYT338-34",
     "aUC-A_Qbiyg",
@@ -31063,7 +31050,8 @@
     "e2wY-vyiprw",
     "gpNGqcJ2PPU",
     "u1jnfQMFNnw",
-    "WMM2OtQCeRg"
+    "WMM2OtQCeRg",
+    "WbF_eqDHJAc"
    ]
   },
   "UCoH8-RRa9r8rOzqtKxIp7wg": {
@@ -31095,7 +31083,7 @@
    ]
   },
   "UCRFsLPOtf3_IWTQ5Xs0iJqg": {
-   "gold": 125,
+   "gold": 126,
    "videos": [
     "ZgXYT338-34",
     "EV7pTtaoLTQ",
@@ -31122,7 +31110,8 @@
     "9pCiWhSU8IY",
     "TMV-kBRujPU",
     "NZQTLeTjjQ8",
-    "LK-yAAoi0hE"
+    "LK-yAAoi0hE",
+    "WbF_eqDHJAc"
    ]
   },
   "UCTCNl84b5HHBvtADR5d4QWg": {
@@ -31468,10 +31457,11 @@
    ]
   },
   "UCeRC9nHVUVkVicYcECn95pg": {
-   "gold": 101,
+   "gold": 102,
    "videos": [
     "EV7pTtaoLTQ",
-    "sSdscsRUJZQ"
+    "sSdscsRUJZQ",
+    "WbF_eqDHJAc"
    ]
   },
   "UC0f7co1siULsR2YAW7KxiwQ": {
@@ -31760,7 +31750,7 @@
    ]
   },
   "UCUV9DJGkCHRq8JZztLrJFWg": {
-   "gold": 111,
+   "gold": 112,
    "videos": [
     "ZgXYT338-34",
     "txiwb0T5trM",
@@ -31773,7 +31763,8 @@
     "UHie2ETreBM",
     "aRTlvNsAvxE",
     "TMV-kBRujPU",
-    "NZQTLeTjjQ8"
+    "NZQTLeTjjQ8",
+    "WbF_eqDHJAc"
    ]
   },
   "UCAs4aOl_11-GwAbHtG1_iZA": {
@@ -32096,7 +32087,7 @@
    ]
   },
   "UCdUIcPmHB9V7j2IIc8gohmw": {
-   "gold": 115,
+   "gold": 116,
    "videos": [
     "24ZYqPAe0Xs",
     "cbjoXa7aO4I",
@@ -32113,7 +32104,8 @@
     "9pCiWhSU8IY",
     "NZQTLeTjjQ8",
     "-U-hJr5zqBw",
-    "LK-yAAoi0hE"
+    "LK-yAAoi0hE",
+    "WbF_eqDHJAc"
    ]
   },
   "UC9fXa6sqEC8boOyr85QAGQg": {
@@ -32168,7 +32160,7 @@
    ]
   },
   "UCubm9qgcqumatAdfmBPpgSQ": {
-   "gold": 110,
+   "gold": 111,
    "videos": [
     "24ZYqPAe0Xs",
     "uyz5dLw9S1g",
@@ -32180,7 +32172,8 @@
     "3hPANVqP0ug",
     "XrDggcy9l3g",
     "IIILdr8bp_Q",
-    "LK-yAAoi0hE"
+    "LK-yAAoi0hE",
+    "WbF_eqDHJAc"
    ]
   },
   "UCH0E2sxGVshTJiJxp2xlqjw": {
@@ -32221,7 +32214,7 @@
    ]
   },
   "UCyEc_kheCCJWHSSmZpnh6vg": {
-   "gold": 123,
+   "gold": 124,
    "videos": [
     "24ZYqPAe0Xs",
     "cbjoXa7aO4I",
@@ -32246,7 +32239,8 @@
     "aRTlvNsAvxE",
     "IIILdr8bp_Q",
     "TMV-kBRujPU",
-    "LK-yAAoi0hE"
+    "LK-yAAoi0hE",
+    "WbF_eqDHJAc"
    ]
   },
   "UCYI6JZ7q0h2kqnuMNe1EbMg": {
@@ -32889,7 +32883,7 @@
    ]
   },
   "UCKyh7wACyRIOT9jAJZbteeQ": {
-   "gold": 115,
+   "gold": 116,
    "videos": [
     "e2wY-vyiprw",
     "FTeW0KmsV1c",
@@ -32906,7 +32900,8 @@
     "3hPANVqP0ug",
     "XrDggcy9l3g",
     "UHie2ETreBM",
-    "cIb4pJJ6Sws"
+    "cIb4pJJ6Sws",
+    "WbF_eqDHJAc"
    ]
   },
   "UCi8E8Fn-KCmrJaHpO3i-M1g": {
@@ -33111,7 +33106,7 @@
    ]
   },
   "UCU7Jwk9xQ5v5rl9uzNyPW6Q": {
-   "gold": 120,
+   "gold": 121,
    "videos": [
     "FTeW0KmsV1c",
     "tFB9-gbOLu8",
@@ -33133,7 +33128,8 @@
     "UHie2ETreBM",
     "aRTlvNsAvxE",
     "LK-yAAoi0hE",
-    "-U-hJr5zqBw"
+    "-U-hJr5zqBw",
+    "WbF_eqDHJAc"
    ]
   },
   "UCRqIO7rabYejj6PZhSbSAYw": {
@@ -33203,7 +33199,7 @@
    ]
   },
   "UCi4gxGF3ISBnpmeOLRy-tiQ": {
-   "gold": 113,
+   "gold": 114,
    "videos": [
     "tFB9-gbOLu8",
     "3oGS4YzZijE",
@@ -33218,7 +33214,8 @@
     "XrDggcy9l3g",
     "aRTlvNsAvxE",
     "9pCiWhSU8IY",
-    "TMV-kBRujPU"
+    "TMV-kBRujPU",
+    "WbF_eqDHJAc"
    ]
   },
   "UC6nI7SShyum2SXwKq__uEoA": {
@@ -33362,7 +33359,7 @@
    ]
   },
   "UCliB9PmTC2i35qCYiVlRz3Q": {
-   "gold": 125,
+   "gold": 126,
    "videos": [
     "mIhumnsE0r4",
     "FTeW0KmsV1c",
@@ -33389,7 +33386,8 @@
     "TMV-kBRujPU",
     "NZQTLeTjjQ8",
     "-U-hJr5zqBw",
-    "LK-yAAoi0hE"
+    "LK-yAAoi0hE",
+    "WbF_eqDHJAc"
    ]
   },
   "UCxaWAaVHp0zfphDEcJagAkw": {
@@ -34076,7 +34074,7 @@
    ]
   },
   "UCryynfKquqfvDXk3z1K1BiA": {
-   "gold": 106,
+   "gold": 107,
    "videos": [
     "uyz5dLw9S1g",
     "fdgTAT0m9J8",
@@ -34084,7 +34082,8 @@
     "3hPANVqP0ug",
     "UHie2ETreBM",
     "cIb4pJJ6Sws",
-    "NZQTLeTjjQ8"
+    "NZQTLeTjjQ8",
+    "WbF_eqDHJAc"
    ]
   },
   "UCjTpxx14oqUv4q5V62yJ6Wg": {
@@ -34327,7 +34326,7 @@
    ]
   },
   "UCUaHGPnRbl4toE6jWUVLqeQ": {
-   "gold": 117,
+   "gold": 118,
    "videos": [
     "Z3ifr-C4aRA",
     "A8Wod2pCAI4",
@@ -34346,7 +34345,8 @@
     "TMV-kBRujPU",
     "-U-hJr5zqBw",
     "NZQTLeTjjQ8",
-    "LK-yAAoi0hE"
+    "LK-yAAoi0hE",
+    "WbF_eqDHJAc"
    ]
   },
   "UCxJRx-5IcLKm-2DB9JV25lA": {
