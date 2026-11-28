@@ -1,10 +1,10 @@
 {
  "schemaVersion": 1,
  "seed": 3999547794,
- "day": 43,
- "date": "2026-11-27",
- "subscriberCount": 3210,
- "peakPopulation": 3210,
+ "day": 44,
+ "date": "2026-11-28",
+ "subscriberCount": 3220,
+ "peakPopulation": 3220,
  "countSource": "public",
  "houses": [
   {
@@ -9235,7 +9235,8 @@
    "occupants": [
     3187,
     3191,
-    3202
+    3202,
+    3211
    ],
    "fine": true
   },
@@ -9281,7 +9282,25 @@
    "builtDay": 40,
    "occupants": [
     3208,
-    3209
+    3209,
+    3210,
+    3212,
+    3213,
+    3214,
+    3215,
+    3216
+   ]
+  },
+  {
+   "id": 593,
+   "plot": 200613,
+   "capacity": 8,
+   "status": "occupied",
+   "builtDay": 44,
+   "occupants": [
+    3217,
+    3218,
+    3219
    ]
   }
  ],
@@ -16423,6 +16442,18 @@
    "rot": 0.11161203859754752,
    "facing": 1,
    "road": "east"
+  },
+  {
+   "id": 200613,
+   "x": 519.6812538921422,
+   "z": 171.68050108791357,
+   "y": 3.2304269469707245,
+   "yMin": 2.977489902790008,
+   "hw": 3.4229926628991962,
+   "hd": 10.406984947621822,
+   "rot": 2.218130507046687,
+   "facing": -1,
+   "road": "lane4"
   }
  ],
  "buildings": [
@@ -16723,12 +16754,12 @@
  "pendingConstruction": [
   {
    "building": "stables",
-   "daysLeft": 2,
+   "daysLeft": 1,
    "daysTotal": 2
   },
   {
    "building": "schoolhouse",
-   "daysLeft": 2,
+   "daysLeft": 1,
    "daysTotal": 2
   }
  ],
@@ -16743,13 +16774,13 @@
    "type": "construction",
    "building": "stables",
    "label": "the Stables",
-   "progress": 0
+   "progress": 0.5
   },
   {
    "type": "construction",
    "building": "schoolhouse",
    "label": "the Schoolhouse",
-   "progress": 0
+   "progress": 0.5
   },
   {
    "type": "harvest"
@@ -16841,7 +16872,7 @@
    "requestDay": 39,
    "complainDay": 22,
    "joinDay": 13,
-   "seenDay": 43
+   "seenDay": 44
   },
   "14": {
    "name": "MeepDoesVR",
@@ -16862,9 +16893,9 @@
    "author": "UC2C3QaTaPxrVuffUFhfZb8Q",
    "day": 3,
    "job": "guard",
-   "requestDay": 41,
+   "requestDay": 44,
    "complainDay": 24,
-   "seenDay": 41
+   "seenDay": 44
   },
   "17": {
    "name": "AMERICANCITIZEN69",
@@ -17469,9 +17500,9 @@
    "day": 7,
    "job": "peasant",
    "requestDay": 40,
-   "rebelDay": 42,
+   "rebelDay": 44,
    "pilloryDay": 35,
-   "seenDay": 42
+   "seenDay": 44
   },
   "114": {
    "name": "theoneheavymain4123",
@@ -18133,7 +18164,7 @@
    "day": 8,
    "job": "guard",
    "requestDay": 41,
-   "seenDay": 43
+   "seenDay": 44
   },
   "214": {
    "name": "Jonnymad1245",
@@ -20039,8 +20070,9 @@
    "author": "UCrcmLt4WXQAxTxuIoHFgfGg",
    "day": 9,
    "job": "guard",
-   "requestDay": 29,
-   "complainDay": 19
+   "requestDay": 44,
+   "complainDay": 19,
+   "seenDay": 44
   },
   "496": {
    "name": "EpikzGamerzPlayz-offi…",
@@ -20980,9 +21012,9 @@
    "author": "UCRFsLPOtf3_IWTQ5Xs0iJqg",
    "day": 12,
    "job": "apprentice",
-   "requestDay": 34,
-   "complainDay": 42,
-   "seenDay": 43,
+   "requestDay": 44,
+   "complainDay": 44,
+   "seenDay": 44,
    "wants": "judge"
   },
   "635": {
@@ -21897,7 +21929,7 @@
    "job": "beekeeper",
    "requestDay": 42,
    "complainDay": 32,
-   "seenDay": 43
+   "seenDay": 44
   },
   "772": {
    "name": "ItovBlackheart",
@@ -22481,7 +22513,8 @@
   "860": {
    "name": "kielston",
    "author": "UCxWZQZDPHEtNvy7ojdZ3QNg",
-   "day": 16
+   "day": 16,
+   "seenDay": 44
   },
   "861": {
    "name": "redcloset123",
@@ -22835,7 +22868,7 @@
    "name": "KaweeWat",
    "author": "UCi4gxGF3ISBnpmeOLRy-tiQ",
    "day": 18,
-   "seenDay": 43
+   "seenDay": 44
   },
   "917": {
    "name": "stranger5809",
@@ -22906,7 +22939,7 @@
    "day": 19,
    "job": "butcher",
    "requestDay": 35,
-   "seenDay": 42
+   "seenDay": 44
   },
   "928": {
    "name": "CrisdanEarlPilares",
@@ -22939,8 +22972,9 @@
    "author": "UCD5MU7bbFp1d2VCuHfWw-xw",
    "day": 20,
    "job": "beggar",
-   "requestDay": 41,
-   "seenDay": 41
+   "requestDay": 44,
+   "seenDay": 44,
+   "complainDay": 44
   },
   "933": {
    "name": "Zucke18",
@@ -22967,9 +23001,9 @@
    "author": "UCliB9PmTC2i35qCYiVlRz3Q",
    "day": 20,
    "job": "merchant",
-   "requestDay": 43,
-   "complainDay": 43,
-   "seenDay": 43
+   "requestDay": 44,
+   "complainDay": 44,
+   "seenDay": 44
   },
   "937": {
    "name": "Terra_4",
@@ -23838,7 +23872,7 @@
    "day": 28,
    "job": "guard",
    "requestDay": 39,
-   "seenDay": 43
+   "seenDay": 44
   },
   "1070": {
    "name": "HappyVictor_15",
@@ -24167,7 +24201,7 @@
   "1118": {
    "name": "cozyleopard",
    "author": "UCN95taZCuF0X8vU6tjL26YQ",
-   "seenDay": 38,
+   "seenDay": 44,
    "day": 35,
    "job": "blacksmith",
    "requestDay": 36,
@@ -24176,10 +24210,10 @@
   "1119": {
    "name": "major_misfire",
    "author": "UCXrNdWsCvsq5MzoBcIFtNaA",
-   "seenDay": 36,
+   "seenDay": 44,
    "day": 35,
-   "job": "guard",
-   "requestDay": 35
+   "job": "beggar",
+   "requestDay": 44
   },
   "1120": {
    "name": "Catcop59",
@@ -24290,10 +24324,10 @@
   "1135": {
    "name": "AbdelmoughitAkli",
    "author": "UCFIl2IGDFyeGqvKORLFFL8g",
-   "seenDay": 42,
+   "seenDay": 44,
    "day": 37,
    "job": "guard",
-   "requestDay": 39,
+   "requestDay": 44,
    "brawlDay": 42
   },
   "1136": {
@@ -24575,6 +24609,12 @@
    "author": "UCbW7zyECWsr5_4XyOf5ft4g",
    "seenDay": 42,
    "day": 42
+  },
+  "1176": {
+   "name": "AidenAngier",
+   "author": "UCCEvSUa6GvyQN7rBs3TbTdA",
+   "seenDay": 44,
+   "day": 44
   }
  },
  "nameQueue": [],
@@ -25754,9 +25794,10 @@
   "UCf8JIbCrW0u7umJLMQWEcVg",
   "UCFLjllNTSZ22L_cf8w8mEdw",
   "UCA8jAvEhLo3dAcCdB4HL8-Q",
-  "UCbW7zyECWsr5_4XyOf5ft4g"
+  "UCbW7zyECWsr5_4XyOf5ft4g",
+  "UCCEvSUa6GvyQN7rBs3TbTdA"
  ],
- "commentsSeen": "2026-11-27T11:12:11Z",
+ "commentsSeen": "2026-11-28T09:22:31Z",
  "storyLog": {
   "royal": 12,
   "proclaim": 25,
@@ -25774,11 +25815,11 @@
   "pig": 37,
   "wolves": 38,
   "guild": 42,
-  "smugglers": 43
+  "smugglers": 44
  },
  "story": {
   "id": "smugglers",
-  "step": "watch",
+  "step": "chase",
   "guards": [
    {
     "id": 1163,
@@ -25832,6 +25873,106 @@
     "name": "CharlieRamsey",
     "job": "guard",
     "day": 39
+   },
+   {
+    "id": 1128,
+    "name": "KengTucky",
+    "job": "fisherman",
+    "day": 36
+   },
+   {
+    "id": 1048,
+    "name": "shannonneo409",
+    "job": "fisherman",
+    "day": 25
+   },
+   {
+    "id": 1176,
+    "name": "AidenAngier",
+    "job": "fisherman",
+    "day": 44
+   },
+   {
+    "id": 1174,
+    "name": "irateurcontentevenifu…",
+    "job": "blacksmith",
+    "day": 42
+   },
+   {
+    "id": 1175,
+    "name": "Josiiah",
+    "job": "tailor",
+    "day": 42
+   },
+   {
+    "id": 1170,
+    "name": "Dustbowl_fan",
+    "job": "baker",
+    "day": 41
+   },
+   {
+    "id": 1171,
+    "name": "BunklyS",
+    "job": "guard",
+    "day": 41
+   },
+   {
+    "id": 1172,
+    "name": "creaturermv",
+    "job": "peasant",
+    "day": 41
+   }
+  ],
+  "nets": [
+   {
+    "id": 1128,
+    "name": "KengTucky",
+    "job": "fisherman",
+    "day": 36
+   },
+   {
+    "id": 1048,
+    "name": "shannonneo409",
+    "job": "fisherman",
+    "day": 25
+   }
+  ],
+  "crowd": [
+   {
+    "id": 1176,
+    "name": "AidenAngier",
+    "job": "fisherman",
+    "day": 44
+   },
+   {
+    "id": 1174,
+    "name": "irateurcontentevenifu…",
+    "job": "blacksmith",
+    "day": 42
+   },
+   {
+    "id": 1175,
+    "name": "Josiiah",
+    "job": "tailor",
+    "day": 42
+   },
+   {
+    "id": 1170,
+    "name": "Dustbowl_fan",
+    "job": "baker",
+    "day": 41
+   },
+   {
+    "id": 1171,
+    "name": "BunklyS",
+    "job": "guard",
+    "day": 41
+   },
+   {
+    "id": 1172,
+    "name": "creaturermv",
+    "job": "peasant",
+    "day": 41
    }
   ]
  },
@@ -25936,68 +26077,7 @@
   "1126": 36,
   "1158": 39
  },
- "storyArc": {
-  "id": "smugglers",
-  "step": "chase",
-  "day": 44,
-  "data": {
-   "guards": [
-    {
-     "id": 1163,
-     "name": "aaronortiz8415",
-     "job": "guard",
-     "day": 40
-    },
-    {
-     "id": 1156,
-     "name": "Hello",
-     "job": "guard",
-     "day": 39
-    },
-    {
-     "id": 1157,
-     "name": "BozoB1L1",
-     "job": "guard",
-     "day": 39
-    },
-    {
-     "id": 1158,
-     "name": "CharlieRamsey",
-     "job": "guard",
-     "day": 39
-    }
-   ],
-   "sneezer": 2,
-   "cargo": "wheels of cheese nobody paid the tax on",
-   "smugglers": 4,
-   "cast": [
-    {
-     "id": 1163,
-     "name": "aaronortiz8415",
-     "job": "guard",
-     "day": 40
-    },
-    {
-     "id": 1156,
-     "name": "Hello",
-     "job": "guard",
-     "day": 39
-    },
-    {
-     "id": 1157,
-     "name": "BozoB1L1",
-     "job": "guard",
-     "day": 39
-    },
-    {
-     "id": 1158,
-     "name": "CharlieRamsey",
-     "job": "guard",
-     "day": 39
-    }
-   ]
-  }
- },
+ "storyArc": null,
  "sceneLog": {
   "tavern": 41,
   "blacksmith:bellows": 19,
@@ -26029,11 +26109,11 @@
   "guard:walls": 43,
   "farmer:hoe": 22,
   "stonemason:block": 25,
-  "ambient:wheat": 37,
+  "ambient:wheat": 44,
   "open:story": 41,
   "open:building": 43,
   "guard:sparring": 31,
-  "open:caravan": 42,
+  "open:caravan": 44,
   "physicist:ramp": 33,
   "physician:herbs": 33,
   "open:villager": 33,
@@ -26055,9 +26135,9 @@
   "tavern": false,
   "church": false,
   "variants": {},
-  "ambient": "patrol",
+  "ambient": "wheat",
   "pov": null,
-  "opening": "building"
+  "opening": "caravan"
  },
  "wall2": {
   "day": 8,
@@ -26194,7 +26274,7 @@
  },
  "nextPlot": 195,
  "plotsV": 2,
- "nextDense": 613,
+ "nextDense": 614,
  "buildQueue": [
   {
    "id": "observatory",
@@ -26321,7 +26401,7 @@
    ]
   },
   "UCRn79g9kHNpn1avTlvMH2vA": {
-   "gold": 138,
+   "gold": 139,
    "videos": [
     "YQjmBQNZlo4",
     "2mydn7mgvjU",
@@ -26361,7 +26441,8 @@
     "-U-hJr5zqBw",
     "NZQTLeTjjQ8",
     "LK-yAAoi0hE",
-    "WbF_eqDHJAc"
+    "WbF_eqDHJAc",
+    "yR4-ODVViWQ"
    ]
   },
   "UCuiY1WK3FRyH4hYZjGLXPWw": {
@@ -26381,7 +26462,7 @@
    ]
   },
   "UC2C3QaTaPxrVuffUFhfZb8Q": {
-   "gold": 111,
+   "gold": 112,
    "videos": [
     "YQjmBQNZlo4",
     "2mydn7mgvjU",
@@ -26394,7 +26475,8 @@
     "uyz5dLw9S1g",
     "rKVick4cw1g",
     "9pCiWhSU8IY",
-    "NZQTLeTjjQ8"
+    "NZQTLeTjjQ8",
+    "yR4-ODVViWQ"
    ]
   },
   "UCQlqnASbgGGYrcXHQAf3Kaw": {
@@ -27064,7 +27146,7 @@
    ]
   },
   "UCzY-N6EGhuXG_Qt0gS3HZeg": {
-   "gold": 126,
+   "gold": 127,
    "videos": [
     "pE-BAt0TLR4",
     "aUlKLkUDX88",
@@ -27092,7 +27174,8 @@
     "TMV-kBRujPU",
     "-U-hJr5zqBw",
     "NZQTLeTjjQ8",
-    "LK-yAAoi0hE"
+    "LK-yAAoi0hE",
+    "yR4-ODVViWQ"
    ]
   },
   "UCjxduNkhDjrSjir2Wn98TJA": {
@@ -27818,7 +27901,7 @@
    ]
   },
   "UColA4TmDCm9N0HFy3vjmyTQ": {
-   "gold": 130,
+   "gold": 131,
    "videos": [
     "9M-MCnG8hzM",
     "bb3qhk45GRw",
@@ -27850,7 +27933,8 @@
     "aRTlvNsAvxE",
     "IIILdr8bp_Q",
     "NZQTLeTjjQ8",
-    "WbF_eqDHJAc"
+    "WbF_eqDHJAc",
+    "yR4-ODVViWQ"
    ]
   },
   "UCg3D1xGOcC-lRKGhi1dOzig": {
@@ -30016,7 +30100,7 @@
    ]
   },
   "UCrcmLt4WXQAxTxuIoHFgfGg": {
-   "gold": 108,
+   "gold": 109,
    "videos": [
     "bb3qhk45GRw",
     "ZgXYT338-34",
@@ -30026,7 +30110,8 @@
     "LnoMyF-qwM4",
     "uyz5dLw9S1g",
     "Z3ifr-C4aRA",
-    "sHV1mIDYhYc"
+    "sHV1mIDYhYc",
+    "yR4-ODVViWQ"
    ]
   },
   "UCk6kATXNsJLX8lZq8ITD6Hg": {
@@ -31083,7 +31168,7 @@
    ]
   },
   "UCRFsLPOtf3_IWTQ5Xs0iJqg": {
-   "gold": 126,
+   "gold": 127,
    "videos": [
     "ZgXYT338-34",
     "EV7pTtaoLTQ",
@@ -31111,7 +31196,8 @@
     "TMV-kBRujPU",
     "NZQTLeTjjQ8",
     "LK-yAAoi0hE",
-    "WbF_eqDHJAc"
+    "WbF_eqDHJAc",
+    "yR4-ODVViWQ"
    ]
   },
   "UCTCNl84b5HHBvtADR5d4QWg": {
@@ -32087,7 +32173,7 @@
    ]
   },
   "UCdUIcPmHB9V7j2IIc8gohmw": {
-   "gold": 116,
+   "gold": 117,
    "videos": [
     "24ZYqPAe0Xs",
     "cbjoXa7aO4I",
@@ -32105,7 +32191,8 @@
     "NZQTLeTjjQ8",
     "-U-hJr5zqBw",
     "LK-yAAoi0hE",
-    "WbF_eqDHJAc"
+    "WbF_eqDHJAc",
+    "yR4-ODVViWQ"
    ]
   },
   "UC9fXa6sqEC8boOyr85QAGQg": {
@@ -32777,9 +32864,10 @@
    ]
   },
   "UCxWZQZDPHEtNvy7ojdZ3QNg": {
-   "gold": 100,
+   "gold": 101,
    "videos": [
-    "24ZYqPAe0Xs"
+    "24ZYqPAe0Xs",
+    "NZQTLeTjjQ8"
    ]
   },
   "UCvk6hmDzEgSxU-JshuKn1AQ": {
@@ -33199,7 +33287,7 @@
    ]
   },
   "UCi4gxGF3ISBnpmeOLRy-tiQ": {
-   "gold": 114,
+   "gold": 115,
    "videos": [
     "tFB9-gbOLu8",
     "3oGS4YzZijE",
@@ -33215,7 +33303,8 @@
     "aRTlvNsAvxE",
     "9pCiWhSU8IY",
     "TMV-kBRujPU",
-    "WbF_eqDHJAc"
+    "WbF_eqDHJAc",
+    "yR4-ODVViWQ"
    ]
   },
   "UC6nI7SShyum2SXwKq__uEoA": {
@@ -33284,7 +33373,7 @@
    ]
   },
   "UCVPx1LGlXgFO-61as1pXljQ": {
-   "gold": 111,
+   "gold": 112,
    "videos": [
     "3oGS4YzZijE",
     "mIhumnsE0r4",
@@ -33297,7 +33386,8 @@
     "rKVick4cw1g",
     "3hPANVqP0ug",
     "UHie2ETreBM",
-    "-U-hJr5zqBw"
+    "-U-hJr5zqBw",
+    "WbF_eqDHJAc"
    ]
   },
   "UCaJt_M5UzYM-5dxHdE0uSEQ": {
@@ -33327,7 +33417,7 @@
    ]
   },
   "UCD5MU7bbFp1d2VCuHfWw-xw": {
-   "gold": 106,
+   "gold": 107,
    "videos": [
     "mIhumnsE0r4",
     "gpNGqcJ2PPU",
@@ -33335,7 +33425,8 @@
     "uyz5dLw9S1g",
     "_6nFFJG87z8",
     "TMV-kBRujPU",
-    "NZQTLeTjjQ8"
+    "NZQTLeTjjQ8",
+    "yR4-ODVViWQ"
    ]
   },
   "UCFToNgB3Qk99tXrP_Ez5ypg": {
@@ -33359,7 +33450,7 @@
    ]
   },
   "UCliB9PmTC2i35qCYiVlRz3Q": {
-   "gold": 126,
+   "gold": 127,
    "videos": [
     "mIhumnsE0r4",
     "FTeW0KmsV1c",
@@ -33387,7 +33478,8 @@
     "NZQTLeTjjQ8",
     "-U-hJr5zqBw",
     "LK-yAAoi0hE",
-    "WbF_eqDHJAc"
+    "WbF_eqDHJAc",
+    "yR4-ODVViWQ"
    ]
   },
   "UCxaWAaVHp0zfphDEcJagAkw": {
@@ -34326,7 +34418,7 @@
    ]
   },
   "UCUaHGPnRbl4toE6jWUVLqeQ": {
-   "gold": 118,
+   "gold": 119,
    "videos": [
     "Z3ifr-C4aRA",
     "A8Wod2pCAI4",
@@ -34346,7 +34438,8 @@
     "-U-hJr5zqBw",
     "NZQTLeTjjQ8",
     "LK-yAAoi0hE",
-    "WbF_eqDHJAc"
+    "WbF_eqDHJAc",
+    "yR4-ODVViWQ"
    ]
   },
   "UCxJRx-5IcLKm-2DB9JV25lA": {
@@ -34662,18 +34755,20 @@
    ]
   },
   "UCN95taZCuF0X8vU6tjL26YQ": {
+   "gold": 103,
+   "videos": [
+    "UHie2ETreBM",
+    "cIb4pJJ6Sws",
+    "9pCiWhSU8IY",
+    "yR4-ODVViWQ"
+   ]
+  },
+  "UCXrNdWsCvsq5MzoBcIFtNaA": {
    "gold": 102,
    "videos": [
     "UHie2ETreBM",
     "cIb4pJJ6Sws",
-    "9pCiWhSU8IY"
-   ]
-  },
-  "UCXrNdWsCvsq5MzoBcIFtNaA": {
-   "gold": 101,
-   "videos": [
-    "UHie2ETreBM",
-    "cIb4pJJ6Sws"
+    "yR4-ODVViWQ"
    ]
   },
   "UCecs0xv5p0EKV9t7yItBE_w": {
@@ -34771,13 +34866,14 @@
    ]
   },
   "UCFIl2IGDFyeGqvKORLFFL8g": {
-   "gold": 104,
+   "gold": 105,
    "videos": [
     "aRTlvNsAvxE",
     "IIILdr8bp_Q",
     "TMV-kBRujPU",
     "NZQTLeTjjQ8",
-    "LK-yAAoi0hE"
+    "LK-yAAoi0hE",
+    "yR4-ODVViWQ"
    ]
   },
   "UCpx7VnMGTaFytGJKEaLsrTA": {
@@ -35033,6 +35129,13 @@
   "UCbW7zyECWsr5_4XyOf5ft4g": {
    "gold": 100,
    "videos": [
+    "LK-yAAoi0hE"
+   ]
+  },
+  "UCCEvSUa6GvyQN7rBs3TbTdA": {
+   "gold": 101,
+   "videos": [
+    "TMV-kBRujPU",
     "LK-yAAoi0hE"
    ]
   }
